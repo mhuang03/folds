@@ -61,21 +61,29 @@ def beatty_list(N):
     res = []
     for p in range(2, (N + 1) // 2 + 1):
         seen = set()
-        for h in (range(0, N + 2 - 2 * p) if 'beattyall' in RULES else sorted({0, 1, N - 2 * p, N + 1 - 2 * p})):
+        for h in (range(0, N + 2 - 2 * p) if 'beattyall' in RULES else range(0, 2)):
             X = tuple((r * N - h) // p for r in range(1, p + 1))
             if X in seen:
                 continue
             seen.add(X)
-            if set_inward(N, set(X)):
+            if h <= 1 or set_inward(N, set(X)):
                 res.append((p, {x: i + 1 for i, x in enumerate(X)}))
     return res
 
 
 def make_cov5(cov2):
-    @lru_cache(maxsize=None)
     def cov(N, u, v):
         if u > v:
             u, v = v, u
+        m = (N + 1 - v, N + 1 - u)
+        return covc(N, *min((u, v), m))
+
+    @lru_cache(maxsize=None)
+    def covc(N, a, b):
+        """the canonical pair (a, b) and its mirror: try every rule on both."""
+        return rules(N, a, b) or rules(N, N + 1 - b, N + 1 - a)
+
+    def rules(N, u, v):
         if C4.dead(N, u, v):
             return False
         if cov2(N, u, v) or inward(N, u, v):
@@ -132,9 +140,6 @@ def make_cov5(cov2):
             for p, idx in beatty_list(N):
                 if u in idx and v in idx and cov(p, idx[u], idx[v]):
                     return True
-        mu, mv = N + 1 - v, N + 1 - u
-        if (mu, mv) < (u, v):
-            return cov(N, mu, mv)
         return False
     return cov
 

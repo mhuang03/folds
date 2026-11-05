@@ -153,5 +153,199 @@ theorem coReach_beatty_transfer {N p h : Nat} (hp : 1 ≤ p) (hh : h + 2 * p ≤
     CoReach N (D.image (beatty N p h)) :=
   coReach_winEmb (winEmb_beatty hp hh) (coReach_beatty hp hh h1) hDs hD
 
+/-! ## Splits into two copies -/
+
+/-- The empty set is co-reachable: every strip has a full semi-symmetric sequence. -/
+theorem coReach_empty (q : Nat) : CoReach q ∅ := by
+  refine coReach_of_inward (c2 := 1) (by simp) ?_
+  intro m hm1 _ _
+  refine ⟨by omega, fun h => by omega, fun _ => ?_⟩
+  simp [leftCount, rightCount]
+
+theorem exists_full (q : Nat) :
+    ∃ σ : List Nat, σ.Nodup ∧ σ.toFinset = Finset.Icc 1 q ∧ SemiSymmetric q σ := by
+  have h := coReach_empty q
+  unfold CoReach g at h
+  rw [Finset.card_pos] at h
+  obtain ⟨σ, hσ⟩ := h
+  rw [mem_semiOrders] at hσ
+  exact ⟨σ, hσ.1.1, by rw [hσ.1.2, Finset.sdiff_empty], hσ.2⟩
+
+/-- **Transfer through a split** `[N] = φ([p]) ⊔ ψ([q])` into two window copies: the
+complement of `φ([p])` is the copy `ψ([q])`, ordered by any full sequence of the `q`-strip,
+so co-reachable sets of the `p`-strip stay co-reachable.  (Instances: the general doubling
+splits `N = (2j+1) n` of `Copies.lean`, `split_res`, in both directions.) -/
+theorem coReach_split {N p q : Nat} {φ ψ : Nat → Nat} (hs : Split N p q φ ψ)
+    {D : Finset Nat} (hDs : D ⊆ Finset.Icc 1 p) (hD : CoReach p D) :
+    CoReach N (D.image φ) := by
+  refine coReach_winEmb hs.emb₁ ?_ hDs hD
+  obtain ⟨σ, hnd, hset, hv⟩ := exists_full q
+  have hb : ∀ y ∈ σ, 1 ≤ y ∧ y ≤ q := fun y hy => by
+    have := List.mem_toFinset.2 hy; rw [hset, Finset.mem_Icc] at this; exact this
+  have hndc := hs.cover.nodup_iff.2 (List.nodup_range' ..)
+  unfold g
+  rw [Finset.card_pos]
+  refine ⟨σ.map ψ, mem_semiOrders.2 ⟨⟨hs.emb₂.nodup_map hnd hb, ?_⟩,
+    (hs.emb₂.semiSymmetric_iff hnd hb).2 hv⟩⟩
+  ext x
+  simp only [List.mem_toFinset, List.mem_map, Finset.mem_sdiff, Finset.mem_Icc,
+    Finset.mem_image]
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    have hy' := hb y hy
+    have hmem : ψ y ∈ (List.range' 1 p).map φ ++ (List.range' 1 q).map ψ :=
+      List.mem_append_right _ (List.mem_map.2 ⟨y, List.mem_range'_1.2 ⟨hy'.1, by omega⟩, rfl⟩)
+    have := hs.cover.subset hmem
+    rw [List.mem_range'_1] at this
+    refine ⟨⟨this.1, by omega⟩, ?_⟩
+    rintro ⟨z, hz, e⟩
+    exact (List.nodup_append.1 hndc).2.2 (φ z)
+      (List.mem_map.2 ⟨z, List.mem_range'_1.2 ⟨hz.1, by omega⟩, rfl⟩) (ψ y)
+      (List.mem_map.2 ⟨y, List.mem_range'_1.2 ⟨hy'.1, by omega⟩, rfl⟩) e
+  · rintro ⟨hx, hnot⟩
+    have : x ∈ (List.range' 1 p).map φ ++ (List.range' 1 q).map ψ :=
+      hs.cover.symm.subset (List.mem_range'_1.2 ⟨hx.1, by omega⟩)
+    rcases List.mem_append.1 this with h | h
+    · obtain ⟨z, hz, rfl⟩ := List.mem_map.1 h
+      rw [List.mem_range'_1] at hz
+      exact absurd ⟨z, ⟨hz.1, by omega⟩, rfl⟩ hnot
+    · obtain ⟨y, hy, rfl⟩ := List.mem_map.1 h
+      rw [List.mem_range'_1] at hy
+      exact ⟨y, by rw [← List.mem_toFinset, hset, Finset.mem_Icc]; omega, rfl⟩
+
+/-! ## Counting helpers -/
+
+theorem countP_odd_le (B : Nat) : ∀ R, (List.range' 1 R).countP
+    (fun d => decide (d % 2 = 1 ∧ d ≤ B)) = (min R B + 1) / 2
+  | 0 => by simp
+  | R + 1 => by
+    rw [List.range'_concat, List.countP_append, countP_odd_le B R]
+    simp only [List.countP_cons, List.countP_nil]
+    by_cases h : (1 + R) % 2 = 1 ∧ 1 + R ≤ B
+    · simp [h]; omega
+    · simp [h]; omega
+
+theorem countP_eq_le (a : Nat) (R : Nat) :
+    (List.range' 1 R).countP (fun d => decide (d = a)) ≤ if a ≤ R then 1 else 0 := by
+  have := countP_range'_interval a a R
+  rw [show (fun d => decide (a ≤ d ∧ d ≤ a)) = fun d => decide (d = a) by
+    funext d; simp only [decide_eq_decide]; omega] at this
+  rw [this]; split_ifs <;> omega
+
+theorem countP_or_le (l : List Nat) (f g : Nat → Bool) :
+    l.countP (fun d => f d || g d) ≤ l.countP f + l.countP g := by
+  induction l with
+  | nil => simp
+  | cons a l ih =>
+    simp only [List.countP_cons]
+    cases f a <;> cases g a <;> simp <;> omega
+
+theorem countP_add_le (l : List Nat) (f g h : Nat → Bool)
+    (hd : ∀ x ∈ l, ¬ (f x = true ∧ g x = true)) (hfh : ∀ x ∈ l, f x = true → h x = true)
+    (hgh : ∀ x ∈ l, g x = true → h x = true) :
+    l.countP f + l.countP g ≤ l.countP h := by
+  induction l with
+  | nil => simp
+  | cons a l ih =>
+    simp only [List.countP_cons]
+    have := ih (fun x hx => hd x (List.mem_cons_of_mem a hx))
+      (fun x hx => hfh x (List.mem_cons_of_mem a hx)) (fun x hx => hgh x (List.mem_cons_of_mem a hx))
+    have h1 := hd a (List.mem_cons_self ..)
+    have h2 := hfh a (List.mem_cons_self ..)
+    have h3 := hgh a (List.mem_cons_self ..)
+    cases hf : f a <;> cases hg : g a <;> cases hh : h a <;> simp_all <;> omega
+
+theorem leftCount_finset (N m : Nat) (S : Finset Nat) :
+    leftCount N S.toList m = (List.range' 1 (reach N m)).countP (fun d => decide (m - d ∈ S)) := by
+  unfold leftCount; simp only [Finset.mem_toList]
+
+theorem rightCount_finset (N m : Nat) (S : Finset Nat) :
+    rightCount N S.toList m = (List.range' 1 (reach N m)).countP (fun d => decide (m + d ∈ S)) := by
+  unfold rightCount; simp only [Finset.mem_toList]
+
+/-! ## The set `F = {2, 4, …, n-4} ∪ {n-1}` (n even): `F` and its complement satisfy Theorem G -/
+
+/-- `F = {2, 4, …, n - 4} ∪ {n - 1}`. -/
+def fSet (n : Nat) : Finset Nat :=
+  (Finset.Icc 1 n).filter (fun x => (x % 2 = 0 ∧ x + 4 ≤ n) ∨ x = n - 1)
+
+theorem mem_fSet {n x : Nat} :
+    x ∈ fSet n ↔ 1 ≤ x ∧ x ≤ n ∧ ((x % 2 = 0 ∧ x + 4 ≤ n) ∨ x = n - 1) := by
+  unfold fSet; rw [Finset.mem_filter, Finset.mem_Icc]; tauto
+
+/-- `F` pulls no panel to the right (centre left of the strip). -/
+theorem inward_fSet {n : Nat} (hn : 6 ≤ n) (he : n % 2 = 0) : Inward n 0 (fSet n) := by
+  intro m hm1 hmn hmF
+  refine ⟨by omega, fun h => by omega, fun _ => ?_⟩
+  rw [mem_fSet] at hmF
+  rw [leftCount_finset, rightCount_finset]
+  simp only [mem_fSet]
+  rcases Nat.lt_or_ge (m + 2) n with hlt | hge
+  · -- `m` odd, `m ≤ n - 3`
+    have hr1 : reach n m ≤ m - 1 := by unfold reach; omega
+    have hr2 : reach n m ≤ n - m := by unfold reach; omega
+    have L : (List.range' 1 (reach n m)).countP (fun d => decide
+        (1 ≤ m - d ∧ m - d ≤ n ∧ ((m - d) % 2 = 0 ∧ m - d + 4 ≤ n ∨ m - d = n - 1))) =
+        (List.range' 1 (reach n m)).countP (fun d => decide (d % 2 = 1 ∧ d ≤ reach n m)) := by
+      apply List.countP_congr; intro d hd; rw [List.mem_range'_1] at hd
+      simp only [decide_eq_true_eq]; omega
+    have R : (List.range' 1 (reach n m)).countP (fun d => decide
+        (1 ≤ m + d ∧ m + d ≤ n ∧ ((m + d) % 2 = 0 ∧ m + d + 4 ≤ n ∨ m + d = n - 1))) ≤
+        (List.range' 1 (reach n m)).countP (fun d => decide (d % 2 = 1 ∧ d ≤ n - 4 - m)) +
+        (List.range' 1 (reach n m)).countP (fun d => decide (d = n - 1 - m)) := by
+      refine le_trans (le_of_eq (List.countP_congr fun d hd => ?_)) (countP_or_le _ _ _)
+      rw [List.mem_range'_1] at hd
+      simp only [Bool.or_eq_true, decide_eq_true_eq]; omega
+    rw [L, countP_odd_le]
+    rw [countP_odd_le] at R
+    have := countP_eq_le (n - 1 - m) (reach n m)
+    split_ifs at this <;> omega
+  · rcases Nat.lt_or_ge m n with hlt' | hge'
+    · -- `m = n - 2`
+      have hr : reach n m = 2 := by unfold reach; omega
+      rw [hr]
+      simp only [List.range', List.countP_cons, List.countP_nil]
+      split_ifs <;> simp only [decide_eq_true_eq] at * <;> omega
+    · have hr : reach n m = 0 := by unfold reach; omega
+      rw [hr]; simp
+
+/-- The complement of `F` pulls no panel to the left (centre right of the strip). -/
+theorem inward_fSet_compl {n : Nat} (hn : 6 ≤ n) (he : n % 2 = 0) :
+    Inward n (2 * n + 1) (Finset.Icc 1 n \ fSet n) := by
+  intro m hm1 hmn hmG
+  refine ⟨by omega, fun _ => ?_, fun h => by omega⟩
+  have hmF : m ∈ fSet n := by
+    by_contra h; exact hmG (Finset.mem_sdiff.2 ⟨Finset.mem_Icc.2 ⟨hm1, hmn⟩, h⟩)
+  rw [mem_fSet] at hmF
+  rw [leftCount_finset, rightCount_finset]
+  simp only [Finset.mem_sdiff, Finset.mem_Icc, mem_fSet]
+  rcases hmF.2.2 with ⟨hev, hm4⟩ | hm
+  · have hr1 : reach n m ≤ m - 1 := by unfold reach; omega
+    have hr2 : reach n m ≤ n - m := by unfold reach; omega
+    have L : (List.range' 1 (reach n m)).countP (fun d => decide
+        ((1 ≤ m - d ∧ m - d ≤ n) ∧ ¬(1 ≤ m - d ∧ m - d ≤ n ∧
+          ((m - d) % 2 = 0 ∧ m - d + 4 ≤ n ∨ m - d = n - 1)))) =
+        (List.range' 1 (reach n m)).countP (fun d => decide (d % 2 = 1 ∧ d ≤ reach n m)) := by
+      apply List.countP_congr; intro d hd; rw [List.mem_range'_1] at hd
+      simp only [decide_eq_true_eq]; omega
+    have R : (List.range' 1 (reach n m)).countP (fun d => decide (d % 2 = 1 ∧ d ≤ n - 3 - m)) +
+        (List.range' 1 (reach n m)).countP (fun d => decide (d = n - 2 - m)) ≤
+        (List.range' 1 (reach n m)).countP (fun d => decide
+        ((1 ≤ m + d ∧ m + d ≤ n) ∧ ¬(1 ≤ m + d ∧ m + d ≤ n ∧
+          ((m + d) % 2 = 0 ∧ m + d + 4 ≤ n ∨ m + d = n - 1)))) := by
+      refine countP_add_le _ _ _ _ (fun d hd => ?_) (fun d hd => ?_) (fun d hd => ?_)
+      all_goals rw [List.mem_range'_1] at hd; simp only [decide_eq_true_eq]; omega
+    rw [L, countP_odd_le]
+    rw [countP_odd_le] at R
+    have e := countP_range'_interval (n - 2 - m) (n - 2 - m) (reach n m)
+    rw [show (fun d => decide (n - 2 - m ≤ d ∧ d ≤ n - 2 - m)) = fun d => decide (d = n - 2 - m)
+      by funext d; simp only [decide_eq_decide]; omega] at e
+    rw [e] at R
+    omega
+  · have hr : reach n m = 1 := by unfold reach; omega
+    rw [hr]
+    simp only [List.range', List.countP_cons, List.countP_nil]
+    split_ifs <;> simp only [decide_eq_true_eq] at * <;> omega
+
 end Live5
 end Folds
