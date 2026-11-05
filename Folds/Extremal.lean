@@ -25,6 +25,11 @@ A step is *free* if its window contains no earlier panel (`FreeStep`), and
   `numFree N a ≤ ⌊log₂(N+1)⌋ + ⌊log₂((N+1)/3)⌋ + 1`.
   After the first step `x`, every later free panel `f` satisfies `2f ≤ x` (left half) or
   `2(N+1-f) ≤ N+1-x` (right half), and within each half the free panels halve.
+* `exists_free` / `max_free`: for `N ≥ 2` the bound is attained by a semi-symmetric
+  sequence, so the maximum is exactly `Fbound N`.  Odd `N`: parity blocks; even `N`:
+  shifted parity blocks (`shifted_blocks`), whose first block `X = shX` is a copy of the
+  `(n-1)`-world, balanced around the second block except for one twisted middle step
+  (`X_balance`).
 -/
 
 namespace Folds
@@ -540,6 +545,12 @@ theorem freeCount_map {N p : Nat} {f : Nat → Nat} : ∀ (l P : List Nat),
     · have h' : ¬ FreeStep N (P.map f) (f x) := fun h' => h (hfree.1 h')
       simp [h, h']
 
+theorem ite_pos' {α : Type} {c : Prop} [Decidable c] {a b : α} (h : c) :
+    (if c then a else b) = a := by simp [h]
+
+theorem ite_neg' {α : Type} {c : Prop} [Decidable c] {a b : α} (h : ¬ c) :
+    (if c then a else b) = b := by simp [h]
+
 /-! ### Shifted parity blocks -/
 
 /-- `X`-panels: evens up to `2j`, then odds from `2j + 3`. -/
@@ -548,7 +559,7 @@ def shX (j y : Nat) : Nat := 2 * y + if j < y then 1 else 0
 /-- `Y`-panels: odds up to `2j + 1`, then evens from `2j + 2`. -/
 def shY (j y : Nat) : Nat := 2 * y - 1 - if j + 1 < y then 1 else 0
 
-theorem winPres_shX {n y : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (hy : y ≤ n - 1) :
+theorem winPres_shX {n y : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (_hy : y ≤ n - 1) :
     WinPres (2 * n) (n - 1) (shX (n / 2)) y := by
   constructor <;> intro z hz1 hz <;> unfold shX reach <;> split_ifs <;> omega
 
@@ -604,19 +615,19 @@ theorem X_balance {n y m : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (hy : y ≤ n + 1
   rw [← hj]
   have hn2 : n = 2 * j ∨ n = 2 * j + 1 := by omega
   rcases Nat.lt_or_ge (j + 1) y with h | h
-  · have hm' : shY j y = 2 * y - 2 := by unfold shY; rw [if_pos h]; omega
+  · have hm' : shY j y = 2 * y - 2 := by unfold shY; rw [ite_pos' h]; omega
     have hr : reach (2 * n) (2 * y - 2) = 2 * n - (2 * y - 2) := by unfold reach; omega
-    rw [hm', hr, if_neg (by omega), countP_eq_interval (A := 2 * y - 2 - n) (B := y - 2),
+    rw [hm', hr, ite_neg' (by omega), countP_eq_interval (A := 2 * y - 2 - n) (B := y - 2),
       countP_eq_interval (A := y - 1) (B := n - 1)]
     · omega
     all_goals
       intro z hz1 hz
       simp only [Function.comp_apply, decide_eq_true_eq]
       unfold shX; split_ifs <;> omega
-  · have hm' : shY j y = 2 * y - 1 := by unfold shY; rw [if_neg (by omega)]; omega
+  · have hm' : shY j y = 2 * y - 1 := by unfold shY; rw [ite_neg' (by omega)]; omega
     rw [hm']
     by_cases ht : n % 2 = 0 ∧ y = j + 1
-    · rw [if_pos ht]
+    · rw [ite_pos' ht]
       obtain ⟨rfl, rfl⟩ : n = 2 * j ∧ y = j + 1 := ⟨by omega, ht.2⟩
       have hr : reach (2 * (2 * j)) (2 * (j + 1) - 1) = 2 * j - 1 := by unfold reach; omega
       rw [hr, countP_eq_interval (A := 1) (B := j), countP_eq_interval (A := j + 1) (B := 2 * j - 1)]
@@ -625,7 +636,7 @@ theorem X_balance {n y m : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (hy : y ≤ n + 1
         intro z hz1 hz
         simp only [Function.comp_apply, decide_eq_true_eq]
         unfold shX; split_ifs <;> omega
-    · rw [if_neg ht]
+    · rw [ite_neg' ht]
       have hr : reach (2 * n) (2 * y - 1) = 2 * y - 2 := by unfold reach; omega
       rw [hr, countP_eq_interval (A := 1) (B := y - 1), countP_eq_interval (A := y) (B := 2 * y - 2)]
       · omega
@@ -633,5 +644,272 @@ theorem X_balance {n y m : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (hy : y ≤ n + 1
         intro z hz1 hz
         simp only [Function.comp_apply, decide_eq_true_eq]
         unfold shX; split_ifs <;> omega
+
+theorem shX_bounds {n y : Nat} (hy1 : 1 ≤ y) (hy : y ≤ n - 1) :
+    1 ≤ shX (n / 2) y ∧ shX (n / 2) y ≤ 2 * n := by
+  unfold shX; split_ifs <;> omega
+
+theorem shY_bounds {n y : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (hy : y ≤ n + 1) :
+    1 ≤ shY (n / 2) y ∧ shY (n / 2) y ≤ 2 * n := by
+  unfold shY; split_ifs <;> omega
+
+theorem shX_inj {j a b : Nat} (h : shX j a = shX j b) : a = b := by
+  unfold shX at h; split_ifs at h <;> omega
+
+theorem shY_inj {j a b : Nat} (ha : 1 ≤ a) (hb : 1 ≤ b) (h : shY j a = shY j b) : a = b := by
+  unfold shY at h; split_ifs at h <;> omega
+
+theorem shX_ne_shY {j a b : Nat} (hb : 1 ≤ b) : shX j a ≠ shY j b := by
+  unfold shX shY; split_ifs <;> omega
+
+theorem perm_Xl {n : Nat} {σ : List Nat} (hσ : IsFoldSeq (n - 1) σ) :
+    (σ.map (shX (n / 2))).Perm (Xl n) :=
+  hσ.map _
+
+/-- In a nodup list containing distinct `a` and `b`, either `a` comes before `b`, or it does
+in the reversed list. -/
+theorem before_or_reverse_before {l : List Nat} (hnd : l.Nodup) {a b : Nat} (ha : a ∈ l)
+    (hb : b ∈ l) (hab : a ≠ b) :
+    (∀ k (hk : k < l.length), l[k] = b → a ∈ l.take k) ∨
+      (∀ k (hk : k < l.reverse.length), l.reverse[k] = b → a ∈ l.reverse.take k) := by
+  obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.1 ha
+  obtain ⟨i', hi', rfl⟩ := List.mem_iff_getElem.1 hb
+  have hii : i ≠ i' := fun e => hab (by subst e; rfl)
+  rcases Nat.lt_or_gt_of_ne hii with h | h
+  · left
+    intro k hk e
+    have : k = i' := (List.Nodup.getElem_inj hnd).1 e
+    rw [getElem_mem_take_iff hnd hi]; omega
+  · right
+    have hndr : l.reverse.Nodup := (List.reverse_perm l).nodup_iff.2 hnd
+    intro k hk e
+    rw [List.getElem_reverse] at e
+    have hk' : k < l.length := by simpa using hk
+    have : l.length - 1 - k = i' := (List.Nodup.getElem_inj hnd).1 e
+    have hpos : l.length - 1 - i < l.reverse.length := by simp; omega
+    have er : l.reverse[l.length - 1 - i] = l[i] := by
+      rw [List.getElem_reverse]; congr 1; omega
+    rw [← er, getElem_mem_take_iff hndr hpos]; omega
+
+theorem countP_split_one {T : List Nat} (hnd : T.Nodup) (h1 : 1 ∈ T) (c : Nat) (hc : 1 < c) :
+    T.countP (fun z => decide (1 ≤ z ∧ z < c)) = T.countP (fun z => decide (2 ≤ z ∧ z < c)) + 1 := by
+  rw [countP_split T (fun z => decide (1 ≤ z ∧ z < c)) (fun z => decide (z = 1))]
+  have e1 : T.countP (fun z => decide (1 ≤ z ∧ z < c) && decide (z = 1)) =
+      T.countP (fun z => z = 1) := by
+    apply List.countP_congr; intro z _; simp; omega
+  have e2 : T.countP (fun z => decide (1 ≤ z ∧ z < c) && !decide (z = 1)) =
+      T.countP (fun z => decide (2 ≤ z ∧ z < c)) := by
+    apply List.countP_congr; intro z _; simp; omega
+  rw [e1, e2, countP_eq_nodup hnd, ite_pos' h1]; omega
+
+/-- **Shifted parity blocks** (`N = 2n`): `σ` (on `n - 1` panels) through `shX`, then `τ`
+(on `n + 1` panels) through `shY`.  For even `n`, `τ` must place panel `1` before its middle
+panel `n/2 + 1`.  The result is semi-symmetric and has at least two more free steps than
+`σ` (panels `1` and `2n`). -/
+theorem shifted_blocks {n : Nat} (hn : 2 ≤ n) {σ τ : List Nat}
+    (hσ : IsFoldSeq (n - 1) σ) (hσs : SemiSymmetric (n - 1) σ)
+    (hτ : IsFoldSeq (n + 1) τ) (hτs : SemiSymmetric (n + 1) τ)
+    (hmid : n % 2 = 0 → ∀ k (hk : k < τ.length), τ[k] = n / 2 + 1 → 1 ∈ τ.take k) :
+    IsFoldSeq (2 * n) (σ.map (shX (n / 2)) ++ τ.map (shY (n / 2))) ∧
+      SemiSymmetric (2 * n) (σ.map (shX (n / 2)) ++ τ.map (shY (n / 2))) ∧
+      numFree (n - 1) σ + 2 ≤ numFree (2 * n) (σ.map (shX (n / 2)) ++ τ.map (shY (n / 2))) := by
+  have bσ : ∀ z ∈ σ, 1 ≤ z ∧ z ≤ n - 1 := fun z hz => (mem_range'_of_perm hσ).1 hz
+  have bτ : ∀ z ∈ τ, 1 ≤ z ∧ z ≤ n + 1 := fun z hz => (mem_range'_of_perm hτ).1 hz
+  have hndσ := nodup_of_foldSeq hσ
+  have hndτ := nodup_of_foldSeq hτ
+  have hndA : (σ.map (shX (n / 2))).Nodup :=
+    nodup_map_of_injOn hndσ fun a _ b _ e => shX_inj e
+  have hndB : (τ.map (shY (n / 2))).Nodup :=
+    nodup_map_of_injOn hndτ fun a ha b hb e => shY_inj (bτ a ha).1 (bτ b hb).1 e
+  have hnd : (σ.map (shX (n / 2)) ++ τ.map (shY (n / 2))).Nodup := by
+    refine List.nodup_append.2 ⟨hndA, hndB, ?_⟩
+    intro a ha b hb
+    obtain ⟨x, -, rfl⟩ := List.mem_map.1 ha
+    obtain ⟨y, hy, rfl⟩ := List.mem_map.1 hb
+    exact shX_ne_shY (bτ y hy).1
+  have hbnd : ∀ x ∈ σ.map (shX (n / 2)) ++ τ.map (shY (n / 2)), 1 ≤ x ∧ x ≤ 2 * n := by
+    intro x hx
+    rcases List.mem_append.1 hx with hx | hx
+    · obtain ⟨y, hy, rfl⟩ := List.mem_map.1 hx
+      exact shX_bounds (bσ y hy).1 (bσ y hy).2
+    · obtain ⟨y, hy, rfl⟩ := List.mem_map.1 hx
+      exact shY_bounds hn (bτ y hy).1 (bτ y hy).2
+  have hlen : (σ.map (shX (n / 2)) ++ τ.map (shY (n / 2))).length = 2 * n := by
+    simp [hσ.length_eq, hτ.length_eq]; omega
+  have hfold : IsFoldSeq (2 * n) (σ.map (shX (n / 2)) ++ τ.map (shY (n / 2))) :=
+    perm_range'_of_nodup_subset hnd hbnd hlen
+  refine ⟨hfold, ?_, ?_⟩
+  · rw [semiSymmetric_append_iff]
+    refine ⟨(semiSymmetric_map_iff hndA bσ fun y hy =>
+      winPres_shX hn (bσ y hy).1 (bσ y hy).2).2 hσs, ?_⟩
+    intro k hk
+    have hk' : k < τ.length := by simpa using hk
+    rw [List.getElem_map, ← List.map_take]
+    have hndk : (σ.map (shX (n / 2)) ++ (τ.take k).map (shY (n / 2))).Nodup := by
+      rw [List.map_take]
+      exact hnd.sublist ((List.take_sublist _ _).append_left _)
+    have hT : ∀ z ∈ τ.take k, 1 ≤ z ∧ z ≤ n + 1 := fun z hz => bτ z (List.mem_of_mem_take hz)
+    have hy := bτ _ (List.getElem_mem hk')
+    have hstep := hτs k hk'
+    have hbal := X_balance hn hy.1 hy.2 rfl
+    by_cases hm : n % 2 = 0 ∧ τ[k] = n / 2 + 1
+    · -- the twisted middle step
+      rw [ite_pos' hm] at hbal
+      have h1 : 1 ∈ τ.take k := hmid hm.1 k hk' hm.2
+      have hndT : (τ.take k).Nodup := take_nodup hndτ k
+      unfold SemiStep at hstep ⊢
+      rw [leftCount_eq hndk, rightCount_append_map hndk hT
+        (by rw [hm.2]; intro z hz1 hz; exact twist_shY_right hn hm.1 hz1 hz),
+        List.countP_append, (perm_Xl hσ).countP_eq, (perm_Xl hσ).countP_eq]
+      rw [leftCount_eq hndT, rightCount_eq hndT] at hstep
+      have hL : ((τ.take k).map (shY (n / 2))).countP (fun x => decide
+          (shY (n / 2) τ[k] - reach (2 * n) (shY (n / 2) τ[k]) ≤ x ∧ x < shY (n / 2) τ[k])) =
+          (τ.take k).countP (fun z => decide (2 ≤ z ∧ z < n / 2 + 1)) := by
+        rw [hm.2]; exact countP_map_congr hT fun z hz1 hz => twist_shY_left hn hm.1 hz1 hz
+      have hreach : τ[k] - reach (n + 1) τ[k] = 1 := by rw [hm.2]; unfold reach; omega
+      rw [hreach, hm.2, countP_split_one hndT h1 _ (by omega)] at hstep
+      rw [hL, rightCount_eq hndT]
+      rw [hm.2] at hbal ⊢
+      omega
+    · rw [ite_neg' hm] at hbal
+      have hw := winPres_shY hn hy.1 hy.2 hm
+      unfold SemiStep at hstep ⊢
+      rw [leftCount_append_map hndk hT hw.1, rightCount_append_map hndk hT hw.2, (perm_Xl hσ).countP_eq,
+        (perm_Xl hσ).countP_eq]
+      omega
+  · unfold numFree
+    rw [freeCount_append, List.nil_append]
+    have h1 := freeCount_map (N := 2 * n) (p := n - 1) (f := shX (n / 2)) σ []
+      (by simpa using hndA) (by simpa using bσ)
+      (fun y hy => winPres_shX hn (bσ y hy).1 (bσ y hy).2)
+    simp only [List.map_nil] at h1
+    have h2 : 2 ≤ freeCount (2 * n) (σ.map (shX (n / 2))) (τ.map (shY (n / 2))) := by
+      apply two_le_freeCount (by omega)
+      · exact List.mem_map.2 ⟨1, (mem_range'_of_perm hτ).2 (by omega), by unfold shY; simp⟩
+      · exact List.mem_map.2 ⟨n + 1, (mem_range'_of_perm hτ).2 (by omega), by
+          unfold shY; rw [ite_pos' (by omega)]; omega⟩
+    omega
+
+/-! ### The free-step bound is attained -/
+
+theorem winPres_scale0 {n y : Nat} (hy1 : 1 ≤ y) (hy : y ≤ n) :
+    WinPres (2 * n + 1) n (scale 0) y := by
+  constructor <;> intro z hz1 hz <;> unfold scale reach <;> omega
+
+theorem log_two_eq_half {m : Nat} (hm : 2 ≤ m) : Nat.log 2 m = Nat.log 2 (m / 2) + 1 := by
+  have := Nat.log_div_base 2 m
+  have : 1 ≤ Nat.log 2 m := Nat.le_log_of_pow_le Nat.one_lt_two (by simpa using hm)
+  omega
+
+/-- `F(N) = ⌊log₂(N+1)⌋ + ⌊log₂((N+1)/3)⌋ + 1`. -/
+def Fbound (N : Nat) : Nat := Nat.log 2 (N + 1) + Nat.log 2 ((N + 1) / 3) + 1
+
+theorem Fbound_odd {m : Nat} (hm : 2 ≤ m) : Fbound (2 * m + 1) = Fbound m + 2 := by
+  unfold Fbound
+  rw [log_two_eq_half (m := 2 * m + 1 + 1) (by omega),
+    log_two_eq_half (m := (2 * m + 1 + 1) / 3) (by omega)]
+  have e1 : (2 * m + 1 + 1) / 2 = m + 1 := by omega
+  have e2 : (2 * m + 1 + 1) / 3 / 2 = (m + 1) / 3 := by omega
+  rw [e1, e2]; omega
+
+theorem log_pair_odd {K : Nat} (hK : 5 ≤ K) (ho : K % 2 = 1) :
+    Nat.log 2 K + Nat.log 2 (K / 3) = Nat.log 2 (K - 1) + Nat.log 2 ((K - 1) / 3) := by
+  rw [log_two_eq_half (m := K) (by omega), log_two_eq_half (m := K - 1) (by omega)]
+  have e1 : K / 2 = (K - 1) / 2 := by omega
+  rw [e1]
+  by_cases h : K / 3 = (K - 1) / 3
+  · rw [h]
+  · obtain ⟨q, rfl⟩ : ∃ q, K = 6 * q + 3 := ⟨K / 6, by omega⟩
+    have e3 : (6 * q + 3) / 3 = 2 * q + 1 := by omega
+    have e4 : (6 * q + 3 - 1) / 3 = 2 * q := by omega
+    rw [e3, e4, log_two_eq_half (m := 2 * q + 1) (by omega), log_two_eq_half (m := 2 * q) (by omega)]
+    have e5 : (2 * q + 1) / 2 = 2 * q / 2 := by omega
+    rw [e5]
+
+theorem Fbound_even {M : Nat} (hM : 4 ≤ M) (he : M % 2 = 0) : Fbound M = Fbound (M - 1) := by
+  unfold Fbound
+  have e0 : M - 1 + 1 = M := by omega
+  have := log_pair_odd (K := M + 1) (by omega) (by omega)
+  rw [e0]
+  simp only [Nat.add_sub_cancel] at this
+  omega
+
+theorem Fbound_small : Fbound 2 = 2 ∧ Fbound 3 = 3 ∧ Fbound 4 = 3 := by
+  have l1 : Nat.log 2 1 = 0 := Nat.log_one_right 2
+  have l3 : Nat.log 2 3 = 1 := Nat.log_eq_of_pow_le_of_lt_pow (by decide) (by decide)
+  have l4 : Nat.log 2 4 = 2 := Nat.log_eq_of_pow_le_of_lt_pow (by decide) (by decide)
+  have l5 : Nat.log 2 5 = 2 := Nat.log_eq_of_pow_le_of_lt_pow (by decide) (by decide)
+  unfold Fbound
+  simp only [show (2 + 1) / 3 = 1 by decide, show 2 + 1 = 3 by decide, show 3 + 1 = 4 by decide,
+    show 4 + 1 = 5 by decide, l1, l3, l4, l5]
+  decide
+
+/-- **Free steps, construction.**  For every `N ≥ 2` some semi-symmetric fold sequence has
+at least (hence, by `numFree_le`, exactly) `⌊log₂(N+1)⌋ + ⌊log₂((N+1)/3)⌋ + 1` free steps. -/
+theorem exists_free : ∀ N, 2 ≤ N →
+    ∃ a, IsFoldSeq N a ∧ SemiSymmetric N a ∧ Fbound N ≤ numFree N a
+  | N, hN => by
+    rcases (show N = 2 ∨ N = 3 ∨ 4 ≤ N by omega) with rfl | rfl | h4
+    · exact ⟨[1, 2], by decide, by decide, by rw [Fbound_small.1]; decide⟩
+    · exact ⟨[2, 3, 1], by decide, by decide, by rw [Fbound_small.2.1]; decide⟩
+    · obtain ⟨m, hm⟩ : ∃ m, N = 2 * m ∨ N = 2 * m + 1 := ⟨N / 2, by omega⟩
+      rcases hm with rfl | rfl
+      · -- N = 2m: shifted parity blocks
+        obtain ⟨σ, hσ, hσs, hσf⟩ : ∃ σ, IsFoldSeq (m - 1) σ ∧ SemiSymmetric (m - 1) σ ∧
+            Fbound (2 * m) ≤ numFree (m - 1) σ + 2 := by
+          rcases (show m = 2 ∨ 3 ≤ m by omega) with rfl | h3
+          · exact ⟨[1], by decide, by decide, by rw [Fbound_small.2.2]; decide⟩
+          · obtain ⟨σ, hσ, hσs, hσf⟩ := exists_free (m - 1) (by omega)
+            refine ⟨σ, hσ, hσs, ?_⟩
+            have h1 := Fbound_even (M := 2 * m) (by omega) (by omega)
+            have h2 := Fbound_odd (m := m - 1) (by omega)
+            rw [show 2 * (m - 1) + 1 = 2 * m - 1 by omega] at h2
+            omega
+        obtain ⟨τ0, hτ0, hτ0s, -⟩ := exists_lrmax (m + 1) (by omega)
+        obtain ⟨τ, hτ, hτs, hmid⟩ : ∃ τ, IsFoldSeq (m + 1) τ ∧ SemiSymmetric (m + 1) τ ∧
+            (∀ k (hk : k < τ.length), τ[k] = m / 2 + 1 → 1 ∈ τ.take k) := by
+          rcases before_or_reverse_before (nodup_of_foldSeq hτ0) (a := 1) (b := m / 2 + 1)
+            ((mem_range'_of_perm hτ0).2 (by omega)) ((mem_range'_of_perm hτ0).2 (by omega))
+            (by omega) with h | h
+          · exact ⟨τ0, hτ0, hτ0s, h⟩
+          · exact ⟨τ0.reverse, (List.reverse_perm τ0).trans hτ0,
+              SemiSymmetric.reverse hτ0 hτ0s, h⟩
+        obtain ⟨hf, hs, hfr⟩ := shifted_blocks (n := m) (by omega) hσ hσs hτ hτs (fun _ => hmid)
+        exact ⟨_, hf, hs, by omega⟩
+      · -- N = 2m + 1: parity blocks, evens first
+        obtain ⟨σ, hσ, hσs, hσf⟩ := exists_free m (by omega)
+        obtain ⟨τ, hτ, hτs, -⟩ := exists_lrmax (m + 1) (by omega)
+        have e1 : (2 * m + 1 + 0) / 2 = m := by omega
+        have e2 : (2 * m + 1 + (1 - 0)) / 2 = m + 1 := by omega
+        have hσ' : IsFoldSeq ((2 * m + 1 + 0) / 2) σ := by rwa [e1]
+        have hτ' : IsFoldSeq ((2 * m + 1 + (1 - 0)) / 2) τ := by rwa [e2]
+        refine ⟨σ.map (scale 0) ++ τ.map (scale (1 - 0)), IsFoldSeq.blocks (by omega) hσ' hτ',
+          (semiSymmetric_blocks_iff (by omega) hσ' hτ').2 ⟨by rwa [e1], by rwa [e2]⟩, ?_⟩
+        have bσ : ∀ z ∈ σ, 1 ≤ z ∧ z ≤ m := fun z hz => (mem_range'_of_perm hσ).1 hz
+        have hndA : (σ.map (scale 0)).Nodup :=
+          nodup_map_of_injOn (nodup_of_foldSeq hσ) fun _ _ _ _ e => scale_inj (by omega) e
+        unfold numFree
+        rw [freeCount_append, List.nil_append]
+        have h1 := freeCount_map (N := 2 * m + 1) (p := m) (f := scale 0) σ []
+          (by simpa using hndA) (by simpa using bσ)
+          (fun y hy => winPres_scale0 (bσ y hy).1 (bσ y hy).2)
+        simp only [List.map_nil] at h1
+        have h2 : 2 ≤ freeCount (2 * m + 1) (σ.map (scale 0)) (τ.map (scale (1 - 0))) := by
+          apply two_le_freeCount (by omega)
+          · exact List.mem_map.2 ⟨1, (mem_range'_of_perm hτ).2 (by omega), by unfold scale; omega⟩
+          · exact List.mem_map.2 ⟨m + 1, (mem_range'_of_perm hτ).2 (by omega),
+              by unfold scale; omega⟩
+        have h3 := Fbound_odd (m := m) (by omega)
+        unfold numFree at hσf
+        omega
+
+/-- **Maximum number of free steps.**  For `N ≥ 2`, the maximum over semi-symmetric fold
+sequences of the number of free steps is exactly `⌊log₂(N+1)⌋ + ⌊log₂((N+1)/3)⌋ + 1`. -/
+theorem max_free {N : Nat} (hN : 2 ≤ N) :
+    (∃ a, IsFoldSeq N a ∧ SemiSymmetric N a ∧ numFree N a = Fbound N) ∧
+      ∀ a, IsFoldSeq N a → numFree N a ≤ Fbound N := by
+  refine ⟨?_, fun a hf => numFree_le hf⟩
+  obtain ⟨a, hf, hs, h⟩ := exists_free N hN
+  exact ⟨a, hf, hs, Nat.le_antisymm (numFree_le hf) h⟩
 
 end Folds
