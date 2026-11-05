@@ -24,3 +24,4 @@ import Folds.Copies
 import Folds.ShiftedCount
 import Folds.SuperExp
 import Folds.SuperExp2
+import Folds.SuperExp3

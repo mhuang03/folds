@@ -14,7 +14,9 @@ Goal: a rigorous exponent > 1/6 (along some subsequence).  NOT achieved.  The be
 exponents are unchanged: 1/6 along N = 2^L and 1/22 for all N (Folds/SuperExp2.lean).  What this
 round produced:
 
- (1) Theorem A, the GENERAL SLIP LEMMA (paper proof, section 1; exhaustively verified): for ANY
+ (1) Theorem A, the GENERAL SLIP LEMMA (section 1; Lean: Folds/SuperExp3.lean, namespace
+     Folds.GSlip, no sorry / native_decide, axioms propext, Classical.choice, Quot.sound; also
+     verified exhaustively): for ANY
      set X of panels (any size n1, any N) the sequences "X in the order f_tau, then the rest in the
      order g_sigma" are valid iff tau and sigma satisfy explicit INDUCED window conditions; for
      strip-valid tau, sigma these are interval (order) conditions whose size is the doubling
@@ -84,6 +86,14 @@ The size of the conditions.  For N = 2n1, with the discrepancy D(y) = kappa(y) -
 the doubling defect of D at f_j: a set X whose discrepancy is doubling-compatible near f_j imposes
 no condition at j.  Parity classes have D in {0, -1/2} (evens) or {0, 1/2} (odds): no conditions
 (the parity-block theorem).
+Lean (Folds/SuperExp3.lean).  Block N n g mu (increasing g : [1,n] -> [1,N] with counting
+function mu), Block.ofMono (every increasing enumeration is a block), cycBelow_map (Lemma 1),
+semiStep_block_iff (one step of a block on top of ANY disjoint placed list F: covers (i) with
+F = [] -- semiStep_first_iff -- and (ii) with F = X), defectFree_iff (zero defect: N-step valid
+iff strip step valid), block_steps_iff, block_semiSymmetric_iff, blocks_mem_semiSeqs_iff (the
+whole-sequence iff for a split [N] = X ⊔ X^c, Split N n1 n2 f kappa g mu) and card_mul_le
+(#{tau : FirstCond} #{sigma : SecondCond} <= a(N) for each split).  The interval form (iii) is
+paper-only (it is the monotonicity of t~).
 Verification.  gslipcheck.c: N = 2n, every X, (i), (ii) for ALL permutations (n <= 6) and the
 interval form for all strip-valid tau, sigma (n <= 8, 28.8 million block checks): 0 failures.
 gslipodd.py: every N <= 9, every n1, every X, every permutation (9.25 million step checks):
