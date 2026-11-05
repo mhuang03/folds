@@ -304,4 +304,187 @@ theorem card_filter_before {X : Finset ℕ} {m : ℕ} (hm : m ∈ X) (Q : Finset
     rw [mem_erase, ← hX, List.mem_toFinset]
     refine ⟨fun h => hnd'.2.2 x hx m (List.mem_cons_self) h, List.mem_of_mem_take hx⟩
 
+/-! ## The window condition as a condition on the set of earlier panels -/
+
+/-- The set `A` of already-bisected panels has equally many elements in the left and in the
+right part of the window of `m`. -/
+def BalancedBefore (N m : ℕ) (A : Finset ℕ) : Prop :=
+  (A.filter (fun x => m - reach N m ≤ x ∧ x < m)).card =
+    (A.filter (fun x => m < x ∧ x ≤ m + reach N m)).card
+
+instance (N m : ℕ) (A : Finset ℕ) : Decidable (BalancedBefore N m A) :=
+  inferInstanceAs (Decidable (_ = _))
+
+theorem countP_eq_card_filter {S : List ℕ} (hnd : S.Nodup) (p : ℕ → Prop) [DecidablePred p] :
+    S.countP (fun x => decide (p x)) = (S.toFinset.filter p).card := by
+  rw [List.countP_eq_length_filter, ← List.toFinset_card_of_nodup (hnd.filter _),
+    List.toFinset_filter]
+  simp
+
+theorem semiStep_iff_balanced {N m : ℕ} {S : List ℕ} (hnd : S.Nodup) :
+    SemiStep N S m ↔ BalancedBefore N m S.toFinset := by
+  unfold SemiStep BalancedBefore
+  rw [leftCount_eq hnd, rightCount_eq hnd, countP_eq_card_filter hnd, countP_eq_card_filter hnd]
+
+/-! ## Summing over subsets of a disjoint union -/
+
+theorem sum_powerset_union {U V : Finset ℕ} (h : Disjoint U V) (f : Finset ℕ → ℕ) :
+    ∑ A ∈ (U ∪ V).powerset, f A = ∑ B ∈ U.powerset, ∑ C ∈ V.powerset, f (B ∪ C) := by
+  rw [← sum_product' (f := fun B C => f (B ∪ C))]
+  apply sum_nbij' (fun A => (A ∩ U, A ∩ V)) (fun p => p.1 ∪ p.2)
+  · intro A _
+    rw [mem_product, mem_powerset, mem_powerset]
+    exact ⟨inter_subset_right, inter_subset_right⟩
+  · intro p hp
+    rw [mem_product, mem_powerset, mem_powerset] at hp
+    rw [mem_powerset]
+    exact union_subset_union hp.1 hp.2
+  · intro A hA
+    rw [mem_powerset] at hA
+    show A ∩ U ∪ A ∩ V = A
+    rw [← inter_union_distrib_left, inter_eq_left.2 hA]
+  · rintro ⟨B, C⟩ hp
+    rw [mem_product, mem_powerset, mem_powerset] at hp
+    have hCU : C ∩ U = ∅ := disjoint_iff_inter_eq_empty.1
+      (disjoint_of_subset_left hp.2 h.symm)
+    have hBV : B ∩ V = ∅ := disjoint_iff_inter_eq_empty.1 (disjoint_of_subset_left hp.1 h)
+    simp only [union_inter_distrib_right, hCU, hBV, union_empty, empty_union,
+      inter_eq_left.2 hp.1, inter_eq_left.2 hp.2]
+  · intro A hA
+    rw [mem_powerset] at hA
+    show f A = f (A ∩ U ∪ A ∩ V)
+    rw [← inter_union_distrib_left, inter_eq_left.2 hA]
+
+/-- The summand after splitting the earlier set into its left, right and outside parts. -/
+def wallisTerm (N j k i : ℕ) : ℕ := if j = k then (j + k + i)! * (N - 1 - (j + k + i))! else 0
+
+theorem sum_balanced {N m : ℕ} (h1 : 1 ≤ m) (h2 : m ≤ N) :
+    ∑ A ∈ ((Icc 1 N).erase m).powerset.filter (BalancedBefore N m),
+      A.card ! * (N - 1 - A.card)! =
+    ∑ j ∈ range (reach N m + 1), (reach N m).choose j * ((reach N m).choose j *
+      ∑ i ∈ range (N - 1 - 2 * reach N m + 1), (N - 1 - 2 * reach N m).choose i *
+        ((j + j + i)! * (N - 1 - (j + j + i))!)) := by
+  set r := reach N m with hr
+  have hr1 : r + 1 ≤ m := by rw [hr]; unfold reach; omega
+  have hr2 : m + r ≤ N := by rw [hr]; unfold reach; omega
+  set E := (Icc 1 N).erase m with hE
+  set pL : ℕ → Prop := fun x => m - r ≤ x ∧ x < m with hpL
+  set pR : ℕ → Prop := fun x => m < x ∧ x ≤ m + r with hpR
+  set L := E.filter pL with hL
+  set R := E.filter pR with hR
+  set O := E.filter (fun x => ¬ pL x ∧ ¬ pR x) with hO
+  have hLRO : E = L ∪ (R ∪ O) := by
+    ext x; simp only [hL, hR, hO, mem_union, mem_filter]; tauto
+  have dRO : Disjoint R O := by
+    rw [hR, hO, disjoint_filter]; intro x _ h h'; exact h'.2 h
+  have dL : Disjoint L (R ∪ O) := by
+    rw [disjoint_union_right]; constructor
+    · rw [hL, hR, disjoint_filter]; intro x _ h h'
+      simp only [hpL, hpR] at h h'; omega
+    · rw [hL, hO, disjoint_filter]; intro x _ h h'; exact h'.1 h
+  have cL : L.card = r := by
+    have : L = Ico (m - r) m := by
+      ext x; simp only [hL, hE, hpL, mem_filter, mem_erase, mem_Icc, mem_Ico]; omega
+    rw [this, Nat.card_Ico]; omega
+  have cR : R.card = r := by
+    have : R = Ioc m (m + r) := by
+      ext x; simp only [hR, hE, hpR, mem_filter, mem_erase, mem_Icc, mem_Ioc]; omega
+    rw [this, Nat.card_Ioc]; omega
+  have cO : O.card = N - 1 - 2 * r := by
+    have hc : E.card = L.card + (R.card + O.card) := by
+      rw [hLRO, card_union_of_disjoint dL, card_union_of_disjoint dRO]
+    have : E.card = N - 1 := by rw [hE, card_erase_of_mem (by simp; omega), Nat.card_Icc]; omega
+    omega
+  rw [sum_filter, hLRO, sum_powerset_union dL]
+  -- rewrite the summand
+  have step1 : ∀ B ∈ L.powerset, ∑ A ∈ (R ∪ O).powerset,
+      (if BalancedBefore N m (B ∪ A) then (B ∪ A).card ! * (N - 1 - (B ∪ A).card)! else 0) =
+      ∑ C ∈ R.powerset, ∑ D ∈ O.powerset, wallisTerm N B.card C.card D.card := by
+    intro B hB
+    rw [sum_powerset_union dRO]
+    apply sum_congr rfl; intro C hC; apply sum_congr rfl; intro D hD
+    rw [mem_powerset] at hB hC hD
+    have fL : (B ∪ (C ∪ D)).filter pL = B := by
+      rw [filter_union, filter_union, filter_true_of_mem, filter_false_of_mem,
+        filter_false_of_mem, union_empty, union_empty]
+      · intro x hx; exact (mem_filter.1 (hD hx)).2.1
+      · intro x hx h; have := (mem_filter.1 (hC hx)).2; simp only [hpL, hpR] at h this; omega
+      · intro x hx; exact (mem_filter.1 (hB hx)).2
+    have fR : (B ∪ (C ∪ D)).filter pR = C := by
+      rw [filter_union, filter_union, filter_false_of_mem, filter_true_of_mem,
+        filter_false_of_mem, empty_union, union_empty]
+      · intro x hx; exact (mem_filter.1 (hD hx)).2.2
+      · intro x hx; exact (mem_filter.1 (hC hx)).2
+      · intro x hx h; have := (mem_filter.1 (hB hx)).2; simp only [hpL, hpR] at h this; omega
+    have cU : (B ∪ (C ∪ D)).card = B.card + C.card + D.card := by
+      rw [card_union_of_disjoint (disjoint_of_subset_left hB
+        (disjoint_of_subset_right (union_subset_union hC hD) dL)),
+        card_union_of_disjoint (disjoint_of_subset_left hC (disjoint_of_subset_right hD dRO))]
+      ring
+    have hbal : BalancedBefore N m (B ∪ (C ∪ D)) ↔ B.card = C.card := by
+      unfold BalancedBefore; rw [← hr]
+      change ((B ∪ (C ∪ D)).filter pL).card = ((B ∪ (C ∪ D)).filter pR).card ↔ _
+      rw [fL, fR]
+    unfold wallisTerm
+    rw [cU]
+    simp only [hbal]
+  rw [sum_congr rfl step1]
+  have step2 : ∀ B ∈ L.powerset, ∑ C ∈ R.powerset, ∑ D ∈ O.powerset,
+      wallisTerm N B.card C.card D.card =
+      ∑ k ∈ range (R.card + 1), R.card.choose k * ∑ i ∈ range (O.card + 1),
+        O.card.choose i * wallisTerm N B.card k i := by
+    intro B _
+    have h3 := sum_powerset_apply_card (fun k => ∑ i ∈ range (O.card + 1),
+        O.card.choose i * wallisTerm N B.card k i) (x := R)
+    simp only [nsmul_eq_mul, Nat.cast_id] at h3
+    rw [← h3]
+    apply sum_congr rfl; intro C _
+    have h4 := sum_powerset_apply_card (wallisTerm N B.card C.card) (x := O)
+    simp only [nsmul_eq_mul, Nat.cast_id] at h4
+    exact h4
+  rw [sum_congr rfl step2]
+  have h5 := sum_powerset_apply_card (fun j => ∑ k ∈ range (R.card + 1), R.card.choose k *
+    ∑ i ∈ range (O.card + 1), O.card.choose i * wallisTerm N j k i) (x := L)
+  simp only [nsmul_eq_mul, Nat.cast_id] at h5
+  rw [h5]
+  simp only [cL, cR, cO]
+  apply sum_congr rfl; intro j hj
+  congr 1
+  rw [sum_eq_single j]
+  · congr 1; apply sum_congr rfl; intro i _; simp [wallisTerm]
+  · intro k _ hk; simp [wallisTerm, Ne.symm hk]
+  · intro h; exact absurd hj h
+
+/-! ## The single-constraint (Wallis) count -/
+
+/-- Fold sequences of length `N` in which the step placing panel `m` is semi-symmetric. -/
+def wallisSeqs (N m : ℕ) : Finset (List ℕ) :=
+  (List.range' 1 N).permutations.toFinset.filter fun a => SemiStep N (a.take (a.idxOf m)) m
+
+theorem wallisSeqs_eq {N m : ℕ} :
+    wallisSeqs N m = (orderings (Icc 1 N)).filter fun l => BalancedBefore N m (before l m) := by
+  ext a
+  rw [wallisSeqs, mem_filter, mem_filter, List.mem_toFinset, List.mem_permutations, before]
+  have e : a.Perm (List.range' 1 N) ↔ a ∈ orderings (Icc 1 N) := by
+    rw [mem_orderings, ← isFoldSeq_iff]; rfl
+  rw [e]
+  constructor
+  · rintro ⟨h, hs⟩
+    exact ⟨h, (semiStep_iff_balanced (take_nodup (mem_orderings.1 h).1 _)).1 hs⟩
+  · rintro ⟨h, hs⟩
+    exact ⟨h, (semiStep_iff_balanced (take_nodup (mem_orderings.1 h).1 _)).2 hs⟩
+
+/-- **Single-constraint (Wallis) count.**  For a panel `1 ≤ m ≤ N` with `r = reach N m`, the
+number of fold sequences in which the step bisecting `m` is semi-symmetric is
+`N! · 4^r · (r!)² / (2r+1)!`, i.e. a fraction `∏_{i=1}^r 2i/(2i+1)` of all `N!` sequences. -/
+theorem card_wallisSeqs {N m : ℕ} (h1 : 1 ≤ m) (h2 : m ≤ N) :
+    (wallisSeqs N m).card * (2 * reach N m + 1)! = N ! * 4 ^ reach N m * (reach N m)! ^ 2 := by
+  have hm : m ∈ Icc 1 N := by simp; omega
+  have hr : 2 * reach N m ≤ N - 1 := by unfold reach; omega
+  rw [wallisSeqs_eq, card_filter_before hm, Nat.card_Icc, Nat.add_sub_cancel, sum_balanced h1 h2]
+  have e : ∀ j i, N - 1 - (j + j + i) = 2 * reach N m + (N - 1 - 2 * reach N m) - (j + j + i) := by
+    intro j i; congr 1; omega
+  simp only [e]
+  rw [wallis_arith, show 2 * reach N m + (N - 1 - 2 * reach N m) + 1 = N by omega]
+
 end Folds
