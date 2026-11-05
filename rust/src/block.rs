@@ -126,13 +126,7 @@ fn pull_needs(prev: &Shape, bl: &Block) -> Vec<usize> {
 /// peak (in words).  `out_mode`: 2 = output blocks stay resident after their step,
 /// 1 = only the current output block is resident, 0 = output is never stored.
 fn schedule(prev: &Shape, out: &Shape, needs: &[Vec<usize>], out_mode: u8) -> (Vec<usize>, Vec<usize>, usize) {
-    let mut best: Option<(Vec<usize>, Vec<usize>, usize)> = None;
-    for dec in [false, true] {
-        let mut order: Vec<usize> = (0..out.blocks.len()).collect();
-        order.sort_by_key(|&b| (out.blocks[b].i, out.blocks[b].c));
-        if dec {
-            order.reverse();
-        }
+    let eval = |order: &[usize]| -> (Vec<usize>, usize) {
         let mut last = vec![usize::MAX; prev.blocks.len()];
         for (t, &b) in order.iter().enumerate() {
             for &p in &needs[b] {
@@ -149,17 +143,58 @@ fn schedule(prev: &Shape, out: &Shape, needs: &[Vec<usize>], out_mode: u8) -> (V
             if out_mode == 2 {
                 outsum += cur;
             }
-            for p in 0..prev.blocks.len() {
+            for &p in &needs[b] {
                 if last[p] == t {
                     live -= prev.blocks[p].len;
+                    last[p] = usize::MAX - 1; // freed once
                 }
             }
         }
-        if best.as_ref().is_none_or(|x| peak < x.2) {
-            best = Some((order, last, peak));
+        (last, peak)
+    };
+    let mut best: Option<(Vec<usize>, usize)> = None;
+    for dec in [false, true] {
+        let mut order: Vec<usize> = (0..out.blocks.len()).collect();
+        order.sort_by_key(|&b| (out.blocks[b].i, out.blocks[b].c));
+        if dec {
+            order.reverse();
+        }
+        let (_, peak) = eval(&order);
+        if best.as_ref().is_none_or(|x| peak < x.1) {
+            best = Some((order, peak));
         }
     }
-    best.unwrap()
+    // Any order is correct (a prev block is freed after its last reader), so improve
+    // the peak by a deterministic local search over insertion moves.
+    let (mut order, mut peak) = best.unwrap();
+    let nb = order.len();
+    if nb > 2 && out_mode == 2 {
+        let mut x = 0x9E3779B97F4A7C15u64;
+        let mut rnd = |m: usize| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            (x % m as u64) as usize
+        };
+        for _ in 0..100_000 {
+            let (a, b) = (rnd(nb), rnd(nb));
+            let mut o = order.clone();
+            let v = o.remove(a);
+            o.insert(b, v);
+            let (_, p) = eval(&o);
+            if p <= peak {
+                order = o;
+                peak = p;
+            }
+        }
+    }
+    let mut last = vec![usize::MAX; prev.blocks.len()];
+    for (t, &b) in order.iter().enumerate() {
+        for &p in &needs[b] {
+            last[p] = t;
+        }
+    }
+    (order, last, peak)
 }
 
 /// Rows of block `bl`: `(row, start, len)`.
