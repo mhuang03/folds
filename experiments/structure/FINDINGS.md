@@ -93,3 +93,21 @@ None of these are in OEIS.
    P(C_m ∧ C_m′) are exactly computable. This could explain the e^{0.09N} drift and
    settle the true asymptotics.
 2. **Confirm the mod-3 effect** with a(28..33) from the Rust counter.
+
+## Update: mod-3 effect confirmed with a(28..33) (Rust counter)
+Let y(N) = log(a(N)/a_W(N)). Compare each N with its same-parity neighbours using the
+local bump b(N) = y(N) − (y(N−2)+y(N+2))/2. No trend fit is needed.
+
+| N | 6* | 7 | 8 | 9* | 10 | 11 | 12* | 13 | 14 | 15* | 16 | 17 | 18* | 19 | 20 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| b | +.060 | −.165 | −.037 | +.104 | −.052 | −.070 | +.026 | −.054 | −.046 | +.040 | −.035 | −.034 | +.014 | −.050 | −.022 |
+
+| N | 21* | 22 | 23 | 24* | 25 | 26 | 27* | 28 | 29 | 30* | 31 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| b | +.025 | −.040 | −.032 | +.016 | −.027 | −.029 | +.007 | −.024 | −.018 | +.006 | −.033 |
+
+- b(N) > 0 for **every** N ≡ 0 (mod 3) in 6..30.
+- b(N) < 0 for **every** other N in 7..31.
+- The bump decays roughly like 1/N.
+- Extrapolating a quadratic trend fitted on N ≤ 27 is unreliable (the trend bends),
+  hence this local test.
