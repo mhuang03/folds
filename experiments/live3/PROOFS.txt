@@ -34,7 +34,7 @@ Programs (this directory; C programs compile with gcc -O2, all 1 core, < 100 MB)
   half.py        the HALF problem (1.3), all solutions' sets, copy test.
   halfcheck.py   checks Theorem H + Lemma W against ChainOK (q <= 41, section 1.4).
   gp.py, gpshape.py, gpblocks.py, ev.py    the constrained strip problems of 1.5
-                 (gpblocks.py: GP(n, B) with odd start is never a block chain mod j < n - 2).
+                 (gpblocks.py: GP(n, B) with odd start is a block chain mod j only for j >= n - 3, n <= 13).
   nearord.py, excreach.py     orderings of complements of near / exceptional classes (3).
   multchain.c    residue chains mod Q = Mq with C_1 (mod q) last (3.3).
   dc.c           parity + class chains with a ghost class (3.4).
