@@ -4,6 +4,26 @@ import Mathlib.Data.Nat.Choose.Central
 import Mathlib.Data.Nat.Choose.Sum
 import Mathlib.Algebra.BigOperators.NatAntidiagonal
 
+/-!
+# The single-constraint (Wallis) count
+
+Fix a panel `1 ≤ m ≤ N` with `r = reach N m`.  `card_wallisSeqs`: the number of fold
+sequences in which the step bisecting `m` is semi-symmetric satisfies
+`card · (2r+1)! = N! · 4^r · (r!)²`.
+
+Proof outline.
+* `card_filter_before`: split an ordering `l = u ++ m :: v` at `m`; the orderings whose
+  set of panels before `m` is `A` number `|A|! · (N - 1 - |A|)!`.
+* `semiStep_iff_balanced`: the step is valid iff the set `A` has equally many elements in
+  the left part `[m-r, m)` and the right part `(m, m+r]` of the window.
+* `sum_balanced`: splitting `A` into its left, right and outside parts,
+  the count is `∑_j C(r,j)² ∑_i C(M,i) (2j+i)! (N-1-2j-i)!` with `M = N - 1 - 2r`.
+* `sum_choose_factorial` (Beta integral):
+  `∑_{i+k=M} C(M,i) (a+i)! (b+k)! · (a+b+1)! = a! b! (a+b+M+1)!`.
+* `sum_centralBinom_antidiagonal`: `∑_{i+k=n} C(2i,i) C(2k,k) = 4^n`, hence
+  `sum_choose_sq_factorial`: `∑_{j+k=r} C(r,j)² (2j)! (2k)! = 4^r (r!)²`.
+-/
+
 namespace Folds
 
 open Finset Nat
