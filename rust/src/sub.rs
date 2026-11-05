@@ -785,7 +785,7 @@ impl<W: Word> Kern<'_, W> {
 }
 
 /// Rows per tile.
-const TILE: usize = 16;
+const TILE: usize = 32;
 
 /// Panels of an `R`-side mask (bit `q` = panel `N-1-q`).
 #[inline]

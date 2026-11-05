@@ -1,0 +1,107 @@
+# start idx 2 2026-11-05T15:57:41Z
+  sub-blocks t=4 a=14: 32452 jobs, sim.peak 9.77 GB (anon 5.00 GB, file 4.78 GB) plan 0.5s
+  job      0/32452: Store { k: 1, ix: 1 } sim.live 0.00 GB rss 0.02 GB (anon 0.01, file 0.00) rss.peak 0.02 GB t=0.5s
+  job    812/32452: Store { k: 6, ix: 75 } sim.live 0.00 GB rss 0.02 GB (anon 0.02, file 0.00) rss.peak 0.02 GB t=0.5s
+  job   1624/32452: Store { k: 7, ix: 159 } sim.live 0.00 GB rss 0.02 GB (anon 0.02, file 0.00) rss.peak 0.02 GB t=0.5s
+  job   2436/32452: Store { k: 9, ix: 1080 } sim.live 0.00 GB rss 0.03 GB (anon 0.02, file 0.00) rss.peak 0.03 GB t=0.6s
+  job   3248/32452: Store { k: 8, ix: 423 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.03 GB t=0.6s
+  job   4060/32452: Store { k: 13, ix: 2183 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.03 GB t=0.8s
+  job   4872/32452: Store { k: 16, ix: 661 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.04 GB t=0.9s
+  job   5684/32452: Store { k: 16, ix: 1309 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.04 GB t=1.0s
+  job   6496/32452: Store { k: 17, ix: 2134 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.04 GB t=1.1s
+  job   7308/32452: Final { ix: 1236 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.05 GB t=1.3s
+  job   8120/32452: Store { k: 8, ix: 872 } sim.live 0.01 GB rss 0.05 GB (anon 0.04, file 0.00) rss.peak 0.05 GB t=1.4s
+  job   8932/32452: Store { k: 10, ix: 874 } sim.live 0.02 GB rss 0.06 GB (anon 0.05, file 0.00) rss.peak 0.06 GB t=2.0s
+  job   9744/32452: Store { k: 9, ix: 939 } sim.live 0.03 GB rss 0.08 GB (anon 0.07, file 0.00) rss.peak 0.08 GB t=3.6s
+  job  10556/32452: Store { k: 11, ix: 1338 } sim.live 0.06 GB rss 0.10 GB (anon 0.10, file 0.00) rss.peak 0.11 GB t=5.4s
+  job  11368/32452: Store { k: 17, ix: 505 } sim.live 0.08 GB rss 0.13 GB (anon 0.12, file 0.00) rss.peak 0.13 GB t=6.8s
+  job  12180/32452: Store { k: 15, ix: 1105 } sim.live 0.09 GB rss 0.14 GB (anon 0.14, file 0.00) rss.peak 0.15 GB t=8.2s
+  job  12992/32452: Store { k: 17, ix: 1863 } sim.live 0.11 GB rss 0.16 GB (anon 0.16, file 0.00) rss.peak 0.17 GB t=10.1s
+  job  13804/32452: Store { k: 15, ix: 2388 } sim.live 0.12 GB rss 0.18 GB (anon 0.17, file 0.00) rss.peak 0.18 GB t=11.0s
+  job  14616/32452: Store { k: 11, ix: 1385 } sim.live 0.15 GB rss 0.21 GB (anon 0.20, file 0.00) rss.peak 0.21 GB t=14.1s
+  job  15428/32452: Store { k: 12, ix: 1375 } sim.live 0.23 GB rss 0.29 GB (anon 0.29, file 0.00) rss.peak 0.30 GB t=22.1s
+  job  16240/32452: Store { k: 11, ix: 1063 } sim.live 0.40 GB rss 0.46 GB (anon 0.45, file 0.00) rss.peak 0.47 GB t=43.4s
+  job  17052/32452: Store { k: 13, ix: 1926 } sim.live 0.59 GB rss 0.65 GB (anon 0.64, file 0.00) rss.peak 0.66 GB t=68.4s
+  job  17864/32452: Store { k: 14, ix: 611 } sim.live 0.68 GB rss 0.73 GB (anon 0.73, file 0.00) rss.peak 0.75 GB t=76.0s
+  job  18676/32452: Store { k: 16, ix: 1679 } sim.live 0.75 GB rss 0.81 GB (anon 0.80, file 0.01) rss.peak 0.83 GB t=82.2s
+  job  19488/32452: Store { k: 16, ix: 2577 } sim.live 0.82 GB rss 0.88 GB (anon 0.87, file 0.01) rss.peak 0.90 GB t=88.0s
+  job  20300/32452: Store { k: 13, ix: 834 } sim.live 1.05 GB rss 1.10 GB (anon 1.09, file 0.01) rss.peak 1.12 GB t=115.0s
+  job  21112/32452: Store { k: 13, ix: 2001 } sim.live 1.55 GB rss 1.59 GB (anon 1.58, file 0.01) rss.peak 1.63 GB t=192.7s
+  job  21924/32452: Store { k: 17, ix: 183 } sim.live 2.17 GB rss 2.18 GB (anon 2.17, file 0.01) rss.peak 2.23 GB t=282.1s
+  job  22736/32452: Store { k: 15, ix: 1118 } sim.live 2.42 GB rss 2.42 GB (anon 2.41, file 0.01) rss.peak 2.48 GB t=315.2s
+  job  23548/32452: Store { k: 18, ix: 2523 } sim.live 2.71 GB rss 2.70 GB (anon 2.66, file 0.04) rss.peak 2.77 GB t=342.0s
+  job  24360/32452: Store { k: 13, ix: 2330 } sim.live 3.17 GB rss 3.16 GB (anon 3.06, file 0.10) rss.peak 3.24 GB t=431.8s
+# start idx 2 2026-11-05T16:18:14Z
+  sub-blocks t=4 a=14: 32452 jobs, sim.peak 9.77 GB (anon 2.00 GB, file 7.77 GB, 19.7 GB written to file) plan 1.9s
+  job      0/32452: Store { k: 1, ix: 1 } sim.live 0.00 GB rss 0.02 GB (anon 0.01, file 0.00) rss.peak 0.02 GB t=1.9s
+  job    812/32452: Store { k: 6, ix: 75 } sim.live 0.00 GB rss 0.02 GB (anon 0.02, file 0.00) rss.peak 0.02 GB t=1.9s
+  job   1624/32452: Store { k: 7, ix: 159 } sim.live 0.00 GB rss 0.02 GB (anon 0.02, file 0.00) rss.peak 0.02 GB t=2.0s
+  job   2436/32452: Store { k: 9, ix: 1080 } sim.live 0.00 GB rss 0.03 GB (anon 0.02, file 0.00) rss.peak 0.03 GB t=2.0s
+  job   3248/32452: Store { k: 8, ix: 423 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.03 GB t=2.1s
+  job   4060/32452: Store { k: 13, ix: 2183 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.03 GB t=2.3s
+  job   4872/32452: Store { k: 16, ix: 661 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.04 GB t=2.4s
+  job   5684/32452: Store { k: 16, ix: 1309 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.04 GB t=2.5s
+  job   6496/32452: Store { k: 17, ix: 2134 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.04 GB t=2.6s
+  job   7308/32452: Final { ix: 1236 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.05 GB t=2.8s
+  job   8120/32452: Store { k: 8, ix: 872 } sim.live 0.01 GB rss 0.05 GB (anon 0.04, file 0.00) rss.peak 0.05 GB t=2.9s
+  job   8932/32452: Store { k: 10, ix: 874 } sim.live 0.02 GB rss 0.06 GB (anon 0.05, file 0.00) rss.peak 0.06 GB t=3.2s
+  job   9744/32452: Store { k: 9, ix: 939 } sim.live 0.03 GB rss 0.08 GB (anon 0.07, file 0.00) rss.peak 0.08 GB t=4.0s
+  job  10556/32452: Store { k: 11, ix: 1338 } sim.live 0.06 GB rss 0.10 GB (anon 0.10, file 0.00) rss.peak 0.11 GB t=5.1s
+  job  11368/32452: Store { k: 17, ix: 505 } sim.live 0.08 GB rss 0.13 GB (anon 0.12, file 0.00) rss.peak 0.13 GB t=6.0s
+  job  12180/32452: Store { k: 15, ix: 1105 } sim.live 0.09 GB rss 0.14 GB (anon 0.14, file 0.00) rss.peak 0.15 GB t=6.6s
+  job  12992/32452: Store { k: 17, ix: 1863 } sim.live 0.11 GB rss 0.16 GB (anon 0.16, file 0.00) rss.peak 0.17 GB t=7.6s
+  job  13804/32452: Store { k: 15, ix: 2388 } sim.live 0.12 GB rss 0.18 GB (anon 0.17, file 0.00) rss.peak 0.18 GB t=8.1s
+  job  14616/32452: Store { k: 11, ix: 1385 } sim.live 0.15 GB rss 0.21 GB (anon 0.20, file 0.00) rss.peak 0.21 GB t=9.9s
+  job  15428/32452: Store { k: 12, ix: 1375 } sim.live 0.23 GB rss 0.29 GB (anon 0.29, file 0.00) rss.peak 0.30 GB t=16.4s
+  job  16240/32452: Store { k: 11, ix: 1063 } sim.live 0.40 GB rss 0.46 GB (anon 0.45, file 0.00) rss.peak 0.47 GB t=23.9s
+  job  17052/32452: Store { k: 13, ix: 1926 } sim.live 0.59 GB rss 0.65 GB (anon 0.64, file 0.00) rss.peak 0.66 GB t=31.0s
+  job  17864/32452: Store { k: 14, ix: 611 } sim.live 0.68 GB rss 0.73 GB (anon 0.73, file 0.00) rss.peak 0.75 GB t=34.9s
+  job  18676/32452: Store { k: 16, ix: 1679 } sim.live 0.75 GB rss 0.80 GB (anon 0.80, file 0.00) rss.peak 0.82 GB t=38.5s
+  job  19488/32452: Store { k: 16, ix: 2577 } sim.live 0.82 GB rss 0.87 GB (anon 0.87, file 0.00) rss.peak 0.89 GB t=42.2s
+  job  20300/32452: Store { k: 13, ix: 834 } sim.live 1.05 GB rss 1.08 GB (anon 1.08, file 0.01) rss.peak 1.11 GB t=49.3s
+  guard: cgroup anonymous 12.77 GB + 0.07 GB + headroom 1.50 GB > limit 14.34 GB, waiting
+  guard: resumed after 70s
+  job  21112/32452: Store { k: 13, ix: 2001 } sim.live 1.55 GB rss 1.57 GB (anon 1.56, file 0.00) rss.peak 1.61 GB t=138.1s
+  job  21924/32452: Store { k: 17, ix: 183 } sim.live 2.17 GB rss 1.91 GB (anon 1.89, file 0.02) rss.peak 1.97 GB t=165.9s
+  job  22736/32452: Store { k: 15, ix: 1118 } sim.live 2.42 GB rss 1.87 GB (anon 1.80, file 0.06) rss.peak 1.97 GB t=185.5s
+  job  23548/32452: Store { k: 18, ix: 2523 } sim.live 2.71 GB rss 1.81 GB (anon 1.71, file 0.10) rss.peak 1.97 GB t=212.5s
+  job  24360/32452: Store { k: 13, ix: 2330 } sim.live 3.17 GB rss 2.02 GB (anon 1.89, file 0.12) rss.peak 2.07 GB t=268.7s
+  job  25172/32452: Store { k: 16, ix: 2268 } sim.live 4.12 GB rss 2.02 GB (anon 1.88, file 0.13) rss.peak 2.21 GB t=426.3s
+  guard: cgroup anonymous 12.80 GB + 0.07 GB + headroom 1.50 GB > limit 14.34 GB, waiting
+  guard: resumed after 15s
+  job  25984/32452: Final { ix: 147 } sim.live 5.48 GB rss 2.04 GB (anon 2.02, file 0.01) rss.peak 2.21 GB t=592.5s
+  job  26796/32452: Store { k: 16, ix: 1513 } sim.live 6.18 GB rss 2.07 GB (anon 2.02, file 0.04) rss.peak 2.21 GB t=650.6s
+  job  27608/32452: Final { ix: 3233 } sim.live 6.89 GB rss 2.09 GB (anon 2.02, file 0.06) rss.peak 2.21 GB t=720.8s
+  job  28420/32452: Store { k: 16, ix: 1050 } sim.live 7.76 GB rss 2.05 GB (anon 2.02, file 0.03) rss.peak 2.21 GB t=1034.9s
+  job  29232/32452: Store { k: 18, ix: 592 } sim.live 8.73 GB rss 2.05 GB (anon 2.01, file 0.04) rss.peak 2.21 GB t=1255.8s
+  job  30044/32452: Final { ix: 2547 } sim.live 9.69 GB rss 2.04 GB (anon 2.01, file 0.03) rss.peak 2.21 GB t=1453.2s
+# start idx 2 2026-11-05T16:49:26Z
+  sub-blocks t=4 a=14: 32452 jobs, sim.peak 9.77 GB (anon 2.00 GB, file 7.77 GB, 19.7 GB written to file) plan 1.8s
+  job      0/32452: Store { k: 1, ix: 1 } sim.live 0.00 GB rss 0.02 GB (anon 0.01, file 0.00) rss.peak 0.02 GB t=1.8s
+  job    812/32452: Store { k: 6, ix: 75 } sim.live 0.00 GB rss 0.02 GB (anon 0.02, file 0.00) rss.peak 0.02 GB t=1.8s
+  job   1624/32452: Store { k: 7, ix: 159 } sim.live 0.00 GB rss 0.02 GB (anon 0.02, file 0.00) rss.peak 0.02 GB t=1.8s
+  job   2436/32452: Store { k: 9, ix: 1080 } sim.live 0.00 GB rss 0.02 GB (anon 0.02, file 0.00) rss.peak 0.03 GB t=1.9s
+  job   3248/32452: Store { k: 8, ix: 423 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.03 GB t=1.9s
+  job   4060/32452: Store { k: 13, ix: 2183 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.03 GB t=2.1s
+  job   4872/32452: Store { k: 16, ix: 661 } sim.live 0.00 GB rss 0.03 GB (anon 0.03, file 0.00) rss.peak 0.04 GB t=2.3s
+  job   5684/32452: Store { k: 16, ix: 1309 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.04 GB t=2.4s
+  job   6496/32452: Store { k: 17, ix: 2134 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.04 GB t=2.5s
+  job   7308/32452: Final { ix: 1236 } sim.live 0.01 GB rss 0.04 GB (anon 0.04, file 0.00) rss.peak 0.05 GB t=2.7s
+  job   8120/32452: Store { k: 8, ix: 872 } sim.live 0.01 GB rss 0.05 GB (anon 0.04, file 0.00) rss.peak 0.05 GB t=2.9s
+  job   8932/32452: Store { k: 10, ix: 874 } sim.live 0.02 GB rss 0.06 GB (anon 0.05, file 0.00) rss.peak 0.06 GB t=3.3s
+  job   9744/32452: Store { k: 9, ix: 939 } sim.live 0.03 GB rss 0.08 GB (anon 0.07, file 0.00) rss.peak 0.08 GB t=4.0s
+  job  10556/32452: Store { k: 11, ix: 1338 } sim.live 0.06 GB rss 0.10 GB (anon 0.10, file 0.00) rss.peak 0.11 GB t=5.2s
+  job  11368/32452: Store { k: 17, ix: 505 } sim.live 0.08 GB rss 0.13 GB (anon 0.12, file 0.00) rss.peak 0.13 GB t=6.2s
+  job  12180/32452: Store { k: 15, ix: 1105 } sim.live 0.09 GB rss 0.14 GB (anon 0.14, file 0.00) rss.peak 0.15 GB t=6.9s
+  job  12992/32452: Store { k: 17, ix: 1863 } sim.live 0.11 GB rss 0.16 GB (anon 0.16, file 0.00) rss.peak 0.17 GB t=7.9s
+  job  13804/32452: Store { k: 15, ix: 2388 } sim.live 0.12 GB rss 0.18 GB (anon 0.17, file 0.00) rss.peak 0.18 GB t=8.5s
+  job  14616/32452: Store { k: 11, ix: 1385 } sim.live 0.15 GB rss 0.21 GB (anon 0.20, file 0.00) rss.peak 0.21 GB t=10.0s
+  job  15428/32452: Store { k: 12, ix: 1375 } sim.live 0.23 GB rss 0.29 GB (anon 0.29, file 0.00) rss.peak 0.30 GB t=14.5s
+  job  16240/32452: Store { k: 11, ix: 1063 } sim.live 0.40 GB rss 0.46 GB (anon 0.45, file 0.00) rss.peak 0.47 GB t=28.2s
+  job  17052/32452: Store { k: 13, ix: 1926 } sim.live 0.59 GB rss 0.65 GB (anon 0.64, file 0.00) rss.peak 0.66 GB t=45.1s
+  job  17864/32452: Store { k: 14, ix: 611 } sim.live 0.68 GB rss 0.73 GB (anon 0.73, file 0.00) rss.peak 0.75 GB t=51.2s
+  job  18676/32452: Store { k: 16, ix: 1679 } sim.live 0.75 GB rss 0.80 GB (anon 0.80, file 0.00) rss.peak 0.82 GB t=56.3s
+  job  19488/32452: Store { k: 16, ix: 2577 } sim.live 0.82 GB rss 0.87 GB (anon 0.87, file 0.00) rss.peak 0.89 GB t=61.4s
+  job  20300/32452: Store { k: 13, ix: 834 } sim.live 1.05 GB rss 1.08 GB (anon 1.08, file 0.00) rss.peak 1.11 GB t=81.3s
+  job  21112/32452: Store { k: 13, ix: 2001 } sim.live 1.55 GB rss 1.57 GB (anon 1.56, file 0.00) rss.peak 1.61 GB t=124.5s
+  job  21924/32452: Store { k: 17, ix: 183 } sim.live 2.17 GB rss 1.91 GB (anon 1.89, file 0.02) rss.peak 1.97 GB t=181.0s
