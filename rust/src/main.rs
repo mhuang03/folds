@@ -42,7 +42,7 @@ fn moduli(w: usize) -> &'static [u64] {
 
 /// One residue (or the exact value for `w = 64`) with the chosen code path.
 fn one(n: usize, chk: &Checker, w: usize, m: u64, blocks: bool, verbose: bool) -> u128 {
-    let ring = dp::Ring { modulus: m };
+    let ring = dp::Ring::new(m);
     match (w, blocks) {
         (64, false) => dp::count::<u64>(n, chk, ring, verbose),
         (64, true) => block::count::<u64>(n, chk, ring, verbose),
@@ -274,11 +274,11 @@ fn check() {
                 let g = brute::subset_dp(&chk);
                 vals.push(("subset", g[(1usize << n) - 1]));
             }
-            vals.push(("mitm64", dp::count::<u64>(n, &chk, dp::Ring { modulus: 0 }, false)));
+            vals.push(("mitm64", dp::count::<u64>(n, &chk, dp::Ring::EXACT, false)));
             if n % 2 == 1 {
-                vals.push(("direct", dp::count_direct::<u64>(n, &chk, dp::Ring { modulus: 0 })));
+                vals.push(("direct", dp::count_direct::<u64>(n, &chk, dp::Ring::EXACT)));
             }
-            vals.push(("blocks64", block::count::<u64>(n, &chk, dp::Ring { modulus: 0 }, false)));
+            vals.push(("blocks64", block::count::<u64>(n, &chk, dp::Ring::EXACT, false)));
             if n <= 18 {
                 vals.push(("crt32", count(n, rule, Mode::M32(3), false, false).0));
                 vals.push(("crt16", count(n, rule, Mode::M16(6), false, false).0));

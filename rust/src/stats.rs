@@ -31,7 +31,7 @@ pub struct Stats {
 pub fn compute(n: usize, rule: Rule) -> Stats {
     let lay = Layout::new(n);
     let chk = Checker::new(n, rule);
-    let ring = Ring { modulus: 0 };
+    let ring = Ring::EXACT;
     let full = lay.full();
     let mut st = Stats {
         n,

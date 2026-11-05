@@ -27,7 +27,7 @@
 //! "live blocks of layer `k-1`" + "blocks of layer `k` written so far", instead of
 //! two full layers.
 
-use crate::dp::{generic_row, offdiag_row, weight, Ring, Word};
+use crate::dp::{weight, Ring, Word};
 use crate::layout::{entry, Block, Layout, Shape};
 use rayon::prelude::*;
 use std::time::Instant;
@@ -174,32 +174,228 @@ fn block_rows(lay: &Layout, bl: &Block) -> Vec<(usize, usize, usize)> {
     }
 }
 
-/// Compute block `bl` of the layer `out_shape` into `out` from the layer `ps`/`pd`.
-fn compute_block<W: Word>(lay: &Layout, chk: &crate::rule::Checker, ring: Ring, ps: &Shape, pd: &[W], bl: &Block, out: &Region<W>) {
-    let rows = block_rows(lay, bl);
-    rows.into_par_iter().with_min_len(4).for_each(|(row, start, len)| {
-        let o = unsafe { out.part(start, len) };
-        if bl.i < bl.j {
-            offdiag_row(lay, chk, ring, ps, pd, bl, row, o);
-        } else {
-            generic_row(lay, chk, ring, ps, pd, bl, row, o);
+/// Rows per tile of the diagonal kernel.
+const DT: usize = 64;
+
+/// Tile `[r0, r1)` of rows of a diagonal block `(i, i, c)` (row `ρ` = rank R, column
+/// = rank L `≤ ρ`), written to `out` = the contiguous triangle rows `r0..r1`.
+///
+/// The row-by-row kernel (`generic_row`) reads `g(L\x, R)` at row `rank(L\x)`,
+/// column `ρ` of block `(i-1, i, c)`: one cache miss per read.  Walking the tile
+/// column by column instead, those reads for the `DT` rows of the tile are `DT`
+/// consecutive words, while the reads `g(L, R\y)` (row `rank(R\y)`, column
+/// `rank L`) and the middle-panel reads stay sequential per row.
+#[allow(clippy::too_many_arguments)]
+#[inline(never)]
+fn diag_tile<W: Word>(lay: &Layout, chk: &crate::rule::Checker, ring: Ring, ps: &Shape, pd: &[W], bl: &Block, r0: usize, r1: usize, out: &mut [W]) {
+    let (i, c, h) = (bl.i, bl.c, lay.h);
+    debug_assert_eq!(bl.i, bl.j);
+    let base = r0 * (r0 + 1) / 2;
+    let un = &lay.un[i];
+    // block (i-1, i, c): both L- and R-removals land there
+    let a = if i > 0 { Some(ps.slot[2 * (i - 1) + c]) } else { None };
+    let (aoff, alen) = a.map(|s| (s.off, s.rowlen)).unwrap_or((0, 0));
+    let moff = if c == 1 { ps.slot[2 * i].off } else { 0 };
+    let rshift = lay.n - 1;
+    // per row of the tile: (panel, prev row start) for each y in R
+    let mut ry: Vec<[(u32, usize); 32]> = Vec::with_capacity(r1 - r0);
+    for rho in r0..r1 {
+        let r = un[rho];
+        let mut v = [(0u32, 0usize); 32];
+        let mut bits = r;
+        let mut q = 0;
+        while bits != 0 {
+            let y = bits.trailing_zeros();
+            bits &= bits - 1;
+            v[q] = ((rshift - y as usize) as u32, aoff + lay.rank[(r ^ (1 << y)) as usize] as usize * alen);
+            q += 1;
         }
-    });
+        ry.push(v);
+    }
+    let mut lx = [(0u32, 0usize); 32];
+    for col in 0..r1 {
+        let l = un[col];
+        let mut nl = 0;
+        let mut bits = l;
+        while bits != 0 {
+            let x = bits.trailing_zeros();
+            bits &= bits - 1;
+            lx[nl] = (x, aoff + lay.rank[(l ^ (1 << x)) as usize] as usize * alen);
+            nl += 1;
+        }
+        for rho in r0.max(col)..r1 {
+            let t = lay.compose_col(l, c, i, rho);
+            let mut acc = 0u64;
+            for &(x, b) in &lx[..nl] {
+                let v = unsafe { pd.get_unchecked(b + rho).get64() };
+                acc += v & mask(chk.valid(t ^ (1u64 << x), x));
+            }
+            for &(p, b) in &ry[rho - r0][..i] {
+                let v = unsafe { pd.get_unchecked(b + col).get64() };
+                acc += v & mask(chk.valid(t ^ (1u64 << p), p));
+            }
+            if c == 1 {
+                let v = unsafe { pd.get_unchecked(moff + rho * (rho + 1) / 2 + col).get64() };
+                acc += v & mask(chk.valid(t ^ (1u64 << h), h as u32));
+            }
+            unsafe { *out.get_unchecked_mut(rho * (rho + 1) / 2 + col - base) = W::put(ring.red(acc as u128)) };
+        }
+    }
 }
 
 #[inline(always)]
-fn md(x: u128, m: u128) -> u128 {
-    if m != 0 { x % m } else { x }
+fn mask(b: bool) -> u64 {
+    (b as u64).wrapping_neg()
+}
+
+/// Rows per tile of the off-diagonal tile kernel.
+const OT: usize = 16;
+
+/// Rows `[r0, r1)` of an off-diagonal block `(i, j, c)`, `i < j`, into `out`
+/// (`(r1-r0) × C(h,j)`, row-major).  Same sums as `offdiag_row`, walked column by
+/// column over the tile.  This matters for `j = i+1`: removing a right panel then
+/// lands in the *diagonal* block `(i, i, c)`, where `g(L, R\y)` with
+/// `rank(R\y) > rank L` sits at row `rank(R\y)`, column `rank L` of the triangle;
+/// the row kernel takes one cache miss per such read, the tile reads `OT`
+/// consecutive words.
+#[allow(clippy::too_many_arguments)]
+#[inline(never)]
+fn offdiag_tile<W: Word>(lay: &Layout, chk: &crate::rule::Checker, ring: Ring, ps: &Shape, pd: &[W], bl: &Block, r0: usize, r1: usize, out: &mut [W]) {
+    let (i, j, c, h) = (bl.i, bl.j, bl.c, lay.h);
+    debug_assert!(i < j);
+    let nr = r1 - r0;
+    let cj = lay.binom[h][j] as usize;
+    let un_i = &lay.un[i];
+    let un_j = &lay.un[j];
+    let rrem = &lay.rrem[j];
+    let rshift = lay.n - 1;
+    // per tile row: L, its left-removal streams, its middle stream, its R-row base
+    let mut ls = [0u32; OT];
+    let mut lx = [[(0u32, 0usize); 32]; OT];
+    let mut mid = [0usize; OT];
+    let mut rb = [0usize; OT];
+    let diag_r = i == j - 1;
+    let rsl = ps.slot[2 * i + c]; // block (i, j-1, c) (a triangle when j-1 = i)
+    for q in 0..nr {
+        let row = r0 + q;
+        let l = un_i[row];
+        ls[q] = l;
+        if i > 0 {
+            let sl = ps.slot[2 * (i - 1) + c];
+            let mut bits = l;
+            let mut t = 0;
+            while bits != 0 {
+                let x = bits.trailing_zeros();
+                bits &= bits - 1;
+                lx[q][t] = (x, sl.off + lay.rank[(l ^ (1 << x)) as usize] as usize * sl.rowlen);
+                t += 1;
+            }
+        }
+        if c == 1 {
+            let sl = ps.slot[2 * i];
+            mid[q] = sl.off + row * sl.rowlen;
+        }
+        rb[q] = if diag_r { 0 } else { rsl.off + row * rsl.rowlen };
+    }
+    let mut ry = [(0u32, 0usize); 32];
+    for col in 0..cj {
+        let r = un_j[col];
+        let mut bits = r;
+        let mut t = 0;
+        while bits != 0 {
+            let y = bits.trailing_zeros();
+            bits &= bits - 1;
+            ry[t] = ((rshift - y as usize) as u32, unsafe { *rrem.get_unchecked(col * j + t) } as usize);
+            t += 1;
+        }
+        let rv = (unsafe { *lay.revc[j].get_unchecked(col) } as u64) << (lay.n - h);
+        for q in 0..nr {
+            let t = ls[q] as u64 | (c as u64) << h | rv;
+            // branch-free: the validity bits are unpredictable, the loads are cheap
+            let mut acc = 0u64;
+            for &(x, b) in &lx[q][..i] {
+                let v = unsafe { pd.get_unchecked(b + col).get64() };
+                acc += v & mask(chk.valid(t ^ (1u64 << x), x));
+            }
+            if c == 1 {
+                let v = unsafe { pd.get_unchecked(mid[q] + col).get64() };
+                acc += v & mask(chk.valid(t ^ (1u64 << h), h as u32));
+            }
+            let row = r0 + q;
+            for &(p, rr) in &ry[..j] {
+                let ix = if !diag_r {
+                    rb[q] + rr
+                } else if rr <= row {
+                    rsl.off + row * (row + 1) / 2 + rr
+                } else {
+                    rsl.off + rr * (rr + 1) / 2 + row
+                };
+                let v = unsafe { pd.get_unchecked(ix).get64() };
+                acc += v & mask(chk.valid(t ^ (1u64 << p), p));
+            }
+            unsafe { *out.get_unchecked_mut(q * cj + col) = W::put(ring.red(acc as u128)) };
+        }
+    }
+}
+
+/// Compute block `bl` of the layer `out_shape` into `out` from the layer `ps`/`pd`.
+fn compute_block<W: Word>(lay: &Layout, chk: &crate::rule::Checker, ring: Ring, ps: &Shape, pd: &[W], bl: &Block, out: &Region<W>) {
+    if bl.i == bl.j {
+        let ci = lay.binom[lay.h][bl.i] as usize;
+        let tiles: Vec<usize> = (0..ci).step_by(DT).collect();
+        tiles.into_par_iter().for_each(|r0| {
+            let r1 = (r0 + DT).min(ci);
+            let o = unsafe { out.part(bl.off + r0 * (r0 + 1) / 2, r1 * (r1 + 1) / 2 - r0 * (r0 + 1) / 2) };
+            diag_tile(lay, chk, ring, ps, pd, bl, r0, r1, o);
+        });
+        return;
+    }
+    let ci = lay.binom[lay.h][bl.i] as usize;
+    let cj = lay.binom[lay.h][bl.j] as usize;
+    let tr = tile_rows(bl);
+    let tiles: Vec<usize> = (0..ci).step_by(tr).collect();
+    tiles.into_par_iter().for_each(|r0| {
+        let r1 = (r0 + tr).min(ci);
+        let o = unsafe { out.part(bl.off + r0 * cj, (r1 - r0) * cj) };
+        offdiag_tile(lay, chk, ring, ps, pd, bl, r0, r1, o);
+    });
+}
+
+/// Tile height for an off-diagonal block: `OT` when right removals hit the diagonal
+/// block (see `offdiag_tile`), else a few rows (the tile keeps one row of block
+/// `(i, j-1, c)` per tile row in cache).
+fn tile_rows(bl: &Block) -> usize {
+    if bl.j == bl.i + 1 { OT } else { 4 }
+}
+
+#[inline(always)]
+fn md(x: u128, ring: Ring) -> u128 {
+    ring.red_any(x)
+}
+
+/// Even `N`, middle layer: position of the orbit of `S^c` for entry `(row, col)` of
+/// block `bl` (same block; complementing reverses colex order, `C = C(h,i) = C(h,j)`).
+#[inline(always)]
+fn even_comp(bl: &Block, cc: usize, row: usize, col: usize) -> usize {
+    if bl.i < bl.j {
+        // (rank L, rank R) -> (rank ~R, rank ~L)
+        bl.off + (cc - 1 - col) * cc + (cc - 1 - row)
+    } else {
+        // triangle (row = rank R >= col = rank L) -> max = C-1-col, min = C-1-row
+        let m = cc - 1 - col;
+        bl.off + m * (m + 1) / 2 + (cc - 1 - row)
+    }
 }
 
 /// Even `N`: `Σ_{S in block} w(S) g(S) g(S^c)` where `S^c` lies in the same block.
 fn even_block_sum<W: Word>(lay: &Layout, ring: Ring, sh: &Shape, d: &[W], bl: &Block) -> u128 {
     let full = lay.full();
-    let m = ring.modulus as u128;
     let rows = block_rows(lay, bl);
     const B: usize = 32;
     let bands: Vec<usize> = (0..rows.len()).step_by(B).collect();
     let maxlen = rows.iter().map(|r| r.2).max().unwrap_or(0);
+    let cc = lay.binom[lay.h][bl.i] as usize;
+    debug_assert_eq!(cc, lay.binom[lay.h][bl.j] as usize);
     bands
         .par_iter()
         .map(|&r0| {
@@ -214,25 +410,23 @@ fn even_block_sum<W: Word>(lay: &Layout, ring: Ring, sh: &Shape, d: &[W], bl: &B
                         continue;
                     }
                     let g = unsafe { d.get_unchecked(start + col).get() };
-                    if g == 0 {
-                        continue;
-                    }
-                    let (l, r) = entry(lay, bl, row, col);
-                    let s = lay.compose(l, bl.c, r);
-                    let f = unsafe { d.get_unchecked(sh.index(lay, full ^ s)).get() };
+                    let f = unsafe { d.get_unchecked(even_comp(bl, cc, row, col)).get() };
+                    debug_assert_eq!(even_comp(bl, cc, row, col), {
+                        let (l, r) = entry(lay, bl, row, col);
+                        sh.index(lay, full ^ lay.compose(l, bl.c, r))
+                    });
                     acc += weight(bl, row, col) as u128 * g * f;
                 }
-                t = md(t + md(acc, m), m);
+                t = md(t + md(acc, ring), ring);
             }
             t
         })
-        .reduce(|| 0u128, |a, b| md(a + b, m))
+        .reduce(|| 0u128, |a, b| md(a + b, ring))
 }
 
 /// Odd `N`, fused: contribution of block `bl` of layer `k+1` (computed in tiles,
 /// never stored), `Σ_U w(U) g(U) g(U^c)` with `U^c` in layer `k` = `ps`/`pd`.
 fn odd_block_sum<W: Word>(lay: &Layout, chk: &crate::rule::Checker, ring: Ring, ps: &Shape, pd: &[W], bl: &Block) -> u128 {
-    let m = ring.modulus as u128;
     let h = lay.h;
     let full = lay.full();
     let rows = block_rows(lay, bl);
@@ -249,8 +443,9 @@ fn odd_block_sum<W: Word>(lay: &Layout, chk: &crate::rule::Checker, ring: Ring, 
                 let nr = TR.min(ci - r0);
                 tmp.clear();
                 tmp.resize(nr * cj, W::default());
-                for q in 0..nr {
-                    offdiag_row(lay, chk, ring, ps, pd, bl, r0 + q, &mut tmp[q * cj..(q + 1) * cj]);
+                for q0 in (0..nr).step_by(tile_rows(bl)) {
+                    let q1 = (q0 + tile_rows(bl)).min(nr);
+                    offdiag_tile(lay, chk, ring, ps, pd, bl, r0 + q0, r0 + q1, &mut tmp[q0 * cj..q1 * cj]);
                 }
                 let mut t = 0u128;
                 for col in 0..cj {
@@ -259,32 +454,47 @@ fn odd_block_sum<W: Word>(lay: &Layout, chk: &crate::rule::Checker, ring: Ring, 
                     for q in 0..nr {
                         acc += tmp[q * cj + col].get() * unsafe { pd.get_unchecked(base - q).get() };
                     }
-                    t = md(t + md(acc, m), m);
+                    t = md(t + md(acc, ring), ring);
                 }
-                md(2 * t, m)
+                md(2 * t, ring)
             })
-            .reduce(|| 0u128, |a, b| md(a + b, m))
+            .reduce(|| 0u128, |a, b| md(a + b, ring))
     } else {
-        rows.par_iter()
-            .with_min_len(4)
-            .map_init(Vec::<W>::new, |tmp, &(row, _start, len)| {
+        let ci = rows.len();
+        // complement block (h-i, h-i, 1-c) of layer k, a triangle with the same C
+        let coff = ps.slot[2 * (h - bl.i) + 1 - bl.c].off;
+        let tiles: Vec<usize> = (0..ci).step_by(DT).collect();
+        tiles
+            .par_iter()
+            .map_init(Vec::<W>::new, |tmp, &r0| {
+                let r1 = (r0 + DT).min(ci);
+                let base = r0 * (r0 + 1) / 2;
                 tmp.clear();
-                tmp.resize(len, W::default());
-                generic_row(lay, chk, ring, ps, pd, bl, row, tmp);
+                tmp.resize(r1 * (r1 + 1) / 2 - base, W::default());
+                diag_tile(lay, chk, ring, ps, pd, bl, r0, r1, tmp);
                 let mut t = 0u128;
-                for col in 0..len {
-                    let gu = tmp[col].get();
-                    if gu == 0 {
-                        continue;
+                // column by column: the complements of one column are consecutive
+                for col in 0..r1 {
+                    let mut acc = 0u128;
+                    for row in r0.max(col)..r1 {
+                        let gu = tmp[row * (row + 1) / 2 + col - base].get();
+                        if gu == 0 {
+                            continue;
+                        }
+                        let m2 = ci - 1 - col;
+                        let ix = coff + m2 * (m2 + 1) / 2 + (ci - 1 - row);
+                        debug_assert_eq!(ix, {
+                            let (l, r) = entry(lay, bl, row, col);
+                            ps.index(lay, full ^ lay.compose(l, bl.c, r))
+                        });
+                        let f = unsafe { pd.get_unchecked(ix).get() };
+                        acc += weight(bl, row, col) as u128 * gu * f;
                     }
-                    let (l, r) = entry(lay, bl, row, col);
-                    let u = lay.compose(l, bl.c, r);
-                    let f = unsafe { pd.get_unchecked(ps.index(lay, full ^ u)).get() };
-                    t = md(t + weight(bl, row, col) as u128 * gu * f, m);
+                    t = md(t + md(acc, ring), ring);
                 }
                 t
             })
-            .reduce(|| 0u128, |a, b| md(a + b, m))
+            .reduce(|| 0u128, |a, b| md(a + b, ring))
     }
 }
 
@@ -332,8 +542,8 @@ fn needs_for(lay: &Layout, ps: &Shape, os: &Shape, n: usize, k: usize) -> Vec<Ve
 
 /// Full block-streamed count.  Returns `a(N)` (exact, or mod `ring.modulus`).
 pub fn count<W: Word>(n: usize, chk: &crate::rule::Checker, ring: Ring, verbose: bool) -> u128 {
+    assert!(W::BYTES <= 8, "block kernels accumulate in u64");
     let lay = Layout::new(n);
-    let m = ring.modulus as u128;
     let t0 = Instant::now();
     let mut ps = Shape::new(&lay, 0);
     let mut pr: Region<W> = Region::new(1);
@@ -359,8 +569,15 @@ pub fn count<W: Word>(n: usize, chk: &crate::rule::Checker, ring: Ring, verbose:
         }
         if !last {
             let or: Region<W> = Region::new(os.len);
+            let mut tdiag = 0.0;
+            let mut ndiag = 0usize;
             for (t, &b) in order.iter().enumerate() {
+                let tb = Instant::now();
                 compute_block(&lay, chk, ring, &ps, pr.data(), &os.blocks[b], &or);
+                if os.blocks[b].i == os.blocks[b].j {
+                    tdiag += tb.elapsed().as_secs_f64();
+                    ndiag += os.blocks[b].len;
+                }
                 for &p in &free_after[t] {
                     let pb = ps.blocks[p];
                     pr.release(pb.off, pb.len);
@@ -368,12 +585,14 @@ pub fn count<W: Word>(n: usize, chk: &crate::rule::Checker, ring: Ring, verbose:
             }
             if verbose {
                 eprintln!(
-                    "  layer {:2}: {:>12} orbits ({:.2} GB) sim.peak {:.2} GB rss.peak {:.2} GB t={:.1}s",
+                    "  layer {:2}: {:>12} orbits ({:.2} GB) sim.peak {:.2} GB rss.peak {:.2} GB diag {} orbits {:.1}s t={:.1}s",
                     k,
                     os.len,
                     (os.len * W::BYTES) as f64 / 1e9,
                     (peak * W::BYTES) as f64 / 1e9,
                     peak_rss() as f64 / 1e9,
+                    ndiag,
+                    tdiag,
                     t0.elapsed().as_secs_f64()
                 );
             }
@@ -390,13 +609,13 @@ pub fn count<W: Word>(n: usize, chk: &crate::rule::Checker, ring: Ring, verbose:
                         let pb = ps.blocks[p];
                         pr.release(pb.off, pb.len);
                     }
-                    total = md(total + even_block_sum(&lay, ring, &os, or.data(), &bl), m);
+                    total = md(total + even_block_sum(&lay, ring, &os, or.data(), &bl), ring);
                     or.release(bl.off, bl.len);
                 }
             } else {
                 for (t, &b) in order.iter().enumerate() {
                     let bl = os.blocks[b];
-                    total = md(total + odd_block_sum(&lay, chk, ring, &ps, pr.data(), &bl), m);
+                    total = md(total + odd_block_sum(&lay, chk, ring, &ps, pr.data(), &bl), ring);
                     for &p in &free_after[t] {
                         let pb = ps.blocks[p];
                         pr.release(pb.off, pb.len);
