@@ -11,13 +11,18 @@ Two corrections to the informal statement: the window size depends on the *panel
 `a_k`, so it is `min(a_k - 1, N - a_k)`, not `min(k-1, N-k)`. And the semi-symmetric
 count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 
-## Lean (`Folds/`, Lean 4 core only, no Mathlib). Build with `lake build`
+## Lean (`Folds/`). Build with `lake exe cache get && lake build`. Only `Counting.lean` uses Mathlib
 
 | file | contents |
 |---|---|
 | `Defs.lean` | `reach`, `IsFoldSeq`, `SymStep`, `SemiStep`, `Symmetric`, `SemiSymmetric`, `APFree` |
 | `Basic.lean` | `Symmetric.semiSymmetric`, `symmetric_iff_apFree`, `semiStep_iff_of_compl`, `SemiSymmetric.reverse`, `SemiSymmetric.mirror` |
 | `Decide.lean` | Bool checkers proven equal to the Props (decidability) |
+| `Parity.lean` | `middle_index_even`: for odd N, the middle panel is always placed at an odd step |
+| `Blocks.lean` | `semiSymmetric_blocks_iff`: evens-then-odds (or the reverse) is semi-symmetric iff both halves are; `prefix_class_semiSymmetric` |
+| `Counting.lean` (Mathlib) | `semiCount_even`: a(2n) ≥ 2a(n)²; `semiCount_odd`: a(2n+1) ≥ 2a(n)a(n+1); `semiCount_ge_pow`: a(N) ≥ 2^{N−1}; `card_class_prefix` (exact count of sequences that start with a full parity class) |
+| `RevMirror.lean` | reversal∘mirror preserves semi-symmetry; `revMirror_no_fixed`: no fixed points when N ≡ 3 (mod 4) |
+| `Radius.lean` | capped-radius variant; radius 1 ⇔ each panel's time is a local max or min relative to its neighbours |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
