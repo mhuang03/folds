@@ -106,6 +106,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live4` (M) | good classes ⇔ complete residue chains; block-chain composition `good_comp` (every class good for q = 2^a); palindromic chains; 378 kernel-checked certificates for q ≤ 27; family `Cov2` proving 3373 of 4949 non-dead 2-sets co-reachable at N = 100 |
 | `Labelling` (M) | finite reduction for each label count t (`bound_of_checks`, via left-half monotonicity); t ≤ 2 settled for all N, so des + 1 ≥ min(⌊log₂(N+1)⌋, 3) |
 | `Adjacent` (M) | **Theorem G** (inward-sign criterion ⇒ co-reachable, via a greedy-then-reverse construction); **every interval is co-reachable** (`coReach_interval`), hence the **Adjacent Lemma**; multiples of q are co-reachable when q ∣ N+1; family `Cov3` (4409 of 4949 non-dead 2-sets at N = 100) |
+| `Generate` | **truncation theorem** (`truncation`, `gen_filter`): the truncated bit-reversal order, and every member of the recursive odds/evens-first tree family, is symmetric and semi-symmetric for every N; O(log N) direct access `genAt_eq`; Montgomery-ladder construction `ladder_valid` |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -179,6 +180,19 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live4/PROOFS.txt` | enlarged proven live family, uniform transfers, exceptional-class attempts |
 | `experiments/adjacent/PROOFS.txt` | Theorem G and the interval / Adjacent Lemma proof |
 | `docs/LITERATURE.md` | literature and OEIS survey |
+
+## Generating valid sequences
+
+`python3 experiments/generate/gen.py N [--mode tree|ladder|comp|slip] [--seed S] [--choices BITS] [--index i] [--verify]`
+prints a valid fold sequence for any N (up to 10^6 in seconds). The default is the
+truncated bit-reversal order, which is symmetric too. `--index i` gives the i-th fold in
+O(log N). Modes:
+- `tree`: 2^{N−1} members selected by `--choices`;
+- `ladder`: O(log N) doubling steps;
+- `comp`: mixed-radix residue composition;
+- `slip`: N^{(1/8+o(1))N} members.
+
+See `experiments/generate/NOTES.txt`.
 
 ## Practical note for folders
 
