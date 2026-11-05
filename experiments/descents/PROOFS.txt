@@ -7,17 +7,22 @@ des(a) = #{k : a_k > a_{k+1}};  runs(a) = des(a)+1 = number of maximal ascending
 LIS / LDS = longest increasing / decreasing subsequence.
 
 SUMMARY
-  (1) COUNTEREXAMPLE to the "attained for every N" half of the conjecture:
-      N = 25 has minimum des = 4, not lg(26)-1 = 3.  (Exact subset DP, relax.c, and SAT,
-      satwords.py, with three different solvers; minimal UNSAT core = all panels 2..24.)
-      So min des = lg(N+1)-1 is FALSE as an equality for all N.  The lower bound
-      des >= lg(N+1)-1 is still open and is confirmed by SAT for all N <= 70+ (see DATA).
-      For N <= 54 (and beyond, see sat_ub_*.txt) N = 25 is the only N where min des
-      exceeds lg(N+1)-1.
-  (2) The LIS/LDS strengthening holds wherever tested: min LDS = min LIS = lg(N+1) for all
-      N <= 30 (SAT, satlds.py; the lower bound side also via DFS, N <= 25), including N = 25
-      where LDS = 4 = lg 26 IS attained (so at N = 25 the two statistics separate:
-      min LDS = lg(N+1) but min des = lg(N+1)).
+  (1) COUNTEREXAMPLES to the "attained for every N" half of the conjecture:
+      min des(N) > lg(N+1)-1 for N = 25, 55, 57, 59 (min des = 4, 5, 5, 5).
+      N = 25: exact subset DP (relax.c, dp_minruns_25.txt) and SAT (satwords.py) with three
+      solvers; minimal UNSAT core = all panels 2..24.  N = 55, 57, 59: SAT (CaDiCaL, ~4-6 min
+      each; N = 55 re-checked with Glucose, check55.txt).  For every other N <= 63 a sequence
+      with lg(N+1)-1 descents exists (SAT, sat_sweep_1_55.txt, sat_ub_1_120.txt).
+      So "min des = lg(N+1)-1" is FALSE as an equality.  The exceptions sit just below the
+      top 2^(t+1)-2 of a block of N with the same lg(N+1) (25 = 30-5; 55, 57, 59 = 62-7, -5,
+      -3), where the extremal structure is rigid (popcount is the unique optimum at the top).
+      The LOWER bound des >= lg(N+1)-1 is still open; it is confirmed by SAT for all
+      N <= 79 (and by exact DP for N <= 25).
+  (2) The LIS/LDS strengthening holds wherever tested: min LDS = min LIS = lg(N+1)
+      (lower bound by SAT for N <= 30, satlds_sweep.txt; attainment wherever des attains, and
+      at N = 25 directly: a valid sequence with LDS = 4 = lg 26).  So at N = 25 the two
+      statistics separate: min LDS = lg(N+1) but min des = lg(N+1) (not lg(N+1)-1), i.e. the
+      LDS form is the "right" conjecture:  min LDS = min LIS = lg(N+1) for every N.
   (3) THEOREM (paper + Lean, Folds/Descents.lean):  for every valid a,
           N + 1 <= (lg(N+1) + 2) ^ (des(a) + 1)      and      N + 1 <= (lg(N+1) + 2) ^ LDS(a)
       (by mirror symmetry also with LIS).  Hence des(a) >= log(N+1)/log(lg(N+1)+2) - 1:
@@ -119,8 +124,8 @@ latter being exactly the panels with gap g = M - m in [1, floor(N/2)] (all with 
 (The constant is not optimised; the truth, if the conjecture holds, is t >= L.)
 
 
-3. THE COUNTEREXAMPLE N = 25
-----------------------------
+3. THE COUNTEREXAMPLES N = 25, 55, 57, 59
+------------------------------------------
 relax.c (exact subset DP over (set, last panel), mode 0) gives min runs = 4 for N = 15..24 and
 min runs = 5 for N = 25 (dp_minruns_25.txt, ~3 min, 1 core).  Independently satwords.py
 (order-encoded labels + totalizers) is UNSAT for N = 25 with 4 labels with CaDiCaL, Glucose 4
@@ -130,9 +135,13 @@ global.  Earlier work (desdfs) had only reported a timeout at N = 25.
 At N = 25 the LDS conjecture still holds and is attained: a valid sequence with LDS = 4,
   11 3 9 22 24 25 13 15 5 6 7 18 19 20 10 21 23 1 12 14 2 16 4 8 17
 (satlds.py), and no valid sequence has LDS <= 3.
-Consequently: "min des = lg(N+1) - 1" is false at N = 25; the correct conjecture is
-"min des >= lg(N+1) - 1, with equality for all N except a sparse exceptional set" (so far
-{25}), and "min LDS = min LIS = lg(N+1) for all N".
+N = 55, 57, 59 (lg(N+1) = 5): satwords.py with 5 labels is UNSAT (385 s, 293 s, 248 s with
+CaDiCaL; the reverse-mirror self-dual subproblem is UNSAT too where it exists), while 5 labels
+suffice for N = 31..54, 56, 58, 60, 61, 62 and 6 labels for N = 63 (sat_ub_1_120.txt).
+Consequently: "min des = lg(N+1) - 1" fails for N in {25, 55, 57, 59} (complete list for
+N <= 63); the corrected conjectures are
+   min des >= lg(N+1) - 1 for all N (lower bound; equality for most N), and
+   min LDS = min LIS = lg(N+1) for all N.
 
 
 4. INVARIANTS TESTED AND REFUTED (what does NOT work)
@@ -190,10 +199,41 @@ Consequently: "min des = lg(N+1) - 1" is false at N = 25; the correct conjecture
   S = {popcount >= p+1} is closed under heap children and its heap roots are exactly
   {2t+1 : popcount(t) = p}, which matches the next run.
 
+6. CONSTRUCTIONS
+----------------
+* No construction can attain lg(N+1)-1 descents for every N: N = 25, 55, 57, 59 are impossible
+  (section 3).  For every other N <= 63 an optimal sequence was found by SAT; the run words
+  are in sat_sweep_1_55.txt / sat_ub_1_120.txt (the sequence is the order by (word letter,
+  panel)).  For most N there is even a reverse-mirror SELF-DUAL optimum (rm:SAT); not for
+  N = 21, 29, 53, 61 (only non-self-dual optima) nor, trivially, for N = 3 mod 4.
+* Popcount order (decreasing binary weight, increasing within a weight) is valid exactly for
+  N in {1..8, 11} u {2^k-2, 2^k-1, 2^k} (earlier notes); it is the unique optimum at
+  N = 2^k - 2.  Binary-weight labels of the dyadic expansion of m/M, (m-1/2)/N, m/(N+2), ...
+  (construct_bits.py) give valid sequences only for N = 2^k-2, 2^k-1, 2^k and a few small N.
+* Pair lift (lift.py): from an optimal word rho' on n, rho(2y) = rho'(y)+1, rho(2y+1) = rho'(y)
+  (or the reverse) plus labels for the boundary panels 1, 2n+2, 2n+3.  This is how popcount
+  doubles.  It produces optima for N = 3..9, 11, 14, 15, 16 but for NO N in 17..23 (from all
+  optimal words on n <= 10).
+* Insertion/deletion (insert.py, delete.py): no optimal word on 13 extends to one on 14 by
+  inserting a panel; deleting panels from popcount(2^k-2) (or 2^k-1, 2^k) loses optimality
+  after one or two steps.  So the optimal sets for consecutive N are not nested.
+* Heap structure (heapstruct.py): optima in which every "after j runs" set S_j is closed under
+  left-heap children (m -> 2m, 2m+1) and every complement under right-heap children exist for
+  all N <= 13 except N = 11 (popcount is of this type; it is what makes popcount valid, see
+  section 5).  Not a general recipe.
+* Runs as unions of dyadic progressions: apart from popcount-type N we saw no such structure
+  in the optima (e.g. N = 13: 5 10 12 13 | 2 4 7 8 9 11 | 1 3 6); only the first run (x plus a
+  halving chain at the right edge) and the last run (a doubling chain at the left edge plus
+  one panel) are forced.
+
 DATA (files in this directory)
   dp_minruns_25.txt   exact min runs N <= 25 (relax.c, mode 0)
   sat_sweep_1_55.txt  SAT: lower bound (k = lg(N+1)-1 UNSAT) and attainment (k = lg(N+1)) N <= 54
   sat_lb_56_200.txt   SAT lower bound sweep from N = 56 (k = lg(N+1)-1 UNSAT)
-  sat_ub_1_120.txt    SAT attainment sweep with reverse-mirror self-dual first (timeouts marked)
+  sat_ub_1_120.txt    SAT attainment sweep N <= 65, reverse-mirror self-dual first (stopped at 65)
+  sat_ineq.txt        window-inequality relaxation: lg(N+1)-1 labels impossible for N <= 62
+  check55.txt, lds_exceptions.txt   independent checks at N = 55 and LDS at N = 55, 57, 59
+  satcore.py, satfamily.py   minimal sets of panel constraints forcing the bound
+  Folds/Descents.lean        the formal proof of Theorem 2.4
   lds_out_*.txt, satlds.py  LDS lower bound / attainment
   lh_minruns.txt      left-half-only thresholds

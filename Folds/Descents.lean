@@ -12,9 +12,9 @@ import Folds.Basic
 
 Proofs on paper: `experiments/descents/PROOFS.txt`.
 
-Conjecture (checked by computer far beyond the range of this file): a semi-symmetric fold
-sequence of length `N` has at least `⌊log₂(N+1)⌋ - 1` descents.  Here we prove the weaker,
-but unconditional, logarithmic bound
+Conjecture (checked by SAT for `N ≤ 79`): a semi-symmetric fold sequence of length `N` has
+at least `⌊log₂(N+1)⌋ - 1` descents.  (The bound is attained for most `N`, but not for
+`N = 25, 55, 57, 59`.)  Here we prove the weaker, but unconditional, logarithmic bound
 
     `N + 1 ≤ (⌊log₂(N+1)⌋ + 2) ^ (des a + 1)`      (`descents_bound`),
 
