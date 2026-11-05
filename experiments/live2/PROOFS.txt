@@ -1,0 +1,209 @@
+Live 2-prefixes, part 2: co-reachability and residue chains
+==========================================================
+
+Notation as in experiments/live/PROOFS.txt.  Panels [N] = {1..N}; window of m: left arm
+L(m) = [m - r, m - 1], right arm R(m) = [m + 1, m + r], r = reach(m) = min(m-1, N-m).  A step
+(S, m) is valid iff |S n L(m)| = |S n R(m)|.  "Lean" refers to Folds/Live2.lean.
+
+Programs (all in this directory, 1 core, < 100 MB; the bitsets R_N come from reach.c and are
+kept outside the repository, pass their directory in LIVE2_DATA):
+  reach.c        R_N = bitset of the sets reachable from scratch (N <= 28 here).
+  copies.c       all window copies X of [N] (copy criterion) + reachability of [N] \ X.
+  coreach.py     co-reachable 2-sets (section 1).
+  chains.py, showchains.py, bchain.py, maximal.py, bothcopies.py, ysplit.py, greedy.py,
+  ydefects.py, adjcopies.py, nearclass2.py, nearres.py
+                 exploration of copies and copy chains (section 5).
+  reschain.py, resfirst.py, rescheck.py, chainok.py
+                 residue chains (sections 2, 3), incl. a check of the theorem of 2.2.
+  rs.c, rotstable.py, rotshow.py
+                 rotation-stable sequences (section 3).
+  rescover.py, smallk.py
+                 coverage of the 2-sets by residue transfers (section 4).
+  ghost.py, antipoint.py, orderset.py, findseq.py
+                 adjacent pairs and the anti-point problem (section 6).
+  nearcheck.py   near residue classes (section 4.3).
+
+
+1. Co-reachability: the clean form of the conjecture
+----------------------------------------------------
+Call a set D of panels CO-REACHABLE in [N] if [N] \ D has a semi-symmetric ordering from
+scratch (Lean `CoReach N D`).  A valid prefix is live iff its set is co-reachable
+(live/PROOFS.txt 1.1; Lean `extends_iff_coReach`).  Co-reachability makes sense for every
+set, whether or not it can be placed first: e.g. an adjacent pair {r, r+1} (2 <= r <= N-2)
+is never a valid 2-prefix (r+1 is in R(r) and r in L(r+1)), but it can be co-reachable.
+
+CONJECTURE C (stronger than the 2-prefix conjecture).  A 2-set D of [N] is co-reachable
+unless D = {1, N} with N even >= 4, or D = {1, 7} with N = 7.
+  Verified for N <= 28 for ALL 2-sets (coreach.py), including the 2-sets that are not valid
+  prefixes.  The 2-prefix conjecture is C restricted to valid 2-sets.
+
+C is much better suited to induction than the prefix statement, because the reductions below
+produce preimage 2-sets that need not be valid prefixes (adjacent pairs in particular).
+
+
+2. Residue classes and residue chains
+-------------------------------------
+2.1 Every residue class is a window copy, for every N.  [Lean `winEmb_res`]
+    Let 1 <= s <= q, s <= N, C_s = {s, s+q, s+2q, ...} n [N], n_s = |C_s| = floor((N-s)/q)+1,
+    phi(y) = s + (y-1) q.  Then phi is a window copy of the n_s-strip.
+    Proof.  Put x = phi(j).  reach(x) = min(x-1, N-x), and floor((x-1)/q) = j-1,
+    floor((N-x)/q) = n_s - j, so floor(reach(x)/q) = reach_{n_s}(j).  For y < j:
+    x - phi(y) = (j-y) q <= reach(x)  iff  j - y <= floor(reach(x)/q) = reach_{n_s}(j);
+    similarly on the right.  QED  (An arithmetic progression through x is symmetric about x
+    inside every window; nothing about N mod q is needed.)
+
+2.2 Balance of unions of classes.  [Lean `balanced_rUnion_iff`, `reach_cls_mod`]
+    Let A be a set of residues, U = union of the C_t (t in A), x in C_s with radius r, and
+    rho = r mod q.  The number of points of C_t in R(x) is #{1 <= d <= r : d = t - s mod q}
+    and in L(x) it is #{1 <= d <= r : d = s - t mod q}; the full periods cancel, so
+        U is balanced around x  iff  #{t in A : (t - s) mod q in [1, mu]}
+                                   = #{t in A : (s - t) mod q in [1, mu]},
+    mu = min(rho, q - 1 - rho) (offsets d and q - d with both <= rho cancel too).  The radius
+    rho takes only two values on C_s:  rho = s - 1 on the left half (r = x - 1), and
+    rho = (nu - s) mod q on the right half (r = N - x), where nu = N mod q.
+    In the first case mu = min(s-1, q-s) = reach_q(s) and the condition reads: A is balanced
+    around s in the q-STRIP.  In the second case put sigma(t) = ((nu - t) mod q) + 1; then
+    mu = reach_q(sigma(s)), and since sigma(s +- d) = sigma(s) -+ d (inside [1, q]) the
+    condition reads: sigma(A) is balanced around sigma(s) in the q-strip.
+
+THEOREM (residue chains).  Let N >= q (every class nonempty).  Order the classes as
+pi = (pi_1, ..., pi_q) and place them as complete blocks, class pi_i in any valid order of
+its n_{pi_i}-strip.  The result is a valid sequence of [N] for all choices of the orders
+inside the blocks iff every class is balanced, at every one of its points, by the classes
+before it.  This holds if
+        pi  and  sigma o pi  are both semi-symmetric sequences of the q-strip,
+and for N >= 2q (every class meets both halves) the condition is also necessary.
+    Proof.  Each block is a copy (2.1); a block on a background balanced around all its
+    points behaves like its own strip (Growth.WinEmb.semiStep_iff); the balance is 2.2.
+    QED  [Lean `res_chain`, in the equivalent arithmetic form `ChainOK q nu pi`: both cyclic
+    balance conditions, at rho = s - 1 and at rho = (nu + q - s) mod q, for every i.]
+    (Checked against brute force, all N <= 40, q <= 6, every pi: rescheck.py; ChainOK as
+    implemented in Lean against brute force: chainok.py.)
+    For q | N (nu = 0) sigma is the mirror t -> q + 1 - t, so every valid pi works: this is
+    the composition of Growth.lean (semiCount_comp).  For q = 2 these are the parity blocks.
+
+2.3 Residue transfer.  [Lean `coReach_res`, `extends_res`]
+    If the classes other than C_s can be ordered as a chain (s can come LAST, equivalently
+    FIRST: a chain reversed is a chain, since a full valid sequence reversed is valid), then
+    [N] \ C_s is reachable, C_s is a copy with reachable complement, and (weak split for
+    sets, Lean `coReach_winEmb`)
+        D' co-reachable in the n_s-strip  ==>  phi(D') co-reachable in [N].
+    In particular a pair u = v (mod q) in such a class reduces to the pair of indices
+    ((u-s)/q + 1, (v-s)/q + 1) in the n_s-strip, at distance (v-u)/q.
+
+
+3. Rotation-stable sequences: which classes can come first
+----------------------------------------------------------
+By 2.2, s can come first in a residue chain mod q for N = nu (mod q), N >= 2q, iff there is a
+semi-symmetric sequence tau of the q-strip with tau_1 = q + 1 - s such that the cyclic
+rotation  rot_nu(tau) = (((tau_i - 1 + nu) mod q) + 1)_i  is semi-symmetric too
+(write pi = m o tau with the mirror m; sigma o m = rot_nu).  Call tau ROTATION-STABLE for nu.
+(For q <= N < 2q the condition is still sufficient.)
+
+CONJECTURE RS.  For every q >= 2, 0 <= nu < q and 1 <= t <= q there is a rotation-stable
+sequence for nu starting with t, except when q is not a power of 2 and
+(nu, t) = (1, q) or (q-1, 1).
+  Verified for q <= 23 (rs.c, subset DP; q = 23 takes about a minute).  In terms of classes:
+  every class can come first in a residue chain mod q, except, for q not a power of 2, the
+  class C_1 when N = 1 (mod q) and the class C_q when N = -1 (mod q).  These exceptional
+  classes are exactly the classes symmetric under the mirror x -> N + 1 - x which contain
+  1 and N (N = 1) resp. are flanked by the residues that do (N = -1).
+
+3.1 Reduction of RS to prime q (proven on paper).  Let q = j m and tau be a residue chain of
+    the q-strip mod j (j | q, so its block order pi' may be any semi-symmetric sequence of the
+    j-strip, 2.2 with nu' = 0) with blocks of size m in orders alpha_a.  Write nu = j c + e,
+    0 <= e < j.  The rotation by nu maps the class a mod j to the class a + e (or a + e - j),
+    index y to y + c (resp. y + c + 1) cyclically in Z_m.  Hence rot_nu(tau) is again a
+    residue chain mod j, with block order rot_e(pi') and inner orders rot_c(alpha_a) or
+    rot_{c+1}(alpha_a).  So RS(q, nu) follows from RS(j, e), RS(m, c) and RS(m, c + 1).
+    For q even and j = 2 this is the parity recursion; it shows that powers of 2 have no
+    exceptions, and that the exceptions propagate exactly as observed.  RS for prime q is
+    open (verified for primes <= 23).
+
+3.2 Reformulation.  tau is rotation-stable for nu iff every step t of tau is balanced, on the
+    cycle Z_q, within two radii: the distance from t to the cut between q and 1, and the
+    distance from t to the cut between q - nu and q - nu + 1 (minus 1/2).  "Semi-symmetric
+    sequences on a cycle with two cuts."
+
+
+4. What the residue reductions give
+-----------------------------------
+4.1 Reduction scheme.  For a 2-set {u < v} with d = v - u >= 2, pick a divisor k >= 2 of d
+    and the class s = u mod k.  If s can come first (RS), {u, v} is co-reachable as soon as the
+    preimage pair, at distance d/k in a strip of size about N/k, is.  With k = d the preimage
+    is an ADJACENT pair {r, r+1}.  Iterating with prime factors of d always ends at an
+    adjacent pair.  So, modulo RS and the exceptional classes:
+
+        Conjecture C  <==  every adjacent pair {r, r+1} is co-reachable in every strip
+                           ("Adjacent Lemma") + the exceptional cases below.
+
+    The Adjacent Lemma is true for N <= 28 (coreach.py).
+
+4.2 Coverage (rescover.py).  Assuming RS and the Adjacent Lemma, residue reductions (all
+    divisors, mirror) prove C for every 2-set of [N], N <= 80, except
+      (a) pairs inside an exceptional class whose every usable divisor is exceptional, and
+      (b) {1, N} for odd N.
+    Without further input this leaves about N/3 pairs per N (rescover.py without 'near').
+
+4.3 Near residue classes (numerically).  For q >= 3 not a power of 2 and N = 1 (mod q) the
+    set X = C_1 - {1} + {2}, and for N = -1 (mod q) the set X = C_q - {q} + {q-1}, is a
+    window copy of the strip of the same size with reachable complement (nearcheck.py: all
+    N <= 28, all q).  For q = 2 this is the near class E - {2} + {1} of live/PROOFS.txt 4.2.
+    With these copies the pairs of (a) that avoid the swapped end panel reduce as well, and
+    rescover.py ('near') leaves, for N <= 80, exactly
+        {1, N}  (odd N, when not reducible by parity), and
+        {u, 2u} with N = 3u - 1,
+    one 2-set per N.  Both are valid in both orders; they need direct constructions.
+
+4.4 Unconditional coverage (smallk.py).  Using only moduli k <= 8 (for which RS is a finite
+    check) and strips of size <= 10 as the base (all of C verified there), residue reductions
+    alone prove C for about half of all 2-sets for N up to 60 (e.g. N = 40: 437 of 779;
+    N = 60: 867 of 1769), as against 95 reachable pairs at N = 40 with the earlier transfers
+    (parity, shifted blocks, mod 3 with 3 | N).  Mixed-parity pairs are now reached: a residue
+    class mod an odd q contains both parities.
+
+
+5. Copies and copy chains (exploration, N <= 22)
+-------------------------------------------------
+* Almost every window copy has a reachable complement (copies.c): at N = 22, 724 of 725
+  copies; the exceptions (badcopies.py) contain {1, N} or are periodic sets with period 4 or
+  6 near the ends.  Restricted to Beatty copies this is Conjecture B of live/.
+* COPY CHAINS.  A partition [N] = X_1 + ... + X_k into window copies such that X_1 + ... +
+  X_{i-1} is balanced around every point of X_i (all blocks defect free).  For N <= 18 every
+  live 2-set except {1,2}, {N-1,N} lies in the first block of a copy chain with a live
+  preimage pair (chains.py; blocks of size >= 2 only).  Residue chains are the copy chains
+  with arithmetic-progression blocks; they are the uniform family found here.
+* The shortest chains are irregular (showchains.py, bchain.py); maximal copies are numerous
+  and unstructured (maximal.py: 354 at N = 22), so composition of copies alone does not
+  reduce Conjecture B to finitely many shapes.
+* Splits with both parts copies are exactly the parity split and the general doubling splits
+  N = (2j+1)n of Copies.lean (bothcopies.py, N <= 22).
+* Complements of Beatty copies are far from copies (ydefects.py) and greedy orders fail
+  (greedy.py).
+
+
+6. Adjacent pairs and the anti-point problem
+--------------------------------------------
+6.1 Ghost reduction.  For D = {o, e} (o odd, e even), placing O - {o} first (always possible:
+    single panels are live in the odd strip) leaves the problem of ordering E - {e} on the
+    background O - {o}; since O is balanced around every even panel, that background acts
+    like a single NEGATIVE point at o (a "ghost").  ghost.py: for adjacent pairs this (or the
+    same with the classes exchanged) works except for r <= 8 or r >= N - 8.
+6.2 The anti-point problem AP(n, w): order [n] \ {w} on a background of weight -1 at w.  For
+    a residue chain mod k with r and r+1 in the last two classes, the adjacent pair {r, r+1}
+    reduces to AP in the last class strip whenever k avoids two congruences.  antipoint.py:
+    AP(n, w) is solvable exactly for w in {2, n-1} and 6 <= w <= n - 5 (n <= 17).  Neither
+    6.1 nor 6.2 is closed under recursion, so the Adjacent Lemma remains open.
+
+
+7. Status
+---------
+Proven (paper):  2.1, 2.2, the residue chain theorem, 2.3, 3.1.
+Proven (Lean, Folds/Live2.lean, no sorry / native_decide): co-reachability and its relation
+  to liveness; 2.1 (`winEmb_res`); the weak split for sets (`coReach_winEmb`); 2.2 in the
+  arithmetic form (`balanced_rUnion_iff`, `reach_cls_mod`); the residue chain theorem
+  (`res_chain`); the residue transfer (`coReach_res`, `extends_res`); and concrete chains,
+  see the file header.
+Open: RS for primes q >= 3; the near residue classes of 4.3 (numerical); the Adjacent
+  Lemma; the two one-per-N families of 4.3.  Together they would prove Conjecture C and
+  hence the 2-prefix conjecture.
