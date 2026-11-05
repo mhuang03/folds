@@ -278,4 +278,64 @@ theorem semiSymmetric_one_N {N : Nat} (hN : 2 ≤ N) :
     semiStep_pair_iff (by omega) le_rfl le_rfl (by omega) (by omega)]
   omega
 
+/-! ## Extending a prefix -/
+
+/-- The partial sequence `p` can be completed to a semi-symmetric fold sequence. -/
+def Extends (N : Nat) (p : List Nat) : Prop :=
+  ∃ a, IsFoldSeq N a ∧ SemiSymmetric N a ∧ p <+: a
+
+/-- **Completability depends only on the complement.**  A valid prefix `p` extends to a
+semi-symmetric fold sequence iff the set of remaining panels has a semi-symmetric
+ordering *from scratch* (`g N ([1..N] \ p) > 0`): the rest of a completion, read backwards,
+is such an ordering (reversal / complementation). -/
+theorem extends_iff_g_pos {N : Nat} {p : List Nat} (hnd : p.Nodup)
+    (hp : ∀ x ∈ p, 1 ≤ x ∧ x ≤ N) (hv : SemiSymmetric N p) :
+    Extends N p ↔ 0 < g N (Finset.Icc 1 N \ p.toFinset) := by
+  rw [g, Finset.card_pos]
+  constructor
+  · rintro ⟨a, hf, ha, t, rfl⟩
+    have hnda := nodup_of_foldSeq hf
+    rw [semiSymmetric_split_iff hf (k := p.length) (by simp), List.drop_left] at ha
+    refine ⟨t.reverse, mem_semiOrders.2 ⟨⟨?_, ?_⟩, ha.2⟩⟩
+    · exact List.nodup_reverse.2 (List.nodup_append.1 hnda).2.1
+    · ext x
+      have hfs := (isFoldSeq_iff.1 hf).2
+      rw [List.toFinset_append] at hfs
+      have hdis := (List.nodup_append.1 hnda).2.2
+      simp only [List.toFinset_reverse, Finset.mem_sdiff, List.mem_toFinset, ← hfs,
+        Finset.mem_union]
+      constructor
+      · intro hx; exact ⟨Or.inr hx, fun hx' => hdis x hx' x hx rfl⟩
+      · rintro ⟨hx | hx, hn⟩
+        · exact absurd hx hn
+        · exact hx
+  · rintro ⟨q, hq⟩
+    obtain ⟨⟨hndq, hq⟩, hsq⟩ := mem_semiOrders.1 hq
+    have hf : IsFoldSeq N (p ++ q.reverse) := by
+      rw [isFoldSeq_iff]
+      refine ⟨List.nodup_append.2 ⟨hnd, List.nodup_reverse.2 hndq, ?_⟩, ?_⟩
+      · intro x hx y hy e
+        subst e
+        have : x ∈ q.toFinset := List.mem_toFinset.2 (List.mem_reverse.1 hy)
+        rw [hq, Finset.mem_sdiff, List.mem_toFinset] at this
+        exact this.2 hx
+      · rw [List.toFinset_append, List.toFinset_reverse, hq, Finset.union_sdiff_of_subset]
+        intro x hx
+        rw [List.mem_toFinset] at hx
+        simpa using hp x hx
+    refine ⟨p ++ q.reverse, hf, ?_, List.prefix_append _ _⟩
+    rw [semiSymmetric_split_iff hf (k := p.length) (by simp), List.take_left, List.drop_left,
+      List.reverse_reverse]
+    exact ⟨hv, hsq⟩
+
+/-- **Dead 2-prefixes.**  For even `N ≥ 3` the valid 2-prefixes `[1, N]` and `[N, 1]`
+cannot be completed to a semi-symmetric fold sequence. -/
+theorem not_extends_one_N {N : Nat} (hN : N % 2 = 0) (h3 : 3 ≤ N) :
+    ¬ Extends N [1, N] ∧ ¬ Extends N [N, 1] := by
+  constructor
+  · rintro ⟨a, hf, ha, hpre⟩
+    exact not_semiSymmetric_one_N hN h3 hf (List.prefix_iff_eq_take.1 hpre).symm ha
+  · rintro ⟨a, hf, ha, hpre⟩
+    exact not_semiSymmetric_N_one hN h3 hf (List.prefix_iff_eq_take.1 hpre).symm ha
+
 end Folds
