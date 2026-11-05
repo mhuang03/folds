@@ -52,15 +52,20 @@ Leading coefficients c_k = lim T(N,k)/N^k, EXACT (polytope volumes, section 4):
    4   4283/48384      (48384 = 2^8 3^3 7)   4283/2016           0.3983
    5   6214319/203212800 (2^11 3^4 5^2 7^2)  6214319/1693440     0.3455
    6   21205971559/2031997943808 (2^18 3^6 7^3 31)  ~7.514       0.3413
-   c_5, c_6 agree with least-squares fits of the data (0.030580, 0.010436).
+   7   12908310624317597/3982715969863680000         ~16.335      0.3106
+       (denominator 2^24 3^6 5^4 7^5 31; numerator 17*61*6857*1815333833) = 0.00324108...
+   c_5, c_6 agree with least-squares fits of the data (0.030580, 0.010436).  c_7 comes from
+   the 4260 continuum classes (volumes.py sharded 0/2, 1/2: the two shards are mirror images,
+   each gives half, see vol7_half.txt); T(N,7) data (N <= 48) is too short to pin c_7 down
+   independently (unstable fits 0.0033-0.0039).
    Numerators 4283, 6214319, 21205971559 are prime.  No product (Wallis-type) formula: the
    denominators contain 7 = 2^3-1, 5, 31 = 2^5-1, i.e. the periods of the doubling map
    x -> 2x mod 1 show up already in the volumes.
    Comparison with the "random earlier set" product model, in which step j (j-1 earlier
    points) is accepted with probability p_j = (2m+1) C(2m,m) / (4^m j), m = floor((j-1)/2)
-   (a Wallis factor): product = 1, 1/2, 1/4, 3/32, 9/256, 45/4096.  The ratio c_k/product is
-   1, 1, 0.889, 0.944, 0.870, 0.950: the true process is slightly below the model, with
-   the same even/odd alternation that a(N) shows.
+   (a Wallis factor): product = 1, 1/2, 1/4, 3/32, 9/256, 45/4096, 225/65536.  The ratio c_k/product is
+   1, 1, 0.889, 0.944, 0.870, 0.950, 0.944 (k = 1..7): the true process is slightly below the model, with
+   an even/odd alternation for k <= 6 reminiscent of a(N).
 
 V leading coefficients: 1/3 (k=2), 23/216 (k=3), ~0.022091 (k=4, numerical; V is a union
 over orderings, so it is not one polytope per order type).  As a fraction

@@ -21,6 +21,9 @@ fn, K = sys.argv[1], int(sys.argv[2])
 npairs = K * (K - 1) // 2
 nsig = 3 ** npairs
 keys = sorted({int(l.split()[1]) for l in open(fn)})
+if len(sys.argv) > 3:  # shard 'i/n' (for running on several cores; add the printed partial sums)
+    si, sn = map(int, sys.argv[3].split('/'))
+    keys = keys[si::sn]
 
 
 def decode(key):
