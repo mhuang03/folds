@@ -4,6 +4,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 import Mathlib.Algebra.BigOperators.Intervals
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.IntervalCases
+import Mathlib.Tactic.LinearCombination
 
 /-!
 # The window rule, suffixes, and dead 2-prefixes
@@ -21,7 +22,16 @@ The window of `c` is `[2c - N, 2c - 1] ∩ [1, N]`.
 * `card_validSuffixes`: the numbers of valid length-`k` suffixes and of valid length-`k`
   prefixes are equal (reversal plus complementation).
 * `not_semiSymmetric_one_N`, `not_semiSymmetric_N_one`: for even `N ≥ 3` no semi-symmetric
-  fold sequence starts with `[1, N]` or `[N, 1]` (no valid third step exists).
+  fold sequence starts with `[1, N]` or `[N, 1]` (no valid third step exists);
+  `not_extends_one_N` in terms of `Extends`.  `extends_iff_g_pos`: a valid prefix can be
+  completed iff the remaining panels admit a semi-symmetric ordering from scratch.
+  (The converse, that every other valid 2-prefix extends, is not proven here.)
+* `card_validPrefixes_three_formula`: `36 T(N, 3) = 8N³ - 3N² - 30N + c` (`N` even),
+  `8N³ - 3N² - 12N + c` (`N` odd), `c = 0, 7, 8, -9, 16, -1` for `N ≡ 0, …, 5 (mod 6)`,
+  for every `N`.  Route: `T(N,3) = 2 W(N)` by mirror symmetry (`card_triples3`), `W(N)` an
+  explicit double sum (`card_triplesLow`, `card_third`), and the step
+  `W(N+2) = W(N) + ⌊N²/4⌋ + C(N) + …` (`Wf_step`) with `6 C(N) = N² - 2N - d(N)`
+  (`Cf_closed`).
 -/
 
 namespace Folds
@@ -870,5 +880,75 @@ theorem Wf_closed : ∀ N, WClosed N
       generalize k * k = A at *
       exact ⟨fun h => absurd h (by omega),
         fun _ => WClosed_step_odd k A B W W' C hstep hC (ih.2 (by omega)) f2 f3⟩
+
+/-- The constant term of `36 T(N, 3)`, by `N mod 6`. -/
+def T3const : Nat → Int
+  | 0 => 0
+  | 1 => 7
+  | 2 => 8
+  | 3 => -9
+  | 4 => 16
+  | _ => -1
+
+/-- **The `T(N, 3)` formula.**  The number of valid length-3 prefixes satisfies
+`36 T(N, 3) = 8N³ - 3N² - 30N + c` for even `N` and `8N³ - 3N² - 12N + c` for odd `N`,
+with `c = 0, 7, 8, -9, 16, -1` for `N ≡ 0, …, 5 (mod 6)`.  Valid for every `N`. -/
+theorem card_validPrefixes_three_formula (N : Nat) :
+    36 * ((validPrefixes N 3).card : Int) =
+      8 * (N : Int) ^ 3 - 3 * (N : Int) ^ 2 - (if N % 2 = 0 then 30 else 12) * (N : Int) +
+        T3const (N % 6) := by
+  rw [card_validPrefixes_three, card_triples3]
+  obtain ⟨he, ho⟩ := Wf_closed N
+  obtain ⟨q, r, hr, rfl⟩ : ∃ q r, r < 6 ∧ N = 6 * q + r :=
+    ⟨N / 6, N % 6, Nat.mod_lt _ (by norm_num), by omega⟩
+  have hm : 2 * (6 * q + r) % 3 = 2 * r % 3 := by omega
+  have hp : (6 * q + r) % 2 = r % 2 := by omega
+  have e6 : (6 * q + r) % 6 = r := by omega
+  rw [hm, hp] at he ho
+  rw [hp, e6]
+  generalize Wf (6 * q + r) = W at he ho
+  interval_cases r
+  · have h := he (by norm_num)
+    norm_num only
+    norm_num at h
+    have h' := congrArg (Nat.cast : ℕ → ℤ) h
+    push_cast at h'
+    simp only [T3const]; push_cast
+    linear_combination h'
+  · have h := ho (by norm_num)
+    norm_num only
+    norm_num at h
+    have h' := congrArg (Nat.cast : ℕ → ℤ) h
+    push_cast at h'
+    simp only [T3const]; push_cast
+    linear_combination h'
+  · have h := he (by norm_num)
+    norm_num only
+    norm_num at h
+    have h' := congrArg (Nat.cast : ℕ → ℤ) h
+    push_cast at h'
+    simp only [T3const]; push_cast
+    linear_combination h'
+  · have h := ho (by norm_num)
+    norm_num only
+    norm_num at h
+    have h' := congrArg (Nat.cast : ℕ → ℤ) h
+    push_cast at h'
+    simp only [T3const]; push_cast
+    linear_combination h'
+  · have h := he (by norm_num)
+    norm_num only
+    norm_num at h
+    have h' := congrArg (Nat.cast : ℕ → ℤ) h
+    push_cast at h'
+    simp only [T3const]; push_cast
+    linear_combination h'
+  · have h := ho (by norm_num)
+    norm_num only
+    norm_num at h
+    have h' := congrArg (Nat.cast : ℕ → ℤ) h
+    push_cast at h'
+    simp only [T3const]; push_cast
+    linear_combination h'
 
 end Folds
