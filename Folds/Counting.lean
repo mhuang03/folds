@@ -13,6 +13,8 @@ import Folds.Blocks
   (the two parity-block orders give disjoint injective families).
 * `semiCount_even`: `2 · a(n)² ≤ a(2n)`, `semiCount_odd`: `2 · a(n) · a(n+1) ≤ a(2n+1)`.
 * `semiCount_ge_pow`: `2 ^ (N - 1) ≤ a(N)` for `N ≥ 1`.
+* `card_class_prefix`: exactly `a((N+c)/2) · a((N+1-c)/2)` semi-symmetric sequences
+  start with the whole parity class `c`.
 -/
 
 namespace Folds
@@ -129,5 +131,89 @@ theorem semiCount_ge_pow : ∀ N, 1 ≤ N → 2 ^ (N - 1) ≤ semiCount N
       _ ≤ semiCount (N + 2) := hb
   termination_by N => N
   decreasing_by all_goals omega
+
+/-! ## Exact count of sequences that start with a full parity class -/
+
+/-- If a fold sequence starts with `(N + c) / 2` panels of class `c`, it is
+`blockMap c (σ, τ)` for the halves `σ`, `τ` of its two blocks, and both are fold
+sequences. -/
+theorem eq_blockMap_of_class_prefix {N c : Nat} (hc : c ≤ 1) {a : List Nat}
+    (hf : IsFoldSeq N a) (h : SemiSymmetric N a)
+    (hcls : ∀ x ∈ a.take ((N + c) / 2), (x + c) % 2 = 0) :
+    ∃ σ τ, IsFoldSeq ((N + c) / 2) σ ∧ IsFoldSeq ((N + (1 - c)) / 2) τ ∧
+      a = blockMap c (σ, τ) := by
+  obtain ⟨hσ, -⟩ := prefix_class_semiSymmetric hc hf h hcls
+  have hnd := nodup_of_foldSeq hf
+  have hlen : a.length = N := by rw [hf.length_eq]; simp
+  have bA : ∀ x ∈ a, 1 ≤ x ∧ x ≤ N := fun x hx => (mem_range'_of_perm hf).1 hx
+  have eσ : ((a.take ((N + c) / 2)).map (half c)).map (scale c) = a.take ((N + c) / 2) := by
+    rw [List.map_map]
+    conv => rhs; rw [← List.map_id (a.take _)]
+    apply List.map_congr_left
+    intro x hx; have := bA x (List.mem_of_mem_take hx); have := hcls x hx
+    simp only [Function.comp, half, scale, id]; omega
+  have hperm := hσ.map_scale (N := N) (c := c) rfl
+  rw [eσ] at hperm
+  -- every panel after the prefix has the other parity
+  have hdrop : ∀ x ∈ a.drop ((N + c) / 2), (x + (1 - c)) % 2 = 0 := by
+    intro x hx
+    have bx := bA x (List.mem_of_mem_drop hx)
+    refine Decidable.byContradiction fun hpar => ?_
+    have hxc : x ∈ classList N c := (mem_classList hc).2 ⟨bx.1, bx.2, by omega⟩
+    have hxt := hperm.symm.subset hxc
+    have hdisj := (List.nodup_append.1 ((List.take_append_drop ((N + c) / 2) a).symm ▸ hnd)).2.2
+    exact hdisj x hxt x hx rfl
+  have hndτ : ((a.drop ((N + c) / 2)).map (half (1 - c))).Nodup :=
+    nodup_map_of_injOn (hnd.sublist (List.drop_sublist _ _)) fun x hx y hy e => by
+      have := hdrop x hx; have := hdrop y hy; unfold half at e; omega
+  have bτ : ∀ y ∈ (a.drop ((N + c) / 2)).map (half (1 - c)),
+      1 ≤ y ∧ y ≤ (N + (1 - c)) / 2 := by
+    intro y hy
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hy
+    have := bA x (List.mem_of_mem_drop hx); have := hdrop x hx; unfold half; omega
+  have hτ : IsFoldSeq ((N + (1 - c)) / 2) ((a.drop ((N + c) / 2)).map (half (1 - c))) :=
+    perm_range'_of_nodup_subset hndτ bτ (by simp; omega)
+  have eτ : ((a.drop ((N + c) / 2)).map (half (1 - c))).map (scale (1 - c)) =
+      a.drop ((N + c) / 2) := by
+    rw [List.map_map]
+    conv => rhs; rw [← List.map_id (a.drop _)]
+    apply List.map_congr_left
+    intro x hx; have := bA x (List.mem_of_mem_drop hx); have := hdrop x hx
+    simp only [Function.comp, half, scale, id]; omega
+  refine ⟨_, _, hσ, hτ, ?_⟩
+  simp only [blockMap, eσ, eτ, List.take_append_drop]
+
+/-- **Exact parity-block count.**  The number of semi-symmetric fold sequences of length
+`N` whose first `(N + c) / 2` panels all have parity class `c` (evens for `c = 0`, odds
+for `c = 1`) is `a((N + c) / 2) · a((N + 1 - c) / 2)`.  In particular the number of ways
+to bisect the whole class `c` first is `a((N + c) / 2)`, and then the other class can be
+completed in `a((N + 1 - c) / 2)` ways regardless of how the first block was built. -/
+theorem card_class_prefix {N c : Nat} (hc : c ≤ 1) :
+    ((semiSeqs N).filter (fun a => ∀ x ∈ a.take ((N + c) / 2), (x + c) % 2 = 0)).card =
+      semiCount ((N + c) / 2) * semiCount ((N + (1 - c)) / 2) := by
+  have e : (semiSeqs N).filter (fun a => ∀ x ∈ a.take ((N + c) / 2), (x + c) % 2 = 0) =
+      (semiSeqs ((N + c) / 2) ×ˢ semiSeqs ((N + (1 - c)) / 2)).image (blockMap c) := by
+    ext a
+    simp only [Finset.mem_filter, Finset.mem_image]
+    constructor
+    · rintro ⟨ha, hcls⟩
+      rw [mem_semiSeqs] at ha
+      obtain ⟨σ, τ, hσ, hτ, rfl⟩ := eq_blockMap_of_class_prefix hc ha.1 ha.2 hcls
+      have := (semiSymmetric_blocks_iff hc hσ hτ).1 ha.2
+      exact ⟨(σ, τ), Finset.mem_product.2 ⟨mem_semiSeqs.2 ⟨hσ, this.1⟩,
+        mem_semiSeqs.2 ⟨hτ, this.2⟩⟩, rfl⟩
+    · rintro ⟨⟨σ, τ⟩, hp, rfl⟩
+      refine ⟨blockMap_mem hc hp, ?_⟩
+      have hσ := (mem_semiSeqs.1 (Finset.mem_product.1 hp).1).1
+      have hl : (σ.map (scale c)).length = (N + c) / 2 := by
+        rw [List.length_map, hσ.length_eq]; simp
+      intro x hx
+      simp only [blockMap] at hx
+      rw [List.take_left' hl] at hx
+      obtain ⟨y, hy, rfl⟩ := List.mem_map.1 hx
+      have := ((mem_range'_of_perm hσ).1 hy).1
+      unfold scale; omega
+  rw [e, Finset.card_image_of_injOn (blockMap_injOn hc), Finset.card_product]
+  rfl
 
 end Folds
