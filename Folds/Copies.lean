@@ -412,7 +412,7 @@ theorem CountEmb.winEmb_iff {N p : Nat} {φ c : Nat → Nat} (h : CountEmb N p �
     ⟨fun hφ => e.1 fun j hj1 hjp => hφ.balanced_self hj1 hjp, h.winEmb⟩⟩
 
 /-- A step `(S, m)` is valid iff `S ∪ {m}` is balanced around `m`. -/
-theorem semiStep_iff_balanced {N m : Nat} {S : List Nat} (hnd : S.Nodup) :
+theorem semiStep_iff_balanced_append {N m : Nat} {S : List Nat} (hnd : S.Nodup) :
     SemiStep N S m ↔ Balanced N (S ++ [m]) m := by
   unfold SemiStep Balanced
   rw [leftCount_eq hnd, rightCount_eq hnd, List.countP_append, List.countP_append]
@@ -434,14 +434,14 @@ theorem CountEmb.winEmb_iff_lastStep {N p : Nat} {φ c : Nat → Nat} (h : Count
   constructor
   · intro hb S e
     have hndS : S.Nodup := (e.nodup_iff.2 hndX).sublist (List.sublist_append_left _ _)
-    exact (semiStep_iff_balanced hndS).2 (hb.perm e.symm)
+    exact (semiStep_iff_balanced_append hndS).2 (hb.perm e.symm)
   · intro hs
     have hmem : φ j ∈ (List.range' 1 p).map φ :=
       List.mem_map.2 ⟨j, List.mem_range'_1.2 ⟨hj1, by omega⟩, rfl⟩
     have e : ((((List.range' 1 p).map φ).erase (φ j)) ++ [φ j]).Perm
         ((List.range' 1 p).map φ) :=
       (List.perm_append_comm.trans (List.perm_cons_erase hmem).symm)
-    exact ((semiStep_iff_balanced (hndX.erase _)).1 (hs _ e)).perm e
+    exact ((semiStep_iff_balanced_append (hndX.erase _)).1 (hs _ e)).perm e
 
 /-! ## Beatty copies
 
