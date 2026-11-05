@@ -9,6 +9,10 @@ cargo run --release -- semi 1 33              # prints "N a(N) time" for N = 1..
 cargo run --release -- sym 1 24               # symmetric variant (OEIS A003407)
 cargo run --release -- semi 34 --mod32 4      # u32 residues, 4 moduli + CRT (half memory)
 cargo run --release -- semi 35 --mod16 7      # u16 residues (quarter memory)
+cargo run --release -- semi 34 --blocks -v     # block-streamed layers (see below), u64
+cargo run --release -- residue semi 36 8 3 --blocks   # one u8 residue (index 3 in the moduli table)
+cargo run --release -- crt 8 r0 r1 ... r12     # CRT of u8 residues (checks the redundant one)
+cargo run --release -- peak 36 37              # simulated peak memory of --blocks
 cargo run --release -- stats semi 26          # refined statistics (see below)
 cargo run --release -- check                  # validation (brute force + known terms)
 cargo test --release                          # unit tests (rule & indexing bijection)
@@ -78,6 +82,76 @@ N=35 9.1 GB (u16).
 
 On N=28 that is ~25× faster than the plain DP and uses ~15× less memory. The remaining
 cost is mostly memory latency, plus system time for page faults.
+
+## Block streaming (`--blocks`, `block.rs`)
+
+The plain layered DP holds two full layers (`k-1` and `k`) at the same time.
+`--blocks` lowers this with three observations about the block structure
+`(i=|L|, j=|R|, c)` of a layer:
+
+1. **Locality in `i`.** Output block `(i, j, c)` of layer `k` reads only the blocks
+   `(i-1, j, c)`, `(i, j-1, c)` (for `j = i` this is the mirror of `(i-1, i, c)`) and
+   `(i, j, 0)` of layer `k-1`. All of these have `L`-size `i-1` or `i`. The output
+   blocks are computed one at a time. Any order is correct; the order is
+   increasing or decreasing `i`, improved by a deterministic local search
+   (100k insertion moves) on the simulated peak. A block of layer `k-1` is released
+   right after the last output block that reads it. Each layer is one
+   `mmap(MAP_NORESERVE)` region, so only written pages count. A released block gets
+   `MADV_DONTNEED` + `PROT_NONE`, so a stray read faults instead of returning a
+   wrong value.
+2. **Even `N`: the middle layer is never stored.** Complementing maps block
+   `(i, h-i)` of layer `h = N/2` to itself (`|~L| = h-i`, `|~R| = i`), via
+   `(rank L, rank R) ↦ (C-1-rank R, C-1-rank L)`, because complement reverses colex
+   order. So each block of the middle layer is computed, combined with itself
+   (`Σ g(S) g(S^c)`) and dropped.
+3. **Odd `N` (fused form `Σ_{|U|=k+1} g(U) g(U^c)`).** The complement of block
+   `(i, j, c)` of layer `k+1` is block `(i+c-1, h-i, 1-c)` of layer `k`, again with
+   `L`-size `i-1` or `i`. Layer `k+1` exists only as 16-row tiles, and layer `k` is
+   released as it is consumed.
+
+**Memory model.** For each step, peak = max over the block order of
+(live blocks of layer `k-1`) + (blocks of layer `k` written so far; in the final step,
+only the current one). `folds peak N` prints the maximum over all steps. Sizes are in
+words (multiply by the bytes per residue):
+
+| N | old: layers h-1 and h | `--blocks` |
+|---|---|---|
+| 33 | 1.10e9 | 0.74e9 |
+| 34 | 2.27e9 | 1.58e9 |
+| 35 | 4.30e9 | 2.88e9 |
+| 36 | 8.84e9 | 6.22e9 |
+| 37 | 16.8e9 | 11.2e9 |
+| 38 | 34.5e9 | 24.2e9 |
+
+The peak is about one full layer plus the two or three largest blocks next to the
+diagonal. For N=36, the binding step is 16 → 17, and block `(8,9)` alone is half of
+layer 17. The measured `VmHWM` matches the simulation: for N=33 with u64, both were
+6.52 GB before the local search, against 9.3 GB for the old code. For N=36 with u8,
+both are 6.22 GB. The local search mostly helps odd N (N=37: 12.2e9 with plain
+decreasing `i`). A global schedule over the (layer, block) DAG (interleaving blocks of
+different layers, found by a greedy search) reaches 6.0e9 for N=36 and 10.6e9 for
+N=37, so it was not implemented. No block order can go
+below max over blocks of (block + the blocks it reads), which is 5.4e9 for N=36.
+
+**Kernels.** The block path also has kernels that are kinder to the cache. They are
+used only there:
+* Diagonal blocks `(i, i, c)` are computed in 64-row tiles, walked column by column.
+  The row kernel read `g(L\x, R)` at column `rank R` of a different row for every
+  `x`: one cache miss per read. The tile reads 64 consecutive words instead.
+* Off-diagonal blocks `(i, i+1, c)` are the largest blocks (half of layer 17 for
+  N=36). There, removing a right panel lands in the *triangle* `(i, i, c)`, and half
+  of these reads fall in a different row. These blocks get 16-row tiles.
+* Barrett reduction replaces a 64-bit `div` per entry. Accumulators are `u64` and the
+  validity masks are branch-free. Precomputed per-`j` tables give `rev` and
+  `rank(R minus one bit)` by sequential reads, instead of random reads of 1 MB tables.
+* The complement index in the final step is computed directly, with no table lookups.
+
+On the shared machine (load 8–13 from other jobs) the user time for N=32 fell by
+about 7%. This VM is limited by memory latency and by CPU share, not by instruction
+count.
+
+`folds check` runs the block path (`u64`, `u16`, `u8`) against all the other paths
+for N ≤ 24. Debug builds also assert the direct complement indices.
 
 ## Validation (`folds check`)
 

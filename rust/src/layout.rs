@@ -28,6 +28,10 @@ pub struct Layout {
     /// `un[i]` = all `h`-bit masks of popcount `i`, increasing (= colex order)
     pub un: Vec<Vec<u32>>,
     pub binom: Vec<Vec<u64>>,
+    /// `revc[j][col] = rev[un[j][col]]` (sequential, instead of a random table read)
+    pub revc: Vec<Vec<u32>>,
+    /// `rrem[j][col*j + q]` = rank of `un[j][col]` with its `q`-th lowest set bit removed
+    pub rrem: Vec<Vec<u32>>,
 }
 
 impl Layout {
@@ -52,12 +56,34 @@ impl Layout {
                 binom[a][c] = binom[a - 1][c - 1] + if c < a { binom[a - 1][c] } else { 0 };
             }
         }
-        Layout { n, h, b, low: (size as u64) - 1, rank, rev, un, binom }
+        let revc = un.iter().map(|v| v.iter().map(|&m| rev[m as usize]).collect()).collect();
+        let rrem = un
+            .iter()
+            .map(|v| {
+                let mut out = Vec::new();
+                for &m in v {
+                    let mut bits = m;
+                    while bits != 0 {
+                        let y = bits.trailing_zeros();
+                        bits &= bits - 1;
+                        out.push(rank[(m ^ (1 << y)) as usize]);
+                    }
+                }
+                out
+            })
+            .collect();
+        Layout { n, h, b, low: (size as u64) - 1, rank, rev, un, binom, revc, rrem }
     }
 
     #[inline(always)]
     pub fn compose(&self, l: u32, c: usize, r: u32) -> u64 {
         l as u64 | (c as u64) << self.h | (self.rev[r as usize] as u64) << (self.n - self.h)
+    }
+
+    /// `compose(l, c, un[j][col])` without the random `rev` lookup.
+    #[inline(always)]
+    pub fn compose_col(&self, l: u32, c: usize, j: usize, col: usize) -> u64 {
+        l as u64 | (c as u64) << self.h | (unsafe { *self.revc[j].get_unchecked(col) } as u64) << (self.n - self.h)
     }
 
     #[inline(always)]

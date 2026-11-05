@@ -1,0 +1,28 @@
+# start idx 0 2026-11-05T06:59:25Z load 9.51 12.34 11.19
+semi N=36 mod 256 = 36 2136.5s peak_rss 6.23 GB (blocks)
+# start idx 1 2026-11-05T07:35:07Z load 7.96 8.13 9.10
+semi N=36 mod 251 = 102 1033.5s peak_rss 6.23 GB (blocks)
+# start idx 2 2026-11-05T07:52:21Z load 6.56 7.43 7.94
+semi N=36 mod 241 = 176 701.2s peak_rss 6.23 GB (blocks)
+# start idx 3 2026-11-05T08:04:17Z load 4.37 6.16 7.09
+semi N=36 mod 239 = 44 440.3s peak_rss 6.23 GB (blocks)
+# start idx 4 2026-11-05T08:11:37Z load 4.37 4.96 6.15
+semi N=36 mod 233 = 197 471.2s peak_rss 6.23 GB (blocks)
+# start idx 5 2026-11-05T08:19:28Z load 5.07 4.91 5.68
+semi N=36 mod 229 = 222 577.5s peak_rss 6.23 GB (blocks)
+# start idx 6 2026-11-05T08:29:06Z load 7.96 7.84 6.61
+semi N=36 mod 227 = 180 438.8s peak_rss 6.23 GB (blocks)
+# start idx 7 2026-11-05T08:36:32Z load 4.65 5.29 5.78 avail 14405724 kB
+semi N=36 mod 223 = 100 757.2s peak_rss 6.23 GB (blocks)
+# start idx 8 2026-11-05T08:49:09Z load 5.06 5.45 5.76 avail 15516356 kB
+semi N=36 mod 211 = 187 480.4s peak_rss 6.23 GB (blocks)
+# start idx 9 2026-11-05T08:57:10Z load 4.06 4.63 5.26 avail 15596280 kB
+semi N=36 mod 199 = 154 540.9s peak_rss 6.23 GB (blocks)
+# start idx 10 2026-11-05T09:06:11Z load 4.56 5.31 5.56 avail 15640564 kB
+semi N=36 mod 197 = 180 526.6s peak_rss 6.23 GB (blocks)
+# start idx 11 2026-11-05T09:15:10Z load 4.76 5.34 5.41 avail 15635608 kB
+semi N=36 mod 193 = 162 634.0s peak_rss 6.23 GB (blocks)
+# start idx 12 2026-11-05T09:25:44Z load 5.90 5.61 5.44 avail 15463828 kB
+semi N=36 mod 191 = 126 712.8s peak_rss 6.23 GB (blocks)
+# start idx 13 2026-11-05T09:37:36Z load 6.00 5.71 5.50 avail 15447260 kB
+semi N=36 mod 181 = 42 781.0s peak_rss 6.23 GB (blocks)

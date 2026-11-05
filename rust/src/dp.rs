@@ -15,6 +15,9 @@ use rayon::prelude::*;
 pub trait Word: Copy + Send + Sync + Default + 'static {
     fn get(self) -> u128;
     fn put(x: u128) -> Self;
+    /// low 64 bits (the block kernels accumulate in `u64`: exact sums are values of
+    /// `g ≤ 20!`, modular sums are `< 64 · 2^32`)
+    fn get64(self) -> u64;
     const BYTES: usize;
 }
 macro_rules! word {
@@ -25,6 +28,10 @@ macro_rules! word {
                 self as u128
             }
             #[inline(always)]
+            fn get64(self) -> u64 {
+                self as u64
+            }
+            #[inline(always)]
             fn put(x: u128) -> Self {
                 debug_assert!(x <= <$t>::MAX as u128);
                 x as $t
@@ -33,6 +40,7 @@ macro_rules! word {
         }
     };
 }
+word!(u8);
 word!(u16);
 word!(u32);
 word!(u64);
@@ -42,12 +50,42 @@ word!(u128);
 #[derive(Clone, Copy, Debug)]
 pub struct Ring {
     pub modulus: u64,
+    /// `floor(2^64 / modulus)` for Barrett reduction (a 64-bit `div` per entry costs
+    /// 40-90 cycles, a large share of the inner loop)
+    minv: u64,
 }
 impl Ring {
+    pub fn new(modulus: u64) -> Self {
+        assert!(modulus == 0 || (2..=1 << 32).contains(&modulus));
+        let minv = if modulus == 0 { 0 } else { ((1u128 << 64) / modulus as u128) as u64 };
+        Ring { modulus, minv }
+    }
+    pub const EXACT: Ring = Ring { modulus: 0, minv: 0 };
+    /// `a mod modulus` for `a < 2^64` (modular mode only).
+    #[inline(always)]
+    pub fn red64(self, a: u64) -> u64 {
+        let q = ((a as u128 * self.minv as u128) >> 64) as u64;
+        let mut r = a - q * self.modulus;
+        while r >= self.modulus {
+            r -= self.modulus;
+        }
+        r
+    }
     #[inline(always)]
     pub fn red(self, x: u128) -> u128 {
         // in modular mode the accumulator is a sum of < 64 residues < 2^32
-        if self.modulus == 0 { x } else { ((x as u64) % self.modulus) as u128 }
+        if self.modulus == 0 { x } else { self.red64(x as u64) as u128 }
+    }
+    /// Reduce any `u128` (exact mode: identity).
+    #[inline(always)]
+    pub fn red_any(self, x: u128) -> u128 {
+        if self.modulus == 0 {
+            x
+        } else if x >> 64 == 0 {
+            self.red64(x as u64) as u128
+        } else {
+            x % self.modulus as u128
+        }
     }
 }
 
@@ -127,7 +165,7 @@ pub fn step_into<W: Word>(
 /// single row of length `≤ C(h, h/2)` read at random (`p ∈ R`), which stays in cache.
 #[allow(clippy::too_many_arguments)]
 #[inline(never)]
-fn offdiag_row<W: Word>(
+pub(crate) fn offdiag_row<W: Word>(
     lay: &Layout,
     chk: &Checker,
     ring: Ring,
@@ -168,9 +206,10 @@ fn offdiag_row<W: Word>(
     };
     let rshift = lay.n - 1;
     let un_j = &lay.un[j];
+    let rrem = &lay.rrem[j];
     for (col, o) in out.iter_mut().enumerate() {
-        let r = un_j[col];
-        let t = lay.compose(l, c, r);
+        let r = unsafe { *un_j.get_unchecked(col) };
+        let t = lay.compose_col(l, c, j, col);
         let mut acc = 0u128;
         for &(x, base) in &lx[..nl] {
             if chk.valid(t ^ (1u64 << x), x) {
@@ -181,15 +220,16 @@ fn offdiag_row<W: Word>(
             acc += unsafe { pd.get_unchecked(midbase + col).get() };
         }
         let mut bits = r;
+        let mut q = col * j;
         while bits != 0 {
             let y = bits.trailing_zeros();
             bits &= bits - 1;
             let p = (rshift - y as usize) as u32;
+            q += 1;
             if chk.valid(t ^ (1u64 << p), p) {
-                let r2 = r ^ (1 << y);
                 let ix = match rbase {
-                    Some(b) => b + lay.rank[r2 as usize] as usize,
-                    None => ps.index_parts(lay, l, c, r2),
+                    Some(b) => b + unsafe { *rrem.get_unchecked(q - 1) } as usize,
+                    None => ps.index_parts(lay, l, c, r ^ (1 << y)),
                 };
                 acc += unsafe { pd.get_unchecked(ix).get() };
             }
@@ -200,7 +240,7 @@ fn offdiag_row<W: Word>(
 
 #[allow(clippy::too_many_arguments)]
 #[inline(never)]
-fn generic_row<W: Word>(
+pub(crate) fn generic_row<W: Word>(
     lay: &Layout,
     chk: &Checker,
     ring: Ring,

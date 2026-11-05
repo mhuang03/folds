@@ -21,3 +21,7 @@
 35 14916356465581456801127844 3807s 4 u16-CRT(7 moduli, stable; residues run as separate processes of 313-755s each, machine shared with other agents, load ~7)
 # Residues for N=35 (mod 65536 65521 65519 65497 65479 65449 65447): 56740 16930 8246 47426 54224 17843 21941
 # Residues for N=34 (mod 2^32 4294967291 4294967279 4294967231): 25842588 1715914896 637060206 883891397
+36 162918548122441960881265188 9451s 4 u8-CRT(13 moduli, stable, plus a 14th residue mod 181 = 42 that agrees; --blocks, peak RSS 6.23 GB; residues run as separate processes of 438-2137s each, load 4-13 from other agents)
+# Residues for N=36 (mod 256 251 241 239 233 229 227 223 211 199 197 193 191): 36 102 176 44 197 222 180 100 187 154 180 162 126
+# N=36 checks: the CRT of the first 12 residues equals the CRT of all 13; a(36) mod 4 = 0, as predicted by a = c (mod 4).
+# Re-verification of the block path: a(33) exact (u64, --blocks) = 171668579369815966705184; a(34) mod 251 = 91 and mod 65521 = 19914 (--blocks) agree with the stored a(34).
