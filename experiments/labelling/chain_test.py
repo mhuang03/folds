@@ -13,6 +13,7 @@ def longest_chain(lab):   # labels in position order; chain = decreasing positio
         for j in range(i + 1, len(lab)):
             if lab[j] < lab[i]: best[i] = max(best[i], best[j] + 1)
     return best
+if __name__ != "__main__": files = []
 for f in files:
     N, t = map(int, f.split('/')[-1][4:-4].split('_'))
     badA = badB = 0; exA = exB = None
