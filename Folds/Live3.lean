@@ -3,7 +3,27 @@ import Folds.Live2
 /-!
 # Live pairs, part 3: residue chains at `ν = ±1`
 
-`experiments/live3/PROOFS.txt`.
+`experiments/live3/PROOFS.txt`, sections 1 and 2.
+
+* `CycBal` toolkit: the counting form `cycBal_iff`, the duality `ρ ↔ q - 1 - ρ`
+  (`cycBal_dual`), invariance under the reflection `sig q ν` and the rotation `rot q` of the
+  labels, and the strip form `semiStep_iff_cycBal` (`N = q`).
+* `chainOK_of_valid`: if `π` and `σ ∘ π` are valid sequences of the `q`-strip,
+  `σ t = ((ν - t) mod q) + 1`, then `π` is a residue chain (`ChainOK q ν π`).
+* **Lemma W** (`lemmaW`): valid sequences of the `k`-strip with any odd start in which `v`
+  comes before `2v`; `semiSymmetric_shift` lifts them to the `(k+1)`-strip.
+* **Theorem H** (`palindromic_chain`): for `q = 2k + 1` and odd `v₀ ≤ k`, an explicit chain
+  for `ν = 1` (odd panels `2β + 1` then `1`, then the even panels in reversed mirrored order),
+  which is also a chain when reversed, from `2v₀ + 1` to `q + 1 - 2v₀`.
+  Consequences for EVERY odd `q` (Conjecture RS was known only for `q ≤ 12` before):
+  `coReach_nu_one` (`N ≡ 1`, classes `≡ 3` and `≡ q - 1 (mod 4)`) and, through the rotation
+  `chainOK_rot`, `coReach_nu_neg_one` (`N ≡ -1`, classes `≡ 2` and `≡ q - 2 (mod 4)`).
+* **Lemma P / Theorem E** (`prec`, `no_chain_exc`): at `ν = 1` the second chain condition at
+  `s` says that class `1` is placed iff class `D(s) = 2s - 1 (mod q)` is; hence, if `q` has an
+  odd divisor `b > 1`, no order of the classes `2..q` is a chain: the exceptions of
+  Conjecture RS are genuine.
+* **Lemma N** (`winEmb_near`): the near class `C₁ - {1} + {2}` (`N ≡ 1 (mod q)`, `q ≥ 3`) is a
+  window copy.  (Its complement is reachable only numerically; see PROOFS.txt section 3.)
 -/
 
 namespace Folds
@@ -66,7 +86,7 @@ theorem sum_ite_eq_countP (A : List Nat) (p : Nat → Prop) [DecidablePred p] :
   | nil => simp
   | cons a A ih =>
     simp only [List.map_cons, List.sum_cons, List.countP_cons, ih]
-    split_ifs <;> simp_all <;> omega
+    by_cases h : p a <;> simp [h, Nat.add_comm]
 
 /-- **Counting form of `CycBal`.** -/
 theorem cycBal_iff {q s ρ : Nat} {A : List Nat} (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q)
@@ -673,8 +693,8 @@ theorem prec {q s : Nat} {A : List Nat} (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q) 
     omega
   rw [countP_eq_ite hnd, countP_eq_ite hnd] at key
   constructor
-  · intro h; rw [if_pos h] at key; split_ifs at key with h' <;> simp_all
-  · intro h; rw [if_pos h] at key; split_ifs at key with h' <;> simp_all
+  · intro h; rw [if_pos h] at key; split_ifs at key with h'; exact h'
+  · intro h; rw [if_pos h] at key; split_ifs at key with h'; exact h'
 
 theorem dbl_iter {q m : Nat} (_hq : 0 < q) (hm : m < q) :
     ∀ j, (dbl q)^[j] (m + 1) = (2 ^ j * m) % q + 1 := by
@@ -753,6 +773,89 @@ theorem no_chain_exc {q b : Nat} (hq : 0 < q) (hb : b ∣ q) (hb1 : 1 < b) (hbo 
         split_ifs at this <;> omega
   obtain ⟨i, hi, -, hji⟩ := step π.length
   omega
+
+/-! ## Lemma N: near residue classes are window copies -/
+
+/-- The near class `C₁ - {1} + {2}`: `φ(1) = 2`, `φ(y) = 1 + (y - 1) q`. -/
+def nearPhi (q y : Nat) : Nat := if y = 1 then 2 else cls q 1 y
+
+theorem cls_one_ge {q y : Nat} (hy : 2 ≤ y) : q + 1 ≤ cls q 1 y := by
+  unfold cls
+  have : q ≤ (y - 1) * q := Nat.le_mul_of_pos_left q (by omega)
+  omega
+
+/-- **Lemma N** (PROOFS.txt 2).  For `q ≥ 3` and `N ≡ 1 (mod q)`, `N > q`, the near class
+`C₁ - {1} + {2}` is a window copy of the strip of size `|C₁|`. -/
+theorem winEmb_near {q N : Nat} (hq : 3 ≤ q) (hN : N % q = 1) (hqN : q < N) :
+    WinEmb N (ccount q 1 N) (nearPhi q) := by
+  have hφ := winEmb_res (q := q) (s := 1) (N := N) (by omega) le_rfl (by omega) (by omega)
+  have hr2 : reach N 2 = 1 := by unfold reach; omega
+  have hrp1 : reach (ccount q 1 N) 1 = 0 := by unfold reach; omega
+  refine ⟨fun y h1 h2 => ?_, fun x y hx1 hxp hy1 hyp e => ?_, fun j y hj1 hjp hy1 hyp => ?_,
+    fun j y hj1 hjp hy1 hyp => ?_⟩
+  · unfold nearPhi; split_ifs
+    · omega
+    · exact hφ.bound y h1 h2
+  · unfold nearPhi at e
+    split_ifs at e with h1 h2 h2
+    · omega
+    · have := cls_one_ge (q := q) (show 2 ≤ y by omega); omega
+    · have := cls_one_ge (q := q) (show 2 ≤ x by omega); omega
+    · exact hφ.inj x y hx1 hxp hy1 hyp e
+  · unfold nearPhi
+    by_cases hj : j = 1
+    · subst hj
+      rw [if_pos rfl, hr2]
+      constructor
+      · rintro ⟨h1, h2⟩
+        by_cases hy : y = 1
+        · rw [if_pos hy] at h2; omega
+        · rw [if_neg hy] at h2
+          have := cls_one_ge (q := q) (show 2 ≤ y by omega); omega
+      · rintro ⟨_, h2⟩; omega
+    · rw [if_neg hj]
+      have hx := cls_one_ge (q := q) (show 2 ≤ j by omega)
+      by_cases hy : y = 1
+      · subst hy
+        rw [if_pos rfl]
+        have h0 := hφ.left j 1 hj1 hjp le_rfl hyp
+        have hc1 : cls q 1 1 = 1 := by unfold cls; simp
+        rw [hc1] at h0
+        rw [← h0]
+        -- `2` and `1` lie in the same arm unless `2 x = N + 2`, impossible mod `q`
+        have hne : cls q 1 j - reach N (cls q 1 j) ≠ 2 := by
+          intro h2
+          have hrx : reach N (cls q 1 j) = N - cls q 1 j := by unfold reach at h2 ⊢; omega
+          have hNe : N = 2 * (j - 1) * q := by
+            rw [hrx] at h2; unfold cls at h2 hx; rw [Nat.mul_assoc]; omega
+          rw [hNe, Nat.mul_mod_left] at hN
+          omega
+        constructor
+        · rintro ⟨h1, h2⟩; exact ⟨by omega, by omega⟩
+        · rintro ⟨h1, h2⟩; exact ⟨by omega, by omega⟩
+      · rw [if_neg hy]
+        exact hφ.left j y hj1 hjp hy1 hyp
+  · unfold nearPhi
+    by_cases hj : j = 1
+    · subst hj
+      rw [if_pos rfl, hr2, hrp1]
+      constructor
+      · rintro ⟨h1, h2⟩
+        by_cases hy : y = 1
+        · rw [if_pos hy] at h1; omega
+        · rw [if_neg hy] at h1 h2
+          have := cls_one_ge (q := q) (show 2 ≤ y by omega); omega
+      · rintro ⟨h1, h2⟩; omega
+    · rw [if_neg hj]
+      have hx := cls_one_ge (q := q) (show 2 ≤ j by omega)
+      by_cases hy : y = 1
+      · subst hy
+        rw [if_pos rfl]
+        constructor
+        · rintro ⟨h1, _⟩; omega
+        · rintro ⟨h1, _⟩; omega
+      · rw [if_neg hy]
+        exact hφ.right j y hj1 hjp hy1 hyp
 
 end Live3
 end Folds
