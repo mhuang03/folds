@@ -20,7 +20,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 |---|---|
 | closed form for a(N) | **none found; very unlikely**. No OEIS match; huge prime factors; no holonomic recurrence; even the symmetric analogue A003407 has no known formula (and, per Ho 2026, no exponential growth rate) |
 | recursive formula | **proven** (Lean): subset recursion `g`, and a(N) = Σ_{\|S\|=k} g(S)·g(Sᶜ) for every k |
-| terms | a(1..36) exact; ln a(N) estimated to N = 4096 |
+| terms | a(1..37) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
 | congruences | a(N) ≡ c(N) (mod 4) (**proven**); 4 ∣ a(N) for N ≡ 3 (mod 4) (**proven**); no patterns modulo odd primes |
 | growth | **rigorously (N/512)^{N/22} ≤ a(N) ≤ N!·e^{−Θ(N)}** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
@@ -31,22 +31,22 @@ fixed by reversal∘mirror.
 
 ## Data
 
-`experiments/semi_counts.txt`: N ≤ 27 come from `experiments/semi.c`; N = 28..36 come
+`experiments/semi_counts.txt`: N ≤ 27 come from `experiments/semi.c`; N = 28..37 come
 from the Rust crate `rust/`.
 
-a(1..36) = 1, 2, 4, 10, 28, 96, 256, 1120, 4256, 17878, 70960, 383476, 1620328,
+a(1..37) = 1, 2, 4, 10, 28, 96, 256, 1120, 4256, 17878, 70960, 383476, 1620328,
 9167908, 47821296, 276182312, 1481994716, 10084180418, 55082188120, 398874108930,
 2505681033958, 18168130281086, 119006527671252, 979730153850974,
 6564449510287388, 55581983250573500, 413109755332919448, 3603074636066234798,
 27545080998591561856, 262878496654501774250, 2037247307316034896720,
 20222490725552617395966, 171668579369815966705184, 1711977358970374039688092,
-14916356465581456801127844, 162918548122441960881265188.
+14916356465581456801127844, 162918548122441960881265188, 1435459602925600924848243286.
 
 - The symmetric counts are OEIS A003407 (3-AP-free permutations).
 - c(N), for sequences fixed by reversal∘mirror, is known to N = 41
   (`experiments/arith/`).
-- `rust/` uses a mirror-orbit, meet-in-the-middle layered DP: a(33) takes 74 s. a(36) used block streaming (6.2 GB peak) and
-  13 u8 CRT residues, about 2.6 h in total (see `rust/README.md`).
+- `rust/` uses a mirror-orbit, meet-in-the-middle layered DP: a(33) takes 74 s. a(36) and a(37) used block streaming (6.2 and 11.2 GB
+  peak) and 13 u8 CRT residues each (2.6 h and 4.6 h). N = 38 needs about 24 GB (see `rust/README.md`).
 
 ## Equivalent formulations (all proven in Lean)
 
