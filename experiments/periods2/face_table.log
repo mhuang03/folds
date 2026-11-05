@@ -1,0 +1,132 @@
+== 3 4
+  a=   1/3 bits=10  A_above=-1/2  A_below=-1/3
+  a=   2/3 bits=01  A_above=-1/3  A_below=-1/2
+M=3 K=4 q=3: predicted coefficient of e(-N/q) in c_1 (x (K-M)!) = (0.09259259259259259-0.010691671651659785j)
+== 3 5
+  a=   1/3 bits=10  A_above=-79/144  A_below=11/48
+  a=   2/3 bits=01  A_above=11/48  A_below=-79/144
+M=3 K=5 q=3: predicted coefficient of e(-N/q) in c_2 (x (K-M)!) = (0.07098765432098761-0.09978893541549089j)
+== 4 5
+  a=   1/7 bits=100  A_above=4/7  A_below=1/14
+  a=   2/7 bits=010  A_above=0  A_below=-8/7
+  a=   3/7 bits=110  A_above=2/7  A_below=0
+  a=   4/7 bits=001  A_above=0  A_below=-2/7
+  a=   5/7 bits=101  A_above=8/7  A_below=0
+  a=   6/7 bits=011  A_above=-1/14  A_below=-4/7
+M=4 K=5 q=7: predicted coefficient of e(-N/q) in c_1 (x (K-M)!) = (-0.05427896787607678+0.042424583705117376j)
+== 4 6
+  a=   1/7 bits=100  A_above=387/392  A_below=1/392
+  a=   2/7 bits=010  A_above=75/392  A_below=-33/784
+  a=   3/7 bits=110  A_above=125/392  A_below=15/56
+  a=   4/7 bits=001  A_above=-15/56  A_below=-125/392
+  a=   5/7 bits=101  A_above=33/784  A_below=-75/392
+  a=   6/7 bits=011  A_above=-1/392  A_below=-387/392
+M=4 K=6 q=7: predicted coefficient of e(-N/q) in c_2 (x (K-M)!) = (-0.21945147581227553-0.059642353065960295j)
+== 5 6
+  a=   1/15 bits=1000  A_above=-13/30  A_below=-1/30
+  a=   3/15 bits=1100  A_above=-6/5  A_below=-1/5
+  a=   6/15 bits=0110  A_above=3/5  A_below=0
+  a=   7/15 bits=1110  A_above=-14/15  A_below=0
+  a=   8/15 bits=0001  A_above=0  A_below=-14/15
+  a=   9/15 bits=1001  A_above=0  A_below=3/5
+  a=  12/15 bits=0011  A_above=-1/5  A_below=-6/5
+  a=  14/15 bits=0111  A_above=-1/30  A_below=-13/30
+M=5 K=6 q=15: predicted coefficient of e(-N/q) in c_1 (x (K-M)!) = (-0.09333333333333352-0.014296596345726456j)
+== 5 7
+  a=   1/15 bits=1000  A_above=-1987/1800  A_below=1/450
+  a=   2/15 bits=0100  A_above=0  A_below=347/1800
+  a=   3/15 bits=1100  A_above=-67/100  A_below=27/400
+  a=   4/15 bits=0010  A_above=0  A_below=101/150
+  a=   6/15 bits=0110  A_above=27/400  A_below=-4/25
+  a=   7/15 bits=1110  A_above=203/600  A_below=0
+  a=   8/15 bits=0001  A_above=0  A_below=203/600
+  a=   9/15 bits=1001  A_above=-4/25  A_below=27/400
+  a=  11/15 bits=1101  A_above=101/150  A_below=0
+  a=  12/15 bits=0011  A_above=27/400  A_below=-67/100
+  a=  13/15 bits=1011  A_above=347/1800  A_below=0
+  a=  14/15 bits=0111  A_above=1/450  A_below=-1987/1800
+M=5 K=7 q=15: predicted coefficient of e(-N/q) in c_2 (x (K-M)!) = (0.013703703703703315+0.8733017389134121j)
+== 6 7
+  a=   1/31 bits=10000  A_above=7/31  A_below=1/62
+  a=   3/31 bits=11000  A_above=40/31  A_below=-3/62
+  a=   5/31 bits=10100  A_above=-9/31  A_below=0
+  a=   6/31 bits=01100  A_above=0  A_below=21/31
+  a=   7/31 bits=11100  A_above=-21/62  A_below=-14/31
+  a=  11/31 bits=11010  A_above=11/62  A_below=0
+  a=  14/31 bits=01110  A_above=-9/31  A_below=0
+  a=  17/31 bits=10001  A_above=0  A_below=9/31
+  a=  20/31 bits=00101  A_above=0  A_below=-11/62
+  a=  24/31 bits=00011  A_above=14/31  A_below=21/62
+  a=  25/31 bits=10011  A_above=-21/31  A_below=0
+  a=  26/31 bits=01011  A_above=0  A_below=9/31
+  a=  28/31 bits=00111  A_above=3/62  A_below=-40/31
+  a=  30/31 bits=01111  A_above=-1/62  A_below=-7/31
+M=6 K=7 q=31: predicted coefficient of e(-N/q) in c_1 (x (K-M)!) = (0.3624400219945669+0.04806995505357978j)
+== 6 8
+  a=   1/31 bits=10000  A_above=18325/15376  A_below=5/3844
+  a=   3/31 bits=11000  A_above=5975/7688  A_below=-207/3844
+  a=   5/31 bits=10100  A_above=-461/15376  A_below=0
+  a=   6/31 bits=01100  A_above=-147/1922  A_below=3729/15376
+  a=   7/31 bits=11100  A_above=-1005/3844  A_below=-2807/7688
+  a=   9/31 bits=10010  A_above=0  A_below=-18/961
+  a=  10/31 bits=01010  A_above=0  A_below=2797/15376
+  a=  11/31 bits=11010  A_above=869/15376  A_below=0
+  a=  12/31 bits=00110  A_above=-2175/7688  A_below=0
+  a=  13/31 bits=10110  A_above=299/3844  A_below=0
+  a=  14/31 bits=01110  A_above=33/1922  A_below=0
+  a=  15/31 bits=11110  A_above=10995/15376  A_below=0
+  a=  16/31 bits=00001  A_above=0  A_below=-10995/15376
+  a=  17/31 bits=10001  A_above=0  A_below=-33/1922
+  a=  18/31 bits=01001  A_above=0  A_below=-299/3844
+  a=  19/31 bits=11001  A_above=0  A_below=2175/7688
+  a=  20/31 bits=00101  A_above=0  A_below=-869/15376
+  a=  21/31 bits=10101  A_above=-2797/15376  A_below=0
+  a=  22/31 bits=01101  A_above=18/961  A_below=0
+  a=  24/31 bits=00011  A_above=2807/7688  A_below=1005/3844
+  a=  25/31 bits=10011  A_above=-3729/15376  A_below=147/1922
+  a=  26/31 bits=01011  A_above=0  A_below=461/15376
+  a=  28/31 bits=00111  A_above=207/3844  A_below=-5975/7688
+  a=  30/31 bits=01111  A_above=-5/3844  A_below=-18325/15376
+M=6 K=8 q=31: predicted coefficient of e(-N/q) in c_2 (x (K-M)!) = (5.278415748028283+0.17441865256305056j)
+== 7 8
+  a=   1/63 bits=100000  A_above=1/126  A_below=-1/126
+  a=   3/63 bits=110000  A_above=-10/7  A_below=1/42
+  a=   5/63 bits=101000  A_above=17/63  A_below=0
+  a=   7/63 bits=111000  A_above=7/18  A_below=0
+  a=  11/63 bits=110100  A_above=-5/63  A_below=11/126
+  a=  14/63 bits=011100  A_above=0  A_below=-1/3
+  a=  19/63 bits=110010  A_above=0  A_below=19/63
+  a=  22/63 bits=011010  A_above=13/21  A_below=0
+  a=  23/63 bits=111010  A_above=-46/63  A_below=0
+  a=  40/63 bits=000101  A_above=0  A_below=-46/63
+  a=  41/63 bits=100101  A_above=0  A_below=13/21
+  a=  44/63 bits=001101  A_above=19/63  A_below=0
+  a=  49/63 bits=100011  A_above=-1/3  A_below=0
+  a=  52/63 bits=001011  A_above=11/126  A_below=-5/63
+  a=  56/63 bits=000111  A_above=0  A_below=7/18
+  a=  58/63 bits=010111  A_above=0  A_below=17/63
+  a=  60/63 bits=001111  A_above=1/42  A_below=-10/7
+  a=  62/63 bits=011111  A_above=-1/126  A_below=1/126
+M=7 K=8 q=63: predicted coefficient of e(-N/q) in c_1 (x (K-M)!) = (0.003975801584485408+0.2908090297950953j)
+== 8 9
+  a=   1/127 bits=1000000  A_above=-32/127  A_below=1/254
+  a=   3/127 bits=1100000  A_above=202/127  A_below=-3/254
+  a=   5/127 bits=1010000  A_above=-33/127  A_below=0
+  a=   7/127 bits=1110000  A_above=-105/254  A_below=0
+  a=  11/127 bits=1101000  A_above=1/127  A_below=0
+  a=  19/127 bits=1100100  A_above=181/254  A_below=0
+  a=  22/127 bits=0110100  A_above=0  A_below=87/127
+  a=  23/127 bits=1110100  A_above=-51/254  A_below=-46/127
+  a=  39/127 bits=1110010  A_above=0  A_below=-78/127
+  a=  51/127 bits=1100110  A_above=-51/127  A_below=0
+  a=  76/127 bits=0011001  A_above=0  A_below=51/127
+  a=  88/127 bits=0001101  A_above=78/127  A_below=0
+  a= 104/127 bits=0001011  A_above=46/127  A_below=51/254
+  a= 105/127 bits=1001011  A_above=-87/127  A_below=0
+  a= 108/127 bits=0011011  A_above=0  A_below=-181/254
+  a= 116/127 bits=0010111  A_above=0  A_below=-1/127
+  a= 120/127 bits=0001111  A_above=0  A_below=105/254
+  a= 122/127 bits=0101111  A_above=0  A_below=33/127
+  a= 124/127 bits=0011111  A_above=3/254  A_below=-202/127
+  a= 126/127 bits=0111111  A_above=-1/254  A_below=32/127
+M=8 K=9 q=127: predicted coefficient of e(-N/q) in c_1 (x (K-M)!) = (97.62477528270402+2.332718809328454j)
