@@ -100,6 +100,21 @@ This runs the full forward DP (all layers, u128, mirror-reduced; practical to N�
 * `by_first = by_last(m)`: #sequences starting with m (= #sequences ending with m, by reversal)
 * `by_first2[m][x]`: #sequences starting with `m, x`
 
+### Observations (formula hunting)
+
+These are fitted to data, not proven.
+* `prefixes(1) = N` and `prefixes(2) = ⌊N²/2⌋`.
+* `prefixes(3)` (checked with a separate DFS for N ≤ 90) is a quasi-polynomial of
+  **period 6**: `(2/9)N³ − N²/12 − αN + β`. Here `α = 5/6` for even N and `1/3` for odd
+  N. `β` depends on `N mod 6`: 0, 7/36, 2/9, −1/4, 4/9, −1/36 for residues 0..5. The
+  mod-3 dependence is consistent with a(N) running above trend when 3 | N: the ratio
+  a(N)/a(N−1) jumps at N = 21, 24, 27, 30, 33.
+* `prefixes(4)` has no quasi-polynomial fit with period ≤ 9 (N ≤ 70).
+* Dead-end sets (no valid next step) occur almost only at even `|S|`.
+* Every sequence starting `1, N` (N even) is doomed. The second step after `1` must be
+  `> N/2`.
+* `by_first(m)` is mirror symmetric (as it must be) and increases toward the middle.
+
 ## Timings (4 threads, 15 GB VM; see `results/semi.txt`)
 
 | N | a(N) | time | storage |
