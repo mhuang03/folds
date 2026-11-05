@@ -69,6 +69,21 @@ has B n L(m) = {} (L(m) lies left of m), so I_B(m) <= 0; a panel m > b has B n R
 I_B(m) >= 0.  QED  [Lean: `inward_interval`, `coReach_interval`, `coReach_adjacent`.]
 Also every valid prefix whose set is an interval is live (`extends_interval`).
 
+COROLLARY 2 (symmetric sets; half of the exceptional classes).  Let B be mirror-symmetric
+(x in B <-> N+1-x in B) with I_B(m) <= 0 at every panel m outside B with 2m <= N + 1.  Then B is
+co-reachable.  In particular, if q | N + 1, the multiples of q, C_q = {q, 2q, ..., N + 1 - q},
+are co-reachable; C_q is a window copy (live2 2.1), so co-reachable sets of its strip transfer
+to [N] (weak split, live2 `coReach_winEmb`).  For q not a power of 2 and N = -1 (mod q) these
+are the exceptional classes of live2 3 / live3 1.3, which have no residue chain (Theorem E);
+live3 3.2 conjectured them co-reachable numerically.  (The other exceptional classes, C_1 with
+N = 1 (mod q), violate (*) for every centre: classinward.py, N <= 40.)
+Proof.  Centre c = (N + 1)/2 moved by 1/2 so that it is not a panel (c2 = 2 floor((N+1)/2) + 1).
+For m left of c the hypothesis gives I_B(m) <= 0; for m right of c, the mirror maps the arms
+of m onto the arms of N + 1 - m exchanged, so I_B(m) = -I_B(N + 1 - m) >= 0.  For C_q and m in
+the left half (window [1, 2m - 1]): |C_q n L(m)| = floor((m-1)/q) and |C_q n R(m)| =
+floor((m mod q + m - 1)/q) >= floor((m-1)/q).  QED
+[Lean: `leftCount_mirror`, `inward_of_symm`, `coReach_mult`, `coReach_mult_transfer`.]
+
 Remarks.
   * The ordering is explicit and computed in O(N^3): place, among the valid panels, the one
     nearest to the removed interval, then reverse.  (Before the proof was found, this "near"

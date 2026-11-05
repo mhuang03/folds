@@ -8,7 +8,10 @@ Cov3 = closure of
                2m < c2  ->  #(B n L(m)) <= #(B n R(m)),   2m > c2  ->  #(B n L(m)) >= #(B n R(m));
            equivalently: every panel outside B with negative imbalance I_B(m) = #(B n L) -
            #(B n R) lies left of every panel outside B with positive imbalance;
-under residue transfers through good classes (the rule `res` of Cov2) and the mirror.
+under residue transfers through good classes (the rule `res` of Cov2), through the multiples
+of q when q | N + 1 (rule `mult`: the class C_q is a window copy whose complement is reachable
+by Theorem G, `coReach_mult`; for q not a power of 2 these are exceptional classes), and the
+mirror.
 In particular every interval, so every adjacent pair, is in Cov3.
 
 Prints per N: non-dead 2-sets, |Cov2|, |inward pairs|, |Cov3|, then valid prefixes and mixed
@@ -49,7 +52,7 @@ def make_cov3(cov2):
             if (v - u) % q:
                 continue
             s = (u - 1) % q + 1
-            if (N % q, s) not in C4.good_set(q):
+            if (N % q, s) not in C4.good_set(q) and not (s == q and (N + 1) % q == 0):
                 continue
             n = (N - s) // q + 1
             if cov(n, (u - s) // q + 1, (v - s) // q + 1):

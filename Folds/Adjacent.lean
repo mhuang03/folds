@@ -21,10 +21,14 @@ import Folds.Live4
 * `coReach_interval`, `coReach_adjacent`: every interval `[a, b]`, in particular every adjacent
   pair `{r, r + 1}` (the **Adjacent Lemma**), is co-reachable; `extends_interval`: every valid
   prefix whose set is an interval is live.
+* `coReach_mult`: a mirror-symmetric set that pulls no panel of the left half to the left
+  satisfies Theorem G (`inward_of_symm`); so the multiples of `q` are co-reachable whenever
+  `q ∣ N + 1` (for `q` not a power of 2 these are exceptional classes of live2/live3, which have
+  no residue chain), and `coReach_mult_transfer` transfers co-reachability through them.
 * `Cov3`: the closure of `Live4.Cov2` and of all sets satisfying the criterion of Theorem G
-  under residue transfers through good classes and the mirror; `Cov3.coReach`,
-  `Cov3.extends`.  `experiments/adjacent/covlean5.py` computes the family: all non-dead
-  2-sets for `N ≤ 20`; 748 of 779 at `N = 40` (`Cov2`: 631).
+  under residue transfers through good classes and through the multiples of `q` (`q ∣ N + 1`),
+  and the mirror; `Cov3.coReach`, `Cov3.extends`.  `experiments/adjacent/covlean5.py` computes
+  the family (see PROOFS.txt section 3 for the numbers).
 -/
 
 namespace Folds
@@ -357,16 +361,140 @@ theorem extends_interval {N a b : Nat} {p : List Nat} (hnd : p.Nodup)
     have := List.mem_toFinset.2 hx; rw [hp, Finset.mem_Icc] at this; omega) hv, hp]
   exact coReach_interval ha hab hb
 
+/-! ## Mirror-symmetric sets; the multiples of `q` when `q ∣ N + 1` -/
+
+theorem leftCount_mirror {N m : Nat} {L : List Nat} (hnd : L.Nodup)
+    (hL : ∀ x ∈ L, 1 ≤ x ∧ x ≤ N) (hsym : ∀ x ∈ L, N + 1 - x ∈ L) (hm1 : 1 ≤ m)
+    (hmN : m ≤ N) : leftCount N L m = rightCount N L (N + 1 - m) := by
+  have hreach : reach N (N + 1 - m) = reach N m := by unfold reach; omega
+  rw [leftCount_eq hnd, rightCount_eq hnd, hreach]
+  have hperm : (L.map (N + 1 - ·)).Perm L := by
+    rw [List.perm_ext_iff_of_nodup (nodup_map_of_injOn hnd fun a ha b hb e => by
+      have := hL a ha; have := hL b hb; omega) hnd]
+    intro x
+    constructor
+    · intro hx
+      obtain ⟨y, hy, rfl⟩ := List.mem_map.1 hx
+      exact hsym y hy
+    · intro hx
+      exact List.mem_map.2 ⟨N + 1 - x, hsym x hx, by have := hL x hx; omega⟩
+  rw [← hperm.countP_eq, List.countP_map]
+  apply List.countP_congr
+  intro x hx
+  have := hL x hx
+  simp only [Function.comp_apply, decide_eq_true_eq]
+  omega
+
+/-- A mirror-symmetric set whose imbalance is `≤ 0` at every panel of the left half satisfies
+the criterion of Theorem G (centre: the middle of the strip). -/
+theorem inward_of_symm {N : Nat} {B : Finset Nat} (hB : B ⊆ Finset.Icc 1 N)
+    (hsym : ∀ x ∈ B, N + 1 - x ∈ B)
+    (hleft : ∀ m, 1 ≤ m → 2 * m ≤ N + 1 → m ∉ B →
+      leftCount N B.toList m ≤ rightCount N B.toList m) :
+    Inward N (2 * ((N + 1) / 2) + 1) B := by
+  have hL : ∀ x ∈ B.toList, 1 ≤ x ∧ x ≤ N := fun x hx => by
+    have := hB (Finset.mem_toList.1 hx); rwa [Finset.mem_Icc] at this
+  have hs : ∀ x ∈ B.toList, N + 1 - x ∈ B.toList := fun x hx =>
+    Finset.mem_toList.2 (hsym x (Finset.mem_toList.1 hx))
+  have hnd := Finset.nodup_toList B
+  intro m hm1 hmN hmB
+  refine ⟨by omega, fun hlt => hleft m hm1 (by omega) hmB, fun hgt => ?_⟩
+  have hm' : N + 1 - m ∉ B := fun h => hmB (by
+    have := hsym _ h; rwa [show N + 1 - (N + 1 - m) = m by omega] at this)
+  have h := hleft (N + 1 - m) (by omega) (by omega) hm'
+  rw [leftCount_mirror hnd hL hs (by omega) (by omega),
+    show N + 1 - (N + 1 - m) = m by omega] at h
+  rw [leftCount_mirror hnd hL hs hm1 hmN]
+  exact h
+
+theorem mod_class_q {q x : Nat} (hq : 0 < q) (hx : 1 ≤ x) :
+    (x - 1) % q + 1 = q ↔ x % q = 0 := by
+  have hlt := Nat.mod_lt (x - 1) hq
+  have e : x % q = ((x - 1) % q + 1) % q := by
+    conv_lhs => rw [show x = (x - 1) + 1 by omega]
+    rw [Nat.add_mod]
+    rcases Nat.lt_or_ge 1 q with h1 | h1
+    · rw [Nat.mod_eq_of_lt h1]
+    · have : q = 1 := by omega
+      subst this; simp
+  rw [e]
+  constructor
+  · intro h; rw [h, Nat.mod_self]
+  · intro h
+    rcases Nat.lt_or_ge ((x - 1) % q + 1) q with h2 | h2
+    · rw [Nat.mod_eq_of_lt h2] at h; omega
+    · omega
+
+/-- **The multiples of `q` are co-reachable when `q ∣ N + 1`** (for `q` not a power of 2 these
+are the exceptional classes `C_q`, `N ≡ -1 (mod q)`, of live2/live3): they are mirror-symmetric,
+and at a panel `m` of the left half `⌊(m-1)/q⌋ ≤ ⌊(m mod q + m - 1)/q⌋` multiples lie left vs
+right. -/
+theorem coReach_mult {q N : Nat} (hq : 0 < q) (hN : (N + 1) % q = 0) :
+    CoReach N (rPanels q N q).toFinset := by
+  have hmem : ∀ x, x ∈ rPanels q N q ↔ 1 ≤ x ∧ x ≤ N ∧ x % q = 0 := by
+    intro x
+    rw [mem_rPanels_iff hq (by omega) le_rfl]
+    constructor
+    · rintro ⟨h1, h2, h3⟩; exact ⟨h1, h2, (mod_class_q hq h1).1 h3⟩
+    · rintro ⟨h1, h2, h3⟩; exact ⟨h1, h2, (mod_class_q hq h1).2 h3⟩
+  have hnodup : (rPanels q N q).Nodup := by
+    unfold rPanels classPanels
+    refine nodup_map_of_injOn List.nodup_range' fun a ha b hb e => ?_
+    rw [List.mem_range'_1] at ha hb
+    unfold cls at e
+    have : (a - 1) * q = (b - 1) * q := by omega
+    have := Nat.eq_of_mul_eq_mul_right hq this
+    omega
+  have hperm : (rPanels q N q).toFinset.toList.Perm (rPanels q N q) := by
+    rw [List.perm_ext_iff_of_nodup (Finset.nodup_toList _) hnodup]
+    intro x; rw [Finset.mem_toList, List.mem_toFinset]
+  have hB : (rPanels q N q).toFinset ⊆ Finset.Icc 1 N := by
+    intro x hx
+    rw [List.mem_toFinset, hmem] at hx
+    rw [Finset.mem_Icc]; exact ⟨hx.1, hx.2.1⟩
+  refine coReach_of_inward hB (inward_of_symm hB ?_ ?_)
+  · intro x hx
+    rw [List.mem_toFinset, hmem] at hx ⊢
+    refine ⟨by omega, by omega, ?_⟩
+    exact Nat.sub_mod_eq_zero_of_mod_eq (by rw [hN, hx.2.2])
+  · intro m hm1 hm2 _
+    have hnd := Finset.nodup_toList (rPanels q N q).toFinset
+    have hr : reach N m = m - 1 := by unfold reach; omega
+    rw [leftCount_eq hnd, rightCount_eq hnd, hperm.countP_eq, hperm.countP_eq, hr,
+      countP_left_rPanels hq (by omega) le_rfl (by omega) (by omega),
+      countP_right_rPanels hq (by omega) le_rfl hm1 (by omega)]
+    apply Nat.div_le_div_right
+    rw [show m - (m - 1) - 1 + q - q = 0 by omega, Nat.zero_mod]
+    omega
+
+/-- **Transfer through the multiples of `q` when `q ∣ N + 1`** (a window copy with reachable
+complement): co-reachable sets of its strip stay co-reachable. -/
+theorem coReach_mult_transfer {q N : Nat} (hq : 0 < q) (hqN : q ≤ N) (hN : (N + 1) % q = 0)
+    {D : Finset Nat} (hDs : D ⊆ Finset.Icc 1 (ccount q q N)) (hD : CoReach (ccount q q N) D) :
+    CoReach N (D.image (cls q q)) := by
+  refine coReach_winEmb (winEmb_res hq (by omega) le_rfl hqN) ?_ hDs hD
+  have e : (Finset.Icc 1 (ccount q q N)).image (cls q q) = (rPanels q N q).toFinset := by
+    ext x
+    simp only [Finset.mem_image, Finset.mem_Icc, List.mem_toFinset, rPanels, classPanels,
+      List.mem_map, List.mem_range'_1]
+    constructor
+    · rintro ⟨y, hy, rfl⟩; exact ⟨y, ⟨hy.1, by omega⟩, rfl⟩
+    · rintro ⟨y, hy, rfl⟩; exact ⟨y, ⟨hy.1, by omega⟩, rfl⟩
+  rw [e]
+  exact coReach_mult hq hN
+
 /-! ## The enlarged proven family -/
 
 /-- `Cov3`: the closure of `Cov2` and of the sets satisfying Theorem G (in particular every
-interval and every adjacent pair) under residue transfers through good classes and the
-mirror. -/
+interval and every adjacent pair) under residue transfers through good classes, through the
+multiples of `q` when `q ∣ N + 1` (`coReach_mult_transfer`), and the mirror. -/
 inductive Cov3 : Nat → Finset Nat → Prop
   | cov2 {N : Nat} {D : Finset Nat} : Cov2 N D → Cov3 N D
   | inward {N c2 : Nat} {D : Finset Nat} : D ⊆ Finset.Icc 1 N → Inward N c2 D → Cov3 N D
   | res {q N s : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ N → Good q (N % q) s →
       D ⊆ Finset.Icc 1 (ccount q s N) → Cov3 (ccount q s N) D → Cov3 N (D.image (cls q s))
+  | mult {q N : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ N → (N + 1) % q = 0 →
+      D ⊆ Finset.Icc 1 (ccount q q N) → Cov3 (ccount q q N) D → Cov3 N (D.image (cls q q))
   | mirror {N : Nat} {D : Finset Nat} : Cov3 N D → Cov3 N (D.image (N + 1 - ·))
 
 theorem Cov3.coReach {N : Nat} {D : Finset Nat} (h : Cov3 N D) : CoReach N D := by
@@ -374,6 +502,7 @@ theorem Cov3.coReach {N : Nat} {D : Finset Nat} (h : Cov3 N D) : CoReach N D := 
   | cov2 h => exact h.coReach
   | inward hD hi => exact coReach_of_inward hD hi
   | res hq2 hqN hg hDs _ ih => exact coReach_good (by omega) hqN hg hDs ih
+  | mult hq2 hqN hN hDs _ ih => exact coReach_mult_transfer (by omega) hqN hN hDs ih
   | mirror _ ih => exact coReach_mirror ih
 
 theorem Cov3.adjacent {N r : Nat} (hr : 1 ≤ r) (hrN : r + 1 ≤ N) : Cov3 N {r, r + 1} := by
