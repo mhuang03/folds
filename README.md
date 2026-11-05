@@ -101,6 +101,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `SuperExp` (M) | **super-exponential lower bound**: slip lemma; a(4m) ≥ 2^m·a(m)⁴; `self_pow_le_semiCount`: N^N ≤ 2^{3N}·a(N)^{32}; `pow_le_semiCount_pow_four`: (4^j)^{4^j} ≤ a(4^j)^8 |
 | `SuperExp2` (M) | slip chains B(2m) ≥ 2^m a(m)² B(m); `pow_le_semiCount_pow_six`: N^N ≤ 2^N·a(N)^6 for N = 2^L; `self_pow_le_semiCount_pow_22`: N^N ≤ 2^{9N}·a(N)^{22} for all N ≥ 1 |
 | `SuperExp3` (M) | general slip lemma (`blocks_mem_semiSeqs_iff`): "X in order f_τ, then Xᶜ in order g_σ" is valid iff τ, σ satisfy induced cyclic-interval conditions, for any split X; parity blocks, residue compositions and slips are special cases |
+| `Live2` (M) | co-reachability; every residue class mod q is a window copy (any N); **residue chain theorem** (`res_chain`); a recursively defined proven family of live 2-sets (e.g. 523 of 779 at N = 40) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -132,8 +133,11 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    decreasing subsequence of length ⌊log₂(N+1)⌋). The SAT check has reached t = 5
    (N = 63..66). There is no proof yet: the extremal labellings are not unique for t ≥ 4;
    see `experiments/labelling/PROOFS.txt`.
-5. **Liveness.** Every valid 2-prefix is live except (1,N) and (N,1) for even N and
-   (1,7), (7,1) at N = 7. Checked for N ≤ 31.
+5. **Liveness (Conjecture C).** Every 2-set is co-reachable (its complement can be
+   ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
+   valid prefixes for N ≤ 31). It reduces to: RS for primes, near residue classes, and
+   the Adjacent Lemma ({r, r+1} is always co-reachable). See
+   `experiments/live2/PROOFS.txt`.
 
 ## Where things are
 
@@ -156,6 +160,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/independence/PROOFS.txt` | pair independence, including the one-outside-element case |
 | `experiments/labelling/PROOFS.txt` | labelling / right-heavy reformulation of the descent bound, failed and surviving lemma candidates |
 | `experiments/live/FINDINGS.txt` | dead and live prefixes, Beatty copies |
+| `experiments/live2/PROOFS.txt` | residue chain theorem, reduction of liveness to RS + Adjacent Lemma |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Practical note for folders
