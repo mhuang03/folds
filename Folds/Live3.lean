@@ -615,5 +615,144 @@ theorem coReach_nu_neg_one {q N s v₀ : Nat} (hqodd : q % 2 = 1) (hqN : q ≤ N
       simp only [List.map_cons, List.head?_cons, Option.some.injEq]
       rw [rot_eq hq2 ⟨by omega, by omega⟩]; split_ifs <;> omega
 
+/-! ## Theorem E: the exceptions of Conjecture RS are genuine -/
+
+/-- The doubling map `D(s) - 1 = 2 (s - 1)` on the class labels. -/
+def dbl (q s : Nat) : Nat := (2 * s - 2) % q + 1
+
+theorem countP_eq_ite {A : List Nat} (hnd : A.Nodup) (x : Nat) :
+    A.countP (fun t => decide (t = x)) = if x ∈ A then 1 else 0 := by
+  induction A with
+  | nil => simp
+  | cons a A ih =>
+    rw [List.nodup_cons] at hnd
+    rw [List.countP_cons, ih hnd.2]
+    by_cases hax : a = x
+    · subst hax; simp [hnd.1]
+    · simp only [hax, decide_false, List.mem_cons]
+      by_cases hx : x ∈ A
+      · simp [hx]
+      · simp [hx, Ne.symm hax]
+
+/-- **Lemma P** (precedence form at `ν = 1`): given the first chain condition at `s ≥ 2`,
+the second one says that class `1` is placed iff class `D(s)` is. -/
+theorem prec {q s : Nat} {A : List Nat} (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q) (hnd : A.Nodup)
+    (hs : 2 ≤ s ∧ s ≤ q) (c1 : CycBal q A s (s - 1)) (c2 : CycBal q A s ((1 + q - s) % q)) :
+    (1 ∈ A ↔ dbl q s ∈ A) := by
+  have hs' : 1 ≤ s ∧ s ≤ q := ⟨by omega, hs.2⟩
+  have e : (1 + q - s) % q = q - 1 - (s - 2) := by
+    rw [Nat.mod_eq_of_lt (show 1 + q - s < q by omega)]; omega
+  rw [e, ← cycBal_dual hA hs' (by omega)] at c2
+  rw [cycBal_iff hA hs' (by omega)] at c1 c2
+  have a1 : A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ s - 2)) +
+      A.countP (fun t => decide (cc q s t = s - 1)) =
+        A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ s - 1)) :=
+    countP_add_of fun t ht => by simp only [decide_eq_true_eq]; split_ifs <;> omega
+  have a2 : A.countP (fun t => decide (q - (s - 2) ≤ cc q s t)) +
+      A.countP (fun t => decide (cc q s t = q + 1 - s)) =
+        A.countP (fun t => decide (q - (s - 1) ≤ cc q s t)) :=
+    countP_add_of fun t ht => by simp only [decide_eq_true_eq]; split_ifs <;> omega
+  have b1 : A.countP (fun t => decide (cc q s t = s - 1)) = A.countP (fun t => decide (t = 1)) := by
+    apply List.countP_congr
+    intro t ht
+    have := hA t ht
+    simp only [decide_eq_true_eq]
+    rw [cc_eq hs.2 (hA t ht)]
+    split_ifs <;> omega
+  have b2 : A.countP (fun t => decide (cc q s t = q + 1 - s)) =
+      A.countP (fun t => decide (t = dbl q s)) := by
+    apply List.countP_congr
+    intro t ht
+    have := hA t ht
+    simp only [decide_eq_true_eq]
+    rw [cc_eq hs.2 (hA t ht)]
+    unfold dbl
+    rw [mod_two (by omega)]
+    split_ifs <;> omega
+  have key : A.countP (fun t => decide (t = 1)) = A.countP (fun t => decide (t = dbl q s)) := by
+    omega
+  rw [countP_eq_ite hnd, countP_eq_ite hnd] at key
+  constructor
+  · intro h; rw [if_pos h] at key; split_ifs at key with h' <;> simp_all
+  · intro h; rw [if_pos h] at key; split_ifs at key with h' <;> simp_all
+
+theorem dbl_iter {q m : Nat} (_hq : 0 < q) (hm : m < q) :
+    ∀ j, (dbl q)^[j] (m + 1) = (2 ^ j * m) % q + 1 := by
+  intro j
+  induction j with
+  | zero => simp [Nat.mod_eq_of_lt hm]
+  | succ j ih =>
+    rw [Function.iterate_succ_apply', ih]
+    unfold dbl
+    rw [show 2 * ((2 ^ j * m) % q + 1) - 2 = 2 * ((2 ^ j * m) % q) by omega, Nat.mul_mod,
+      Nat.mod_mod, ← Nat.mul_mod, ← Nat.mul_assoc, ← pow_succ']
+
+/-- **Theorem E** (PROOFS.txt 1.3).  If `q` has an odd divisor `b > 1` (i.e. `q` is not a power
+of `2`), no order of the classes `2, …, q` is a residue chain for `ν = 1`: the class `1` can
+never come last (equivalently first) when `N ≡ 1 (mod q)`. -/
+theorem no_chain_exc {q b : Nat} (hq : 0 < q) (hb : b ∣ q) (hb1 : 1 < b) (hbo : b % 2 = 1)
+    {π : List Nat} (hmem : ∀ t, t ∈ π ↔ 2 ≤ t ∧ t ≤ q) (hnd : π.Nodup) :
+    ¬ ChainOK q 1 π := by
+  intro hc
+  obtain ⟨m, rfl⟩ := hb
+  have hm : 0 < m := by rcases Nat.eq_zero_or_pos m with h | h <;> simp_all
+  have hmq : m < b * m := by nlinarith
+  -- the orbit never meets `1`
+  have hne : ∀ j, (dbl (b * m))^[j] (m + 1) ≠ 1 := by
+    intro j h
+    rw [dbl_iter hq hmq] at h
+    have h0 : (2 ^ j * m) % (b * m) = 0 := by omega
+    have hdvd : b * m ∣ 2 ^ j * m := Nat.dvd_of_mod_eq_zero h0
+    have hb2 : b ∣ 2 ^ j := Nat.dvd_of_mul_dvd_mul_right hm hdvd
+    have hcop2 : Nat.Coprime 2 b := by
+      show Nat.gcd 2 b = 1
+      rw [Nat.gcd_rec, hbo]; rfl
+    have hcop : Nat.Coprime b (2 ^ j) := Nat.Coprime.pow_right _ (Nat.coprime_comm.1 hcop2)
+    have := Nat.Coprime.eq_one_of_dvd hcop hb2
+    omega
+  have hle : ∀ j, (dbl (b * m))^[j] (m + 1) ≤ b * m := by
+    intro j; rw [dbl_iter hq hmq]; have := Nat.mod_lt (2 ^ j * m) hq; omega
+  have hpos : ∀ j, 1 ≤ (dbl (b * m))^[j] (m + 1) := by
+    intro j; rw [dbl_iter hq hmq]; omega
+  have hin : ∀ j, (dbl (b * m))^[j] (m + 1) ∈ π := fun j =>
+    (hmem _).2 ⟨by have := hne j; have := hpos j; omega, hle j⟩
+  have hb' : ∀ t ∈ π, 1 ≤ t ∧ t ≤ b * m := fun t ht => by have := (hmem t).1 ht; omega
+  -- positions strictly increase along the orbit
+  have step : ∀ j, ∃ i, ∃ hi : i < π.length, π[i] = (dbl (b * m))^[j] (m + 1) ∧ j ≤ i := by
+    intro j
+    induction j with
+    | zero =>
+      obtain ⟨i, hi, e⟩ := List.getElem_of_mem (hin 0)
+      exact ⟨i, hi, by simpa using e, Nat.zero_le _⟩
+    | succ j ih =>
+      obtain ⟨i, hi, e, hji⟩ := ih
+      set s := (dbl (b * m))^[j] (m + 1) with hsdef
+      have hs2 : 2 ≤ s ∧ s ≤ b * m := ⟨by have := hne j; have := hpos j; omega, hle j⟩
+      obtain ⟨c1, c2⟩ := hc i hi
+      rw [e] at c1 c2
+      have hA : ∀ t ∈ π.take i, 1 ≤ t ∧ t ≤ b * m := fun t ht => hb' t (List.mem_of_mem_take ht)
+      have h1 : (1 : Nat) ∉ π.take i := fun h => by
+        have := (hmem 1).1 (List.mem_of_mem_take h); omega
+      have hP := prec hA (take_nodup hnd i) hs2 c1 c2
+      have hD : dbl (b * m) s ∉ π.take i := fun h => h1 (hP.2 h)
+      have hDs : dbl (b * m) s = (dbl (b * m))^[j + 1] (m + 1) := by
+        rw [Function.iterate_succ_apply']
+      have hDmem : dbl (b * m) s ∈ π := by rw [hDs]; exact hin (j + 1)
+      obtain ⟨i', hi', e'⟩ := List.getElem_of_mem hDmem
+      refine ⟨i', hi', by rw [e', hDs], ?_⟩
+      by_contra hlt
+      rcases Nat.lt_or_ge i' i with h | h
+      · exact hD (by rw [← e']; exact List.mem_iff_getElem.2 ⟨i', by simp; omega, by simp⟩)
+      · have hii : i' = i := by omega
+        subst hii
+        rw [e] at e'
+        -- `D(s) = s` forces `s = 1`
+        have : dbl (b * m) s = s := e'.symm
+        unfold dbl at this
+        rw [mod_two (by omega)] at this
+        split_ifs at this <;> omega
+  obtain ⟨i, hi, -, hji⟩ := step π.length
+  omega
+
 end Live3
 end Folds
