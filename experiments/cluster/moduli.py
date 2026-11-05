@@ -44,6 +44,12 @@ if __name__ == "__main__":
             print("Nmin=%d deg=%d rms=%.4f  " % (Nmin, deg, s) + ", ".join("%s=%.4f(%.4f)" % (n, bb, e) for n, bb, e in zip(names, b, se) if n.startswith("[")))
     names, b, se, s, r = fit(10, [3], extra=(("[3|N]*(30/N)", lambda n: (n % 3 == 0) * 30.0 / n),))
     print("decay test: " + ", ".join("%s=%.4f(%.4f)" % (n, bb, e) for n, bb, e in zip(names, b, se) if n.startswith("[")))
+    for nm, f in (("[3|N]*sqrt(30/N)", lambda n: (n % 3 == 0) * (30.0 / n) ** 0.5), ("[3|N]*(30/N)", lambda n: (n % 3 == 0) * 30.0 / n)):
+        names, b, se, s, r = fit(10, [], extra=((nm, f),))
+        print("single-form fit %s: coef=%.4f(%.4f) rms=%.4f" % (nm, b[-1], se[-1], s))
+    names, b, se, s, r = fit(10, [3])
+    print("constant form: rms=%.4f" % s)
+    print("constant-form fit: " +", ".join("%s=%.4f(%.4f)" % (n, bb, e) for n, bb, e in zip(names, b, se) if n.startswith("[")))
     names, b, se, s, r = fit(10, [3])
     print("residuals after [3|N] fit (N>=10):", " ".join("%d:%+.3f" % (n, v) for n, v in zip(Ns[Ns >= 10], r)))
     print()
