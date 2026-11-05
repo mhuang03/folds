@@ -1,0 +1,255 @@
+Live 2-prefixes, part 3: the three remaining lemmas
+==================================================
+
+Notation as in experiments/live/PROOFS.txt and experiments/live2/PROOFS.txt.  Panels [N];
+reach(m) = min(m-1, N-m); a step (S, m) is valid iff |S n L(m)| = |S n R(m)|.  Residue classes
+C_s = {s, s+q, ...} n [N], nu = N mod q.  "Lean" refers to Folds/Live3.lean.
+
+The three open lemmas of live2 (section 7 there):
+  (1) Conjecture RS for prime q (which classes can come first in a residue chain);
+  (2) the Adjacent Lemma ([N] \ {r, r+1} is reachable from scratch);
+  (3) near residue classes (C_1 - {1} + {2}, N = 1 mod q, is a copy with reachable complement).
+
+STATUS (details in section 6).  None of the three is proven in full.  Proven here:
+  * RS: the exceptions are genuine for EVERY q that is not a power of 2 (Theorem E, the
+    "only if" half of RS), via an exact precedence form of the chain condition at nu = +-1
+    (Lemma P).
+  * RS at nu = 1, every odd q (prime or not): the classes t = 3 (mod 4) and t = q - 1 (mod 4)
+    can come first AND last (Theorem H + Lemma W), by an explicit palindromic parity-block
+    construction; [Lean: in progress, see section 6].  Together with the exact form of the
+    remaining quarter (section 1.5).
+  * Lemma 3, first half: the near class is a window copy for every N = 1 (mod q), q >= 3.
+  * New numerical facts that change the picture of Lemma 3 (section 3): the exceptional
+    classes are themselves co-reachable (all q <= 12, N <= 26, except when they contain a
+    dead pair), but never through a residue chain of ANY modulus Q with q | Q; so Lemma 3 and
+    the exceptional cases need non-chain orderings.
+
+Programs (this directory; C programs compile with gcc -O2, all 1 core, < 100 MB):
+  rsparity.c     RS restricted to parity chains (section 1.6).
+  rsblocks.c     RS restricted to block chains mod j, all j (section 1.6).
+  palin.py, pal1.py    palindromic rotation-stable sequences (section 1.3).
+  half.py        the HALF problem (1.3), all solutions' sets, copy test.
+  halfcheck.py   checks Theorem H + Lemma W against ChainOK (q <= 41, section 1.4).
+  gp.py, gpshape.py, ev.py    the constrained strip problems of 1.5.
+  nearord.py, excreach.py     orderings of complements of near / exceptional classes (3).
+  multchain.c    residue chains mod Q = Mq with C_1 (mod q) last (3.3).
+  dc.c           parity + class chains with a ghost class (3.4).
+
+
+1. Conjecture RS at nu = +-1
+---------------------------
+Throughout, in the CLASS convention of live2 2.2: an order pi of the classes 1..q is a chain
+for nu iff every step s, with A the set of earlier classes, satisfies
+   CycBal(A, s, s-1)  and  CycBal(A, s, (nu - s) mod q)                       [ChainOK]
+where, for 0 <= rho < q,
+   CycBal(A, s, rho):  #{t in A : 1 <= (s-t) mod q <= rho} = #{t in A : 1 <= (t-s) mod q <= rho}.
+(This is the Lean definition `Live2.CycBal`: its two summands are exactly these indicators,
+see 1.1(a).)  Class s can come first iff some chain starts with s, last iff some chain ends
+with s; a full chain reversed is a chain (live2 2.3), so first <=> last.
+
+1.1 Elementary facts about CycBal (all for 1 <= s, t <= q, 0 <= rho < q).  Write
+    c = (s - t) mod q in [0, q-1].
+  (a) The left summand ((s + 2q - rho - 1 - t) mod q + rho) div q equals [1 <= c <= rho], and
+      the right summand ((s + q - t) mod q + rho) div q equals [c >= q - rho]; for c >= 1,
+      (t - s) mod q = q - c, so [c >= q - rho] = [1 <= (t-s) mod q <= rho].
+      Proof: c + (q - rho - 1) < 2q; if c <= rho the first numerator is c + q - 1, else
+      c - 1; the second numerator is c + rho.  QED
+  (b) Duality: CycBal(A, s, rho) <=> CycBal(A, s, q - 1 - rho).  Indeed per t with c >= 1,
+      [1 <= c <= q-1-rho] = 1 - [c >= q - rho] and [c >= rho + 1] = 1 - [1 <= c <= rho];
+      terms with c = 0 vanish on both sides.
+  (c) Reflection: for tau(t) = (m - t) mod q + 1 (any m), CycBal(tau A, tau s, rho) <=>
+      CycBal(A, s, rho) (c and q - c are exchanged, i.e. the two sides are swapped).
+      Rotation: likewise for t -> (t + m) mod q + 1.
+  (d) Strip form: in the q-strip (N = q, every class a single panel), a list A of panels is
+      balanced around s iff CycBal(A, s, reach_q(s)) (live2 `balanced_rUnion_iff` with N = q,
+      or directly: offsets up to reach_q(s) do not wrap).  Since reach_q(s) is s-1 or
+      q-1-(s-1), by (b) this is CycBal(A, s, s-1).
+  (e) Hence (live2 2.2):  pi is a chain for nu  <=>  pi and sigma o pi are valid sequences of
+      the q-strip, sigma(t) = ((nu - t) mod q) + 1.  (By (c) the second ChainOK condition at
+      s is the strip condition of sigma(A) around sigma(s), whose reach is sigma(s) - 1 =
+      (nu - s) mod q or its dual.)
+
+1.2 LEMMA P (precedence form, nu = 1).  Let D(s) = ((2s - 2) mod q) + 1 (so D(s) - 1 = 2(s-1)
+    in Z_q).  For 2 <= s <= q and A not containing s:
+       CycBal(A, s, s-1) and CycBal(A, s, q+1-s)   <=>   CycBal(A, s, s-1) and
+                                                         ([1 in A] = [D(s) in A]).
+    (For nu = 1 the second radius is (1 - s) mod q = q + 1 - s.)
+    Proof.  Put rho = s - 1 and h_rho(c) = [1 <= c <= rho] - [c >= q - rho] (c >= 1), so that
+    CycBal(A, s, rho) says sum_{t in A} h_rho(c_t) = 0.  By (b), h_{q-1-rho} = h_rho, and
+    h_{mu+1}(c) - h_mu(c) = [c = mu+1] - [c = q-1-mu].  With mu = q - 1 - rho:
+        h_{q-rho}(c) - h_rho(c) = [c = q - rho] - [c = rho].
+    c_t = rho = s - 1 iff t = 1; c_t = q - rho = q + 1 - s iff t = 2s - 1 (mod q) iff t = D(s).
+    So the two sums differ by [D(s) in A] - [1 in A].  (If D(s) = 1, which happens only for
+    q even and s = q/2 + 1, the condition is empty.)  QED
+    In words: at nu = 1 a chain is a valid order of the q-strip in which, at every step s != 1,
+    the class 1 is placed iff the class D(s) is placed.  The two cuts of live2 3.2 are
+    adjacent; the second cut only adds the pair (1, D(s)) to the window of s.
+
+1.3 THEOREM E (the exceptions of RS are genuine).  Let q >= 3 not be a power of 2.  Then no
+    order of the classes 2..q is a chain for nu = 1; equivalently class 1 can come neither
+    first nor last for nu = 1 (and, rotating by one step (1.1(c), the chain conditions only
+    depend on the two cuts of live2 3.2), class q neither first nor last for nu = -1).
+    Proof.  Let pi list 2..q.  Class 1 never occurs, so by Lemma P every s must come before
+    D(s) whenever D(s) != 1.  Write q = 2^a b, b odd >= 3, and s_0 = 2^a + 1, s_{i+1} =
+    D(s_i).  Then s_i - 1 = 2^{a+i} mod q, which is never 0 (b does not divide 2^{a+i}), so
+    s_i != 1 for all i and the positions of s_0, s_1, s_2, ... in pi strictly increase:
+    impossible in a list of length q - 1.  If pi starts with 1, the same argument with "after"
+    (Lemma P with 1 in A: D(s) must be placed before s) gives strictly decreasing positions.
+    QED
+    For q = 2^a the map z -> 2z on Z_q is nilpotent and the precedences are acyclic, in
+    accordance with RS.  With live2 2.2 (chains are necessary for N >= 2q) this proves the
+    "except" half of RS: for N >= 2q, N = 1 (mod q), no residue chain puts C_1 first or last.
+    [Lean: `Live3.no_chain_exc` (classes 2..q, nu = 1).]
+
+1.4 THEOREM H (palindromic chains, nu = 1, q odd).  Let q = 2k + 1 >= 3 and let beta be a
+    valid sequence of the k-strip in which v comes before 2v whenever 2v <= k.  Put
+        pi = (2 beta_1 + 1, ..., 2 beta_k + 1, 1, q + 1 - 2 beta_k, ..., q + 1 - 2 beta_1).
+    Then pi and its reverse are chains for nu = 1.  pi starts with 2 beta_1 + 1 and ends with
+    q + 1 - 2 beta_1.
+    Proof.  (i) pi is a parity-block sequence of the q-strip: first the odd panels, in the
+    order alpha = (beta_1 + 1, ..., beta_k + 1, 1) of the odd strip [k+1], then the even
+    panels, in the order delta = revMirror_k(beta) = (k+1-beta_k, ..., k+1-beta_1) of the even
+    strip [k] (2(k+1-v) = q+1-2v).  By the parity-block theorem (Blocks) pi is valid iff alpha
+    and delta are.  delta is valid (reverse o mirror of a valid sequence).  alpha: the last
+    step 1 has reach 0.  For the step beta_i + 1 =: v + 1, with S = earlier beta's, the
+    (k+1)-strip reach of v + 1 is min(v, k - v) and the k-strip reach of v is min(v-1, k-v).
+    If they agree, the windows correspond under the shift by one (index 1 of the odd strip,
+    i.e. 0 in beta coordinates, is not yet placed and lies outside).  Otherwise (2v <= k) the
+    (k+1)-window has one extra pair: index 1 (unplaced) and 2v + 1, i.e. beta-value 2v, which
+    is unplaced too because v comes before 2v.  So every step of alpha is valid.
+    (ii) Let sigma(t) = ((1 - t) mod q) + 1: sigma(1) = 1, sigma(2v+1) = q+1-2v and
+    sigma(q+1-2v) = 2v+1.  Hence sigma o pi = reverse(pi), which is valid (a full valid
+    sequence reversed is valid).  By 1.1(e) pi is a chain.  The same for reverse(pi), since
+    sigma o reverse(pi) = pi.  QED
+    Theorem H is the special case U = odds of a palindromic ansatz: every pi with
+    sigma o pi = reverse(pi) has 1 in the middle, and by 1.1(e) it is a chain iff it is
+    valid; in the shifted coordinates z = t - 1 of [2, q] (the (q-1)-strip, whose mirror is
+    sigma) this is the HALF problem: a transversal U of the mirror pairs {z, q - z}, validly
+    orderable from scratch in the (q-1)-strip, with z before 2z (mod q) whenever both are in
+    U (Lemma P).  half.py: HALF is solvable for every start z_0 for q <= 23; the only
+    transversals that are window copies are the odds and the evens (Beatty copies of the
+    half strip), giving the families below.
+
+    LEMMA W.  For every k >= 1 and every odd v_0 <= k there is a valid sequence of the
+    k-strip starting with v_0 in which v comes before 2v for every v with 2v <= k.
+    Proof.  Strong induction on k; k = 1: (1).  Otherwise take the parity blocks
+    (odd panels, in a valid order of the odd strip [ceil(k/2)] starting with (v_0+1)/2 --
+    claim (i) of live/PROOFS 2), then (even panels 2w, w running through a sequence of
+    Lemma W for floor(k/2) starting with 1).  Valid by the parity-block theorem.  If v is odd,
+    2v is even and comes later.  If v = 2w, 2v = 2(2w): w comes before 2w in the inner
+    sequence.  QED
+
+    COROLLARY.  For odd q = 2k + 1 >= 3 and nu = 1 the classes
+        t = 2 v_0 + 1   and   t = q + 1 - 2 v_0      (v_0 odd, v_0 <= k),
+    i.e. t = 3 (mod 4) and t = q - 1 (mod 4), can come first and last in a residue chain.
+    By the rotation of 1.1(c) (t -> t - 1), for nu = q - 1 the classes t = 2 (mod 4) and
+    t = q - 2 (mod 4).  Hence (live2 2.3) for every N >= q with N = 1 (mod q) these classes
+    have a reachable complement and pairs inside them reduce to the class strip.
+    (halfcheck.py: checked against ChainOK for all odd q <= 41.)  For q = 3 this is all of
+    RS at nu = +-1.
+
+1.5 The remaining quarter at nu = 1.  Missing: t = 1 (mod 4) and t = q + 1 (mod 4)
+    (exchanged by sigma(t) = q + 2 - t, so either one suffices), e.g. q = 7: t = 4, 5.
+    * As parity chains (odds first, 1 among them): the odd block must solve GP(h, B):
+      a valid sequence of the h-strip (h = (q+1)/2) with 1 at some time T, every y > ceil(h/2)
+      before T, and for 2 <= y <= ceil(h/2): if y and 2y-1 are both before T then y comes
+      first; if y is after T then 2y-1 comes before y.  Theorem H is T = end.  gp.py: GP(n, B)
+      has a solution for every start >= 2 (n <= 11; only (n, start) = (5, 5) fails), and the
+      shape "odds, big evens, 1, small evens" (gpshape.py) covers exactly the starts = 3 (mod
+      4) again: the odd starts u_0 = 1 (mod 4) need the next 2-adic level.  The data suggest
+      a recursion on the 2-adic valuation of t - 1 that is not yet found.
+    * In HALF form: z_0 = t - 1 = 0 (mod 4).  The near swap U = E - {2w} + {q - 2w} with
+      q - 2w placed last works iff EV(k, w) is solvable (ev.py: a valid order of [k] \ {w}
+      from scratch starting with 2w, v before 2v for v != w); numerically exactly for w a
+      power of 2 (k <= 14).  So z_0 = 2^j, j >= 2, is covered numerically, the general z_0 = 0
+      (mod 4) needs transversals with several swaps (half.py lists them).
+
+1.6 Other prime-q data (general nu).  Parity chains alone (rsparity.c) together with the
+    symmetry iota(t) = q + 1 - (t + nu) (rot convention) cover all non-exceptional (nu, t)
+    for q = 5, 17, but fail on a few (nu, t) for the other primes <= 19 (mostly nu in
+    {2, 3, q-2, q-3}).  Block chains mod j for some j (rsblocks.c) cover more but not all
+    (q = 13, nu = 2, t = 12, 13 in the rot convention).  So RS for primes needs constructions
+    beyond single-level block chains, as at nu = 1.
+
+
+2. Near residue classes are window copies
+------------------------------------------
+LEMMA N.  Let q >= 3, N = 1 (mod q), N >= q + 1 and n = |C_1| = (N - 1)/q + 1.  Then
+X = C_1 - {1} + {2}, i.e. phi(1) = 2, phi(y) = 1 + (y-1) q (y >= 2), is a window copy of the
+n-strip.  Likewise, for q >= 2, N = -1 (mod q), N >= 2q - 1, the set C_q - {q} + {q - 1} is a
+window copy of the strip of size |C_q| (q = 2: E - {2} + {1}, live 4.2).
+Proof of the second statement: x_1 = q - 1 replaces q; for j >= 2, x_j = jq >= 2q is outside
+the window [1, 2q - 3] of q - 1 (as it was outside [1, 2q - 1]); q - 1 and q lie in the same
+arm of the window of x_j unless 2 x_j - N = q, i.e. 0 = 2 x_j = N + q = -1 (mod q).  QED
+Proof of the first statement.  C_1 is a copy (live2 2.1), with phi_0(y) = 1 + (y-1) q.  phi differs only at y = 1.
+Relations not involving y = 1 are those of C_1.  Pairs (1, j), j >= 2: index 1 has reach 0 in
+the n-strip, so j is never in its window, and in [N] the window of 2 is {1, 3}, which contains
+no x_j = 1 + (j-1) q >= q + 1 >= 4.  Conversely 1 is in L_n(j) iff 1 in L_N(x_j) (copy C_1), and
+we need the same for 2: 2 in L_N(x_j) iff x_j - reach(x_j) <= 2, 1 in L_N(x_j) iff
+x_j - reach(x_j) <= 1.  They differ only if x_j - reach(x_j) = 2, i.e. reach = N - x_j and
+2 x_j = N + 2; then 2 = 2 x_j - N = 2 - N = 1 (mod q), i.e. q | 1.  Impossible.  Neither 1 nor 2
+is ever in a right arm.  QED  [Lean: `Live3.winEmb_near`.]
+
+
+3. Exceptional and near classes: what the complement orderings must look like
+------------------------------------------------------------------------------
+3.1 For N >= 2q + 3 odd, no ordering of the complement of the near class X = C_1 - {1} + {2}
+    places the classes C_2', C_3, ..., C_q as blocks (C_2' = C_2 - {2} + {1}).  Indeed, for
+    x >= 3 the panels 1 and 2 lie in the same arm of every window except when 2x = N + 2
+    (impossible for odd N), so the block conditions are those of the classes 2..q without
+    class 1, except at panel 2 itself (replaced by panel 1, reach 0).  But the left-half
+    panels 2 + jq (j >= 1, present for N >= 2q + 3) carry the same condition as panel 2
+    (radius residue 1), so the chain conditions are those of Theorem E: impossible.  So the
+    complements of near classes are reachable (nearcheck.py of live2, N <= 28) only through
+    orderings that are not residue chains.
+3.2 Numerically (excreach.py) the EXCEPTIONAL classes themselves have reachable complements:
+    for every q <= 12 that is not a power of 2 and q <= N <= 26, C_1 (N = 1) and C_q
+    (N = -1) are co-reachable, except exactly C_1 = {1, N} (N = q + 1, a dead pair) and
+    q = 3, N = 7 (C_1 = {1, 4, 7} contains the dead pair {1, 7}).  If this holds in general
+    it replaces Lemma 3 and also covers both one-per-N families of live2 4.3 ({1, N} = C_1 mod
+    N - 1, and {u, 2u} = C_u mod u for N = 3u - 1 = -1 mod u).
+3.3 No residue chain of a multiple modulus helps: for N = 1 (mod q) and Q = M q, no chain mod
+    Q (any nu_2 = N mod Q) ends with the M classes 1, 1 + q, ... (multchain.c: q = 3, M <= 8;
+    q = 5, M <= 4; q = 7, M <= 3).
+3.4 Nor do parity-then-class chains with a ghost: placing one parity class (minus C_1)
+    completely and then the other parity class (minus C_1) as whole classes mod 2q on that
+    background fails for every odd q <= 21 and both values of N mod 2q (dc.c): the missing
+    part of C_1 in the first parity class unbalances every possible first class.
+So both (3) and the exceptional cases need genuinely non-chain orderings.
+
+
+4. The Adjacent Lemma
+---------------------
+Only the reformulations below; no proof.
+4.1 Parity reduction (live2 6.1 made exact).  For D = {r, r+1} = {o, e}: place O - {o} first
+    (reachable by claim (i)), then E - {e} on the background O - {o}.  In even-strip
+    coordinates (e = 2w) this is AG(n, w, +-): order [n] \ {w} from scratch where a step y is
+    valid iff  S(L(y)) - S(R(y)) = [w in L(y)] - [w+1 in R(y)]  (ghost at w + 1/2, o = e + 1)
+    resp. [w-1 in L(y)] - [w in R(y)] (o = e - 1): a ghost at a non-integer position p acts
+    as floor(p) on left arms and ceil(p) on right arms whenever the window ends are integers.
+4.2 Recursing by parity once more produces only three types: HG (full strip, one ghost at a
+    non-integer position), AP' (removed point w with a ghost at w +- epsilon, which is the
+    anti-point problem of live2 6.2 up to the window edges) and AG itself: AG -> (HG, AP'),
+    AP' -> (HG, AP'), HG -> (HG, HG).  The relative position of w is preserved, but its
+    distance to the ends halves, and AP is unsolvable close to the ends (live2 6.2: w <= 5),
+    so the recursion has no finite base.  A proof needs a copy that keeps a point at bounded
+    distance from an end fixed (none of the known copies does), or local gadgets near the
+    ends.
+
+
+5. Consequences for the liveness theorem
+-----------------------------------------
+Conjecture C (hence the 2-prefix conjecture) follows from: RS for primes (non-exceptional
+classes), co-reachability of the exceptional classes (3.2; replaces Lemma 3 and the two
+families), and the Adjacent Lemma (live2 4.1).  Proven now: the exceptional half of RS for all
+q (Theorem E), RS at nu = +-1 for half of the classes of every odd q (Theorem H), the copy half
+of Lemma 3.  The full liveness iff for 2-prefixes is therefore NOT assembled.
+
+
+6. Status
+---------
+Proven (paper): 1.1, Lemma P, Theorem E, Theorem H, Lemma W, the Corollary of 1.4, Lemma N.
+Lean (Folds/Live3.lean, no sorry / native_decide): see the file header for what is
+formalized.
+Open: RS for primes outside nu = +-1 and the quarter 1.5 at nu = +-1; the Adjacent Lemma;
+co-reachability of exceptional / near classes (numerical only).
