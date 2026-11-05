@@ -22,17 +22,17 @@ and also N^N <= B(N)^3.  (Previously a(N) >= N^{N/8} for N = 4^j.)
 Theorem 3 (all N) [Lean: self_pow_le_semiCount_pow_25, alln_aux].  For every N >= 1
         N^N <= 2^{9N} a(N)^25,    i.e.   a(N) >= (N/512)^{N/25}.
 (Previously N^N <= 2^{3N} a(N)^32.)
-Theorem 4 (restricted chain; paper, verified exhaustively for small sizes).
+Theorem 4 (restricted chain) [Lean: mSum_chain, mSum_le_slipSum, self_pow_le_semiCount_pow_22].
     M(x,y,r) := sum_{D ⊆ [1,r]} #condF(x,D) #condS(y,D)   satisfies, for 2r <= x, 2r+1 <= y,
         M(x,y,r) >= 2^{ceil(r/2)} a(ceil(x/2)) a(floor(y/2)) M(floor(x/2), ceil(y/2), floor(r/2)),
     and B(n) >= M(n, n, floor((n-1)/2)).  With it the all-N exponent rises to 1/22:
-        N^N <= 2^{9N} a(N)^22      (paper; Lean has 1/25).
+        N^N <= 2^{9N} a(N)^22,    i.e.   a(N) >= (N/512)^{N/22}      [Lean, alln22_aux].
 Theorem 5 (averaging; paper).  For every n >= 1 (odd n included)
         a(2n) >= B(n) >= 2^{(n-1)/4} a(n)^2.
 So, rigorously,
         ln a(N) >= (1/6) N ln N - O(N)    along N = 2^L      (Lean),
-        ln a(N) >= (1/25) N ln N - O(N)   for all N           (Lean),  1/22 on paper,
-i.e.  liminf ln a(N)/(N ln N) >= 1/22 (1/25 in Lean),  limsup >= 1/6.  Conjectured truth: 1.
+        ln a(N) >= (1/22) N ln N - O(N)   for all N           (Lean),
+i.e.  liminf ln a(N)/(N ln N) >= 1/22,  limsup >= 1/6  (both Lean).  Conjectured truth: 1.
 
 
 =========================================================================================
@@ -138,13 +138,14 @@ oddslip.py, qslip.py, splitslip.py         explorations of section 6.
 Lean           Folds/SuperExp2.lean: slipSum, slipSum_le, sq_le_slipSum, qq_double,
                pp_double, dbl_injOn, blockMap_mem_condF, blockMap_mem_condS, slipSum_chain,
                pow_two_aux, pow_le_semiCount_pow_six, slipSum_odd, alln_aux,
-               self_pow_le_semiCount_pow_25.
+               self_pow_le_semiCount_pow_25; mSum, mSum_chain, alln22_aux,
+               self_pow_le_semiCount_pow_22 (Theorem 4 and the 1/22 bound).
 
 
 =========================================================================================
-5. THEOREMS 4 AND 5 (PAPER) AND THE BEST ALL-N EXPONENT OF THESE METHODS
+5. THEOREM 4 (LEAN), THEOREM 5 (PAPER) AND THE BEST ALL-N EXPONENT OF THESE METHODS
 =========================================================================================
-5.1 Theorem 4 (restricted chain).  If 2r <= x and 2r+1 <= y, then for k <= r no reduction
+5.1 Theorem 4 (restricted chain) [Lean].  If 2r <= x and 2r+1 <= y, then for k <= r no reduction
 mod x or y happens: q_x(k) = 2k, p_y(k) = 2k+1.  Let tau = PB(alpha, beta) in V_x
 (alpha in V_{ceil(x/2)}, beta in V_{floor(x/2)}), D = E ∪ 2D', E ⊆ odds <= r, D' ⊆ [1, floor(r/2)].
 Odd k in E: k odd before 2k even.  k = 2i: 2i and 4i are both even, their order is that of i
@@ -156,7 +157,7 @@ are free; summing as in Theorem 1 gives the recursion.  B(n) >= M(n, n, floor((n
 the D-range only shrinks.  The new feature: the chain works for ODD sizes too (no wrap is
 needed below the top level), at the price of using only the lower half of the positions.
 [mcheck.py, 0 failures.]
-5.2 All N with Theorem 4.  Same induction as Theorem 3 with K = 22 and a fourth statement
+5.2 All N with Theorem 4 [Lean].  Same induction as Theorem 3 with K = 22 and a fourth statement
    (iv) x^x y^y 2^{13 r} <= 2^{9(x+y)} M(x,y,r)^22    for y in {x, x+1}, 2r <= x, 2r+1 <= y,
         x <= 2r + 2.
 (iv) for r <= 13 is trivial (x, y <= 29 and 13r <= 3.25(x+y)).  For r >= 14: with x1 = ceil(x/2),
@@ -166,8 +167,9 @@ x + y + 2 + 13 ceil(r/2) <= 22 ceil(r/2); as x + y + 2 <= 4r + 7 this holds for 
 (iii) for odd n = 2m+1 >= 13 (u = 9 covers n <= 63 trivially): B(n) >= M(n,n,m) and (iv) give
 (2n)^{2n} 2^{4n} = 2^{6n} n^{2n} <= 2^{6n - 13m} 2^{18n} B(n)^22 and 6n <= 13m for m >= 6.
 (iii) for even n and (i), (ii) as in Theorem 3 (K = 22 >= 10 resp. >= 2).
-Hence N^N <= 2^{9N} a(N)^22 for all N.  (Not formalised: it needs the analogues of
-blockMap_mem_condF/S for odd sizes and a four-part induction; the arithmetic is the same.)
+Hence N^N <= 2^{9N} a(N)^22 for all N.  [Lean: blockMap_mem_condF', blockMap_mem_condS',
+mSum_chain, self_pow_split (x^x <= 2^{x+1} ceil(x/2)^ceil(x/2) floor(x/2)^floor(x/2)),
+arith_iv, alln22_aux, self_pow_le_semiCount_pow_22.]
 The potential-function bound for these tools is K >= 20 (odd node: surplus 2; even node 2y
 with y odd: K/4 >= 3 + 2 from three levels of entropy and the surplus), and mbound.py gives
 about 0.055 = 1/18 on the worst N (binary 1010..., exactly half of the nodes odd).

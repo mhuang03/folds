@@ -37,6 +37,12 @@ All `N` (`self_pow_le_semiCount_pow_25`): `N^N ≤ 2^{9N} a(N)^{25}`, i.e.
 induction on the triple (bound for `a(N)`, the same with a surplus `2^{2N}` for even `N`,
 bound for `B(N)` with surplus), from `a(2n) ≥ B(n)`, the chain recursion,
 `B(2m+1) ≥ 2^{⌊(m+1)/2⌋} a(m)² a(m+1)²` (`slipSum_odd`) and `a(2n+1) ≥ 2 a(n) a(n+1)`.
+
+Restricted chain (`mSum_chain`): `M(x,y,r) = ∑_{D ⊆ [1,r]} #condF(x,D) #condS(y,D)` satisfies
+`M(x,y,r) ≥ 2^{⌈r/2⌉} a(⌈x/2⌉) a(⌊y/2⌋) M(⌊x/2⌋, ⌈y/2⌉, ⌊r/2⌋)` for `2r ≤ x`, `2r+1 ≤ y`
+(below the top level no reduction mod `x`, `y` happens, so the chain also works for odd
+sizes), and `B(n) ≥ M(n, n, ⌊(n-1)/2⌋)`.  With it (`self_pow_le_semiCount_pow_22`):
+`N^N ≤ 2^{9N} a(N)^{22}` for all `N`, i.e. `a(N) ≥ (N/512)^{N/22}`.
 Paper proofs: `experiments/superexp2/PROOFS.txt`.
 -/
 
@@ -415,8 +421,8 @@ theorem slipSum_odd (m : Nat) :
     show (2 * m + 1 + 1) / 2 = m + 1 by omega, show (2 * m + 1) / 2 = m by omega] at this
 
 /-- Small cases of the slip-sum bound: `(2n)^{2n} 2^{4n} ≤ 2^{18n} B(n)^{25}` for `n ≤ 64`. -/
-theorem small_slipSum {n : Nat} (hn : n ≤ 64) :
-    (2 * n) ^ (2 * n) * 2 ^ (4 * n) ≤ 2 ^ (18 * n) * slipSum n ^ 25 := by
+theorem small_slipSum {n k : Nat} (hn : n ≤ 64) :
+    (2 * n) ^ (2 * n) * 2 ^ (4 * n) ≤ 2 ^ (18 * n) * slipSum n ^ k := by
   have e1 : (2 * n) ^ (2 * n) * 2 ^ (4 * n) = (8 * n) ^ (2 * n) := by
     rw [show 8 * n = 2 * n * 4 by ring, Nat.mul_pow (2 * n) 4, Nat.pow_mul 4 2 n,
       show (4 : Nat) ^ 2 = 2 ^ 4 by norm_num, ← Nat.pow_mul, Nat.mul_comm 4 n]
@@ -424,7 +430,7 @@ theorem small_slipSum {n : Nat} (hn : n ≤ 64) :
     rw [show (512 : Nat) = 2 ^ 9 by norm_num, ← Nat.pow_mul]; ring_nf
   rw [e1, e2]
   calc (8 * n) ^ (2 * n) ≤ 512 ^ (2 * n) := Nat.pow_le_pow_left (by omega) _
-    _ ≤ 512 ^ (2 * n) * slipSum n ^ 25 :=
+    _ ≤ 512 ^ (2 * n) * slipSum n ^ k :=
         Nat.le_mul_of_pos_right _ (Nat.one_le_pow _ _ (slipSum_pos n))
 
 /-- The induction behind `self_pow_le_semiCount_pow_25`: for `N ≥ 1`,
@@ -585,6 +591,482 @@ theorem self_pow_le_semiCount_pow_25 {N : Nat} (hN : 1 ≤ N) :
   (alln_aux N hN).1
 
 end AllN2
+
+/-! ## The restricted chain (all sizes): `M(x,y,r) ≥ 2^{⌈r/2⌉} a(⌈x/2⌉) a(⌊y/2⌋) M(⌊x/2⌋,⌈y/2⌉,⌊r/2⌋)` -/
+
+section Restricted
+
+/-- `M(x, y, r) = ∑_{D ⊆ [1, r]} #condF(x, D) · #condS(y, D)`. -/
+noncomputable def mSum (x y r : Nat) : Nat :=
+  ∑ D ∈ (Finset.Icc 1 r).powerset, (condF x D).card * (condS y D).card
+
+theorem mSum_le_slipSum {n r : Nat} (hr : r ≤ n - 1) : mSum n n r ≤ slipSum n :=
+  Finset.sum_le_sum_of_subset
+    (Finset.powerset_mono.2 (Finset.Icc_subset_Icc le_rfl hr))
+
+theorem mSum_pos (x y r : Nat) : 1 ≤ mSum x y r := by
+  unfold mSum
+  have h : (∅ : Finset Nat) ∈ (Finset.Icc 1 r).powerset := Finset.empty_mem_powerset _
+  refine le_trans ?_ (Finset.single_le_sum (fun _ _ => Nat.zero_le _) h)
+  rw [condF_empty, condS_empty]
+  exact Nat.mul_le_mul (semiCount_pos x) (semiCount_pos y)
+
+/-- The odd numbers in `[1, r]`. -/
+def oddR (r : Nat) : Finset Nat := (Finset.range ((r + 1) / 2)).image fun i => 2 * i + 1
+
+theorem card_oddR (r : Nat) : (oddR r).card = (r + 1) / 2 := by
+  unfold oddR
+  rw [Finset.card_image_of_injective _ (fun x y e => by
+    have : 2 * x + 1 = 2 * y + 1 := e
+    omega), Finset.card_range]
+
+theorem mem_oddR {r k : Nat} (hk : k ∈ oddR r) : k % 2 = 1 ∧ 1 ≤ k ∧ k ≤ r := by
+  unfold oddR at hk
+  obtain ⟨i, hi, rfl⟩ := Finset.mem_image.1 hk
+  rw [Finset.mem_range] at hi
+  omega
+
+theorem mem_dbl' {p : Finset Nat × Finset Nat} (hE : ∀ x ∈ p.1, x % 2 = 1) {x : Nat} :
+    x ∈ dbl p ↔ (x % 2 = 1 ∧ x ∈ p.1) ∨ (x % 2 = 0 ∧ x / 2 ∈ p.2) := by
+  unfold dbl
+  rw [Finset.mem_union, Finset.mem_image]
+  constructor
+  · rintro (h | ⟨i, hi, rfl⟩)
+    · exact Or.inl ⟨hE _ h, h⟩
+    · right; refine ⟨by omega, ?_⟩; rwa [show 2 * i / 2 = i by omega]
+  · rintro (⟨-, h⟩ | ⟨h0, h⟩)
+    · exact Or.inl h
+    · exact Or.inr ⟨x / 2, h, by omega⟩
+
+theorem dbl_sub' {r : Nat} {p : Finset Nat × Finset Nat} (hE : p.1 ⊆ oddR r)
+    (hD : p.2 ⊆ Finset.Icc 1 (r / 2)) : dbl p ⊆ Finset.Icc 1 r := by
+  intro x hx
+  unfold dbl at hx
+  rcases Finset.mem_union.1 hx with h | h
+  · have := mem_oddR (hE h); rw [Finset.mem_Icc]; omega
+  · obtain ⟨i, hi, rfl⟩ := Finset.mem_image.1 h
+    have := Finset.mem_Icc.1 (hD hi); rw [Finset.mem_Icc]; omega
+
+theorem dbl_injOn' {r : Nat} :
+    Set.InjOn dbl
+      (((oddR r).powerset ×ˢ (Finset.Icc 1 (r / 2)).powerset : Finset _) : Set _) := by
+  rintro ⟨E, D⟩ hp ⟨E', D'⟩ hp' e
+  simp only [Finset.coe_product, Set.mem_prod, Finset.mem_coe, Finset.mem_powerset] at hp hp'
+  have hE1 : ∀ x ∈ E, x % 2 = 1 := fun x hx => (mem_oddR (hp.1 hx)).1
+  have hE2 : ∀ x ∈ E', x % 2 = 1 := fun x hx => (mem_oddR (hp'.1 hx)).1
+  have h := fun x => (mem_dbl' (p := (E, D)) hE1 (x := x)).symm.trans
+    ((congrArg (x ∈ ·) e).to_iff.trans (mem_dbl' (p := (E', D')) hE2))
+  simp only at h
+  have hE : E = E' := by
+    ext x
+    constructor
+    · intro hx
+      rcases (h x).1 (Or.inl ⟨hE1 x hx, hx⟩) with ⟨-, h'⟩ | ⟨h0, -⟩
+      · exact h'
+      · have := hE1 x hx; omega
+    · intro hx
+      rcases (h x).2 (Or.inl ⟨hE2 x hx, hx⟩) with ⟨-, h'⟩ | ⟨h0, -⟩
+      · exact h'
+      · have := hE2 x hx; omega
+  have hD : D = D' := by
+    ext i
+    have e2 : 2 * i / 2 = i := by omega
+    constructor
+    · intro hi
+      rcases (h (2 * i)).1 (Or.inr ⟨by omega, by rwa [e2]⟩) with ⟨h1, -⟩ | ⟨-, h'⟩
+      · omega
+      · rwa [e2] at h'
+    · intro hi
+      rcases (h (2 * i)).2 (Or.inr ⟨by omega, by rwa [e2]⟩) with ⟨h1, -⟩ | ⟨-, h'⟩
+      · omega
+      · rwa [e2] at h'
+  rw [hE, hD]
+
+theorem qq_small {x k : Nat} (hk : 1 ≤ k) (h : 2 * k ≤ x) : qq x k = 2 * k := by
+  unfold qq; rw [Nat.mod_eq_of_lt (by omega)]; omega
+
+theorem pp_small {y k : Nat} (h : 2 * k < y) : pp y k = 2 * k + 1 := by
+  unfold pp; rw [Nat.mod_eq_of_lt h]
+
+theorem blockMap_mem_gen {x : Nat} {α β : List Nat} (hα : α ∈ semiSeqs ((x + 1) / 2))
+    (hβ : β ∈ semiSeqs (x / 2)) : blockMap 1 (α, β) ∈ semiSeqs x := by
+  apply blockMap_mem (N := x) (c := 1) le_rfl
+  rw [show (x + (1 - 1)) / 2 = x / 2 by omega]
+  exact Finset.mem_product.2 ⟨hα, hβ⟩
+
+theorem card_image_blockMap_gen {x : Nat} {X Y : Finset (List Nat)}
+    (hX : X ⊆ semiSeqs ((x + 1) / 2)) (hY : Y ⊆ semiSeqs (x / 2)) :
+    ((X ×ˢ Y).image (blockMap 1)).card = X.card * Y.card := by
+  rw [Finset.card_image_of_injOn, Finset.card_product]
+  have := blockMap_injOn (N := x) (c := 1) le_rfl
+  rw [show (x + (1 - 1)) / 2 = x / 2 by omega] at this
+  exact this.mono (Finset.coe_subset.2 (Finset.product_subset_product hX hY))
+
+/-- First block, restricted range (no wrap): `PB(α, β) ∈ condF(x, E ∪ 2D')`. -/
+theorem blockMap_mem_condF' {x r : Nat} (hx : 2 * r ≤ x) {E D' : Finset Nat}
+    (hE : E ⊆ oddR r) (hD' : D' ⊆ Finset.Icc 1 (r / 2)) {α β : List Nat}
+    (hα : α ∈ semiSeqs ((x + 1) / 2)) (hβ : β ∈ condF (x / 2) D') :
+    blockMap 1 (α, β) ∈ condF x (dbl (E, D')) := by
+  have hβs : β ∈ semiSeqs (x / 2) := (Finset.mem_filter.1 hβ).1
+  have hβc := (Finset.mem_filter.1 hβ).2
+  have hαf := (mem_semiSeqs.1 hα).1
+  have hβf := (mem_semiSeqs.1 hβs).1
+  have hE1 : ∀ z ∈ E, z % 2 = 1 := fun z hz => (mem_oddR (hE hz)).1
+  unfold condF
+  rw [Finset.mem_filter]
+  refine ⟨blockMap_mem_gen hα hβs, ?_⟩
+  rw [blockMap_eq]
+  intro k hk hd
+  have hxD : (α.map (scale 1) ++ β.map (scale 0))[k] ∈ dbl (E, D') := by
+    unfold ind at hd; split at hd
+    · assumption
+    · omega
+  rcases Nat.lt_or_ge k α.length with hkA | hkA
+  · have hkA' : k < (α.map (scale 1)).length := by simpa using hkA
+    have hi1 : 1 ≤ α[k] := ((mem_range'_of_perm hαf).1 (List.getElem_mem _)).1
+    have e : (α.map (scale 1) ++ β.map (scale 0))[k] = 2 * α[k] - 1 := by
+      rw [List.getElem_append_left hkA']; simp [scale]
+    rw [e] at hxD ⊢
+    have hsub := dbl_sub' (r := r) hE hD' hxD
+    rw [Finset.mem_Icc] at hsub
+    rw [qq_small (by omega) (by omega)]
+    intro hmem
+    rw [List.take_append_of_le_length hkA'.le] at hmem
+    have := mem_map_scale_one_odd hαf (List.mem_of_mem_take hmem)
+    omega
+  · have hkA' : (α.map (scale 1)).length ≤ k := by simpa using hkA
+    have hβl : k - α.length < β.length := by simp at hk; omega
+    have hi1 : 1 ≤ β[k - α.length] := ((mem_range'_of_perm hβf).1 (List.getElem_mem _)).1
+    have e : (α.map (scale 1) ++ β.map (scale 0))[k] = 2 * β[k - α.length] := by
+      rw [List.getElem_append_right hkA']; simp [scale]
+    rw [e] at hxD ⊢
+    have hiD : β[k - α.length] ∈ D' := by
+      rcases (mem_dbl' (p := (E, D')) hE1).1 hxD with ⟨h1, -⟩ | ⟨-, h2⟩
+      · omega
+      · simpa using h2
+    have hir := Finset.mem_Icc.1 (hD' hiD)
+    have hcond := hβc (k - α.length) hβl (by unfold ind; rw [ite_eq_left_iff.2 (fun h => absurd hiD h)])
+    rw [qq_small (by omega) (by omega), show 2 * (2 * β[k - α.length]) = 2 * qq (x / 2) β[k - α.length] by
+      rw [qq_small hi1 (by omega)]]
+    intro hmem
+    rw [List.take_append, List.take_of_length_le hkA'] at hmem
+    rcases List.mem_append.1 hmem with h | h
+    · have := mem_map_scale_one_odd hαf h; omega
+    · rw [List.length_map, ← List.map_take] at h
+      obtain ⟨z, hz, hz2⟩ := List.mem_map.1 h
+      unfold scale at hz2
+      have : z = qq (x / 2) β[k - α.length] := by omega
+      exact hcond (this ▸ hz)
+
+/-- Second block, restricted range: `PB(α', β') ∈ condS(y, E ∪ 2D')`. -/
+theorem blockMap_mem_condS' {y r : Nat} (hy : 2 * r + 1 ≤ y) {E D' : Finset Nat}
+    (hE : E ⊆ oddR r) (hD' : D' ⊆ Finset.Icc 1 (r / 2)) {α β : List Nat}
+    (hα : α ∈ condS ((y + 1) / 2) D') (hβ : β ∈ semiSeqs (y / 2)) :
+    blockMap 1 (α, β) ∈ condS y (dbl (E, D')) := by
+  have hαs : α ∈ semiSeqs ((y + 1) / 2) := (Finset.mem_filter.1 hα).1
+  have hαc := (Finset.mem_filter.1 hα).2
+  have hαf := (mem_semiSeqs.1 hαs).1
+  have hE1 : ∀ z ∈ E, z % 2 = 1 := fun z hz => (mem_oddR (hE hz)).1
+  unfold condS
+  rw [Finset.mem_filter]
+  refine ⟨blockMap_mem_gen hαs hβ, ?_⟩
+  rw [blockMap_eq]
+  intro k hk hd
+  have hxD : (α.map (scale 1) ++ β.map (scale 0))[k] - 1 ∈ dbl (E, D') := by
+    unfold ind at hd; split at hd
+    · assumption
+    · omega
+  rcases Nat.lt_or_ge k α.length with hkA | hkA
+  · have hkA' : k < (α.map (scale 1)).length := by simpa using hkA
+    have hi1 : 1 ≤ α[k] := ((mem_range'_of_perm hαf).1 (List.getElem_mem _)).1
+    have e : (α.map (scale 1) ++ β.map (scale 0))[k] = 2 * α[k] - 1 := by
+      rw [List.getElem_append_left hkA']; simp [scale]
+    rw [e] at hxD ⊢
+    have hiD : α[k] - 1 ∈ D' := by
+      rcases (mem_dbl' (p := (E, D')) hE1).1 hxD with ⟨h1, -⟩ | ⟨-, h2⟩
+      · omega
+      · rwa [show (2 * α[k] - 1 - 1) / 2 = α[k] - 1 by omega] at h2
+    have hir := Finset.mem_Icc.1 (hD' hiD)
+    have hcond := hαc k hkA (by unfold ind; rw [ite_eq_left_iff.2 (fun h => absurd hiD h)])
+    rw [show 2 * α[k] - 1 - 1 = 2 * (α[k] - 1) by omega, pp_small (by omega),
+      show 2 * (2 * (α[k] - 1)) + 1 = scale 1 (pp ((y + 1) / 2) (α[k] - 1)) by
+        rw [pp_small (by omega)]; unfold scale; omega,
+      List.take_append_of_le_length hkA'.le, ← List.map_take]
+    exact List.mem_map.2 ⟨_, hcond, rfl⟩
+  · have hkA' : (α.map (scale 1)).length ≤ k := by simpa using hkA
+    have hβl : k - α.length < β.length := by simp at hk; omega
+    have e : (α.map (scale 1) ++ β.map (scale 0))[k] = 2 * β[k - α.length] := by
+      rw [List.getElem_append_right hkA']; simp [scale]
+    rw [e] at hxD ⊢
+    have hsub := dbl_sub' (r := r) hE hD' hxD
+    rw [Finset.mem_Icc] at hsub
+    rw [pp_small (by omega)]
+    have hmemA : 2 * (2 * β[k - α.length] - 1) + 1 ∈ α.map (scale 1) := by
+      refine List.mem_map.2 ⟨2 * β[k - α.length], (mem_range'_of_perm hαf).2 ⟨by omega, by omega⟩, ?_⟩
+      unfold scale; omega
+    rw [List.take_append, List.take_of_length_le hkA']
+    exact List.mem_append_left _ hmemA
+
+/-- **Restricted chain.**  For `2r ≤ x`, `2r + 1 ≤ y`:
+`2^{⌈r/2⌉} a(⌈x/2⌉) a(⌊y/2⌋) M(⌊x/2⌋, ⌈y/2⌉, ⌊r/2⌋) ≤ M(x, y, r)`. -/
+theorem mSum_chain {x y r : Nat} (hx : 2 * r ≤ x) (hy : 2 * r + 1 ≤ y) :
+    2 ^ ((r + 1) / 2) * (semiCount ((x + 1) / 2) * semiCount (y / 2) *
+      mSum (x / 2) ((y + 1) / 2) (r / 2)) ≤ mSum x y r := by
+  set P := (oddR r).powerset ×ˢ (Finset.Icc 1 (r / 2)).powerset with hP
+  set f : Finset Nat → Nat := fun D => (condF x D).card * (condS y D).card
+  have hsub : P.image dbl ⊆ (Finset.Icc 1 r).powerset := by
+    intro D hD
+    obtain ⟨p, hp, rfl⟩ := Finset.mem_image.1 hD
+    rw [hP, Finset.mem_product, Finset.mem_powerset, Finset.mem_powerset] at hp
+    exact Finset.mem_powerset.2 (dbl_sub' hp.1 hp.2)
+  have step1 : ∑ D ∈ P.image dbl, f D ≤ mSum x y r :=
+    Finset.sum_le_sum_of_subset hsub
+  rw [Finset.sum_image (fun a ha b hb e => dbl_injOn' (r := r) ha hb e)] at step1
+  have step2 : ∀ p ∈ P, semiCount ((x + 1) / 2) * semiCount (y / 2) *
+      ((condF (x / 2) p.2).card * (condS ((y + 1) / 2) p.2).card) ≤ f (dbl p) := by
+    rintro ⟨E, D'⟩ hp
+    rw [hP, Finset.mem_product, Finset.mem_powerset, Finset.mem_powerset] at hp
+    have hF : (semiSeqs ((x + 1) / 2) ×ˢ condF (x / 2) D').image (blockMap 1) ⊆
+        condF x (dbl (E, D')) := by
+      intro z hz
+      obtain ⟨⟨α, β⟩, hab, rfl⟩ := Finset.mem_image.1 hz
+      rw [Finset.mem_product] at hab
+      exact blockMap_mem_condF' hx hp.1 hp.2 hab.1 hab.2
+    have hS : (condS ((y + 1) / 2) D' ×ˢ semiSeqs (y / 2)).image (blockMap 1) ⊆
+        condS y (dbl (E, D')) := by
+      intro z hz
+      obtain ⟨⟨α, β⟩, hab, rfl⟩ := Finset.mem_image.1 hz
+      rw [Finset.mem_product] at hab
+      exact blockMap_mem_condS' hy hp.1 hp.2 hab.1 hab.2
+    have sF : condF (x / 2) D' ⊆ semiSeqs (x / 2) := by unfold condF; exact Finset.filter_subset _ _
+    have sS : condS ((y + 1) / 2) D' ⊆ semiSeqs ((y + 1) / 2) := by
+      unfold condS; exact Finset.filter_subset _ _
+    have c1 := Finset.card_le_card hF
+    have c2 := Finset.card_le_card hS
+    rw [card_image_blockMap_gen le_rfl sF] at c1
+    rw [card_image_blockMap_gen sS le_rfl] at c2
+    calc semiCount ((x + 1) / 2) * semiCount (y / 2) *
+          ((condF (x / 2) D').card * (condS ((y + 1) / 2) D').card)
+        = (semiCount ((x + 1) / 2) * (condF (x / 2) D').card) *
+            ((condS ((y + 1) / 2) D').card * semiCount (y / 2)) := by
+          unfold semiCount; ring
+      _ ≤ f (dbl (E, D')) := Nat.mul_le_mul c1 c2
+  have step3 := Finset.sum_le_sum step2
+  rw [hP, Finset.sum_product] at step3
+  simp only at step3
+  rw [Finset.sum_const, Finset.card_powerset, card_oddR, nsmul_eq_mul, Nat.cast_id,
+    ← Finset.mul_sum] at step3
+  exact le_trans step3 (by rw [← hP]; exact step1)
+
+/-- `x^x ≤ 2^{x+1} ⌈x/2⌉^{⌈x/2⌉} ⌊x/2⌋^{⌊x/2⌋}`. -/
+theorem self_pow_split (x : Nat) :
+    x ^ x ≤ 2 ^ (x + 1) * (((x + 1) / 2) ^ ((x + 1) / 2) * (x / 2) ^ (x / 2)) := by
+  rcases Nat.even_or_odd x with ⟨k, hk⟩ | ⟨k, hk⟩
+  · rw [show x = 2 * k by omega, show (2 * k + 1) / 2 = k by omega, show 2 * k / 2 = k by omega,
+      Nat.mul_pow, ← Nat.pow_two, ← Nat.pow_mul, show k * 2 = 2 * k by ring]
+    exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by omega) (by omega))
+  · rw [show x = 2 * k + 1 by omega, show (2 * k + 1 + 1) / 2 = k + 1 by omega,
+      show (2 * k + 1) / 2 = k by omega]
+    rcases Nat.eq_zero_or_pos k with h0 | hk1
+    · subst h0; norm_num
+    · calc (2 * k + 1) ^ (2 * k + 1) ≤ 2 ^ (2 * k + 2) * (k ^ k * (k + 1) ^ (k + 1)) :=
+            odd_self_pow_le k hk1
+        _ = 2 ^ (2 * k + 1 + 1) * ((k + 1) ^ (k + 1) * k ^ k) := by ring
+
+end Restricted
+
+/-! ## All `N` with the restricted chain: `N^N ≤ 2^{9N} a(N)^{22}` -/
+
+section AllN3
+
+theorem arith_iv {N y r : Nat} (hy : y = N ∨ y = N + 1) (h3 : N ≤ 2 * r + 2) (hr : 14 ≤ r) :
+    N + y + 2 + 13 * r + 9 * ((N + 1) / 2 + N / 2 + (y + 1) / 2 + y / 2) ≤
+      22 * ((r + 1) / 2) + 13 * (r / 2) + 9 * (N + y) := by
+  rw [show (N + 1) / 2 + N / 2 + (y + 1) / 2 + y / 2 = N + y by omega]
+  have e3 : (r + 1) / 2 + r / 2 = r := by omega
+  have e4 : r ≤ 2 * ((r + 1) / 2) := by omega
+  generalize (r + 1) / 2 = t at e3 e4 ⊢
+  generalize r / 2 = r' at e3 e4 ⊢
+  subst e3
+  have : y ≤ N + 1 := by omega
+  omega
+
+/-- The induction behind `self_pow_le_semiCount_pow_22`: for `N ≥ 1`,
+(i) `N^N ≤ 2^{9N} a(N)^22`, (ii) the same with a surplus `2^{2N}` for even `N`,
+(iii) `(2N)^{2N} 2^{4N} ≤ 2^{18N} B(N)^22`,
+(iv) `N^N y^y 2^{13r} ≤ 2^{9(N+y)} M(N,y,r)^22` for `y ∈ {N, N+1}`, `2r ≤ N`, `2r+1 ≤ y`,
+`N ≤ 2r + 2`. -/
+theorem alln22_aux : ∀ N, 1 ≤ N →
+    N ^ N ≤ 2 ^ (9 * N) * semiCount N ^ 22 ∧
+      (N % 2 = 0 → N ^ N * 2 ^ (2 * N) ≤ 2 ^ (9 * N) * semiCount N ^ 22) ∧
+      (2 * N) ^ (2 * N) * 2 ^ (4 * N) ≤ 2 ^ (18 * N) * slipSum N ^ 22 ∧
+      (∀ y r, (y = N ∨ y = N + 1) → 2 * r ≤ N → 2 * r + 1 ≤ y → N ≤ 2 * r + 2 →
+        N ^ N * y ^ y * 2 ^ (13 * r) ≤ 2 ^ (9 * (N + y)) * mSum N y r ^ 22) := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+  intro hN
+  have hpow : ∀ k, 0 < 2 ^ k := fun k => Nat.two_pow_pos k
+  -- (iv)
+  have IV : ∀ y r, (y = N ∨ y = N + 1) → 2 * r ≤ N → 2 * r + 1 ≤ y → N ≤ 2 * r + 2 →
+      N ^ N * y ^ y * 2 ^ (13 * r) ≤ 2 ^ (9 * (N + y)) * mSum N y r ^ 22 := by
+    intro y r hy h1 h2 h3
+    rcases Nat.lt_or_ge r 14 with hr | hr
+    · -- small: everything is at most 32
+      have hN32 : N ≤ 32 := by omega
+      have hy32 : y ≤ 32 := by omega
+      calc N ^ N * y ^ y * 2 ^ (13 * r) ≤ 32 ^ N * 32 ^ y * 2 ^ (4 * N + 4 * y) := by
+            gcongr
+            omega
+        _ = 2 ^ (9 * (N + y)) * 1 := by
+            rw [show (32 : Nat) = 2 ^ 5 by norm_num, ← Nat.pow_mul, ← Nat.pow_mul, ← Nat.pow_add,
+              ← Nat.pow_add]; ring_nf
+        _ ≤ 2 ^ (9 * (N + y)) * mSum N y r ^ 22 :=
+            Nat.mul_le_mul_left _ (Nat.one_le_pow _ _ (mSum_pos N y r))
+    · -- the recursion
+      have key := mSum_chain (x := N) (y := y) (r := r) h1 h2
+      have Qx1 := (ih ((N + 1) / 2) (by omega) (by omega)).1
+      have Qy2 := (ih (y / 2) (by omega) (by omega)).1
+      have M' := (ih (N / 2) (by omega) (by omega)).2.2.2 ((y + 1) / 2) (r / 2) (by omega)
+        (by omega) (by omega) (by omega)
+      have sx := self_pow_split N
+      have sy := self_pow_split y
+      have harith := arith_iv hy h3 hr
+      clear ih
+      set x1 := (N + 1) / 2 with hx1
+      set x2 := N / 2 with hx2
+      set y1 := (y + 1) / 2 with hy1
+      set y2 := y / 2 with hy2
+      set t := (r + 1) / 2 with ht
+      set r' := r / 2 with hr'
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (13 * r')) ?_ (hpow _)
+      calc N ^ N * y ^ y * 2 ^ (13 * r) * 2 ^ (13 * r')
+          ≤ (2 ^ (N + 1) * (x1 ^ x1 * x2 ^ x2)) * (2 ^ (y + 1) * (y1 ^ y1 * y2 ^ y2)) *
+              2 ^ (13 * r) * 2 ^ (13 * r') := by gcongr
+        _ = 2 ^ (N + y + 2 + 13 * r) * (x1 ^ x1 * y2 ^ y2) * (x2 ^ x2 * y1 ^ y1 * 2 ^ (13 * r')) := by
+            ring
+        _ ≤ 2 ^ (N + y + 2 + 13 * r) * ((2 ^ (9 * x1) * semiCount x1 ^ 22) *
+              (2 ^ (9 * y2) * semiCount y2 ^ 22)) * (2 ^ (9 * (x2 + y1)) * mSum x2 y1 r' ^ 22) := by
+            gcongr
+        _ = 2 ^ (N + y + 2 + 13 * r + 9 * (x1 + x2 + y1 + y2)) *
+              (semiCount x1 * semiCount y2 * mSum x2 y1 r') ^ 22 := by ring
+        _ ≤ 2 ^ (22 * t + 13 * r' + 9 * (N + y)) *
+              (semiCount x1 * semiCount y2 * mSum x2 y1 r') ^ 22 := by
+            exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by norm_num) harith)
+        _ = 2 ^ (9 * (N + y)) * (2 ^ t * (semiCount x1 * semiCount y2 * mSum x2 y1 r')) ^ 22 *
+              2 ^ (13 * r') := by ring
+        _ ≤ 2 ^ (9 * (N + y)) * mSum N y r ^ 22 * 2 ^ (13 * r') := by gcongr
+  -- (iii)
+  have III : (2 * N) ^ (2 * N) * 2 ^ (4 * N) ≤ 2 ^ (18 * N) * slipSum N ^ 22 := by
+    rcases Nat.lt_or_ge 64 N with hl | hs
+    swap
+    · exact small_slipSum hs
+    rcases Nat.even_or_odd N with ⟨m, hm⟩ | ⟨m, hm⟩
+    · -- N = 2m: the chain recursion
+      rw [show N = 2 * m by omega] at ⊢
+      have hm1 : 1 ≤ m := by omega
+      have Qm := (ih m (by omega) hm1).1
+      have Bm := (ih m (by omega) hm1).2.2.1
+      have key := slipSum_chain hm1
+      have e : (2 * (2 * m)) ^ (2 * (2 * m)) * 2 ^ (4 * (2 * m)) * 2 ^ (4 * m) =
+          2 ^ (14 * m) * ((2 * m) ^ (2 * m) * 2 ^ (4 * m)) * (m ^ m) ^ 2 := by
+        rw [show 2 * (2 * m) = 2 * (2 * m) by rfl, Nat.mul_pow 2 (2 * m) (2 * (2 * m)),
+          show (2 * m) ^ (2 * (2 * m)) = (2 * m) ^ (2 * m) * (2 * m) ^ (2 * m) by
+            rw [← Nat.pow_add]; congr 1; ring,
+          show (2 * m) ^ (2 * m) = 2 ^ (2 * m) * (m ^ m) ^ 2 by
+            rw [Nat.mul_pow, ← Nat.pow_mul, Nat.mul_comm m 2, Nat.pow_mul]]
+        rw [show (2 : Nat) ^ (2 * (2 * m)) = 2 ^ (4 * m) by ring_nf]
+        ring
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (4 * m)) ?_ (hpow _)
+      rw [e]
+      calc 2 ^ (14 * m) * ((2 * m) ^ (2 * m) * 2 ^ (4 * m)) * (m ^ m) ^ 2
+          ≤ 2 ^ (14 * m) * (2 ^ (18 * m) * slipSum m ^ 22) * (2 ^ (9 * m) * semiCount m ^ 22) ^ 2 := by
+            gcongr
+        _ = 2 ^ (28 * m) * (2 ^ m * (semiCount m ^ 2 * slipSum m)) ^ 22 := by ring
+        _ ≤ 2 ^ (28 * m) * slipSum (2 * m) ^ 22 := by gcongr
+        _ ≤ 2 ^ (18 * (2 * m)) * slipSum (2 * m) ^ 22 * 2 ^ (4 * m) := by
+            rw [Nat.mul_right_comm, ← Nat.pow_add]
+            exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by omega) (by omega))
+    · -- N = 2m+1: B(N) ≥ M(N, N, m) and (iv)
+      have hMB := mSum_le_slipSum (n := N) (r := m) (by omega)
+      have hIV := IV N m (Or.inl rfl) (by omega) (by omega) (by omega)
+      have e : (2 * N) ^ (2 * N) * 2 ^ (4 * N) = 2 ^ (6 * N) * (N ^ N * N ^ N) := by
+        rw [Nat.mul_pow, show 2 * N = N + N by ring, Nat.pow_add N N N]; ring
+      rw [e]
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (13 * m)) ?_ (hpow _)
+      calc 2 ^ (6 * N) * (N ^ N * N ^ N) * 2 ^ (13 * m)
+          = 2 ^ (6 * N) * (N ^ N * N ^ N * 2 ^ (13 * m)) := by ring
+        _ ≤ 2 ^ (6 * N) * (2 ^ (9 * (N + N)) * mSum N N m ^ 22) := by gcongr
+        _ ≤ 2 ^ (13 * m) * (2 ^ (18 * N) * slipSum N ^ 22) := by
+            rw [show 9 * (N + N) = 18 * N by ring, ← Nat.mul_assoc, ← Nat.mul_assoc]
+            exact Nat.mul_le_mul (Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by norm_num)
+              (by omega))) (Nat.pow_le_pow_left hMB 22)
+        _ = 2 ^ (18 * N) * slipSum N ^ 22 * 2 ^ (13 * m) := by ring
+  refine ⟨?_, ?_, III, IV⟩
+  · -- (i)
+    rcases Nat.even_or_odd N with ⟨n, hn⟩ | ⟨n, hn⟩
+    · rw [show N = 2 * n by omega] at ⊢
+      have hn1 : 1 ≤ n := by omega
+      have Bn := (ih n (by omega) hn1).2.2.1
+      have := slipSum_le hn1
+      calc (2 * n) ^ (2 * n) ≤ (2 * n) ^ (2 * n) * 2 ^ (4 * n) := Nat.le_mul_of_pos_right _ (hpow _)
+        _ ≤ 2 ^ (18 * n) * slipSum n ^ 22 := Bn
+        _ ≤ 2 ^ (9 * (2 * n)) * semiCount (2 * n) ^ 22 := by
+            rw [show 9 * (2 * n) = 18 * n by ring]; gcongr
+    · rw [hn]
+      rcases Nat.eq_zero_or_pos n with h0 | hn1
+      · subst h0
+        simp only [Nat.mul_zero, Nat.zero_add, Nat.pow_one, Nat.mul_one]
+        exact le_trans (by norm_num) (Nat.le_mul_of_pos_right _ (Nat.one_le_pow _ _ (semiCount_pos 1)))
+      have key := semiCount_odd (n := n) hn1
+      have P : n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) ≤
+          2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 22 := by
+        rcases Nat.even_or_odd n with ⟨s, hs⟩ | ⟨s, hs⟩
+        · have E := (ih n (by omega) hn1).2.1 (by omega)
+          have Q1 := (ih (n + 1) (by omega) (by omega)).1
+          calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) = (n ^ n * 2 ^ (2 * n)) * (n + 1) ^ (n + 1) := by
+                ring
+            _ ≤ (2 ^ (9 * n) * semiCount n ^ 22) * (2 ^ (9 * (n + 1)) * semiCount (n + 1) ^ 22) := by
+                gcongr
+            _ = 2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 22 := by ring
+        · have E := (ih (n + 1) (by omega) (by omega)).2.1 (by omega)
+          have Q0 := (ih n (by omega) hn1).1
+          calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)
+              ≤ n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1)) := by gcongr; omega
+            _ = n ^ n * ((n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1))) := by ring
+            _ ≤ (2 ^ (9 * n) * semiCount n ^ 22) * (2 ^ (9 * (n + 1)) * semiCount (n + 1) ^ 22) := by
+                gcongr
+            _ = 2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 22 := by ring
+      have hb := odd_self_pow_le n hn1
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (2 * n)) ?_ (hpow _)
+      calc (2 * n + 1) ^ (2 * n + 1) * 2 ^ (2 * n)
+          ≤ 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1)) * 2 ^ (2 * n) := by gcongr
+        _ = 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)) := by ring
+        _ ≤ 2 ^ (2 * n + 2) * (2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 22) := by
+            gcongr
+        _ ≤ 2 ^ (2 * n + 22) * (2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 22) := by
+            gcongr; omega
+        _ = 2 ^ (9 * (2 * n + 1)) * (2 * (semiCount n * semiCount (n + 1))) ^ 22 * 2 ^ (2 * n) := by
+            ring
+        _ ≤ 2 ^ (9 * (2 * n + 1)) * semiCount (2 * n + 1) ^ 22 * 2 ^ (2 * n) := by gcongr
+  · -- (ii)
+    intro he
+    obtain ⟨n, rfl⟩ : ∃ n, N = 2 * n := ⟨N / 2, by omega⟩
+    have hn1 : 1 ≤ n := by omega
+    have Bn := (ih n (by omega) hn1).2.2.1
+    have := slipSum_le hn1
+    calc (2 * n) ^ (2 * n) * 2 ^ (2 * (2 * n)) = (2 * n) ^ (2 * n) * 2 ^ (4 * n) := by ring_nf
+      _ ≤ 2 ^ (18 * n) * slipSum n ^ 22 := Bn
+      _ ≤ 2 ^ (9 * (2 * n)) * semiCount (2 * n) ^ 22 := by
+          rw [show 9 * (2 * n) = 18 * n by ring]; gcongr
+
+/-- **Super-exponential lower bound with exponent 1/22 for all `N`**:
+`N^N ≤ 2^{9N} a(N)^{22}`, i.e. `a(N) ≥ (N/512)^{N/22}`. -/
+theorem self_pow_le_semiCount_pow_22 {N : Nat} (hN : 1 ≤ N) :
+    N ^ N ≤ 2 ^ (9 * N) * semiCount N ^ 22 :=
+  (alln22_aux N hN).1
+
+end AllN3
 
 end Slip
 end Folds
