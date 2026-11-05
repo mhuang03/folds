@@ -14,11 +14,14 @@ STATUS (details in section 6).  None of the three is proven in full.  Proven her
   * RS: the exceptions are genuine for EVERY q that is not a power of 2 (Theorem E, the
     "only if" half of RS), via an exact precedence form of the chain condition at nu = +-1
     (Lemma P).
-  * RS at nu = 1, every odd q (prime or not): the classes t = 3 (mod 4) and t = q - 1 (mod 4)
-    can come first AND last (Theorem H + Lemma W), by an explicit palindromic parity-block
-    construction; [Lean: in progress, see section 6].  Together with the exact form of the
-    remaining quarter (section 1.5).
-  * Lemma 3, first half: the near class is a window copy for every N = 1 (mod q), q >= 3.
+  * RS at nu = +-1, every odd q (prime or not): at nu = 1 the classes t = 3 (mod 4) and
+    t = q - 1 (mod 4), at nu = -1 the classes t = 2 and t = q - 2 (mod 4), can come first AND
+    last (Theorem H + Lemma W), by an explicit palindromic parity-block construction; so for
+    N = +-1 (mod q) these classes have reachable complements and the residue transfer of
+    live2 2.3 holds for them, for every odd q (before: q <= 12 only).  Fully in Lean.  The
+    remaining quarter (t = 1, q + 1 (mod 4) at nu = 1) is reformulated in section 1.5.
+  * Lemma 3, first half: the near class is a window copy for every N = 1 (mod q), q >= 3
+    (Lemma N, in Lean).  The second half (reachable complement) remains numerical.
   * New numerical facts that change the picture of Lemma 3 (section 3): the exceptional
     classes are themselves co-reachable (all q <= 12, N <= 26, except when they contain a
     dead pair), but never through a residue chain of ANY modulus Q with q | Q; so Lemma 3 and
@@ -30,7 +33,8 @@ Programs (this directory; C programs compile with gcc -O2, all 1 core, < 100 MB)
   palin.py, pal1.py    palindromic rotation-stable sequences (section 1.3).
   half.py        the HALF problem (1.3), all solutions' sets, copy test.
   halfcheck.py   checks Theorem H + Lemma W against ChainOK (q <= 41, section 1.4).
-  gp.py, gpshape.py, ev.py    the constrained strip problems of 1.5.
+  gp.py, gpshape.py, gpblocks.py, ev.py    the constrained strip problems of 1.5
+                 (gpblocks.py: GP(n, B) with odd start is never a block chain mod j < n - 2).
   nearord.py, excreach.py     orderings of complements of near / exceptional classes (3).
   multchain.c    residue chains mod Q = Mq with C_1 (mod q) last (3.3).
   dc.c           parity + class chains with a ghost class (3.4).
@@ -99,7 +103,8 @@ with s; a full chain reversed is a chain (live2 2.3), so first <=> last.
     For q = 2^a the map z -> 2z on Z_q is nilpotent and the precedences are acyclic, in
     accordance with RS.  With live2 2.2 (chains are necessary for N >= 2q) this proves the
     "except" half of RS: for N >= 2q, N = 1 (mod q), no residue chain puts C_1 first or last.
-    [Lean: `Live3.no_chain_exc` (classes 2..q, nu = 1).]
+    [Lean: `Live3.prec` (Lemma P), `Live3.no_chain_exc` (no order of the classes 2..q is a
+    chain for nu = 1, whenever q has an odd divisor b > 1).]
 
 1.4 THEOREM H (palindromic chains, nu = 1, q odd).  Let q = 2k + 1 >= 3 and let beta be a
     valid sequence of the k-strip in which v comes before 2v whenever 2v <= k.  Put
@@ -147,6 +152,11 @@ with s; a full chain reversed is a chain (live2 2.3), so first <=> last.
     have a reachable complement and pairs inside them reduce to the class strip.
     (halfcheck.py: checked against ChainOK for all odd q <= 41.)  For q = 3 this is all of
     RS at nu = +-1.
+    [Lean: 1.1 = `cycBal_iff`, `cycBal_dual`, `cycBal_sig`, `cycBal_rot`, `semiStep_iff_cycBal`;
+    1.1(e) (one direction) = `chainOK_of_valid`; Lemma W = `lemmaW`; the lift of (i) =
+    `semiSymmetric_shift`; Theorem H = `palindromic_chain`; the rotation = `chainOK_rot`;
+    the Corollary = `coReach_nu_one`, `coReach_nu_neg_one` (every odd q, every N >= q with
+    N = 1 resp. -1 (mod q)).]
 
 1.5 The remaining quarter at nu = 1.  Missing: t = 1 (mod 4) and t = q + 1 (mod 4)
     (exchanged by sigma(t) = q + 2 - t, so either one suffices), e.g. q = 7: t = 4, 5.
@@ -249,7 +259,9 @@ of Lemma 3.  The full liveness iff for 2-prefixes is therefore NOT assembled.
 6. Status
 ---------
 Proven (paper): 1.1, Lemma P, Theorem E, Theorem H, Lemma W, the Corollary of 1.4, Lemma N.
-Lean (Folds/Live3.lean, no sorry / native_decide): see the file header for what is
-formalized.
+Lean (Folds/Live3.lean, no sorry / native_decide, no decide at all): all of these
+(`chainOK_of_valid`, `lemmaW`, `palindromic_chain`, `coReach_nu_one`, `coReach_nu_neg_one`,
+`prec`, `no_chain_exc`, `winEmb_near`).  Not yet used: the new transfers could be added as
+steps to the closure `Live2.Cov` (they hold for every odd q, not only q <= 12).
 Open: RS for primes outside nu = +-1 and the quarter 1.5 at nu = +-1; the Adjacent Lemma;
 co-reachability of exceptional / near classes (numerical only).
