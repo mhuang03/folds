@@ -4,3 +4,8 @@ defaultTargets = ["Folds"]
 
 [[lean_lib]]
 name = "Folds"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.35.0"

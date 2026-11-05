@@ -2,3 +2,8 @@ import Folds.Defs
 import Folds.Basic
 import Folds.Decide
 import Folds.Cyclic
+import Folds.Parity
+import Folds.RevMirror
+import Folds.Blocks
+import Folds.Radius
+import Folds.Counting
