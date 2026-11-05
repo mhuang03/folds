@@ -68,8 +68,9 @@ Popcount (N = 2^(t+1)-2, c = t - popcount) has inv(m) = r(m) everywhere (it is v
         K(t)        3   9   21   61   157
     Full problem infeasible in the ranges [3,3), [7,9), [15,21), [31,61), [63,157):
       t = 1, 2: Lean kernel computation (search over prefixes, section 2.4);
-      t = 3: SAT (fixed_t_small.txt) and exhaustive search (dfs_nodes.py, enum.c);
-      t = 4: SAT (fixed_t_small.txt, and earlier sat_ineq.txt with the old encoding);
+      t = 3: SAT (fixed_t_small.txt), exhaustive search (dfs_nodes.py) and CP-SAT;
+      t = 4: SAT (fixed_t_small.txt, and earlier sat_ineq.txt with the old encoding) and
+             CP-SAT (crosscheck_cpsat_t34.txt, also the left-only check at 60/61);
       t = 5: SAT, section 3.
     Hence THE CONJECTURE HOLDS FOR t <= 5.
 2.3 Consequences.  For a right-heavy permutation (in particular a valid = semi-symmetric fold
@@ -153,9 +154,31 @@ threshold is ~2.7^t.)  A proof must use case analysis / integrality.
     |A| reaches 27 at N = 62 (> 2^4 - 2) (ab_test.py).
 (c) Prefixes: [1, s] need not contain lg(s+1) labels (fails at s = 7, 8, 15, ...;
     prefix_labels.py) -- consistent with the one-sided thresholds.
+(e) Splitting at the bottom and top classes: L_Z = [1, min Z) and R_T = (max T, N] (edge
+    runs) can be longer than 2^t - 2 (t = 4: 19 at N = 21; t = 5: 44 at N = 62), and T, Z
+    can interleave deeply (tz_split.py).  So "L_Z, R_T are smaller instances" fails even as
+    a length bound (popcount: |L_Z| = |R_T| = 2^t - 2, middle = 2 panels).
 (d) Chains starting at panel N: the longest decreasing subsequence starting at N can have
     length 1 for N = 15, 16 (t = 4) (chain_from.py); candidate (B) of labelling/ is only a
     near-threshold phenomenon.
+
+
+5'. EDGE RUNS AND THE ONE-SIDED PROBLEM (proved; runs_test.py)
+--------------------------------------------------------------
+Lemma.  A maximal run I of panels with labels < j that touches the right edge has
+|I| <= maxLH(j) (= 2, 8, 20, 60, 156 for j = 1..5).
+Proof.  Reverse-mirror (labelling/PROOFS.txt 1.2): c'(x) = t-1-c(M-x) is admissible and maps
+I onto a prefix [1, |I|] with labels in {t-j, ..., t-1}.  For 2m <= |I|+1 (<= N+1) the
+left-half constraint of m has window [1, 2m-1] inside the prefix, so c' - (t-j) on [1, |I|]
+solves LH(|I|, j).                                                                          □
+Data: the longest right-edge runs are 2, 8, 20 (j = 1, 2, 3; = maxLH) and >= 44 (j = 4) in
+the enumerated lists, while inner runs (candidate (A)) stay <= 1, 6, 13, 27 <= 2^(j+1) - 2
+(t = 5 list at N = 62 included: (A) survives).  This explains the failure 4(i) of the
+previous attempt exactly: edge runs are one-sided objects and grow like ~2.6^j.
+A structural induction would split [N] at the top class T (a doubling chain in the left
+half plus <= 1 panel in the right half, labelling/PROOFS.txt 1.5): inner runs are bounded by
+(A), the final run by maxLH(t-1); but the number of inner runs is ~lg N and the final run's
+bound is one-sided, so this alone gives nothing better than ~lg N * 2^t.
 
 
 6. REMARKS ON THE GENERAL CASE
