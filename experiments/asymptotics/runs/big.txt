@@ -1,2 +1,6 @@
 N=2048 P=48000 Pmax=768000 loga_est=9501.5667 logN!=13571.9510 ratio=0.70009 deficit=1.98749
 N=2048 P=48000 Pmax=768000 loga_est=9487.2079 logN!=13571.9510 ratio=0.69903 deficit=1.99450
+N=4096 P=16000 Pmax=256000 loga_est=21208.7535 logN!=29978.6481 ratio=0.70746 deficit=2.14109
+N=4096 extinct at k=4094
+N=3072 extinct at k=3068
+N=4096 P=64000 Pmax=1024000 loga_est=21268.9890 logN!=29978.6481 ratio=0.70947 deficit=2.12638

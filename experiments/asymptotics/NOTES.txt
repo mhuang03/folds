@@ -15,7 +15,7 @@ SUMMARY
 Conjecture (best supported):   c = 1, with a ln ln N second-order term:
      ln a(N) = N ln N - N - N ln sigma_bar(N) - O(N),   sigma_bar(N) = Theta(ln N) (heuristic),
      a(N) = N! / (kappa_N ln N)^N  with kappa_N slowly varying (0.92 at N = 1024, 0.96 at 2048,
-     rising), i.e. a(N) = N!/(Theta(log N))^{N(1+o(1))}, as the growth agent conjectured.
+     1.01 at 4096, rising; heuristic limit ~1.4), i.e. a(N) = N!/(Theta(log N))^{N(1+o(1))}, as the growth agent conjectured.
 The exact mechanism, in three steps:
  (1) [data] Acceptance is a local CLT: V/(N-k) = G/(sqrt(2pi) sigma_J), G = 1.02-1.05, where
      sigma_J is the spread of the integer imbalance field J over the free panels (valid move
@@ -26,21 +26,23 @@ The exact mechanism, in three steps:
      a(N) is a Feynman-Kac (directed-polymer) partition function: random set paths weighted
      by prod_k 1/sigma_J(S_k).  The "soft" model that keeps only this weight (toy.c: random
      permutations weighted by prod_k (N-k)/(sqrt(2pi) sigma_J)) reproduces sigma_J of the
-     true process within 5% and d(N) within 0.02-0.1 for N = 64..2048.
+     true process within 4-7% and d(N) within 0.04-0.1 for N = 64..2048.
  (3) [heur] Gaussian Feynman-Kac analysis of the Fourier modes along doubling chains
      (var J = sum_n |S^(n/2) - S^(n)|^2/(pi n)^2): each mode is confined only while it lives,
      giving equal contributions ~ sigma_J per octave of frequencies up to ~N/sigma_J, hence
      sigma_J^2 ~ A sigma_J ln N, i.e. sigma_J = A (ln N - ln sigma_J) + B: LOGARITHMIC, not
-     sqrt(log N) and not a power.  Predicted A = 0.35-0.45; fitted A = 0.64.
+     sqrt(log N) and not a power.  Predicted A = 0.35-0.45; fitted A = 0.66.
 Numerics (smc3.c, a corrected and much faster SMC; N up to 4096, 1-2 cores):
    * old SMC estimates were biased low by up to 28 in ln a at N = 1024 (ln of an unbiased
      estimator; bias ~ 0.04 N^2/P).  New: ln a(512) = 1815.8(6), ln a(1024) = 4182(3),
-     ln a(2048) = 9494(8), ln a(4096) = @A4096@.
-   * sigma_bar(N) = exp(mean_t ln sigma_J) = 1.36, 1.65, 1.99, 2.32, 2.69, 3.07, @S4096@ for
-     N = 64, 128, ..., 2048, 4096: fits (ln N)^{1.34} or A(lnN - ln sigma)+B (rms 0.011-0.016),
-     not N^g (rms 0.039, systematic) and not sqrt(ln N) (rms 0.047).  The local power exponent
-     d ln sigma / d ln N falls: 0.30, 0.25, 0.21, 0.21, 0.19 (N = 128 .. 1536).
-   * d(N) fits: alpha ln ln N + b + e/ln N with alpha = 1.6 (rms 0.003), or c' ln N + b + e/ln N
+     ln a(2048) = 9494(8), ln a(4096) = 21269 (+-10).
+   * sigma_bar(N) = exp(mean_t ln sigma_J) = 1.36, 1.65, 1.99, 2.32, 2.69, 3.07, 3.48 for
+     N = 64, 128, ..., 2048, 4096: fits (ln N)^{1.35} or A(lnN - ln sigma)+B (rms 0.015-0.021),
+     not N^g (rms 0.054, systematic residuals) and not sqrt(ln N) (rms 0.065).  The local power exponent
+     d ln sigma / d ln N falls: 0.30, 0.25, 0.21, 0.21, 0.19, 0.19, 0.17 (N = 128 .. 3072);
+     out of sample, the fits on N <= 2048 predicted sigma_bar(4096) = 3.38-3.43 (log forms)
+     or 3.71 (power): measured 3.48.
+   * d(N) fits: alpha ln ln N + b + e/ln N with alpha = 1.7 (rms 0.004), or c' ln N + b + e/ln N
      with c' = 0.15 (i.e. c = 0.85, rms 0.0015) - the deficit alone cannot decide; the sigma_J
      analysis (falling local exponent, logarithmic per-octave structure) is what favours c = 1.
 Rigorous (new, Lean, Folds/Asymptotics.lean, no sorry/native_decide):
@@ -204,8 +206,9 @@ With sigma_J(t) ~ A s(t) ln N (shape s(t) <= s(1/2) = 1 independent of N) and fr
      a(N) = N! / (kappa ln N)^{N (1 + o(1))},   kappa = sqrt(2 pi) A exp(mean_t ln s(t)) / G.
 So c = 1 in ln a ~ c N ln N, with the second-order term -N ln ln N (coefficient exactly 1).
 Because sigma_J = A(ln N - ln sigma_J) + B, the approach is slow: the effective coefficient of
-N ln ln N, fitted on N <= 2048, is 1.3-1.6, and e^{d(N)}/ln N still drifts (0.74 at N = 33,
-0.92 at N = 1024, 0.96 at N = 2048) towards kappa.
+N ln ln N, fitted on N <= 4096, is 1.35-1.7, and e^{d(N)}/ln N still drifts (0.74 at N = 33,
+0.92 at N = 1024, 0.96 at N = 2048, 1.01 at N = 4096) towards kappa ~ sqrt(2pi) A e^{<ln s>}/G
+~ 1.4 (A = 0.655, e^{<ln s>} = sigma_bar/sigma(1/2) ~ 0.90, G ~ 1.03).
 
 
 =========================================================================================
@@ -229,22 +232,73 @@ replicate spread and the change with P give  bias(ln a) ~ -b(N)/P with b(N) ~ 0.
    N = 2048: P = 3000: 9389, 9435 (+2 extinct);  12000: 9490;  48000: 9501.6, 9487.2.
 The replicate spread grows like N/sqrt(P) (sd 1 at N = 512, P = 64000; sd 10 at N = 2048,
 P = 48000), so for the deficit d(N) = (ln N! - ln a)/N the error is ~ 1/sqrt(P) only:
-0.002 at N = 1024, 0.005 at N = 2048, @E4096@ at N = 4096.
+0.002 at N = 1024, 0.005 at N = 2048, ~0.003 at N = 4096.
 Exact checks: N = 20: 26.72 (exact 26.712), N = 33: 53.48 (exact 53.500), P = 20000.
 
 3.2 Estimates (largest P; sd = replicate spread; d = (ln N! - ln a)/N)
    N      ln a(N)     sd     d(N)    e^d/lnN   sigma_J(1/2)  sigma_bar  frac*sigma*sqrt(2pi)
-@TABLE@
+      N    ln a(N)     sd     d(N)  e^d/lnN  sigma(1/2) sigma_bar   G_bar     (P, runs)
+     48       89.0    0.0   1.0764   0.7579                                  (32000, 2)
+     64      130.5    0.1   1.1660   0.7717     1.644     1.363    1.024     (32000, 2)
+     96      222.0    0.1   1.2848   0.7918     1.850     1.552    1.037     (32000, 2)
+    128      321.6    0.1   1.3656   0.8075     1.960     1.654    1.016     (32000, 2)
+    192      538.6    0.2   1.4710   0.8281     2.159     1.852    1.049     (32000, 2)
+    256      772.4    0.3   1.5422   0.8431     2.280     1.990    1.033     (32000, 2)
+    384     1275.8    0.8   1.6383   0.8649     2.495     2.190    1.037     (32000, 2)
+    512     1816.1    1.0   1.6992   0.8767     2.638     2.324    1.037    (256000, 2)
+    768     2964.6    2.0   1.7891   0.9007     2.857     2.527    1.034     (24000, 2)
+   1024     4182.0    2.1   1.8518   0.9192     3.004     2.689    1.033     (24000, 2)
+   1536     6762.6    8.7   1.9372   0.9458     3.260     2.917    1.032     (16000, 2)
+   2048     9494.4   10.2   1.9910   0.9604     3.436     3.074    1.031     (48000, 2)
+   3072                                         3.314 (sigma_bar)            (32000, 1; died at k = N-4)
+   4096    21269.0  ~10     2.1264   1.0080     3.854     3.480    1.025     (64000, 1)
+  (N = 4096, P = 16000: 21208.8, d = 2.141, sigma(1/2) = 4.05 and 4.13: at this P the population
+   drifts to worse states; P = 64000 is needed.  The 1536 row is P = 16000, probably ~5 low.)
+  G_bar = exp(mean_t ln(sqrt(2pi) sigma_J frac)) is the local-CLT constant of 1.3.
 (sigma_bar = exp(mean_t ln sigma_J(t)) is the t-average that enters d(N): by 1.3,
  d(N) = ln sqrt(2pi) + ln sigma_bar - mean_t ln G, and mean_t ln G = 0.016-0.048.)
 
 3.3 Which growth law for sigma_J?
 ---------------------------------
-@SIGMA@
+sigma_bar(N) (the t-average entering d(N)), N = 64 .. 4096, 13 points (fit2.py):
+   C (ln N)^beta          beta = 1.35, C = 0.197         rms 0.015
+   A (ln N - ln s) + B    A = 0.655, B = -1.18 (FK form)  rms 0.021
+   a ln N + b             a = 0.51                        rms 0.034
+   C N^g                  g = 0.222                       rms 0.054, residuals - + + + + + + + - - -- (systematic)
+   a sqrt(ln N) + b                                       rms 0.065, systematic
+Local exponents between consecutive N:
+   N          128   256   512   768  1024  1536  2048  3072
+   d ln s / d ln N (local power)   0.30 0.25 0.21 0.22 0.21 0.19 0.19 0.17   (falling)
+   d ln s / d ln ln N              1.44 1.38 1.34 1.49 1.45 1.37 1.47 1.39   (flat, ~1.4)
+Out-of-sample test: fits on N <= 2048 predicted sigma(1/2) at N = 4096 = 3.73-3.77 (logarithmic
+forms) or 4.03 (power law); measured 3.85 with P = 64000 (the bias at this P is ~ +0.05; at
+P = 16000 it is +0.2-0.3), i.e. ~3.80.  Same for sigma_bar: predicted 3.38-3.43 (log forms)
+vs 3.71 (power); measured 3.48.
+Conclusion: sigma_J grows like a power of ln N with effective exponent ~1.35-1.4 on
+N = 64..4096; a power law N^g is disfavoured (its local exponent keeps falling, and it
+overshoots the out-of-sample point).  The FK form A(ln N - ln sigma) + B (asymptotic exponent 1)
+has effective exponent A ln N/(sigma + A) = 1.3-1.4 in this range, so it is consistent too.
 
 3.4 Fits of ln a(N)
 -------------------
-@FITS@
+d(N) = (ln N! - ln a(N))/N on N = 64..4096 (fit2.py, weights from replicate spread + bias):
+   A   c' ln N + b                       c' = 0.243               rms 0.029  (bad)
+   A'  c' ln N + b + e/ln N              c' = 0.150, e = -2.80    rms 0.0014
+   B   alpha ln ln N + b                 alpha = 1.35             rms 0.012
+   D   alpha ln ln N + b + e/ln N        alpha = 1.69, e = +1.83  rms 0.0036
+   C   ln(ln N + mu) + b                 (alpha = 1)              rms 0.026
+Out-of-sample: fitted on N <= 2048 these predicted d(4096) = 2.126 (A'), 2.117 (D), 2.092 (B);
+measured 2.126 (P = 64000; bias about -0.003, so ~2.123 +- 0.006).
+In words: ln a(N) = ln N! - N d(N) with d(N) ~ (1.35-1.7) ln ln N + const over the range.
+The two-point exponent c from ln a/N = c ln N + b is 0.73, 0.76, 0.77, 0.80, 0.80 for
+N = 128-256, ..., 2048-4096 (still rising), and ln a(N)/ln N! = 0.662, 0.676, 0.688, 0.700,
+0.710 at N = 256, ..., 4096 (growth/PROOFS.txt had 0.683 at N = 1024 from biased estimates).
+A c < 1 law (A', c = 0.85) fits the deficit as well as c = 1 laws (D) - the deficit alone
+cannot decide, because d(N) = ln sqrt(2pi) + ln sigma_bar - ln G_bar and ln of a power of
+ln N looks like a small power of N over two decades.  The decision rests on sigma_bar
+(3.3) and on the theory (section 2), both of which favour logarithmic growth, i.e. c = 1.
+Best formula for extrapolation (c = 1 form, D):
+   ln a(N) ~ ln N! - N (1.69 ln ln N - 1.675 + 1.83/ln N)        (N >= 64; error < 0.01 N).
 
 
 
