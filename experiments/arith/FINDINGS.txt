@@ -61,11 +61,11 @@ Self-dual sequences as a half-size problem (twisted condition)        [PROVEN]
     24 65590610 | 25 24614452 | 26 528642788 | 28 4816541630 | 29 1743100292
     30 32805810402 | 32 352981345474 | 33 102863657584 | 34 3107650434004
     36 29231919216916 | 37 11114209181230 | 38 301305621655490
-    40 / 41: see selfdual2_out.txt  (N == 3 mod 4 all zero)
-  Timings (1 core): N=36 17 s, N=38 73 s; N=40 ~5 GB RAM.  So c is known 8 terms beyond a.
+    40 3433739638181768 | 41 1058827496724146   (N == 3 mod 4 all zero)
+  Timings (1 core): N=36 17 s, N=38 73 s; N=40/41 ~270 s, ~5 GB RAM.  So c is known 8 terms beyond a.
 * PREDICTIONS for a(N) mod 4 (from a == c mod 4):
     a(34) == 0, a(35) == 0, a(36) == 0, a(37) == 2, a(38) == 2, a(39) == 0 (mod 4)
-    (a(40), a(41): c(40), c(41) mod 4, see selfdual2_out.txt)
+    a(40) == 0, a(41) == 2 (mod 4).   So v2(a(N)) = 1 exactly for N = 37, 38, 41 in 34..41.
 * OEIS: no match for c(N), c(N)/2, c(2n), c(2n)/2, c(4n+1), orbit counts, (a-c)/4, a/2.
 * No formula found.  c(2n)^2 / a(2n) stays in [1.5, 6.5] for 2n <= 32 (so c(2n) ~ sqrt(a)
   up to a bounded factor), c(4n+1)^2/a(4n+1) in [0.06, 0.6].  log c is much less smooth
