@@ -18,7 +18,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 
 | question | status |
 |---|---|
-| closed form for a(N) | **none found; very unlikely**. No OEIS match; huge prime factors; no holonomic recurrence; even the symmetric analogue A003407 has no known formula (and, per Ho 2026, no exponential growth rate) |
+| closed form for a(N) | **none found; very unlikely**. The prefix-count bivariate generating function is provably not D-finite. No OEIS match; huge prime factors; no holonomic recurrence; even the symmetric analogue A003407 has no known formula (and, per Ho 2026, no exponential growth rate) |
 | recursive formula | **proven** (Lean): subset recursion `g`, and a(N) = Σ_{\|S\|=k} g(S)·g(Sᶜ) for every k |
 | terms | a(1..37) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
@@ -123,6 +123,12 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
      624960.
    - The denominators are the periodic points of the doubling map: halving chains give
      2^a, and halving cycles give 2^s − 1.
+   - **Theorem C (proven on paper):** for every k ≥ 4, 2^(k−1)·(2^(k−1)−1) divides the
+     period of T(N,k). Cancellations (T(N,3); the 16-part at k = 5) come from one
+     parity effect: the halving chain and the increasing chain are conjugate and cancel
+     for odd k. Two-cycle faces give components of order 93 and 105 at k = 9.
+   - **The bivariate generating function Σ T(N,k)tᴺuᵏ is not D-finite (proven)**, so
+     there is no finite transfer structure in k. See `experiments/periods2/PROOFS.txt`.
    - Leading coefficients c_k are exact for k ≤ 9, e.g. 9!·c_9 ≈ 101.7. The continuum
      acceptance p_k = c_k/c_{k−1} decays like ≈ 0.75/(ln k + 0.25) (continuum SMC to
      k ≈ 1000), matching the a(N) = N!/(κ ln N)^N conjecture.
@@ -150,6 +156,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/prefix/FINDINGS.txt` | T(N,k) quasi-polynomials, Ehrhart mechanism, window rule |
 | `experiments/prefix5/FINDINGS.txt` | exact T(N,5), T(N,6) via Normaliz; period law for the coefficients |
 | `experiments/periods/PROOFS.txt` | proof of the period-law upper bound; c_8, c_9; continuum acceptance |
+| `experiments/periods2/PROOFS.txt` | Theorem C (period divisibility), vertex classification, non-D-finiteness of the bivariate GF |
 | `experiments/extremal/PROOFS.txt` | left-to-right maxima and free-step laws |
 | `experiments/superexp/PROOFS.txt` | slip construction and the super-exponential lower bound |
 | `experiments/superexp2/PROOFS.txt` | slip chains: exponents 1/6 (powers of 2) and 1/22 (all N), and the ceiling analysis |
