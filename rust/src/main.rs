@@ -271,10 +271,10 @@ fn main() {
                 let sl = sub::SubLayout::new(n, t);
                 let p = sub::plan(&sl, true);
                 let cap: f64 = std::env::var("FOLDS_ANON").ok().and_then(|v| v.parse().ok()).unwrap_or(7.0);
-                let (_, ap, fp) = sub::assign(&sl, &p, (cap * 1e9) as usize);
+                let (f, ap, fp) = sub::assign(&sl, &p, (cap * 1e9) as usize);
                 println!(
-                    "N={} --sub {} peak {} words = {:.2} GB (u8); with FOLDS_SPILL and FOLDS_ANON={}: anonymous {:.2} GB + file {:.2} GB (u8)",
-                    n, t, p.peak, p.peak as f64 / 1e9, cap, ap as f64 / 1e9, fp as f64 / 1e9
+                    "N={} --sub {} peak {} words = {:.2} GB (u8); with FOLDS_SPILL and FOLDS_ANON={}: anonymous {:.2} GB + file {:.2} GB (u8), {:.1} GB written to the file",
+                    n, t, p.peak, p.peak as f64 / 1e9, cap, ap as f64 / 1e9, fp as f64 / 1e9, sub::file_words(&sl, &f) as f64 / 1e9
                 );
             }
         }
@@ -289,8 +289,8 @@ fn main() {
             let nsb: usize = sl.shapes.iter().map(|s| s.sbs.len()).sum();
             println!("N={} t={} {} sub-blocks, {} jobs, peak {} words = {:.2} GB (u8) [{:.1}s]", n, t, nsb, p.jobs.len(), p.peak, p.peak as f64 / 1e9, ts.elapsed().as_secs_f64());
             for cap in args[4..].iter().map(|s| (s.parse::<f64>().unwrap() * 1e9) as usize) {
-                let (_, ap, fp) = sub::assign(&sl, &p, cap);
-                println!("  anon cap {:.2}e9: anon peak {:.2}e9, file peak {:.2}e9", cap as f64 / 1e9, ap as f64 / 1e9, fp as f64 / 1e9);
+                let (f, ap, fp) = sub::assign(&sl, &p, cap);
+                println!("  anon cap {:.2}e9: anon peak {:.2}e9, file peak {:.2}e9, file writes {:.1}e9", cap as f64 / 1e9, ap as f64 / 1e9, fp as f64 / 1e9, sub::file_words(&sl, &f) as f64 / 1e9);
             }
         }
         "stats" => {

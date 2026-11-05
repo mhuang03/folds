@@ -1,0 +1,3 @@
+# start idx 1 2026-11-05T15:32:19Z load 16.72 9.78 5.89 avail 12733220 kB disk_avail 18741 MB anon_cap 2 spill /home/user/spill38
+semi N=36 mod 251 = 102 1514.5s peak_rss 4.58 GB
+# exit idx 1 code 0 2026-11-05T15:57:34Z load 11.53 11.90 10.54

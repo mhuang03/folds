@@ -354,10 +354,13 @@ pub fn plan(sl: &SubLayout, global: bool) -> Plan {
     Plan { jobs, free_after, peak, live: lives }
 }
 
-/// Split the stored sub-blocks between anonymous memory and the spill file: walk
-/// them by increasing lifetime (jobs between write and free) and keep one in memory
-/// if the anonymous total stays `≤ cap` words over its whole lifetime.  Returns
-/// `file[k][ix]`, the anonymous peak and the file peak (words).
+/// Split the stored sub-blocks between anonymous memory and the spill file, keeping
+/// the anonymous total `≤ cap` words at all times.  First, for a target file peak
+/// `F`, the times where the live total exceeds `F` are covered: at each such time,
+/// live sub-blocks are moved to memory, those freed soonest first.  Then the rest go
+/// to memory by increasing lifetime while they fit (less I/O).  The smallest feasible
+/// `F` is found by bisection.  Returns `file[k][ix]`, the anonymous peak and the file
+/// peak (words).
 pub fn assign(sl: &SubLayout, p: &Plan, cap: usize) -> (Vec<Vec<bool>>, usize, usize) {
     let nj = p.jobs.len();
     let mut start: Vec<Vec<usize>> = sl.shapes.iter().map(|s| vec![usize::MAX; s.sbs.len()]).collect();
@@ -370,35 +373,95 @@ pub fn assign(sl: &SubLayout, p: &Plan, cap: usize) -> (Vec<Vec<bool>>, usize, u
             end[k as usize][ix as usize] = t;
         }
     }
-    let mut items: Vec<(usize, usize, usize)> = vec![]; // (lifetime, k, ix)
+    // items: (start, end, len, k, ix)
+    let mut items: Vec<(usize, usize, usize, usize, usize)> = vec![];
     for k in 1..sl.klast() {
         for ix in 0..sl.shapes[k].sbs.len() {
             if start[k][ix] != usize::MAX {
-                items.push((end[k][ix] - start[k][ix], k, ix));
+                items.push((start[k][ix], end[k][ix], sl.shapes[k].sbs[ix].len, k, ix));
             }
         }
     }
-    items.sort();
-    let mut anon = vec![0usize; nj + 1];
+    let mut total = vec![0usize; nj + 1];
+    for &(a, b, len, _, _) in &items {
+        total[a..=b].iter_mut().for_each(|x| *x += len);
+    }
+    let maxtot = *total.iter().max().unwrap_or(&0);
+    // by start time, for the sweep
+    let mut by_start: Vec<usize> = (0..items.len()).collect();
+    by_start.sort_by_key(|&i| items[i].0);
+    let mut by_life: Vec<usize> = (0..items.len()).collect();
+    by_life.sort_by_key(|&i| (items[i].1 - items[i].0, i));
+    let run = |target: usize| -> (Vec<bool>, usize, usize) {
+        let mut inmem = vec![false; items.len()];
+        let mut anon = vec![0usize; nj + 1];
+        let fits = |anon: &[usize], it: &(usize, usize, usize, usize, usize)| anon[it.0..=it.1].iter().all(|&x| x + it.2 <= cap);
+        // sweep: live candidates ordered by end time
+        let mut heap = std::collections::BinaryHeap::new();
+        let mut next = 0;
+        for t in 0..=nj {
+            while next < by_start.len() && items[by_start[next]].0 <= t {
+                let i = by_start[next];
+                heap.push(std::cmp::Reverse((items[i].1, i)));
+                next += 1;
+            }
+            if total[t] <= target + anon[t] {
+                continue;
+            }
+            let mut skipped = vec![];
+            while total[t] > target + anon[t] {
+                let Some(std::cmp::Reverse((e, i))) = heap.pop() else { break };
+                if e < t || inmem[i] {
+                    continue;
+                }
+                if fits(&anon, &items[i]) {
+                    inmem[i] = true;
+                    let it = items[i];
+                    anon[it.0..=it.1].iter_mut().for_each(|x| *x += it.2);
+                } else {
+                    skipped.push(std::cmp::Reverse((e, i)));
+                }
+            }
+            for x in skipped {
+                heap.push(x);
+            }
+        }
+        for &i in &by_life {
+            if !inmem[i] && fits(&anon, &items[i]) {
+                inmem[i] = true;
+                let it = items[i];
+                anon[it.0..=it.1].iter_mut().for_each(|x| *x += it.2);
+            }
+        }
+        let fpeak = (0..=nj).map(|t| total[t] - anon[t]).max().unwrap_or(0);
+        (inmem, *anon.iter().max().unwrap_or(&0), fpeak)
+    };
+    let mut best = run(maxtot);
+    let (mut lo, mut hi) = (maxtot.saturating_sub(cap), best.2);
+    while hi > lo + maxtot / 1000 {
+        let mid = (lo + hi) / 2;
+        let r = run(mid);
+        if r.2 <= mid {
+            hi = r.2.min(mid);
+            if r.2 < best.2 {
+                best = r;
+            }
+        } else {
+            lo = mid + 1;
+        }
+    }
     let mut file: Vec<Vec<bool>> = sl.shapes.iter().map(|s| vec![true; s.sbs.len()]).collect();
     // layer 0 (one word) lives in memory
     file[0].iter_mut().for_each(|f| *f = false);
-    for &(_, k, ix) in &items {
-        let len = sl.shapes[k].sbs[ix].len;
-        let (a, b) = (start[k][ix], end[k][ix]);
-        if anon[a..=b].iter().all(|&x| x + len <= cap) {
-            anon[a..=b].iter_mut().for_each(|x| *x += len);
-            file[k][ix] = false;
-        }
+    for (i, it) in items.iter().enumerate() {
+        file[it.3][it.4] = !best.0[i];
     }
-    let mut fl = vec![0usize; nj + 1];
-    for &(_, k, ix) in &items {
-        if file[k][ix] {
-            let len = sl.shapes[k].sbs[ix].len;
-            fl[start[k][ix]..=end[k][ix]].iter_mut().for_each(|x| *x += len);
-        }
-    }
-    (file, *anon.iter().max().unwrap(), *fl.iter().max().unwrap())
+    (file, best.1, best.2)
+}
+
+/// Total words written to the file region under `file`.
+pub fn file_words(sl: &SubLayout, file: &[Vec<bool>]) -> usize {
+    sl.shapes[..sl.klast()].iter().zip(file).map(|(sh, f)| sh.sbs.iter().zip(f).filter(|(_, b)| **b).map(|(s, _)| s.len).sum::<usize>()).sum()
 }
 
 // ---------------------------------------------------------------------------------
@@ -500,6 +563,13 @@ struct Kern<'a, W: Word> {
     tb: &'a Tabs,
     chk: &'a Checker,
     ring: Ring,
+    /// panels of `HL | c` and of `HR` (fixed for the sub-block)
+    lhi: u64,
+    rhi: u64,
+    /// removing a low panel `x ≤ x0` (left: panel `x`; right: panel `N-1-x`) has a
+    /// validity that depends only on its own side and the fixed panels: its window
+    /// `(x, 2x]` (resp. its mirror) reaches the other side only in high panels
+    x0: usize,
 }
 
 impl<W: Word> Kern<'_, W> {
@@ -594,6 +664,96 @@ impl<W: Word> Kern<'_, W> {
         }
     }
 
+    /// Rows `[r0, r1)` of a rectangular sub-block (as `tile`), for words of at most 16
+    /// bits.  The left-low removals of `x ≤ x0` are valid or not for a whole row, so
+    /// they are added row by row (a vectorized `u32` add of a row of `pa`); the
+    /// right-low removals of `y ≤ x0` are valid or not for a whole column, so only the
+    /// valid ones are read; the remaining terms are tested entry by entry.
+    fn tile_fast(&self, r0: usize, r1: usize, out: &mut [W], acc: &mut Vec<u32>) {
+        let nr = r1 - r0;
+        let cj = self.colm.len();
+        let chk = self.chk;
+        let tb = self.tb;
+        let x0 = self.x0 as u32;
+        acc.clear();
+        acc.resize(nr * cj, 0);
+        let mut lxd = [[(0u32, 0u32); 32]; TILE];
+        let mut nd = [0usize; TILE];
+        for q in 0..nr {
+            let u = r0 + q;
+            let l = tb.un[self.il][u];
+            let tr = self.rowm[u] | self.rhi;
+            let mut bits = l;
+            while bits != 0 {
+                let x = bits.trailing_zeros();
+                bits &= bits - 1;
+                let r = tb.rank[(l ^ (1 << x)) as usize] as usize;
+                if x <= x0 {
+                    if chk.valid(tr ^ (1u64 << x), x) {
+                        let pa = self.pa.as_ref().unwrap();
+                        debug_assert!(!pa.tri && pa.sv == 1);
+                        let row = unsafe { std::slice::from_raw_parts(pa.p.add(r * pa.su), cj) };
+                        for (a, b) in acc[q * cj..(q + 1) * cj].iter_mut().zip(row) {
+                            *a += b.get64() as u32;
+                        }
+                    }
+                } else {
+                    lxd[q][nd[q]] = (x, r as u32);
+                    nd[q] += 1;
+                }
+            }
+        }
+        let rr = &tb.rrem[self.jl];
+        let mut ryc = [0u32; 32];
+        let mut ryd = [(0u32, 0u32); 32];
+        for v in 0..cj {
+            let r = tb.un[self.jl][v];
+            let tc = self.colm[v] | self.lhi;
+            let (mut nc, mut ndd) = (0, 0);
+            let mut bits = r;
+            let mut qq = 0;
+            while bits != 0 {
+                let y = bits.trailing_zeros();
+                bits &= bits - 1;
+                let p = (self.n - 1 - y as usize) as u32;
+                let rk = rr[v * self.jl + qq];
+                qq += 1;
+                if y <= x0 {
+                    if chk.valid(tc ^ (1u64 << p), p) {
+                        ryc[nc] = rk;
+                        nc += 1;
+                    }
+                } else {
+                    ryd[ndd] = (p, rk);
+                    ndd += 1;
+                }
+            }
+            let cm = self.colm[v];
+            for q in 0..nr {
+                let u = r0 + q;
+                let t = self.rowm[u] | cm;
+                let mut s = acc[q * cj + v] as u64;
+                if let Some(pa) = &self.pa {
+                    for &(x, r) in &lxd[q][..nd[q]] {
+                        s += pa.at(r as usize, v) & mask(chk.valid(t ^ (1u64 << x), x));
+                    }
+                }
+                if let Some(pc) = &self.pc {
+                    for &rk in &ryc[..nc] {
+                        s += pc.at(u, rk as usize);
+                    }
+                    for &(p, rk) in &ryd[..ndd] {
+                        s += pc.at(u, rk as usize) & mask(chk.valid(t ^ (1u64 << p), p));
+                    }
+                }
+                for &(p, ref ac) in &self.ph {
+                    s += ac.at(u, v) & mask(chk.valid(t ^ (1u64 << p), p));
+                }
+                out[q * cj + v] = W::put(self.ring.red(s as u128));
+            }
+        }
+    }
+
     /// Compute the whole sub-block into `out` (length = sub-block length), in parallel.
     fn run(&self, out: *mut W) {
         struct P<W>(*mut W);
@@ -604,17 +764,22 @@ impl<W: Word> Kern<'_, W> {
         let tiles: Vec<usize> = (0..rows).step_by(TILE).collect();
         let cj = self.colm.len();
         let tri = self.tri;
-        let go = |r0: usize| {
+        let fast = !tri && W::BYTES <= 2 && std::env::var_os("FOLDS_SLOW").is_none();
+        let go = |acc: &mut Vec<u32>, r0: usize| {
             let o = &o;
             let r1 = (r0 + TILE).min(rows);
             let (s, l) = if tri { (r0 * (r0 + 1) / 2, r1 * (r1 + 1) / 2 - r0 * (r0 + 1) / 2) } else { (r0 * cj, (r1 - r0) * cj) };
             let sl = unsafe { std::slice::from_raw_parts_mut(o.0.add(s), l) };
-            self.tile(r0, r1, sl);
+            if fast {
+                self.tile_fast(r0, r1, sl, acc);
+            } else {
+                self.tile(r0, r1, sl);
+            }
         };
         if tiles.len() == 1 {
-            go(0);
+            go(&mut Vec::new(), 0);
         } else {
-            tiles.into_par_iter().for_each(go);
+            tiles.into_par_iter().for_each_init(Vec::new, go);
         }
     }
 }
@@ -681,7 +846,8 @@ fn kern<'a, W: Word>(sl: &SubLayout, tb: &'a Tabs, chk: &'a Checker, ring: Ring,
     if c == 1 {
         ph.push((h as u32, get(0, hl, hr, il, jl)));
     }
-    Kern { il, jl, n, tri: s.tri, rowm, colm, pa, pc, ph, tb, chk, ring }
+    let x0 = (n - 1 - a) / 2;
+    Kern { il, jl, n, tri: s.tri, rowm, colm, pa, pc, ph, tb, chk, ring, lhi, rhi, x0 }
 }
 
 /// `Σ w(e) gX(e) gY(comp e)` over the entries `e` of `x` (key `s`), where `y` reads the
@@ -727,6 +893,103 @@ fn rss_kb(field: &str) -> u64 {
         .unwrap_or(0)
 }
 
+/// Memory guard for a shared memory cgroup (v1): before a job that grows our
+/// anonymous memory by `grow` bytes, wait while `total_rss` of our cgroup (all
+/// anonymous memory of all processes in it) + `grow` + `FOLDS_HEADROOM` GB (default
+/// 1.5) exceeds the cgroup limit.  Page cache (the spill file) is not counted: the
+/// kernel can write it back and drop it.
+///
+/// Also, before writing `w` bytes to the spill file, wait while the free disk space
+/// there is below `w` + `FOLDS_DISK_MIN` GB (default 2): a full disk would kill the
+/// process (`SIGBUS` on a write fault of the file mapping).
+struct Guard {
+    stat: Option<std::path::PathBuf>,
+    limit: u64,
+    headroom: u64,
+    waited: f64,
+    disk: Option<std::ffi::CString>,
+    disk_min: u64,
+}
+
+unsafe extern "C" {
+    fn statfs(path: *const std::ffi::c_char, buf: *mut [i64; 15]) -> i32;
+}
+
+fn disk_free(path: &std::ffi::CStr) -> Option<u64> {
+    let mut b = [0i64; 15];
+    // x86_64 struct statfs: f_type, f_bsize, f_blocks, f_bfree, f_bavail, ...
+    (unsafe { statfs(path.as_ptr(), &mut b) } == 0).then(|| b[1] as u64 * b[4] as u64)
+}
+
+impl Guard {
+    fn new() -> Self {
+        let cg = std::fs::read_to_string("/proc/self/cgroup").ok().and_then(|s| {
+            s.lines().find_map(|l| {
+                let mut it = l.splitn(3, ':');
+                let (_, ctl, path) = (it.next()?, it.next()?, it.next()?);
+                (ctl == "memory").then(|| std::path::PathBuf::from(format!("/sys/fs/cgroup/memory{path}")))
+            })
+        });
+        let limit = cg
+            .as_ref()
+            .and_then(|d| std::fs::read_to_string(d.join("memory.limit_in_bytes")).ok())
+            .and_then(|v| v.trim().parse::<u64>().ok())
+            .unwrap_or(u64::MAX);
+        let headroom = (std::env::var("FOLDS_HEADROOM").ok().and_then(|v| v.parse::<f64>().ok()).unwrap_or(1.5) * 1e9) as u64;
+        let stat = cg.map(|d| d.join("memory.stat")).filter(|_| limit < 1 << 50);
+        let disk = std::env::var_os("FOLDS_SPILL").and_then(|d| std::ffi::CString::new(d.into_encoded_bytes()).ok());
+        let disk_min = (std::env::var("FOLDS_DISK_MIN").ok().and_then(|v| v.parse::<f64>().ok()).unwrap_or(2.0) * 1e9) as u64;
+        Guard { stat, limit, headroom, waited: 0.0, disk, disk_min }
+    }
+    fn wait_disk(&mut self, w: u64) {
+        let Some(d) = self.disk.clone() else { return };
+        let t = Instant::now();
+        let mut warned = false;
+        while let Some(f) = disk_free(&d) {
+            if f >= w + self.disk_min {
+                break;
+            }
+            if !warned {
+                eprintln!("  guard: free disk {:.2} GB < {:.2} GB + {:.2} GB, waiting", f as f64 / 1e9, w as f64 / 1e9, self.disk_min as f64 / 1e9);
+                warned = true;
+            }
+            std::thread::sleep(std::time::Duration::from_secs(5));
+        }
+        if warned {
+            self.waited += t.elapsed().as_secs_f64();
+            eprintln!("  guard: resumed after {:.0}s", t.elapsed().as_secs_f64());
+        }
+    }
+    fn anon(&self) -> Option<u64> {
+        let s = std::fs::read_to_string(self.stat.as_ref()?).ok()?;
+        s.lines().find(|l| l.starts_with("total_rss ")).and_then(|l| l.split_whitespace().nth(1)?.parse().ok())
+    }
+    fn wait(&mut self, grow: u64) {
+        let mut warned = false;
+        let t = Instant::now();
+        while let Some(a) = self.anon() {
+            if a + grow + self.headroom <= self.limit {
+                break;
+            }
+            if !warned {
+                eprintln!(
+                    "  guard: cgroup anonymous {:.2} GB + {:.2} GB + headroom {:.2} GB > limit {:.2} GB, waiting",
+                    a as f64 / 1e9,
+                    grow as f64 / 1e9,
+                    self.headroom as f64 / 1e9,
+                    self.limit as f64 / 1e9
+                );
+                warned = true;
+            }
+            std::thread::sleep(std::time::Duration::from_secs(5));
+        }
+        if warned {
+            self.waited += t.elapsed().as_secs_f64();
+            eprintln!("  guard: resumed after {:.0}s", t.elapsed().as_secs_f64());
+        }
+    }
+}
+
 /// Words per page for `W`.
 fn page_words<W: Word>() -> usize {
     4096 / W::BYTES
@@ -755,13 +1018,14 @@ pub fn count<W: Word>(n: usize, t: usize, chk: &Checker, ring: Ring, verbose: bo
     let kl = sl.klast();
     if verbose {
         eprintln!(
-            "  sub-blocks t={} a={}: {} jobs, sim.peak {:.2} GB (anon {:.2} GB, file {:.2} GB) plan {:.1}s",
+            "  sub-blocks t={} a={}: {} jobs, sim.peak {:.2} GB (anon {:.2} GB, file {:.2} GB, {:.1} GB written to file) plan {:.1}s",
             t,
             sl.a,
             plan.jobs.len(),
             (plan.peak * W::BYTES) as f64 / 1e9,
             (apeak * W::BYTES) as f64 / 1e9,
             (fpeak * W::BYTES) as f64 / 1e9,
+            (file_words(&sl, &file) * W::BYTES) as f64 / 1e9,
             t0.elapsed().as_secs_f64()
         );
     }
@@ -784,12 +1048,17 @@ pub fn count<W: Word>(n: usize, t: usize, chk: &Checker, ring: Ring, verbose: bo
     let mut next_report = 0usize;
     let mut tmp_x: Vec<W> = vec![];
     let mut tmp_y: Vec<W> = vec![];
+    let mut guard = Guard::new();
     for (tj, jb) in plan.jobs.iter().enumerate() {
         match *jb {
             Job::Store { k, ix } => {
                 let (k, ix) = (k as usize, ix as usize);
                 let s = sl.shapes[k].sbs[ix];
                 let f = mem.file[k][ix];
+                guard.wait(if f { 0 } else { (s.len * W::BYTES) as u64 } + (64 << 20));
+                if f {
+                    guard.wait_disk((s.len * W::BYTES) as u64);
+                }
                 if mem.reg[k][f as usize].is_none() {
                     let dir = if f { spill.as_deref() } else { None };
                     mem.reg[k][f as usize] = Some(Region::with(sl.shapes[k].len, dir, false));
@@ -804,11 +1073,17 @@ pub fn count<W: Word>(n: usize, t: usize, chk: &Checker, ring: Ring, verbose: bo
                 ke.run(mem.ptr(&sl, k, ix));
                 if f {
                     mem.region(k, ix).flush_async(s.off, s.len);
+                    mem.region(k, ix).unmap_pages(s.off, s.len);
+                }
+                for p in sl.needs(k, &s) {
+                    let ps = &sl.shapes[k - 1].sbs[p as usize];
+                    mem.region(k - 1, p as usize).unmap_pages(ps.off, ps.len);
                 }
             }
             Job::Final { ix } => {
                 let ix = ix as usize;
                 let s = sl.shapes[kl].sbs[ix];
+                guard.wait((2 * s.len * W::BYTES) as u64 + (64 << 20));
                 let mut deps = sl.needs(kl, &s);
                 let cr = sl.comp(kl, &s);
                 if sl.b == 0 {
@@ -816,10 +1091,11 @@ pub fn count<W: Word>(n: usize, t: usize, chk: &Checker, ring: Ring, verbose: bo
                 } else {
                     deps.push(cr.ix);
                 }
-                for p in deps {
+                for &p in &deps {
                     let ps = &sl.shapes[kl - 1].sbs[p as usize];
                     mem.region(kl - 1, p as usize).prefetch(ps.off, ps.len);
                 }
+                let deps_all = deps;
                 let pre = |r: Ref| mem.ptr(&sl, kl - 1, r.ix as usize) as *const W;
                 tmp_x.clear();
                 tmp_x.resize(s.len, W::default());
@@ -845,6 +1121,10 @@ pub fn count<W: Word>(n: usize, t: usize, chk: &Checker, ring: Ring, verbose: bo
                     pair_sum(&sl, ring, &s, &tmp_x, &y)
                 };
                 total = ring.red_any(total + part);
+                for p in deps_all {
+                    let ps = &sl.shapes[kl - 1].sbs[p as usize];
+                    mem.region(kl - 1, p as usize).unmap_pages(ps.off, ps.len);
+                }
             }
         }
         for &(k, ix) in &plan.free_after[tj] {
@@ -873,7 +1153,12 @@ pub fn count<W: Word>(n: usize, t: usize, chk: &Checker, ring: Ring, verbose: bo
         }
     }
     if verbose {
-        eprintln!("  sub-block count done: rss.peak {:.2} GB t={:.1}s", crate::block::peak_rss() as f64 / 1e9, t0.elapsed().as_secs_f64());
+        eprintln!(
+            "  sub-block count done: rss.peak {:.2} GB t={:.1}s (guard waits {:.0}s)",
+            crate::block::peak_rss() as f64 / 1e9,
+            t0.elapsed().as_secs_f64(),
+            guard.waited
+        );
     }
     total
 }

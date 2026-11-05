@@ -120,6 +120,18 @@ impl<W: Word> Region<W> {
             unsafe { sync_file_range(f.as_raw_fd(), (start * W::BYTES) as i64, (len * W::BYTES) as i64, 2) };
         }
     }
+    /// File-backed only: drop our mapping of the pages inside `[start, start+len)`.
+    /// The data stays in the page cache / file (a later read faults it back in), but
+    /// it no longer counts toward this process's resident set.
+    pub fn unmap_pages(&self, start: usize, len: usize) {
+        if self.file.is_some() {
+            let a = (self.ptr as usize + start * W::BYTES + PAGE - 1) / PAGE * PAGE;
+            let b = (self.ptr as usize + (start + len) * W::BYTES) / PAGE * PAGE;
+            if b > a {
+                unsafe { madvise(a as *mut _, b - a, MADV_DONTNEED) };
+            }
+        }
+    }
     /// File-backed only: ask the kernel to read `[start, start+len)` ahead.
     pub fn prefetch(&self, start: usize, len: usize) {
         if self.file.is_some() {
