@@ -64,16 +64,35 @@ impl<W: Word> Layer<W> {
 
 pub fn layer0<W: Word>(lay: &Layout) -> Layer<W> {
     let shape = Shape::new(lay, 0);
-    let mut data = vec![W::default(); shape.len];
+    let mut data: Vec<W> = zeroed_vec(shape.len);
     data[0] = W::put(1);
     Layer { shape, data }
 }
 
 /// Compute layer `k = prev.k + 1` by pulling from `prev`.
 pub fn step<W: Word>(lay: &Layout, chk: &Checker, ring: Ring, prev: &Layer<W>) -> Layer<W> {
+    step_into(lay, chk, ring, prev, Vec::new())
+}
+
+/// As [`step`], reusing `buf` as storage when it is large enough (every entry is
+/// overwritten, so stale contents are harmless).  Ping-ponging two buffers avoids
+/// paying the page faults of a fresh multi-GB allocation at every layer.
+pub fn step_into<W: Word>(
+    lay: &Layout,
+    chk: &Checker,
+    ring: Ring,
+    prev: &Layer<W>,
+    mut buf: Vec<W>,
+) -> Layer<W> {
     let k = prev.shape.k + 1;
     let shape = Shape::new(lay, k);
-    let mut data: Vec<W> = vec![W::default(); shape.len];
+    let mut data: Vec<W> = if buf.len() >= shape.len {
+        buf.truncate(shape.len);
+        buf
+    } else {
+        drop(buf);
+        zeroed_vec(shape.len)
+    };
     let rows = shape.rows(lay);
     // carve the output into row slices
     let mut slices: Vec<(crate::layout::Block, usize, &mut [W])> = Vec::with_capacity(rows.len());
@@ -92,8 +111,107 @@ pub fn step<W: Word>(lay: &Layout, chk: &Checker, ring: Ring, prev: &Layer<W>) -
     let ps = &prev.shape;
     let pd = &prev.data;
     slices.into_par_iter().with_min_len(4).for_each(|(bl, row, out)| {
+        if bl.i < bl.j {
+            offdiag_row(lay, chk, ring, ps, pd, &bl, row, out);
+        } else {
+            generic_row(lay, chk, ring, ps, pd, &bl, row, out);
+        }
+    });
+    Layer { shape, data }
+}
+
+/// Row of an off-diagonal block `(i < j, c)`: `L` is fixed, `R` runs over all
+/// `j`-subsets in colex order.  Every predecessor `T \ p` lives in a row that is
+/// either streamed in lock-step with the output (`p ∈ L`, or `p` = middle) or is a
+/// single row of length `≤ C(h, h/2)` read at random (`p ∈ R`), which stays in cache.
+#[allow(clippy::too_many_arguments)]
+#[inline(never)]
+fn offdiag_row<W: Word>(
+    lay: &Layout,
+    chk: &Checker,
+    ring: Ring,
+    ps: &Shape,
+    pd: &[W],
+    bl: &crate::layout::Block,
+    row: usize,
+    out: &mut [W],
+) {
+    let (i, j, c, h) = (bl.i, bl.j, bl.c, lay.h);
+    let l = lay.un[i][row];
+    // streams for removals from L (block (i-1, j, c), always canonical)
+    let mut lx = [(0u32, 0usize); 32];
+    let mut nl = 0;
+    if i > 0 {
+        let sl = ps.slot[2 * (i - 1) + c];
+        let mut bits = l;
+        while bits != 0 {
+            let x = bits.trailing_zeros();
+            bits &= bits - 1;
+            lx[nl] = (x, sl.off + lay.rank[(l ^ (1 << x)) as usize] as usize * sl.rowlen);
+            nl += 1;
+        }
+    }
+    // stream for removing the middle panel (block (i, j, 0))
+    let midbase = if c == 1 {
+        let sl = ps.slot[2 * i];
+        sl.off + row * sl.rowlen
+    } else {
+        0
+    };
+    // row for removals from R (block (i, j-1, c)) when it is off-diagonal
+    let rbase = if i < j - 1 {
+        let sl = ps.slot[2 * i + c];
+        Some(sl.off + row * sl.rowlen)
+    } else {
+        None
+    };
+    let rshift = lay.n - 1;
+    let un_j = &lay.un[j];
+    for (col, o) in out.iter_mut().enumerate() {
+        let r = un_j[col];
+        let t = lay.compose(l, c, r);
+        let mut acc = 0u128;
+        for &(x, base) in &lx[..nl] {
+            if chk.valid(t ^ (1u64 << x), x) {
+                acc += unsafe { pd.get_unchecked(base + col).get() };
+            }
+        }
+        if c == 1 && chk.valid(t ^ (1u64 << h), h as u32) {
+            acc += unsafe { pd.get_unchecked(midbase + col).get() };
+        }
+        let mut bits = r;
+        while bits != 0 {
+            let y = bits.trailing_zeros();
+            bits &= bits - 1;
+            let p = (rshift - y as usize) as u32;
+            if chk.valid(t ^ (1u64 << p), p) {
+                let r2 = r ^ (1 << y);
+                let ix = match rbase {
+                    Some(b) => b + lay.rank[r2 as usize] as usize,
+                    None => ps.index_parts(lay, l, c, r2),
+                };
+                acc += unsafe { pd.get_unchecked(ix).get() };
+            }
+        }
+        *o = W::put(ring.red(acc));
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+#[inline(never)]
+fn generic_row<W: Word>(
+    lay: &Layout,
+    chk: &Checker,
+    ring: Ring,
+    ps: &Shape,
+    pd: &[W],
+    bl: &crate::layout::Block,
+    row: usize,
+    out: &mut [W],
+) {
+    {
         for (col, o) in out.iter_mut().enumerate() {
-            let (l, r) = entry(lay, &bl, row, col);
+            let (l, r) = entry(lay, bl, row, col);
             let t = lay.compose(l, bl.c, r);
             let mut acc = 0u128;
             let mut bits = t;
@@ -107,8 +225,7 @@ pub fn step<W: Word>(lay: &Layout, chk: &Checker, ring: Ring, prev: &Layer<W>) -
             }
             *o = W::put(ring.red(acc));
         }
-    });
-    Layer { shape, data }
+    }
 }
 
 /// Weight of an orbit representative = orbit size (1 if mirror-symmetric, else 2).
@@ -183,9 +300,18 @@ pub fn count<W: Word>(n: usize, chk: &Checker, ring: Ring, verbose: bool) -> u12
     let lay = Layout::new(n);
     let mut cur: Layer<W> = layer0(&lay);
     let t0 = std::time::Instant::now();
-    for _ in 0..n / 2 {
-        let next = step(&lay, chk, ring, &cur);
-        drop(cur);
+    // two buffers of the largest layer size, used alternately
+    let maxlen = Shape::new(&lay, n / 2).len;
+    let mut spare: Vec<W> = if n >= 8 { zeroed_vec(maxlen) } else { Vec::new() };
+    for q in 0..n / 2 {
+        let next = step_into(&lay, chk, ring, &cur, spare);
+        spare = std::mem::take(&mut cur.data);
+        if q == 0 && n >= 8 {
+            spare = zeroed_vec(maxlen);
+        }
+        if 2 * (q + 2) > n {
+            spare = Vec::new(); // the last layer needs no further buffer
+        }
         cur = next;
         if verbose {
             eprintln!(
@@ -198,4 +324,28 @@ pub fn count<W: Word>(n: usize, chk: &Checker, ring: Ring, verbose: bool) -> u12
         }
     }
     combine(&lay, chk, ring, &cur)
+}
+
+unsafe extern "C" {
+    fn madvise(addr: *mut std::ffi::c_void, len: usize, advice: i32) -> i32;
+}
+const MADV_HUGEPAGE: i32 = 14;
+
+/// A zeroed vector whose (still untouched, calloc/mmap-backed) pages are marked for
+/// transparent huge pages: big layers otherwise spend a lot of system time in
+/// 4 KiB page faults.
+pub fn zeroed_vec<W: Word>(len: usize) -> Vec<W> {
+    let v: Vec<W> = vec![W::default(); len];
+    let bytes = len * std::mem::size_of::<W>();
+    if bytes >= 1 << 22 {
+        let p = v.as_ptr() as usize;
+        let start = (p + 0x1f_ffff) & !0x1f_ffff;
+        let end = (p + bytes) & !0x1f_ffff;
+        if end > start {
+            unsafe {
+                madvise(start as *mut _, end - start, MADV_HUGEPAGE);
+            }
+        }
+    }
+    v
 }
