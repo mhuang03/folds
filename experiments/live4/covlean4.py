@@ -9,14 +9,25 @@ Good classes: the closure `Gd` of Folds/Live4.lean,
   mirror  (nu, s) -> ((q - nu) mod q, q + 1 - s)              (good_mirror)
   comp    block chains: (j, e, a), (m, inner, y), some (m, c), some (m, c+1) if e > 0
           -> (m j, j c + e, (y - 1) j + a)                     (good_comp)
+  cert    the certificates of certs.txt (q, nu, pi): (nu, pi_1)  (Gd.cert, checked by decide;
+          disable with the environment variable NOCERT=1)
 Cov2: base N <= 12 (non-dead) or at most one panel left; residue transfer mod q (any
 2 <= q <= N) through a good class; mirror.
 
 Prints per N: non-dead 2-sets, |Cov|, |Cov2|, then valid prefixes and mixed parity
 (Cov / Cov2).  Also prints, with -g, the number of good (nu, s) per q.
 """
+import os
 import sys
 from functools import lru_cache
+
+CERTS = {}
+_cf = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'certs.txt')
+if os.path.exists(_cf) and not os.environ.get('NOCERT'):
+    for _line in open(_cf):
+        _w = list(map(int, _line.split()))
+        if _w:
+            CERTS.setdefault(_w[0], []).append((_w[1], _w[2]))
 
 QMAX = 200
 
@@ -42,6 +53,8 @@ def good_set(q):
     S = set()
     for t in range(1, q + 1):
         S.add((0, t))
+    for c in CERTS.get(q, []):
+        S.add(c)
     if 2 <= q <= 12:
         for nu in range(q):
             for s in range(1, q + 1):
