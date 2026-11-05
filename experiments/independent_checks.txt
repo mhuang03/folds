@@ -2,3 +2,5 @@
 # a separate program sharing no code with rust/.
 N=28  exact (u128)                                  3603074636066234798   match
 N=29  mod 2^64 (semi.c with u64 wrapping, 4 GB)     9098336924882010240   match (a(29) mod 2^64)
+N=30  mod 2^64 (semi.c with u64 wrapping, 8 GB)     4624079622568051626   match (a(30) mod 2^64)
+# N >= 31 needs >= 16 GB for the plain DP; those terms rely on the Rust code paths (u64 / u32 / u16 / u8 CRT with redundant moduli) plus the proven mod-4 law.
