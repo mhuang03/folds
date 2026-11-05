@@ -1,0 +1,178 @@
+ADMISSIBLE LABELLINGS AND THE CONJECTURE N <= 2^(t+1) - 2
+==========================================================
+
+Notation as in experiments/descents/PROOFS.txt.  Panels 1..N, M = N+1, r(m) = min(m-1, N-m),
+L(m) = [m-r, m-1], R(m) = [m+1, m+r], W(m) = [m-r, m+r].  A labelling c : [1..N] -> {0..t-1} is
+ADMISSIBLE if for every panel m
+        #{x in L(m) : c(x) <= c(m)}  <=  #{x in R(m) : c(x) < c(m)}.            (WI)
+(This is exactly the inequality of the Window Lemma, descents/PROOFS.txt section 1.)
+Left half P = {m : 2m <= M} (there L(m) = [1, m-1], R(m) = [m+1, 2m-1]); right half Q = the
+rest, described by the gap g = M - m (there R(m) = gaps [1, g-1], L(m) = gaps [g+1, 2g-1]).
+
+CONJECTURE.  An admissible labelling with t labels has N <= 2^(t+1) - 2.
+
+STATUS: NOT PROVED.  No counterexample either.  What was done:
+  * new SAT evidence (N = 63 is impossible with 5 labels, the first open threshold case),
+  * the extremal labellings are NOT unique for t >= 4 (11 at N = 30, >= 718 at N = 62),
+  * a clean equivalent reformulation (right-heavy permutations, section 1),
+  * small rigorous facts (sections 1-2) and a long list of lemma candidates that FAIL
+    (section 4, with counterexamples), which rules out most natural induction schemes,
+  * one-sided (prefix-only) thresholds 2, 8, 20, 60, 155..159: one edge alone only gives
+    t >= log_{~2.7} N, so any proof must use both edges together (section 3).
+
+
+1. REFORMULATIONS AND SYMMETRIES (proved)
+-----------------------------------------
+1.1 Right-heavy permutations.  Call a permutation a of [N] (a placement order) RIGHT-HEAVY if
+    every panel m, when placed, has at least as many already placed panels in R(m) as in L(m).
+    (Valid = semi-symmetric fold sequences are the ones with equality.)
+    (a) If c is admissible, the order a_c "by (c, position)" is right-heavy and has at most t
+        ascending runs (hence LDS(a_c) <= t).  Proof: the panels placed before m are
+        {c < c(m)} u {c = c(m), x < m}; in L(m) these are exactly {x in L(m): c(x) <= c(m)},
+        in R(m) exactly {x in R(m): c(x) < c(m)}.  So right-heaviness at m is (WI) at m.
+    (b) If a is right-heavy and c is any level labelling of a (c strictly increases along
+        inversions: x placed before y, y < x => c(x) < c(y)), then c is admissible
+        (the Window Lemma proof, inequality form: #{L: c <= c(m)} <= |S n L| <= |S n R| <=
+        #{R: c < c(m)}, S = placed before m).  The patience level gives t = LDS(a).
+    Hence the following three numbers coincide for every N:
+        min #labels of an admissible labelling
+      = min LDS of a right-heavy permutation of [N]
+      = min #runs of a right-heavy permutation of [N].
+    The conjecture is: EVERY RIGHT-HEAVY PERMUTATION OF [N] HAS A DECREASING SUBSEQUENCE OF
+    LENGTH lg(N+1) (lg = floor log2).  (No LIS analogue: N, N-1, ..., 1 is right-heavy.)
+1.2 Reverse-mirror.  c'(M - x) = t - 1 - c(x) is admissible iff c is (the window inequality
+    at M - m for c' is equivalent, by complementation inside the full windows, to (WI) at m).
+    Equivalently (WI) can be written  #{x in R(m): c(x) >= c(m)} <= #{x in L(m): c(x) > c(m)}.
+1.3 Normalisation.  c' = lambda - 1, lambda(m) = 1 + max{lambda(y) : y > m, c(y) < c(m)} (the
+    patience level of a_c), is admissible with at most as many labels, and every panel of
+    label v >= 1 has a panel of label v-1 to its right.  Same from the left by 1.2.
+    (normalize.py checks this; iterating both normalisations does not reach a canonical form:
+    1044 fixed points among 1930 labellings at N = 28.)
+1.4 The top class can be deleted.  Labels t-1 never occur on either side of (WI) for a panel of
+    smaller label, so c restricted to [N] minus {c = t-1} satisfies (WI) with the ORIGINAL
+    windows ("strip with holes").  The bottom class cannot be deleted this way.
+1.5 Extreme classes.  Bottom class Z = {c = 0}: no x in L(m) n Z for m in Z.  So |Z n P| <= 1
+    (and it is the first element of Z), and the gaps of Z n Q satisfy g' >= 2g for
+    consecutive elements.  Top class T: R(m) n T = {} and R(m) has no label t-1 for m in T; so
+    |T n Q| <= 1 (the last element of T), and T n P is a doubling chain, at most one element
+    in every dyadic block [2^u, 2^(u+1)).
+1.6 Raising the left part helps.  If a labelling of a strip is split into a left part A and a
+    right part B (as intervals), adding a constant s >= 0 to all labels on A preserves (WI):
+    comparisons inside A or inside B do not change, and for x in A, y in B, y in R(x) counts
+    iff c(y) < c(x), x in L(y) counts iff c(x) <= c(y) -- both only improve.
+1.7 Walls.  If c is admissible on [1..N] with labels 0..t-1, then  t || c || -1  (a panel of
+    label t in front, a panel of label -1 behind) is admissible on [1..N+2]: every old panel
+    gets exactly one extra panel on each side of its window; on the left that is either the
+    top wall (never counted) or, for right-half panels, an old panel (counted at most once),
+    balanced by the bottom wall on the right (always counted); for left-half panels the extra
+    right panel only helps.  (So the full strip is a "natural interval" -- but the natural
+    interval generalisation is false, see 4(k).)
+
+
+2. SMALL CASES (proved by hand)
+-------------------------------
+t = 1: (WI) forces L(m) to be empty for all m, so r(m) = 0 everywhere: N <= 2.
+t = 2: a label-1 panel m needs #L(m) = r <= #{R(m): c = 0}, i.e. R(m) is all label 0; a
+  label-0 panel needs L(m) to be all label 1.  If N >= 7, take m = 4 (r = 3): if c(4) = 1 then
+  5, 6, 7 have label 0 and 6 (r >= 1) has 5 in L(6) with label 0 -- contradiction; if
+  c(4) = 0 then 1, 2, 3 have label 1 and 2 (r = 1) has 3 in R(2) with label 1 -- contradiction.
+  So N <= 6, and N = 6 forces 110100 (= popcount, unique; enum.c).
+t = 3: N <= 14 (exhaustive DFS, enum.c; the case analysis through the middle panel 8 of
+  N = 15 works but does not obviously generalise).
+
+
+3. COMPUTATIONS
+---------------
+Tools: enum.c (exhaustive DFS), sat.py (SAT, encoding of descents/satwords.py with ineq=True,
+with blocking clauses for enumeration), prefix_sat.py, core_ineq.py, interval_sat.py, and the
+*_test.py scripts (each tests one lemma candidate on the enumerated labellings).
+
+3.1 The conjecture at the thresholds.
+    N = 7 / 15 / 31: no labelling with 2 / 3 / 4 labels (enum.c, SAT; known).
+    N = 63 with 5 labels: UNSAT (CaDiCaL 1.5.3, 278 s; sat_63_5.txt).  NEW.
+    N = 64, 65, 66 with 5 labels: UNSAT (266 s, 227 s, 215 s; sat_64_66_5.txt).
+    (Monotonicity in N is not known, so each N needs its own check.)
+3.2 Number of admissible labellings (exhaustive, enum.c):
+      t = 2: N = 2..6: 4 4 5 2 1;  N = 7: 0.
+      t = 3: N = 3..14: 17 36 51 78 82 91 63 62 15 17 3 1;  N = 15: 0.
+      t = 4: N = 15..21: 54038 82421 74552 104734 75314 97303 52084.
+      t = 4: N = 29: 10, N = 30: 11 (SAT, complete); N = 31: 0.
+      t = 5: N = 62: at least 718 (SAT enumeration stopped; all_62_5.txt).
+3.3 Extremal labellings (N = 2^(t+1) - 2).
+    t = 1, 2, 3: unique, the popcount labelling c(m) = t - popcount(m).
+    t = 4 (N = 30): 11 labellings, closed under reverse-mirror (5 self-dual).  All agree with
+      popcount outside the central block 13..19 (= 15.5 +- 3.5), where they carry a
+      permutation of popcount's labels 1103221:
+        1022131 1023121 1021321 1103221 0221131 0212131 0213121 1203121 1202131 1201321 0211321
+    t = 5 (N = 62): >= 718 labellings; they differ from popcount on panels 6..57; the class
+      sizes vary ((6,15,20,15,6) in 383 of them, also (6,15,20,16,5), (6,14,21,15,6), ...);
+      popcount was not among the first 718 found.
+    So the extremal structure is rigid only for t <= 3; any proof must be robust.
+3.4 One-sided problems.  Requiring (WI) only on the left half (right-half panels free):
+      max N = 2, 8, 20, 60, and between 155 and 159 for t = 5 (prefix_sat.py, prefix_t5.txt)
+    -- far above 2^(t+1) - 2 = 2, 6, 14, 30, 62 and growing like ~2.7^t.  The SAT cores of the
+    full problem (core_ineq.py) are large and spread out: N = 7: panels 3,4,5; N = 15: 4..12,14;
+    N = 31: 26 of the 31 panels.  So the bound comes from the interaction of the two halves.
+
+
+4. LEMMA CANDIDATES THAT FAIL (each tested on all labellings above; script in brackets)
+-------------------------------------------------------------------------------------
+(a) Pair projections c'(y) = f(c(2y), c(2y+1)) on N' = floor((N-1)/2) with f = min, max-1,
+    c(2y+1), c(2y)-1: not admissible in general (N = 7: 1021010) [reduce_test.py].  The
+    first-occurrence projection of the right-heavy order always loses a run and a level
+    (as for valid sequences) but is not right-heavy: failures by 1 (sometimes 2) at single
+    steps [pairproj_test.py, pairproj_fail.py].
+(b) Restrictions to the left/right part of length floor((N-1)/2) are not admissible in
+    general, and need not lose a label [restr_test.py].
+(c) Split at q = first bottom panel and p = last top panel (popcount: q = 2^t - 1, p = 2^t,
+    [1,q) and (p,N] are popcount on 2^t - 2 with t-1 labels): prefix [1,q) or suffix (p,N]
+    admissible only in ~50% of cases; at N = 29, 30 only popcount qualifies [split_test.py].
+(d) Gluing the heap tops P0 = [1, h/2] and Q0 = (last h'/2 panels) into one strip: admissible
+    in almost all cases WITHOUT shift (all extremals at N = 29, 30; 1926/1930 at N = 28), but
+    then it still uses t labels; with P0 lowered by one (popcount -> popcount_(t-1)), or with
+    clipping max(c-1,0) / min(c,t-2), it fails (e.g. all 10 extremals at N = 29)
+    [topparts_test.py, glue_test.py].
+(e) Per-level / per-half counting:  a_v = #{P : c < v} <= 2^v - 1 fails (a_2 = 4 at N = 11),
+    a_v + b_v <= 2^(v+1) - 2 fails (8 at N = 16), and h <= 2^(#labels on P) - 1 fails
+    (1100) [profile.py, half_labels_test.py].
+(f) "Claim A'" (edge counts bounded by popcount):
+    #{x : M - x <= n, c(x) < v} <= #{1 <= g <= n : popcount(g) <= v}  fails, even inside the
+    right half and even for 10 of the 11 extremal labellings at N = 30 (v = 2, n = 14..16)
+    [claimA_test.py].
+(g) Edge chains: the first n labels read from the right end need not contain an increasing
+    run of length lg(n+1) (121032211110100, n = 7) [suffix_chain_test.py]; edge windows
+    [M-2g+1, N] with only k labels can have length 1, 7, 19 for k = 1, 2, 3 [edge_window.py].
+(h) Windows: W(m) need not contain lg(r+1)+1 labels (21110100, m = 5) [window_test.py];
+    lambda(m) + rho(m) - 1 >= lg(r(m)+1) + 1 fails (131302231110100, m = 8); a chain of
+    length lg(N+1) through a middle panel fails at N = 15 [chain_test.py, chain_ends.py].
+(i) Intervals with labels < j have length <= 2^(j+1) - 2: false for intervals touching the
+    right edge (2201110100: 8 panels with labels <= 1) [interval_test.py].
+(j) Stage lemmas: an unplaced panel whose window is still empty after v phases does not force
+    lg(r+1)+1 further phases (221211102100, m = 4) [stage_test.py].
+(k) Natural intervals (labels in [al, al+j), higher wall on the left, lower wall on the
+    right, cf. 1.7) of length > 2^(j+1) - 2 exist (5 consecutive 1's between a 2 and a 0)
+    [natural_interval_test.py].
+(l) Time/space split at m: with Y = R(m) placed before m and Y' = L(m) placed after m one
+    has LDS >= LDS(Y) + 1 + LDS(Y') and |Y| + |Y'| >= r(m); but |Y| <= 2^(LDS(Y)+1) - 2
+    fails (Y can be an increasing set of 3 panels) [split_time_test.py].
+(m) Per-class bounds: classes are binomial-like (popcount: C(t+1, v+1) panels of label v),
+    and vary among extremals (3.3), so no per-class bound of the form 2^something.
+
+
+5. WHAT SURVIVES (conjectures supported by the data)
+----------------------------------------------------
+(A) Inner intervals: a maximal interval of panels with labels < j, NOT touching the right edge
+    (bounded by labels >= j on both sides, or starting at panel 1), has length <= 2^(j+1)-2;
+    tight (j = 2: 6, j = 3: 14 at N = 22).  Left-edge ones are shorter (<= 4 for j = 2,
+    <= 12 for j = 3).  Checked: all enumerated labellings and SAT for t = 4, N <= 30
+    [interval_test2.py, interval_sat.py].  (It does not obviously imply the conjecture,
+    because the full strip touches the right edge.)
+(B) Chains from the edge near the top of the range: for N in [2^(t+1)-5, 2^(t+1)-2] (t = 3)
+    and [26, 30] (t = 4) every admissible labelling has a chain of length t starting at
+    panel N (decreasing positions, increasing labels) [chain_ends.py].
+(C) Gluing the heap tops without shift (4(d)) is admissible in almost all cases.
+
+Why the natural approaches fail, in one sentence: each half alone behaves like a heap with
+free support from the other half (thresholds ~2.7^t, 3.4), the support a half can give is
+not monotone in any single statistic (4(e),(f)), and the extremal configurations are not
+rigid (3.3), so neither a halving map nor a per-level count can carry an induction.

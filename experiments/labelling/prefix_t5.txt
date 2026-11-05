@@ -1,0 +1,5 @@
+N=120 t=5 prefix-only: SAT
+N=140 t=5 prefix-only: SAT
+N=160 t=5 prefix-only: UNSAT
+N=150 t=5 prefix-only: SAT
+N=155 t=5 prefix-only: SAT
