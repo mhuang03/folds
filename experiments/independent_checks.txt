@@ -1,0 +1,4 @@
+# Independent cross-checks of the Rust terms with the plain 2^N subset DP (experiments/semi.c),
+# a separate program sharing no code with rust/.
+N=28  exact (u128)                                  3603074636066234798   match
+N=29  mod 2^64 (semi.c with u64 wrapping, 4 GB)     9098336924882010240   match (a(29) mod 2^64)
