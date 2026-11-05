@@ -17,7 +17,7 @@ STATUS: NOT PROVED.  No counterexample either.  What was done:
   * a clean equivalent reformulation (right-heavy permutations, section 1),
   * small rigorous facts (sections 1-2) and a long list of lemma candidates that FAIL
     (section 4, with counterexamples), which rules out most natural induction schemes,
-  * one-sided (prefix-only) thresholds 2, 8, 20, 60, 140..159: one edge alone only gives
+  * one-sided (prefix-only) thresholds 2, 8, 20, 60, 155..159: one edge alone only gives
     t >= log_{~2.7} N, so any proof must use both edges together (section 3).
 
 
@@ -90,7 +90,7 @@ with blocking clauses for enumeration), prefix_sat.py, core_ineq.py, interval_sa
 3.1 The conjecture at the thresholds.
     N = 7 / 15 / 31: no labelling with 2 / 3 / 4 labels (enum.c, SAT; known).
     N = 63 with 5 labels: UNSAT (CaDiCaL 1.5.3, 278 s; sat_63_5.txt).  NEW.
-    N = 64, 65, 66 with 5 labels: see sat_64_66_5.txt.
+    N = 64, 65, 66 with 5 labels: UNSAT (266 s, 227 s, 215 s; sat_64_66_5.txt).
     (Monotonicity in N is not known, so each N needs its own check.)
 3.2 Number of admissible labellings (exhaustive, enum.c):
       t = 2: N = 2..6: 4 4 5 2 1;  N = 7: 0.
@@ -109,7 +109,7 @@ with blocking clauses for enumeration), prefix_sat.py, core_ineq.py, interval_sa
       popcount was not among the first 718 found.
     So the extremal structure is rigid only for t <= 3; any proof must be robust.
 3.4 One-sided problems.  Requiring (WI) only on the left half (right-half panels free):
-      max N = 2, 8, 20, 60, and between 141 and 159 for t = 5 (prefix_sat.py, prefix_t5.txt)
+      max N = 2, 8, 20, 60, and between 155 and 159 for t = 5 (prefix_sat.py, prefix_t5.txt)
     -- far above 2^(t+1) - 2 = 2, 6, 14, 30, 62 and growing like ~2.7^t.  The SAT cores of the
     full problem (core_ineq.py) are large and spread out: N = 7: panels 3,4,5; N = 15: 4..12,14;
     N = 31: 26 of the 31 panels.  So the bound comes from the interaction of the two halves.
