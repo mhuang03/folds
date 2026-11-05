@@ -19,5 +19,6 @@ import Folds.Asymptotics
 import Folds.Descents
 import Folds.Live
 import Folds.Independence
+import Folds.Independence2
 import Folds.Copies
 import Folds.ShiftedCount

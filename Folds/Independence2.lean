@@ -339,4 +339,113 @@ theorem card_indep_qb {X L R : Finset ℕ} {b e : ℕ} (hb : b ∈ X)
   simp only [true_and, filter_true, card_orderings] at h2
   rw [h1, h2]; ring
 
+/-! ## The pair `(a, b)` with one outside element -/
+
+/-- From the independence of `C_b` and the relative order on some `M ⊇ W_a` to the pair
+formula. -/
+theorem card_pair_of_indep_restrict {N a b : ℕ} {M : Finset ℕ} (ha1 : 1 ≤ a) (ha2 : a ≤ N)
+    (hb1 : 1 ≤ b) (hb2 : b ≤ N) (hWM : window N a ⊆ M)
+    (hind : ((orderings (Icc 1 N)).filter
+        (fun l => Cstep N a (restrict M l) ∧ Cstep N b l)).card * M.card ! =
+      ((orderings M).filter (Cstep N a)).card *
+        ((orderings (Icc 1 N)).filter (Cstep N b)).card) :
+    (constrSeqs N {a, b}).card * (2 * reach N a + 1)! * (2 * reach N b + 1)! =
+      N ! * (4 ^ reach N a * (reach N a)! ^ 2) * (4 ^ reach N b * (reach N b)! ^ 2) := by
+  have e : constrSeqs N {a, b} = (orderings (Icc 1 N)).filter
+      (fun l => Cstep N a (restrict M l) ∧ Cstep N b l) := by
+    rw [constrSeqs_eq]
+    apply filter_congr
+    intro l _
+    simp [cstep_restrict hWM]
+  have hA : ((orderings M).filter (Cstep N a)).card * (2 * reach N a + 1)! =
+      4 ^ reach N a * (reach N a)! ^ 2 * M.card ! := by
+    have h := card_indep hWM (Cstep N a) (fun _ => True) (fun _ _ _ _ _ _ => Iff.rfl)
+    simp only [and_true, filter_true, card_orderings, card_window,
+      cstep_restrict (subset_refl _), card_window_orderings ha1 ha2] at h
+    exact h
+  have hB : ((orderings (Icc 1 N)).filter (Cstep N b)).card * (2 * reach N b + 1)! =
+      N ! * (4 ^ reach N b * (reach N b)! ^ 2) := by
+    have hw := card_wallisSeqs hb1 hb2
+    rw [wallisSeqs_eq] at hw
+    change ((orderings (Icc 1 N)).filter (Cstep N b)).card * _ = _ at hw
+    rw [hw]; ring
+  rw [e]
+  apply Nat.eq_of_mul_eq_mul_right (Nat.factorial_pos M.card)
+  calc _ = (((orderings (Icc 1 N)).filter
+        (fun l => Cstep N a (restrict M l) ∧ Cstep N b l)).card * M.card !) *
+        (2 * reach N a + 1)! * (2 * reach N b + 1)! := by ring
+    _ = (((orderings M).filter (Cstep N a)).card * (2 * reach N a + 1)!) *
+        (((orderings (Icc 1 N)).filter (Cstep N b)).card * (2 * reach N b + 1)!) := by
+          rw [hind]; ring
+    _ = _ := by rw [hA, hB]; ring
+
+theorem cstep_iff_qb (N b : ℕ) (l : List ℕ) :
+    Cstep N b l ↔ QB (leftArm N b) (rightArm N b) b l := by
+  unfold Cstep BalancedBefore QB
+  simp only [leftArm, rightArm, mem_Ico, mem_Ioc]
+
+/-- The pair formula when `[1, N] \ {b} = ({e} ∪ L) ∪ R`, `C_b` is the balance condition
+between `L` and `R`, and `W_a ⊆ {e} ∪ L`. -/
+theorem card_pair_of_outside {N a b e : ℕ} {L R : Finset ℕ} (hb1 : 1 ≤ b) (hb2 : b ≤ N)
+    (hX : (Icc 1 N).erase b = insert e L ∪ R) (heL : e ∉ L) (hMR : Disjoint (insert e L) R)
+    (hLR : L.card = R.card) (hC : ∀ l, Cstep N b l ↔ QB L R b l)
+    (h : window N a ⊆ insert e L) :
+    (constrSeqs N {a, b}).card * (2 * reach N a + 1)! * (2 * reach N b + 1)! =
+      N ! * (4 ^ reach N a * (reach N a)! ^ 2) * (4 ^ reach N b * (reach N b)! ^ 2) := by
+  obtain ⟨hMX, -, -⟩ := setup_props hX
+  have ha : a ∈ Icc 1 N := hMX (h (by simp [window]))
+  rw [mem_Icc] at ha
+  apply card_pair_of_indep_restrict ha.1 ha.2 hb1 hb2 h
+  have hi := card_indep_qb (mem_Icc.2 ⟨hb1, hb2⟩) hX heL hMR hLR (Cstep N a)
+  have e1 : (orderings (Icc 1 N)).filter
+      (fun l => Cstep N a (restrict (insert e L) l) ∧ QB L R b l) =
+      (orderings (Icc 1 N)).filter
+      (fun l => Cstep N a (restrict (insert e L) l) ∧ Cstep N b l) :=
+    filter_congr (fun l _ => by rw [hC])
+  have e2 : (orderings (Icc 1 N)).filter (QB L R b) =
+      (orderings (Icc 1 N)).filter (Cstep N b) :=
+    filter_congr (fun l _ => (hC l).symm)
+  rw [e1, e2] at hi
+  exact hi
+
+/-- **One outside element.**  For `N = 2n+2` and `b = n+2` (window `[2, N]`), if the window
+of `a` lies in `{1} ∪ L_b = [1, n+1]` then `C_a` and `C_b` are independent. -/
+theorem card_pair_one_outside {n a : ℕ}
+    (h : window (2 * n + 2) a ⊆ insert 1 (leftArm (2 * n + 2) (n + 2))) :
+    (constrSeqs (2 * n + 2) {a, n + 2}).card * (2 * reach (2 * n + 2) a + 1)! *
+        (2 * reach (2 * n + 2) (n + 2) + 1)! =
+      (2 * n + 2)! * (4 ^ reach (2 * n + 2) a * (reach (2 * n + 2) a)! ^ 2) *
+        (4 ^ reach (2 * n + 2) (n + 2) * (reach (2 * n + 2) (n + 2))! ^ 2) := by
+  have hr : reach (2 * n + 2) (n + 2) = n := by unfold reach; omega
+  apply card_pair_of_outside (by omega) (by omega) _ _ _ _ (cstep_iff_qb _ _) h
+  · ext x
+    simp only [mem_erase, mem_Icc, mem_union, mem_insert, leftArm, rightArm, mem_Ico,
+      mem_Ioc, hr]
+    omega
+  · simp [leftArm, hr]
+  · rw [disjoint_left]; intro x
+    simp only [mem_insert, leftArm, rightArm, mem_Ico, mem_Ioc, hr]; omega
+  · simp only [leftArm, rightArm, hr, Nat.card_Ico, Nat.card_Ioc]; omega
+
+/-- **One outside element, mirror image.**  For `N = 2n+2` and `b = n+1` (window
+`[1, 2n+1]`), if the window of `a` lies in `R_b ∪ {N} = [n+2, N]` then `C_a` and `C_b` are
+independent. -/
+theorem card_pair_one_outside' {n a : ℕ}
+    (h : window (2 * n + 2) a ⊆ insert (2 * n + 2) (rightArm (2 * n + 2) (n + 1))) :
+    (constrSeqs (2 * n + 2) {a, n + 1}).card * (2 * reach (2 * n + 2) a + 1)! *
+        (2 * reach (2 * n + 2) (n + 1) + 1)! =
+      (2 * n + 2)! * (4 ^ reach (2 * n + 2) a * (reach (2 * n + 2) a)! ^ 2) *
+        (4 ^ reach (2 * n + 2) (n + 1) * (reach (2 * n + 2) (n + 1))! ^ 2) := by
+  have hr : reach (2 * n + 2) (n + 1) = n := by unfold reach; omega
+  apply card_pair_of_outside (by omega) (by omega) _ _ _ _
+    (fun l => (cstep_iff_qb _ _ l).trans eq_comm) h
+  · ext x
+    simp only [mem_erase, mem_Icc, mem_union, mem_insert, leftArm, rightArm, mem_Ico,
+      mem_Ioc, hr]
+    omega
+  · simp only [rightArm, hr, mem_Ioc]; omega
+  · rw [disjoint_left]; intro x
+    simp only [mem_insert, leftArm, rightArm, mem_Ico, mem_Ioc, hr]; omega
+  · simp only [leftArm, rightArm, hr, Nat.card_Ico, Nat.card_Ioc]; omega
+
 end Folds
