@@ -21,7 +21,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 | closed form for a(N) | **none found; very unlikely**. No OEIS match; huge prime factors; no holonomic recurrence; even the symmetric analogue A003407 has no known formula (and, per Ho 2026, no exponential growth rate) |
 | recursive formula | **proven** (Lean): subset recursion `g`, and a(N) = Σ_{\|S\|=k} g(S)·g(Sᶜ) for every k |
 | terms | a(1..35) exact; ln a(N) estimated to N = 4096 |
-| exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (both **proven**); T(N,4) has period 168 (fitted); single-panel Wallis count (**proven**) |
+| exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
 | congruences | a(N) ≡ c(N) (mod 4) (**proven**); 4 ∣ a(N) for N ≡ 3 (mod 4) (**proven**); no patterns modulo odd primes |
 | growth | rigorously ½e^{1.28N} ≤ a(N) ≤ N!·e^{−Θ(N)}. **Conjecture:** a(N) = N!/(κ ln N)^N |
 | arithmetic effect | multiples of 3 sit above trend (all N ≤ 33). Mechanism: the 2-cycle {N/3, 2N/3} of the doubling map |
@@ -108,9 +108,14 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 2. **Mod-3 effect.** Relative to the independence model, a(N) is above trend exactly
    when 3 ∣ N (all N ≤ 33). The proposed mechanism is the 2-cycle {N/3, 2N/3} of the
    doubling map.
-3. **T(N,k)** is a quasi-polynomial for every fixed k: proven via an Ehrhart
-   (polytope-counting) decomposition. The leading coefficients are exact for k ≤ 7. The
-   period of T(N,5) is unknown (likely 1680).
+3. **T(N,k)** is a quasi-polynomial for every fixed k (proven via an Ehrhart
+   decomposition, one polytope per order type).
+   - Exact formulas exist for k ≤ 6; see `experiments/prefix5/FINDINGS.txt`.
+   - **Period law (conjectured, exact for k ≤ 7):** the coefficient of N^(k−m) has period
+     B(m) = lcm(2^(m−1), 2^a(2^s−1) : a+s = m−1), i.e. 1, 1, 2, 12, 168, 1680, 104160,
+     624960.
+   - The denominators are the periodic points of the doubling map: halving chains give
+     2^a, and halving cycles give 2^s − 1.
 4. **Minimum LDS = minimum LIS = ⌊log₂(N+1)⌋**, attained. Minimum descents are
    ⌊log₂(N+1)⌋−1, except ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59. This would follow from the
    labelling conjecture (equivalently: every *right-heavy* permutation of [N] has a
@@ -129,6 +134,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/arith/FINDINGS.txt` | Burnside / mod 4, c(N) to 41, statistics polynomials |
 | `experiments/cluster/FINDINGS.txt` | pair correlations, mod-3 mechanism, Wallis asymptotics |
 | `experiments/prefix/FINDINGS.txt` | T(N,k) quasi-polynomials, Ehrhart mechanism, window rule |
+| `experiments/prefix5/FINDINGS.txt` | exact T(N,5), T(N,6) via Normaliz; period law for the coefficients |
 | `experiments/extremal/PROOFS.txt` | left-to-right maxima and free-step laws |
 | `experiments/growth/PROOFS.txt` | composition, splits, upper bounds, SMC |
 | `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
