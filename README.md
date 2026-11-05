@@ -94,6 +94,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Growth` (M) | **composition** a(qn) ≥ a(q)·a(n)^q; doubling splits a(3n) ≥ 2a(n)a(2n) (also 5n, 7n); branching and parity upper bounds |
 | `Asymptotics` (M) | dipole lemma (how one panel changes the imbalance field); binary-digit decomposition; half-circle balance |
 | `Descents` (M) | N+1 ≤ (⌊log₂(N+1)⌋+2)^(des+1); the same for LDS and LIS |
+| `Independence` (M) | exact independence of constraints: compatible windows (disjoint, or one window inside an arm of the other) give #(C_a ∧ C_b) = N!·w_a·w_b; chain product formula `card_constrSeqs_chain`; dyadic upper bound `semiCount_mul_le_dyadic` |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -127,6 +128,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/growth/PROOFS.txt` | composition, splits, upper bounds, SMC |
 | `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
 | `experiments/descents/PROOFS.txt` | descent and LDS bounds, SAT data |
+| `experiments/independence/PROOFS.txt` | pair independence, including the one-outside-element case (paper) |
 | `experiments/live/FINDINGS.txt` | dead and live prefixes, Beatty copies |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
