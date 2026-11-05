@@ -2,6 +2,7 @@ import Folds.WindowRule
 import Folds.Blocks
 import Folds.Extremal
 import Folds.RevMirror
+import Folds.Growth
 
 /-!
 # Live prefixes
@@ -9,9 +10,26 @@ import Folds.RevMirror
 `Extends N p` (from `WindowRule.lean`): the partial sequence `p` can be completed to a
 semi-symmetric fold sequence.
 
-* `extends_scale`: liveness transfers through the parity-class embedding
-  `y ↦ scale c y = 2y - c` (parity blocks).
-* `extends_single`: every panel is a live first step, `Extends N [m]` for `1 ≤ m ≤ N`.
+Live side.
+* `extends_single`: **every panel is a live first step**, `Extends N [m]` for `1 ≤ m ≤ N`
+  (parity blocks, strong induction on `N`); `exists_semiSymmetric`.
+* Transfer lemmas: live prefixes of a smaller strip stay live through
+  - the parity classes `y ↦ 2y - c` (`extends_scale`),
+  - any window embedding whose complement is reachable from scratch (`extends_winEmb`,
+    the *weak split*: complete the copy, then the rest reversed),
+  - either half of a `Split` (`Split.extends`), e.g. the mod-3 split (`extends_three`),
+  - the shifted parity block `shX` for `N = 2n` (`extends_shX`).
+  `extends_congr`: liveness of a valid prefix only depends on its set of panels.
+
+Dead side (with `not_extends_one_N` from `WindowRule.lean` these are all dead 2- and
+3-prefixes for `N = 6` and `N ≥ 8`, see `experiments/live/`).
+* `dead_block`, `not_extends_block`, `not_extends_three_block`: a prefix containing
+  `1, 2j, 2j+1` (`j ≥ 2`, `4j ≤ N + 3`) but nothing of `[2, 2j-1]` is dead (the first
+  panel of `[2, 2j-1]` sees one bisected panel on its left arm and `0` or `≥ 2` on its
+  right arm); mirror images (`not_extends_block_mirror`).
+* `not_extends_corner`: for odd `N ≥ 7` every prefix whose panels form a 3-subset of
+  `{1, 2, N-1, N}` is dead.
+* `not_extends_seven`: the sporadic dead 2-prefixes `[1, 7]`, `[7, 1]` for `N = 7`.
 -/
 
 namespace Folds
@@ -57,6 +75,71 @@ theorem exists_semiSymmetric (N : Nat) : ∃ a, IsFoldSeq N a ∧ SemiSymmetric 
   · exact ⟨[], List.Perm.refl _, fun k hk => absurd hk (by simp)⟩
   · obtain ⟨a, hf, hs, -⟩ := extends_single N 1 le_rfl hN
     exact ⟨a, hf, hs⟩
+
+/-! ## Transfer lemmas -/
+
+/-- Liveness of a valid prefix depends only on its set of panels. -/
+theorem extends_congr {N : Nat} {p q : List Nat} (hp : p.Nodup) (hq : q.Nodup)
+    (hpr : ∀ x ∈ p, 1 ≤ x ∧ x ≤ N) (hqr : ∀ x ∈ q, 1 ≤ x ∧ x ≤ N)
+    (hpv : SemiSymmetric N p) (hqv : SemiSymmetric N q) (h : ∀ x, x ∈ p ↔ x ∈ q) :
+    Extends N p ↔ Extends N q := by
+  rw [extends_iff_g_pos hp hpr hpv, extends_iff_g_pos hq hqr hqv]
+  have : p.toFinset = q.toFinset := by ext x; simp [h]
+  rw [this]
+
+/-- **Weak split.**  If `φ` window-embeds the `p`-strip into the `N`-strip and the panels
+outside its image can be ordered semi-symmetrically from scratch, then every live prefix of
+the `p`-strip stays live through `φ` (complete it in the copy, then the rest reversed). -/
+theorem extends_winEmb {N p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) {r : List Nat}
+    (hr : Extends p r) (hY : 0 < g N (Finset.Icc 1 N \ (Finset.Icc 1 p).image φ)) :
+    Extends N (r.map φ) := by
+  obtain ⟨σ, hσf, hσs, hpre⟩ := hr
+  have bσ : ∀ y ∈ σ, 1 ≤ y ∧ y ≤ p := fun y hy => (mem_range'_of_perm hσf).1 hy
+  have hndσ := nodup_of_foldSeq hσf
+  have hnd := hφ.nodup_map hndσ bσ
+  have hrange : ∀ x ∈ σ.map φ, 1 ≤ x ∧ x ≤ N := by
+    intro x hx; obtain ⟨y, hy, rfl⟩ := List.mem_map.1 hx
+    exact hφ.bound y (bσ y hy).1 (bσ y hy).2
+  have hval := (hφ.semiSymmetric_iff hndσ bσ).2 hσs
+  have himg : (σ.map φ).toFinset = (Finset.Icc 1 p).image φ := by
+    ext x
+    simp only [List.mem_toFinset, List.mem_map, Finset.mem_image, Finset.mem_Icc,
+      mem_range'_of_perm hσf]
+  have := (extends_iff_g_pos hnd hrange hval).2 (by rw [himg]; exact hY)
+  obtain ⟨a, hf, hs, hpre'⟩ := this
+  exact ⟨a, hf, hs, (hpre.map φ).trans hpre'⟩
+
+/-- **Split transfer.**  Through either half of a split, live prefixes stay live. -/
+theorem Split.extends {N p q : Nat} {φ ψ : Nat → Nat} (h : Split N p q φ ψ) {r : List Nat}
+    (hr : Extends p r) : Extends N (r.map φ) := by
+  obtain ⟨σ, hσf, hσs, hpre⟩ := hr
+  obtain ⟨τ, hτf, hτs⟩ := exists_semiSymmetric q
+  exact ⟨_, h.isFoldSeq hσf hτf, (h.semiSymmetric_iff hσf hτf).2 ⟨hσs, hτs⟩,
+    (hpre.map φ).trans (List.prefix_append _ _)⟩
+
+/-- Mod-3 split (`N = 3n`): live prefixes of the `n`-strip stay live through
+`y ↦ 3y - 1`, those of the `2n`-strip through `y ↦ y + ⌊y/2⌋`. -/
+theorem extends_three {n : Nat} {r : List Nat} :
+    (Extends n r → Extends (3 * n) (r.map third)) ∧
+      (Extends (2 * n) r → Extends (3 * n) (r.map twoThirds)) :=
+  ⟨(threeSplit n).extends, (threeSplit n).symm.extends⟩
+
+/-- **Shifted blocks** (`N = 2n`): live prefixes of the `(n-1)`-strip stay live through
+`shX` (evens up to `n`, then odds). -/
+theorem extends_shX {n : Nat} (hn : 2 ≤ n) {r : List Nat} (hr : Extends (n - 1) r) :
+    Extends (2 * n) (r.map (shX (n / 2))) := by
+  obtain ⟨σ, hσf, hσs, hpre⟩ := hr
+  obtain ⟨τ, hτf, hτs, hτpre⟩ := extends_single (n + 1) 1 le_rfl (by omega)
+  obtain ⟨t, rfl⟩ := hτpre
+  have hmid : n % 2 = 0 → ∀ k (hk : k < ([1] ++ t).length), ([1] ++ t)[k] = n / 2 + 1 →
+      1 ∈ ([1] ++ t).take k := by
+    intro _ k hk e
+    rcases Nat.eq_zero_or_pos k with rfl | hk0
+    · simp at e; omega
+    · obtain ⟨k', rfl⟩ : ∃ k', k = k' + 1 := ⟨k - 1, by omega⟩
+      simp
+  obtain ⟨hf, hs, -⟩ := shifted_blocks hn hσf hσs hτf hτs hmid
+  exact ⟨_, hf, hs, (hpre.map _).trans (List.prefix_append _ _)⟩
 
 /-! ## Mirror invariance of `Extends` -/
 
