@@ -11,3 +11,4 @@ import Folds.Recursion
 import Folds.Congruence
 import Folds.Prefix
 import Folds.Wallis
+import Folds.SelfDual
