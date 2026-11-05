@@ -82,3 +82,13 @@ so only sets of size `≤ ⌈N/2⌉` are needed.
 A partial semi-symmetric sequence cannot always be completed. The smallest example is
 `N = 4`: bisect panels 1 then 4, and no next step is valid. Dead-end states for
 `N = 4..14`: 1, 2, 4, 18, 30, 63, 137, 293, 591, 1275, 2449.
+
+## Further findings
+
+- `experiments/structure/FINDINGS.md`. Exact formulas for relaxations: a single
+  constraint gives a Wallis factor, and radius 1 gives 2·E_N (alternating
+  permutations). Parity blocks give a(N) ≥ 2^{N−1} and a(2n) ≥ 2a(n)². The independent
+  product model a_W(N) = N!·Π(2r)!!/(2r+1)!! is within a factor of about 10 at N = 27.
+  There is a weak mod-3 signal.
+- `docs/LITERATURE.md`. Survey of 3-AP-free permutations (A003407) and their cyclic
+  versions, and the OEIS searches (no matches).
