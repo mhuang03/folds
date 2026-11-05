@@ -1,0 +1,31 @@
+N=1: a=1 ext_top=1.000 ext_any=1.000 del_ok=1.000
+   #valid top positions per seq: {2: 1}
+   positions: [1, 1]
+N=2: a=2 ext_top=1.000 ext_any=1.000 del_ok=1.000
+   #valid top positions per seq: {2: 2}
+   positions: [1, 2, 1]
+N=3: a=4 ext_top=1.000 ext_any=1.000 del_ok=1.000
+   #valid top positions per seq: {2: 2, 3: 2}
+   positions: [2, 3, 3, 2]
+N=4: a=10 ext_top=1.000 ext_any=1.000 del_ok=0.714
+   #valid top positions per seq: {1: 2, 2: 6, 3: 2}
+   positions: [2, 6, 4, 6, 2]
+N=5: a=28 ext_top=1.000 ext_any=1.000 del_ok=0.750
+   #valid top positions per seq: {1: 2, 2: 12, 3: 10, 4: 4}
+   positions: [5, 15, 16, 16, 15, 5]
+N=6: a=96 ext_top=0.833 ext_any=1.000 del_ok=0.719
+   #valid top positions per seq: {0: 16, 1: 16, 2: 30, 3: 28, 4: 6}
+   positions: [10, 24, 33, 50, 33, 24, 10]
+N=7: a=256 ext_top=0.797 ext_any=0.953 del_ok=0.505
+   #valid top positions per seq: {0: 52, 1: 18, 2: 68, 3: 70, 4: 38, 5: 10}
+   positions: [38, 63, 81, 101, 101, 81, 63, 38]
+N=8: a=1120 ext_top=0.759 ext_any=0.914 del_ok=0.438
+   #valid top positions per seq: {0: 270, 1: 238, 2: 300, 3: 230, 4: 74, 5: 8}
+   positions: [24, 176, 201, 348, 366, 348, 201, 176, 24]
+N=9: a=4256 ext_top=0.773 ext_any=0.928 del_ok=0.434
+   #valid top positions per seq: {0: 968, 1: 806, 2: 1104, 3: 894, 4: 370, 5: 100, 6: 14}
+   positions: [119, 629, 757, 1177, 1198, 1198, 1177, 757, 629, 119]
+N=10: a=17878 ext_top=0.613 ext_any=0.878 del_ok=0.362
+   #valid top positions per seq: {0: 6918, 1: 2780, 2: 3540, 3: 3088, 4: 1232, 5: 290, 6: 30}
+   positions: [327, 1333, 1950, 3360, 3826, 4090, 3826, 3360, 1950, 1333, 327]
++1 criterion agrees with brute force for all N <= 10
