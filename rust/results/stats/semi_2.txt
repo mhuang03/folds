@@ -1,0 +1,13 @@
+# semi N=2 (0.00s)
+total 2
+prefixes(k=0..N) 1 2 2
+reachable_sets(k=0..N) 1 2 1
+dead_end_sets(k=0..N) 0 0 0
+dead_end_total 0
+alive_sets(k=0..N) 1 2 1
+doomed_sets(k=0..N) 0 0 0
+doomed_total 0
+by_first=by_last(m=1..N) 1 1
+by_first2[m][x] = #seq starting m,x (rows m=1..N):
+  0 1
+  1 0

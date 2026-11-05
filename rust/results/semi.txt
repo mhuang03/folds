@@ -1,0 +1,23 @@
+# Semi-symmetric fold sequences a(N), computed by `folds semi` (rust/ crate).
+# Machine: 4 cores (Intel Xeon @ 2.80GHz, VM), 15 GB RAM.
+# Algorithm: mirror-orbit layered meet-in-the-middle DP (see rust/README.md).
+# Columns: N  a(N)  wall-time  threads  storage
+# N = 1..27 reproduce experiments/semi_counts.txt exactly (folds check).
+20 398874108930 0.008s 3 u64
+21 2505681033958 0.015s 3 u64
+22 18168130281086 0.027s 3 u64
+23 119006527671252 0.056s 3 u64
+24 979730153850974 0.121s 3 u64
+25 6564449510287388 0.247s 3 u64
+26 55581983250573500 0.382s 3 u64
+27 413109755332919448 0.869s 3 u64
+28 3603074636066234798 1.738s 3 u64
+29 27545080998591561856 4.986s 3 u64
+30 262878496654501774250 7.031s 4 u64
+31 2037247307316034896720 16.144s 4 u64
+32 20222490725552617395966 26.959s 4 u64
+33 171668579369815966705184 73.648s 4 u64
+34 1711977358970374039688092 884.3s 4 u32-CRT(4 moduli, stable; ~125s per residue without contention, 4th residue slowed by other load)
+35 14916356465581456801127844 3807s 4 u16-CRT(7 moduli, stable; residues run as separate processes of 313-755s each, machine shared with other agents, load ~7)
+# Residues for N=35 (mod 65536 65521 65519 65497 65479 65449 65447): 56740 16930 8246 47426 54224 17843 21941
+# Residues for N=34 (mod 2^32 4294967291 4294967279 4294967231): 25842588 1715914896 637060206 883891397
