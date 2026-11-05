@@ -32,6 +32,7 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `Growth.lean` (Mathlib) | composition `semiCount_comp`: a(qn) ≥ a(q)·a(n)^q; doubling splits a(3n) ≥ 2a(n)a(2n) (also for 5n, 7n); branching upper bound `semiCount_le_prod`; parity upper bound `semiCount_even_le_prod`: a(2h) ≤ (2h)!·(√e/2)^{h(1+o(1))} |
 | `WindowRule.lean` (Mathlib) | `semiStep_iff_window`: the window rule (above/below counts decide the half and which panels the window holds); `card_validSuffixes`: valid suffixes = valid prefixes; dead 2-prefixes (1,N),(N,1) for even N; **`card_validPrefixes_three_formula`**: 36·T(N,3) = 8N³ − 3N² − (30 or 12)N + c(N mod 6) |
 | `Asymptotics.lean` (Mathlib) | dipole lemma `imb_cons` (how adding a panel changes the imbalance field); binary-digit decomposition of the step condition (`dyadic_defect`, `semiStep_iff_dyadic` for N = 2^L); half-circle balance `half_balance` |
+| `Descents.lean` (Mathlib) | `descents_bound`: N+1 ≤ (⌊log₂(N+1)⌋+2)^(des+1), so descents grow at least like log N/log log N; `labelling_bound`, which also covers LDS and LIS |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
@@ -126,8 +127,7 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
   - The mechanism of the mod-3 effect: the period-2 doubling orbit {N/3, 2N/3}, whose
     two constraints read the same two prefix sets and force P(N/3) ≈ s/3.
 - `experiments/extremal/PROOFS.txt`. Proofs of the extremal laws. Shifted parity blocks
-  give a(2n) ≥ 2a(n)² + a(n−1)a(n+1) for odd n (on paper). Open: the minimum number of
-  descents is ⌊log₂(N+1)⌋−1 (checked for N ≤ 22).
+  give a(2n) ≥ 2a(n)² + a(n−1)a(n+1) for odd n (on paper). 
 - `experiments/prefix/FINDINGS.txt`. **Exact formulas for valid prefixes of fixed
   length k.** T(N,k) is the number of valid first-k-step sequences. It is a
   quasi-polynomial in N:
@@ -152,3 +152,8 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
     the imbalance field.
   - A Feynman–Kac / Gaussian analysis gives σ_J ~ A·ln N.
   - Debiased sequential Monte Carlo (SMC) estimates up to N = 4096: ln a(4096) ≈ 21269.
+- `experiments/descents/PROOFS.txt`. Minimum descents.
+  - The lower bound ⌊log₂(N+1)⌋−1 holds for N ≤ 79 (SAT), but it is **not** always
+    attained: the true minimum is ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59.
+  - Better conjecture: the minimum LIS = minimum LDS = ⌊log₂(N+1)⌋, attained.
+  - A paper proof gives des ≥ 0.36·log₂N − O(1).

@@ -1,0 +1,244 @@
+DESCENTS AND MONOTONE SUBSEQUENCES OF SEMI-SYMMETRIC FOLD SEQUENCES
+=====================================================================
+
+Notation as in experiments/extremal/PROOFS.txt.  Panels 1..N, M = N+1, a = (a_1..a_N) valid,
+r_m = min(m-1, N-m), W_L(m) = [m-r_m, m-1], W_R(m) = [m+1, m+r_m].  lg x = floor(log2 x).
+des(a) = #{k : a_k > a_{k+1}};  runs(a) = des(a)+1 = number of maximal ascending runs.
+LIS / LDS = longest increasing / decreasing subsequence.
+
+SUMMARY
+  (1) COUNTEREXAMPLES to the "attained for every N" half of the conjecture:
+      min des(N) > lg(N+1)-1 for N = 25, 55, 57, 59 (min des = 4, 5, 5, 5).
+      N = 25: exact subset DP (relax.c, dp_minruns_25.txt) and SAT (satwords.py) with three
+      solvers; minimal UNSAT core = all panels 2..24.  N = 55, 57, 59: SAT (CaDiCaL, ~4-6 min
+      each; N = 55 re-checked with Glucose 4, 1430 s; 6 labels suffice for all three,
+      check55.txt).  For every other N <= 63 a sequence
+      with lg(N+1)-1 descents exists (SAT, sat_sweep_1_55.txt, sat_ub_1_120.txt).
+      So "min des = lg(N+1)-1" is FALSE as an equality.  The exceptions sit just below the
+      top 2^(t+1)-2 of a block of N with the same lg(N+1) (25 = 30-5; 55, 57, 59 = 62-7, -5,
+      -3), where the extremal structure is rigid (popcount is the unique optimum at the top).
+      The LOWER bound des >= lg(N+1)-1 is still open; it is confirmed by SAT for all
+      N <= 79 (and by exact DP for N <= 25).
+  (2) The LIS/LDS strengthening holds wherever tested: min LDS = min LIS = lg(N+1)
+      (lower bound by SAT for N <= 30, satlds_sweep.txt, and DFS for N <= 25; attainment
+      wherever des attains (LDS <= des+1), and directly at the des-exceptions N = 25, 55, 57:
+      valid sequences with LDS = lg(N+1), lds_exceptions.txt; N = 59 undecided after 30 min).
+      So at N = 25, 55, 57 the two statistics separate: min LDS = lg(N+1) but
+      min des = lg(N+1) (not lg(N+1)-1).  The LDS form is the better conjecture:
+          min LDS = min LIS = lg(N+1) for every N.
+  (3) THEOREM (paper + Lean, Folds/Descents.lean):  for every valid a,
+          N + 1 <= (lg(N+1) + 2) ^ (des(a) + 1)      and      N + 1 <= (lg(N+1) + 2) ^ LDS(a)
+      (by mirror symmetry also with LIS).  Hence des(a) >= log(N+1)/log(lg(N+1)+2) - 1:
+      the first unconditional lower bound tending to infinity (before: des >= 2 for N >= 7).
+      On paper (Theorem 2.5, not formalised) the same method gives a bound LINEAR in lg N:
+          N <= 2^j C(L+3j, j) + 2^(t-j) C(L+3(t-j), t-j)   for all j,  t = des+1 or LDS,
+      hence des, LDS, LIS >= 0.36 lg N - O(1)  (asymptotic constant 0.368...).
+  (4) The exact lower bound remains open.  Section 4 lists the invariants that were tested
+      and FAIL (with counterexamples), section 5 the reformulations that survive.
+
+
+1. REFORMULATION: LEVEL LABELLINGS AND THE WINDOW LEMMA
+-------------------------------------------------------
+Def.  A level labelling of a is c : [1..N] -> {0..t-1} such that whenever x is placed before y
+and y < x (an inversion), c(x) < c(y).
+  * Run index: c(a_k) = #descents among positions < k.  An inversion x before y forces a
+    descent in between, so c increases.  t = des(a)+1.
+  * Patience level: c(x) = (length of the longest decreasing subsequence ending at x) - 1.
+    t = LDS(a).  (Conversely any level labelling has t >= LDS: labels strictly increase along
+    a decreasing subsequence.)
+
+Window Lemma.  For a level labelling c and every panel m:
+    #{x in W_L(m) : c(x) <= c(m)}  <=  #{x in W_R(m) : c(x) < c(m)}.
+Proof.  Let S be the set placed before m.  If x in W_L(m) (so x < m) has c(x) <= c(m), then x
+is in S: otherwise m is placed before x with x < m, an inversion, so c(m) < c(x).  If
+x in W_R(m) is in S, then x before m and m < x, so c(x) < c(m).  Hence
+#{W_L : c <= c(m)} <= |S ∩ W_L| = |S ∩ W_R| <= #{W_R : c < c(m)}.                     □
+(For the run index both inequalities are equalities: the static "word" condition
+  #{d <= r_m : rho(m-d) <= rho(m)} = #{d <= r_m : rho(m+d) < rho(m)}
+characterises the sequences with <= t runs, rho = run index in 1..t; the sequence is recovered
+as the order by (rho, value).  This is what satwords.py encodes.)
+
+2. THE COUNTING THEOREM (Lean: card_le_pow_of_labelling, labelling_bound, descents_bound)
+-------------------------------------------------------------------------------------------
+Let s_v = #{x : c(x) < v}, L = lg(N+1).
+
+Lemma 2.1 (left half).  At most s_v + 1 panels m with c(m) = v satisfy 2m <= N+1.
+Proof.  Let m* be the largest.  For 2m* <= N+1, W_L(m*) = [1, m*-1] contains all the others,
+which have c = v <= c(m*); by the Window Lemma their number is <= #{W_R(m*) : c < v} <= s_v. □
+
+Lemma 2.2 (dyadic blocks; Lean block_count).  Let G ⊆ [1,H] be such that for every g in G at
+most s elements of G lie in the open interval (g, 2g).  Then |G| <= (s+1)(lg H + 1).
+Proof.  Induction on H: the elements of G in (H/2, H] all lie in (g0, 2g0) except g0 itself,
+g0 = their minimum (g' <= H < 2 g0), so there are at most s+1 of them; the rest lie in
+[1, floor(H/2)] and lg floor(H/2) + 1 = lg H for H >= 2.                                     □
+
+Lemma 2.3 (right half).  At most (s_v + 1) L panels m with c(m) = v satisfy 2m > N+1.
+Proof.  Put g = N+1-m (the distance to the right edge), so g <= N/2 and r_m = g-1,
+W_L(m) = {panels with gap in (g, 2g)}.  If m, m' both have label v and g < g' < 2g, then m' is in
+W_L(m) with c(m') = v <= c(m); by the Window Lemma there are <= s_v such m'.  Apply 2.2 with
+H = floor(N/2): (s_v+1)(lg floor(N/2) + 1) <= (s_v+1) L.                                     □
+
+Theorem 2.4.  s_{v+1} + 1 <= (s_v + 1)(L + 2), hence N + 1 = s_t + 1 <= (L+2)^t.
+So  N + 1 <= (lg(N+1)+2)^(des+1)  and  N + 1 <= (lg(N+1)+2)^LDS.                          □
+
+Remarks.
+ * Everything is proved in Folds/Descents.lean (no sorry, no native_decide; axioms propext,
+   Classical.choice, Quot.sound).  The Lean statement takes an arbitrary level labelling
+   (labelling_bound) and specialises to the run index (descents_bound).
+ * Where the loss is.  Lemma 2.1 costs a factor 2 per label, but Lemma 2.3 costs a factor
+   lg N per label.  Theorem 2.5 removes most of that loss by counting at every scale.
+ * The window inequality alone (without equality) already seems to force the conjectured
+   number of labels: see section 5.
+
+Theorem 2.5 (a lower bound linear in lg N; paper only, not formalised).  Let c be a level
+labelling with t labels, L = lg(N+1).  For every 0 <= j <= t,
+      N  <=  2^j C(L+3j, j)  +  2^(t-j) C(L+3(t-j), t-j).
+Consequently t >= (alpha* - o(1)) L, with alpha* = 0.3684... the root of
+alpha/2 + (1 + 3 alpha/2) H(alpha/(2+3 alpha)) = 1 (H = binary entropy); taking j = floor(t/2)
+in the inequality gives t >= L/3 for every 5 <= L <= 1500 (direct evaluation), e.g.
+L = 10: t >= 5, L = 32: t >= 13, L = 64: t >= 25.  Applied to the run index and to the
+patience level:  des(a) >= 0.36 lg N - O(1)  and  LDS(a), LIS(a) >= 0.36 lg N - O(1).
+Proof.  Put h = floor(M/2), so that the panels are [1,h] (all with 2m <= M) and (h, N], the
+latter being exactly the panels with gap g = M - m in [1, floor(N/2)] (all with 2m > M).
+  R_v(n) = #{x : c(x) < v, 1 <= M - x <= n}   (n <= floor(N/2)),
+  A_v    = #{x <= h : c(x) < v}.
+(i) Right edge, at every scale.  Fix v and n <= floor(N/2).  Panels of label v with gap <= n
+    lie in the right half; split them into dyadic blocks g in [2^i, 2^(i+1)), i <= lg n.  In a
+    block let g0 be the smallest gap, m0 its panel; the other members of the block have gaps in
+    (g0, 2g0), i.e. lie in W_L(m0), and have label v; W_R(m0) = gaps [1, g0-1].  The Window
+    Lemma gives: block size <= 1 + R_v(min(n, 2^(i+1)-1)).  Hence
+        R_{v+1}(n) <= R_v(n) + sum_{i=0}^{lg n} (1 + R_v(min(n, 2^(i+1)))).
+    With P_v(i) = R_v(min(2^i, floor(N/2))) this reads
+        P_{v+1}(i) <= (i+1) + sum_{j=1}^{i} P_v(j) + 2 P_v(i),
+    and induction on v (hockey stick + Pascal) gives P_v(i) <= C(i+3v, v) - 1:
+        (i+1) + sum_{j=1}^{i} (C(j+3v,v)-1) + 2(C(i+3v,v)-1) <= C(i+3v+1,v+1) + 2C(i+3v,v) - 1
+        <= C(i+3v+3, v+1) - 1.
+    Since floor(N/2) < 2^L, R_v(floor(N/2)) = P_v(L) <= C(L+3v, v) - 1.
+(ii) Left half, globally.  Let m* be the largest panel of label v in [1,h]; the others lie in
+    W_L(m*) = [1, m*-1], so by the Window Lemma their number is <= #{x in (m*, 2m*) : c x < v}
+    <= A_v + R_v(floor(N/2)) (the part of (m*, 2m*) above h consists of panels with gap
+    <= floor(N/2)).  Hence A_{v+1} <= 2 A_v + 1 + R_v(floor(N/2)) <= 2 A_v + C(L+3v, v), and
+    A_j <= (2^j - 1) C(L+3j, j).
+(iii) So #{x : c(x) < j} = A_j + R_j(floor(N/2)) <= 2^j C(L+3j, j).  The reverse-mirror
+    a' = RM(a) is valid (Lean: RevMirror.lean) and c'(M-x) = t-1-c(x) is a level labelling of
+    a' (an inversion x before y, y < x of a becomes M-y before M-x, M-x < M-y in a', and
+    c'(M-y) < c'(M-x)), so likewise #{x : c(x) >= j} = #{x' : c'(x') < t-j} <=
+    2^(t-j) C(L+3(t-j), t-j).  Add.                                                              □
+(The constant is not optimised; the truth, if the conjecture holds, is t >= L.)
+
+
+3. THE COUNTEREXAMPLES N = 25, 55, 57, 59
+------------------------------------------
+relax.c (exact subset DP over (set, last panel), mode 0) gives min runs = 4 for N = 15..24 and
+min runs = 5 for N = 25 (dp_minruns_25.txt, ~3 min, 1 core).  Independently satwords.py
+(order-encoded labels + totalizers) is UNSAT for N = 25 with 4 labels with CaDiCaL, Glucose 4
+and MiniSat 2.2 (0.2 s each) and SAT for N = 24 and N = 26..54 with lg(N+1) labels.  The
+minimal UNSAT core over panel constraints (satcore.py) is all of 2..24: the obstruction is
+global.  Earlier work (desdfs) had only reported a timeout at N = 25.
+At N = 25 the LDS conjecture still holds and is attained: a valid sequence with LDS = 4,
+  11 3 9 22 24 25 13 15 5 6 7 18 19 20 10 21 23 1 12 14 2 16 4 8 17
+(satlds.py), and no valid sequence has LDS <= 3.
+N = 55, 57, 59 (lg(N+1) = 5): satwords.py with 5 labels is UNSAT (385 s, 293 s, 248 s with
+CaDiCaL; the reverse-mirror self-dual subproblem is UNSAT too where it exists), while 5 labels
+suffice for N = 31..54, 56, 58, 60, 61, 62 and 6 labels for N = 63 (sat_ub_1_120.txt).
+Consequently: "min des = lg(N+1) - 1" fails for N in {25, 55, 57, 59} (complete list for
+N <= 63); the corrected conjectures are
+   min des >= lg(N+1) - 1 for all N (lower bound; equality for most N), and
+   min LDS = min LIS = lg(N+1) for all N.
+
+
+4. INVARIANTS TESTED AND REFUTED (what does NOT work)
+----------------------------------------------------
+(a) Pair projection.  Pairs {2y, 2y+1}, y = 1..floor((N-1)/2), N' = floor((N-1)/2), so that
+    lg(N'+1) = lg(N+1) - 1.  Let d = order of first occurrence of the pairs.
+    PROVEN: des(a) >= des(d) + 1 whenever des(a) >= 1.  [The last run c_1 < ... < c_t of a valid
+    sequence has c_{i+1} >= 2 c_i (last-run lemma), so no pair {2y,2y+1}, y >= 1, meets the last
+    run twice, and every pair met by the last run occurred before it; hence all first
+    occurrences precede the last descent p of a.  Each descent of d is witnessed by a descent of
+    a between the two first occurrences, in disjoint position intervals, all < p.]
+    Empirically also LDS(a) >= LDS(d)+1 (N <= 12) and every step of d has |L-R| <= 1.
+    BUT d is not valid (N >= 7), there is not always ANY choice of one representative per pair
+    giving a valid sequence (N = 11: 322 sequences, reps.py), and the induction breaks: at
+    N = 7, 8 the projection d (N' = 3) can be increasing (des 0 < lg 4 - 1).  Iterating the
+    projection with first/last/median occurrence (dyadic.py, quantile.py) fails the same way.
+    The class {|L-R| <= 1 at every step} needs fewer runs (relax.c mode 0 K=1: 2 runs for
+    N = 5..12), so it cannot carry the induction either.
+(b) One-sided constraints.  Left-half constraints only: min runs = 1, 2, 3, 4 up to
+    N = 2, 8, 20, ...  (thresholds 2, 8, 20: h_k = 2 h_{k-1} + 4, versus 2, 6, 14 =
+    2^(k+1)-2 for the full problem).  Sign relaxations (L <= R on one half, >= on the other)
+    fail at N = 7, 8, 15, 16 (relax.c modes 1-3).
+(c) "Claim A" (edge counting).  If S is reachable in j runs then |S ∩ [M-n, N]| <=
+    #{g <= n : popcount(g) <= j}.  True for j = 1 (halving chain), true at j = runs for S = [N]
+    (it is equivalent to the conjecture there), FALSE in between: N = 8, S = {2..8} is reached
+    in 2 runs (5 7 8 | 2 3 4 6); N = 14, S ⊇ {8..14} in 2 runs (4 11 13 14 | 2 7 8 9 10 12).
+    Even restricted to n < M/2 and completable S it fails (claimA2.c).  Reason: the top block
+    of a world is NOT a world -- panels at distance g in (M/4, M/2) see the other half.
+    Also max block length, block through the edge, etc. fail (runs_dp.c).
+(d) Structured chains.  No decreasing subsequence of length lg(N+1) of the form
+    x_{i+1} <= x_i/2 (or (x_i+1)/2, gap-doubling, window-inclusion ...) exists in general
+    (chains.py); heap paths (children 2m, 2m+1, or the right-heap / doubling-map analogues)
+    with child placed before parent are too short (heappath*.py); LR-minima/RL-maxima fail
+    (records.py).  Run sizes are not bounded by binomial layer sizes (runsizes.py).
+(e) Small cores.  The SAT cores (satcore.py, satfamily.py) show that for N = 2^(k+1)-1 the
+    constraints of the panels in [M/2^(k-1), M - M/2^(k-1)] already force k+1 runs (k = 3, 4),
+    while the left half, the right half, the even or the odd panels alone do not.
+
+5. REFORMULATIONS THAT SURVIVE (possible routes to the exact bound)
+-------------------------------------------------------------------
+* Static word form (section 1): t runs suffice iff some word rho in [t]^N satisfies
+  #{d <= r_m : rho(m-d) <= rho(m)} = #{d <= r_m : rho(m+d) < rho(m)} for all m.
+* Window-inequality form: replace "=" by "<=" (this is all the Window Lemma uses, and it covers
+  LDS as well).  satwords.py --ineq computes the minimal t for this relaxation: see
+  sat_ineq.txt: lg(N+1)-1 labels are impossible for every N <= 62, and lg(N+1) labels are
+  possible (also at N = 25, where the equality version needs one more), so the relaxation
+  sees the lower bound but not the exceptions.  If this persists for all N, the exact
+  lower bounds for BOTH des and LDS reduce to a purely static statement about words:
+      if c : [1..N] -> [t] and #{x in W_L(m) : c x <= c m} <= #{x in W_R(m) : c x < c m}
+      for every m, then N <= 2^(t+1) - 2.
+  The popcount labelling c(m) = K - popcount(m) on N = 2^K - 2 is an equality case.
+* Heap form of the left-half condition: for 2m <= N+1, with S = earlier panels,
+  sigma_S(2m-1) = 2 sigma_S(m-1) (sigma = prefix count), i.e. in the binary heap
+  (children 2c, 2c+1) "#S among the first 2m-1 nodes = twice #S among the first m-1".  For a
+  run T started from S, its left-half members c_1 < c_2 < ... have
+  e_S(c_i) := sigma_S(2c_i - 1) - 2 sigma_S(c_i - 1) = i - 1 exactly.  This explains popcount:
+  S = {popcount >= p+1} is closed under heap children and its heap roots are exactly
+  {2t+1 : popcount(t) = p}, which matches the next run.
+
+6. CONSTRUCTIONS
+----------------
+* No construction can attain lg(N+1)-1 descents for every N: N = 25, 55, 57, 59 are impossible
+  (section 3).  For every other N <= 63 an optimal sequence was found by SAT; the run words
+  are in sat_sweep_1_55.txt / sat_ub_1_120.txt (the sequence is the order by (word letter,
+  panel)).  For most N there is even a reverse-mirror SELF-DUAL optimum (rm:SAT); not for
+  N = 21, 29, 53, 61 (only non-self-dual optima) nor, trivially, for N = 3 mod 4.
+* Popcount order (decreasing binary weight, increasing within a weight) is valid exactly for
+  N in {1..8, 11} u {2^k-2, 2^k-1, 2^k} (earlier notes); it is the unique optimum at
+  N = 2^k - 2.  Binary-weight labels of the dyadic expansion of m/M, (m-1/2)/N, m/(N+2), ...
+  (construct_bits.py) give valid sequences only for N = 2^k-2, 2^k-1, 2^k and a few small N.
+* Pair lift (lift.py): from an optimal word rho' on n, rho(2y) = rho'(y)+1, rho(2y+1) = rho'(y)
+  (or the reverse) plus labels for the boundary panels 1, 2n+2, 2n+3.  This is how popcount
+  doubles.  It produces optima for N = 3..9, 11, 14, 15, 16 but for NO N in 17..23 (from all
+  optimal words on n <= 10).
+* Insertion/deletion (insert.py, delete.py): no optimal word on 13 extends to one on 14 by
+  inserting a panel; deleting panels from popcount(2^k-2) (or 2^k-1, 2^k) loses optimality
+  after one or two steps.  So the optimal sets for consecutive N are not nested.
+* Heap structure (heapstruct.py): optima in which every "after j runs" set S_j is closed under
+  left-heap children (m -> 2m, 2m+1) and every complement under right-heap children exist for
+  all N <= 13 except N = 11 (popcount is of this type; it is what makes popcount valid, see
+  section 5).  Not a general recipe.
+* Runs as unions of dyadic progressions: apart from popcount-type N we saw no such structure
+  in the optima (e.g. N = 13: 5 10 12 13 | 2 4 7 8 9 11 | 1 3 6); only the first run (x plus a
+  halving chain at the right edge) and the last run (a doubling chain at the left edge plus
+  one panel) are forced.
+
+DATA (files in this directory)
+  dp_minruns_25.txt   exact min runs N <= 25 (relax.c, mode 0)
+  sat_sweep_1_55.txt  SAT: lower bound (k = lg(N+1)-1 UNSAT) and attainment (k = lg(N+1)) N <= 54
+  sat_lb_56_200.txt   SAT lower bound sweep from N = 56 (k = lg(N+1)-1 UNSAT)
+  sat_ub_1_120.txt    SAT attainment sweep N <= 65, reverse-mirror self-dual first (stopped at 65)
+  sat_ineq.txt        window-inequality relaxation: lg(N+1)-1 labels impossible for N <= 62
+  check55.txt, lds_exceptions.txt   independent checks at N = 55 and LDS at N = 55, 57, 59
+  satcore.py, satfamily.py   minimal sets of panel constraints forcing the bound
+  Folds/Descents.lean        the formal proof of Theorem 2.4
+  lds_out_*.txt, satlds.py  LDS lower bound / attainment
+  lh_minruns.txt      left-half-only thresholds
