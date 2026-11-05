@@ -95,6 +95,8 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Asymptotics` (M) | dipole lemma (how one panel changes the imbalance field); binary-digit decomposition; half-circle balance |
 | `Descents` (M) | N+1 ≤ (⌊log₂(N+1)⌋+2)^(des+1); the same for LDS and LIS |
 | `Independence` (M) | exact independence of constraints: compatible windows (disjoint, or one window inside an arm of the other) give #(C_a ∧ C_b) = N!·w_a·w_b; chain product formula `card_constrSeqs_chain`; dyadic upper bound `semiCount_mul_le_dyadic` |
+| `Copies` (M) | general doubling splits a((2j+1)n) ≥ 2a(jn)a((j+1)n) for all j; copy criterion (X is a copy ⇔ every element is a valid last step); Beatty copies; near-class copy for odd N |
+| `ShiftedCount` (M) | a(2n) ≥ 2a(n)² + a(n−1)a(n+1) (odd n), and the halved version for even n |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
