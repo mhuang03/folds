@@ -1,0 +1,177 @@
+Live and dead prefixes: proofs
+==============================
+
+Notation.  Panels [N] = {1..N}.  The window of m is [2m-N, 2m-1] n [1,N] minus m, with left
+arm L(m) = [max(1, 2m-N), m-1] and right arm R(m) = [m+1, min(N, 2m-1)]; both arms have
+reach(m) = min(m-1, N-m) elements.  Placing m on the set S of bisected panels is valid iff
+|S n L(m)| = |S n R(m)|.  Equivalently (complement inside the window) iff
+|(W \ S) n L(m)| = |(W \ S) n R(m)| for the full window W.  A prefix p is LIVE if some full
+semi-symmetric fold sequence starts with p (Lean `Extends N p`).
+
+Throughout, "Lean" refers to Folds/Live.lean unless stated otherwise.
+
+
+1. Basic facts
+--------------
+1.1 (Liveness depends on the set; WindowRule.extends_iff_g_pos.)  A valid prefix p is live iff
+    [N] \ p has a valid ordering from scratch.  Proof: if p ++ t is a full valid sequence then
+    t reversed is valid from scratch (in the window of t_i the unbisected panels are exactly
+    the later t's; complement inside the window); conversely append the reversed ordering.
+    In particular two valid orderings of the same set are both live or both dead
+    (Lean `extends_congr`), and liveness is mirror invariant (Lean `Extends.mirror`).
+
+1.2 (Balanced background.)  If U is a set disjoint from the window structure of the steps
+    considered and |U n L(m)| = |U n R(m)| for every m placed later, then U can be ignored.
+    A complete parity class is balanced around every panel of the other parity
+    (Blocks.class_balanced).
+
+
+2. Claim (i): every panel is a live first step       [Lean `extends_single`]
+-----------------------------------------------------------------------------
+Induction on N; N = 1 is trivial.  For N >= 2 let c = m mod 2 and N1 = (N+c)/2 < N, the size
+of the parity class of m (odds c = 1, evens c = 0).  By induction there is a valid sequence
+sigma of the N1-strip starting with (m+c)/2, and a valid sequence tau of the other class strip
+(N + 1 - c)/2 < N.  Parity blocks (Blocks.semiSymmetric_blocks_iff): sigma scaled by
+y -> 2y - c followed by tau scaled by y -> 2y - (1-c) is valid, and it starts with m.  QED.
+More generally (Lean `extends_scale`): if p is live in the class strip (N+c)/2, then
+p scaled by y -> 2y - c is live in [N].  So a same-parity pair {u, v} (class c) is live
+whenever {(u+c)/2, (v+c)/2} is live in the class strip.
+
+
+3. Window copies
+----------------
+Definition.  X = {x_1 < ... < x_p} subset of [N] is a (window) copy of the p-strip if for all
+i != j:  x_i in L_N(x_j) <=> i in L_p(j)  and  x_i in R_N(x_j) <=> i in R_p(j)
+(Lean `WinEmb N p (y -> x_y)`).  Then any sequence sigma of the p-strip is valid iff its
+image is valid in [N] from scratch, and also on any background balanced around the
+images (Growth.WinEmb.semiStep_iff).
+
+3.1 Criterion.  Let c(y) = |X n [1,y]| (c(y) = 0 for y <= 0) and c~(y) = c(y) for y <= N,
+    c~(y) = p + c(y - N) for y > N.  Then
+        X is a copy  <=>  c~(2x - 1) = 2 c(x) - 1  for every x in X
+                     <=>  every x in X is a valid LAST step of X (X \ {x} balanced around x)
+                     <=>  [N] \ X is balanced around every x in X.
+    Proof.  Fix j, x = x_j.  For i > j, x_i in R(x) <=> x_i <= 2x - 1, and i in R_p(j) <=>
+    i <= 2j - 1; as x is increasing the equivalence for all i > j says
+    c(min(N, 2x-1)) = min(p, 2j-1).  For i < j, x_i in L(x) <=> x_i >= 2x - N and i in L_p(j)
+    <=> i >= 2j - p, i.e. c(2x - N - 1) = max(0, 2j - p - 1).  If 2x - 1 <= N the second
+    condition reads 2j - 1 <= p and together with the first gives c(2x-1) = 2j - 1; if
+    2x - 1 > N the first reads 2j - 1 >= p and the second p + c(2x-1-N) = 2j - 1.  In both
+    cases the pair of conditions is equivalent to c~(2x-1) = 2j - 1 = 2c(x) - 1.  The second
+    form is the prefix-count form of validity (README, "Equivalent formulations" 2) for the
+    step (X \ {x}, x): P(x-1) = c(x) - 1, P(2x-1) = c(2x-1) - 1, |S| = p - 1.  The third
+    holds because [N] \ {x} is balanced around x (both arms are full).  QED
+    (Checked against the definition for all subsets of [N], N <= 12.)
+
+3.2 Weak split [Lean `extends_winEmb`].  If X = phi([p]) is a copy and [N] \ X has a valid
+    ordering from scratch, then for every live prefix r of the p-strip, phi(r) is live.
+    Proof: complete r to sigma in the p-strip; phi(sigma) is valid from scratch (3) and is a
+    valid prefix whose complement is reachable, hence live by 1.1.
+    Special cases with a proven reachable complement:
+      - the parity classes (Lean `extends_scale`);
+      - either half of a split (Lean `Split.extends`), e.g. N = 3n: {3y-1} (n-strip) and
+        {y + floor(y/2)} (2n-strip) (Lean `extends_three`), and the residue classes mod q for
+        q | N (Growth composition);
+      - the shifted block X = {2y + [y > n/2]} for N = 2n (Lean `extends_shX`, via
+        Extremal.shifted_blocks with tau starting with 1);
+      - near-class copies, see 4.2.
+
+3.3 Weak split, reversed.  If X is a copy not containing u, v and Z = [N] \ X has a valid
+    ordering from scratch starting with (u, v), then [u, v] is live: after Z the copy X is
+    placed in any valid order of its world, because [N] \ X = Z is balanced around every
+    x in X (3.1).
+
+
+4. Beatty copies
+----------------
+4.1 Lemma.  For 1 <= p <= N and 2p - 1 - N <= g <= 0 the Beatty set
+        X(N,p,g) = { x_r = floor((rN + g)/p) : r = 1..p }
+    is a copy of the p-strip.
+    Proof.  x_r is strictly increasing (N/p >= 1), x_1 >= 1 (N + g >= p since g >= p - N),
+    x_p = N + floor(g/p) <= N.  Put x~_k = floor((kN + g)/p) for 1 <= k <= 2p; for k > p this
+    is x_{k-p} + N, so c~(y) = #{k : x~_k <= y} for y < 2N and the criterion 3.1 reads
+    x~_{2r-1} <= 2x_r - 1 < x~_{2r}.  Write rN + g = p x_r + rho, 0 <= rho <= p - 1.  Then
+        x~_{2r}   = floor((2p x_r + 2rho - g)/p)     = 2x_r + floor((2rho - g)/p)     >= 2x_r
+    because g <= 0, and
+        x~_{2r-1} = floor((2p x_r + 2rho - g - N)/p) = 2x_r + floor((2rho - g - N)/p) <  2x_r
+    because 2rho - g - N <= 2p - 2 - g - N < 0.  QED
+    (beatty_copy.py lists the copy status of all X(N,p,g).  The parity classes are
+    X(2n, n, 0), X(2n, n, -1), X(2n+1, n, -1), X(2n+1, n+1, 0).)
+
+4.2 Near-class copy, odd N.  X(N, (N-1)/2, -2) = {1, 4, 6, ..., N-1} = E - {2} + {1}.  Its
+    complement Y = {2, 3, 5, 7, ..., N} is reachable from scratch: let psi map the odd strip
+    [(N+1)/2] to Y by psi(1) = 2, psi(y) = 2y - 1 (y >= 2).  For an odd panel m >= 3 the
+    window W(m) = [2m-N, 2m-1] contains 2 iff it contains 1 (m in the left half: both; m in
+    the right half: 2m - N >= 3, neither) and 2 sits on the left arm, like 1.  So steps at
+    m >= 3 behave exactly as in the odd strip.  The step at 2 has window {1, 3}; 1 is never
+    bisected, so it is valid iff 3 = psi(2) is not yet bisected, i.e. iff the odd-strip
+    sequence places 1 before 2.  A valid odd-strip sequence starting with 1 exists (claim
+    (i)).  Hence pairs inside E - {2} + {1} reduce to the even strip by 3.2.
+
+4.3 CONJECTURE B.  For every Beatty copy X(N,p,g) (1 <= p < N, 2p-1-N <= g <= 0) the
+    complement [N] \ X is reachable from scratch.  Verified for N <= 26 (beattyB.c).
+    Together with 3.2 and induction on N it would show that every live pair of the p-strip
+    maps to a live pair; beatty_cover.py shows (N <= 40) that this covers every live 2-set
+    except {1,2}, {N-1,N} and O(1) sporadic sets per N.  B for p = 2 is the liveness of the
+    pairs at distance about N/2, so B is a genuine strengthening, not a lemma.
+
+
+5. Dead prefixes (all proven in Lean for all N)
+------------------------------------------------
+5.1 (1,N), (N,1), even N >= 4 [WindowRule.not_extends_one_N]: every window except the middle
+    of an odd strip contains exactly one of 1, N (1 in W(m) iff 2m <= N+1, N in W(m) iff
+    2m >= N+1), so no third step is valid.
+
+5.2 (1,7), (7,1), N = 7 [Lean `not_extends_seven`].  After {1,7} only 4 is valid (every other
+    window sees exactly one of 1, 7).  After {1,4,7} only 3 or 5.  After {1,3,4,7} only 2;
+    after {1,2,3,4,7} nothing (5: left {3,4}, right {6,7} has one; 6: right {7}).  The case 5
+    is the mirror image.  (Each step is a finite check; Lean uses `decide` per step.)
+
+5.3 Dead blocks [Lean `dead_block`, `not_extends_block`, `not_extends_three_block`].
+    Let j >= 2 and 4j <= N + 3.  If 1, 2j, 2j+1 are bisected before every panel of
+    G = [2, 2j-1], the sequence is invalid.
+    Proof.  Let m be the first panel of G to be bisected and S the set bisected before it;
+    S n [1, 2j+1] = {1, 2j, 2j+1}.  Since 2m <= 4j - 2 <= N + 1, m is in the left half and
+    W(m) = [1, 2m - 1].  Left arm [1, m-1]: S meets it in {1} only.  Right arm [m+1, 2m-1]:
+    if m <= j it lies inside G, so S misses it; if m >= j + 1 it contains 2j and 2j + 1
+    (2m - 1 >= 2j + 1 and m < 2j).  So the counts are 1 vs 0 or 1 vs >= 2.  QED
+    Hence every prefix containing 1, 2j, 2j+1 and nothing of [2, 2j-1] is dead, and by mirror
+    symmetry every prefix containing N, N+1-2j, N-2j and nothing of [N+2-2j, N-1].
+    Valid orderings of D_j = {1, 2j, 2j+1} (2 <= j, 4j <= N+1): 1 has reach 0;
+      (2j+1, 1, 2j) is valid iff 1 is in L(2j) iff 4j <= N + 1;
+      (1, 2j+1, 2j) is valid iff 1 is not in W(2j+1) (4j >= N) and 4j <= N + 1;
+      every ordering with 2j before 2j+1 or adjacent first two is invalid
+      ((1,2j): 1 in L(2j); (2j,1,2j+1): L(2j+1) holds 2j (and 1 if 4j < N), R(2j+1) nothing).
+    So D_j has one valid ordering, two when N in {4j-1, 4j}; for 4j in {N+2, N+3} none.
+
+5.4 Dead corners, odd N >= 7 [Lean `not_extends_corner`].  Let h = (N+1)/2 (middle).
+    {1,2,N}: a left-half m >= 3 has 1, 2 on its left arm and at most N on its right arm
+    (N in W(m) iff m = h); a right-half m >= h+1 has 2m - N >= 3, nothing on the left, N on
+    the right.  No step.
+    {1,N-1,N}: m = 2: left {1}, right {3}: 1 vs 0.  Left-half 3 <= m < h: 1 vs 0.  m = h:
+    1 vs 2.  Right half h < m <= N - 2: 0 vs 2.  No step.
+    {1,2,N-1}: the same computation leaves only m = N (reach 0); m = h has 2 vs 1.
+    {1,2,N-1,N}: only m = h (2 vs 2).  {1,2,h,N-1,N}: left-half m: 2 vs <= 1; right-half
+    m: <= 1 vs 2.  No step.  {2,N-1,N} is the mirror image of {1,2,N-1}.
+    Each of the four sets has three valid orderings, giving 12 dead 3-prefixes.
+
+5.5 Count.  For N = 6 and N >= 8 the dead 3-prefixes found by the search (N <= 31) are
+    exactly those of 5.3 (j <= floor((N+1)/4)) and 5.4, so their number is
+        2(floor((N+1)/4) - 1) + 2[N = 0, 3 mod 4] + 12[N odd].
+    The dead direction holds for every N by 5.3 and 5.4; completeness (every other valid
+    3-prefix is live) is verified for N <= 31 only.
+
+
+6. The live direction: status
+-----------------------------
+Proven: (i) for every N.  Proven reductions: a 2-set inside a parity class, a mod-3 class
+(3 | N), a residue class mod q (q | N), the shifted block X (N even), or E - {2} + {1}
+(odd N) is live as soon as its preimage pair is live in the smaller strip.  These alone do
+not reach most mixed-parity pairs (proven_cover.py: N = 40, 95 of 532 live 2-sets).
+Open: a uniform completion for mixed-parity pairs.  The most promising route found is
+3.2 + 4.1 + Conjecture B (beatty_cover.py) plus explicit constructions for {1,2},
+{N-1,N} and the sporadic leftovers.  One-level parity blocks with a foreign point
+(FINDINGS 3(b)) fail on whole families, and every set balanced around all panels of the
+other parity is empty or a full class (balsets.py), so a foreign point can never be
+neutralised inside one parity level; the mixed case needs genuinely mixed copies such as
+the shifted blocks, near-classes and Beatty sets.
