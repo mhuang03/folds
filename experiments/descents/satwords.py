@@ -34,7 +34,7 @@ class Enc:
                     if B(j + 1) != F: cl.append(B(j + 1))
                     self.cl.append(cl)
         return c
-def build(N, k, rm=False):
+def build(N, k, rm=False, ineq=False):
     E = Enc(); M = N + 1
     y = {}
     for m in range(1, N + 1):
@@ -67,7 +67,7 @@ def build(N, k, rm=False):
             for t in range(1, r + 1):
                 a = ge(oL, t - nT_L); b = ge(oR, t - nT_R)
                 # cond -> (a <-> b)
-                for (p, q) in ((a, b), (b, a)):
+                for (p, q) in (((a, b),) if ineq else ((a, b), (b, a))):
                     # p -> q
                     if p == 'F' or q == 'T': continue
                     cl = list(cond)
@@ -82,8 +82,8 @@ def build(N, k, rm=False):
                 if a in ('T', 'F') or b in ('T', 'F'): continue
                 E.cl.append([a, b]); E.cl.append([-a, -b])
     return E, y
-def solve(N, k, solver='cadical153', rm=False):
-    E, y = build(N, k, rm)
+def solve(N, k, solver='cadical153', rm=False, ineq=False):
+    E, y = build(N, k, rm, ineq)
     with Solver(name=solver, bootstrap_with=E.cl) as s:
         t = time.time(); sat = s.solve(); dt = time.time() - t
         if not sat: return None, dt, E
