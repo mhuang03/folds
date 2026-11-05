@@ -1,0 +1,6 @@
+name = "Folds"
+version = "0.1.0"
+defaultTargets = ["Folds"]
+
+[[lean_lib]]
+name = "Folds"
