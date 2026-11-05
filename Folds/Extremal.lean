@@ -207,4 +207,187 @@ theorem exists_lrmax : ∀ N, 1 ≤ N →
       unfold lrmax at hσl ⊢
       omega
 
+/-! ## Free steps -/
+
+/-- A free step: no earlier panel lies in the window of `m`. -/
+def FreeStep (N : Nat) (S : List Nat) (m : Nat) : Prop :=
+  ∀ d ∈ List.range' 1 (reach N m), m - d ∉ S ∧ m + d ∉ S
+
+instance (N : Nat) (S : List Nat) (m : Nat) : Decidable (FreeStep N S m) :=
+  inferInstanceAs (Decidable (∀ d ∈ _, _))
+
+/-- Number of free steps of `l`, performed after the panels `S`. -/
+def freeCount (N : Nat) : List Nat → List Nat → Nat
+  | _, [] => 0
+  | S, x :: t => (if FreeStep N S x then 1 else 0) + freeCount N (S ++ [x]) t
+
+/-- Number of free steps of a fold sequence. -/
+def numFree (N : Nat) (a : List Nat) : Nat := freeCount N [] a
+
+theorem FreeStep.mono {N m : Nat} {S T : List Nat} (h : FreeStep N T m)
+    (hST : ∀ x ∈ S, x ∈ T) : FreeStep N S m :=
+  fun d hd => ⟨fun h1 => (h d hd).1 (hST _ h1), fun h1 => (h d hd).2 (hST _ h1)⟩
+
+/-- An earlier panel `x` lies outside the window of a free panel `f`: on the left half
+(`2f ≤ N + 1`) this means `x ≥ 2f`, on the right half `x ≤ 2f - N - 1`. -/
+theorem FreeStep.far {N f x : Nat} {S : List Nat} (h : FreeStep N S f) (hx : x ∈ S)
+    (hxf : x ≠ f) (hx1 : 1 ≤ x) (hxN : x ≤ N) (hf1 : 1 ≤ f) (hfN : f ≤ N) :
+    (2 * f ≤ N + 1 → 2 * f ≤ x) ∧ (N + 1 < 2 * f → 2 * (N + 1 - f) ≤ N + 1 - x) := by
+  have key : ∀ d, 1 ≤ d → d ≤ reach N f → f - d ≠ x ∧ f + d ≠ x := by
+    intro d h1 h2
+    have := h d (by rw [List.mem_range'_1]; omega)
+    exact ⟨fun e => this.1 (e ▸ hx), fun e => this.2 (e ▸ hx)⟩
+  have h1 : x < f → reach N f < f - x := fun hlt =>
+    Nat.lt_of_not_le fun hr => (key (f - x) (by omega) hr).1 (by omega)
+  have h2 : f < x → reach N f < x - f := fun hgt =>
+    Nat.lt_of_not_le fun hr => (key (x - f) (by omega) hr).2 (by omega)
+  unfold reach at h1 h2
+  constructor <;> intro <;> omega
+
+/-- `hgt A = ⌊log₂ A⌋ + 1` for `A ≥ 1` and `hgt 0 = 0`: the longest chain
+`A ≥ f₁ ≥ 2f₂, f₂ ≥ 2f₃, …` of positive integers has `hgt A` terms. -/
+def hgt (A : Nat) : Nat := Nat.log 2 (2 * A)
+
+theorem hgt_mono {A B : Nat} (h : A ≤ B) : hgt A ≤ hgt B :=
+  Nat.log_mono_right (by omega)
+
+theorem hgt_of_pos {x : Nat} (hx : 1 ≤ x) : hgt x = Nat.log 2 x + 1 :=
+  log_two_mul (by omega)
+
+theorem hgt_half {x : Nat} (hx : 1 ≤ x) : hgt (x / 2) + 1 ≤ hgt x := by
+  rcases Nat.eq_zero_or_pos (x / 2) with h0 | hpos
+  · rw [h0, hgt_of_pos hx]; simp [hgt]
+  · rw [hgt_of_pos hpos, hgt_of_pos hx]
+    have := Nat.log_div_base 2 x
+    have : 1 ≤ Nat.log 2 x := Nat.le_log_of_pow_le Nat.one_lt_two (by simp; omega)
+    omega
+
+/-- **Potential bound.**  If every free panel of `l` on the left half is at most `A` and
+every free panel on the right half has mirror image `N + 1 - f ≤ B`, then `l` has at most
+`hgt A + hgt B` free steps. -/
+theorem freeCount_le {N : Nat} : ∀ (l S : List Nat) (A B : Nat),
+    (S ++ l).Nodup → (∀ x ∈ S ++ l, 1 ≤ x ∧ x ≤ N) →
+    (∀ f ∈ l, 2 * f ≤ N + 1 → FreeStep N S f → f ≤ A) →
+    (∀ f ∈ l, N + 1 < 2 * f → FreeStep N S f → N + 1 - f ≤ B) →
+    freeCount N S l ≤ hgt A + hgt B
+  | [], _, _, _, _, _, _, _ => by simp [freeCount]
+  | x :: t, S, A, B, hnd, hb, hA, hB => by
+    have hnd' : (S ++ [x] ++ t).Nodup := by simpa using hnd
+    have hb' : ∀ y ∈ S ++ [x] ++ t, 1 ≤ y ∧ y ≤ N := fun y hy => hb y (by simpa using hy)
+    have hxt : ∀ f ∈ t, x ≠ f := by
+      intro f hf e; subst e
+      rw [List.nodup_append] at hnd
+      have := hnd.2.1; rw [List.nodup_cons] at this; exact this.1 hf
+    have hx := hb x (by simp)
+    have hbt : ∀ f ∈ t, 1 ≤ f ∧ f ≤ N := fun f hf => hb f (by simp [hf])
+    have hsub : ∀ y ∈ S, y ∈ S ++ [x] := fun y hy => by simp [hy]
+    unfold freeCount
+    by_cases hfx : FreeStep N S x
+    · simp only [hfx, ite_true]
+      rcases Nat.lt_or_ge (N + 1) (2 * x) with hr | hl
+      · have hxB : N + 1 - x ≤ B := hB x (by simp) hr hfx
+        have ih := freeCount_le t (S ++ [x]) A ((N + 1 - x) / 2) hnd' hb'
+          (fun f hf hfl hff => hA f (by simp [hf]) hfl (hff.mono hsub))
+          (fun f hf hfr hff => by
+            have := (hff.far (x := x) (by simp) (hxt f hf) hx.1 hx.2 (hbt f hf).1
+              (hbt f hf).2).2 hfr
+            omega)
+        have := hgt_half (x := N + 1 - x) (by omega)
+        have := hgt_mono hxB
+        omega
+      · have hxA : x ≤ A := hA x (by simp) hl hfx
+        have ih := freeCount_le t (S ++ [x]) (x / 2) B hnd' hb'
+          (fun f hf hfl hff => by
+            have := (hff.far (x := x) (by simp) (hxt f hf) hx.1 hx.2 (hbt f hf).1
+              (hbt f hf).2).1 hfl
+            omega)
+          (fun f hf hfr hff => hB f (by simp [hf]) hfr (hff.mono hsub))
+        have := hgt_half hx.1
+        have := hgt_mono hxA
+        omega
+    · simp only [hfx, ite_false, Nat.zero_add]
+      exact freeCount_le t (S ++ [x]) A B hnd' hb'
+        (fun f hf hfl hff => hA f (by simp [hf]) hfl (hff.mono hsub))
+        (fun f hf hfr hff => hB f (by simp [hf]) hfr (hff.mono hsub))
+
+theorem log_le_of_pow_le {u M : Nat} (h : 2 ^ u ≤ M) : u ≤ Nat.log 2 M :=
+  Nat.le_log_of_pow_le Nat.one_lt_two h
+
+/-- `2^u + 2^v ≤ M` forces `u + v ≤ ⌊log₂ M⌋ + ⌊log₂ (M/3)⌋`. -/
+theorem pow_add_pow_le_aux {u v M : Nat} (hvu : v ≤ u) (h : 2 ^ u + 2 ^ v ≤ M) :
+    u + v ≤ Nat.log 2 M + Nat.log 2 (M / 3) := by
+  rcases Nat.eq_or_lt_of_le hvu with e | hlt
+  · subst e
+    rcases Nat.eq_zero_or_pos v with h0 | hpos
+    · subst h0; simp
+    · obtain ⟨w, rfl⟩ : ∃ w, v = w + 1 := ⟨v - 1, by omega⟩
+      have e1 : 2 ^ (w + 1) = 2 * 2 ^ w := by rw [Nat.pow_succ, Nat.mul_comm]
+      have hu : 2 ^ (w + 2) ≤ M := by rw [Nat.pow_succ]; omega
+      have hv : 2 ^ w ≤ M / 3 := by rw [Nat.le_div_iff_mul_le (by decide)]; omega
+      have := log_le_of_pow_le hu
+      have := log_le_of_pow_le hv
+      omega
+  · have hpow : 2 ^ (v + 1) ≤ 2 ^ u := Nat.pow_le_pow_right (by decide) hlt
+    have e1 : 2 ^ (v + 1) = 2 * 2 ^ v := by rw [Nat.pow_succ, Nat.mul_comm]
+    have hu : 2 ^ u ≤ M := by omega
+    have hv : 2 ^ v ≤ M / 3 := by rw [Nat.le_div_iff_mul_le (by decide)]; omega
+    have := log_le_of_pow_le hu
+    have := log_le_of_pow_le hv
+    omega
+
+theorem pow_add_pow_le {u v M : Nat} (h : 2 ^ u + 2 ^ v ≤ M) :
+    u + v ≤ Nat.log 2 M + Nat.log 2 (M / 3) := by
+  rcases Nat.le_total v u with hvu | huv
+  · exact pow_add_pow_le_aux hvu h
+  · rw [Nat.add_comm u v]; exact pow_add_pow_le_aux huv (by omega)
+
+/-- After a first panel `x`, at most `hgt x + hgt ((N + 1 - x) / 2)` steps are free. -/
+theorem hgt_first_le {N x : Nat} (hx1 : 1 ≤ x) (hxN : x ≤ N) :
+    hgt x + hgt ((N + 1 - x) / 2) ≤ Nat.log 2 (N + 1) + Nat.log 2 ((N + 1) / 3) + 1 := by
+  rw [hgt_of_pos hx1]
+  have hux : 2 ^ Nat.log 2 x ≤ x := Nat.pow_log_le_self 2 (by omega)
+  rcases Nat.eq_zero_or_pos ((N + 1 - x) / 2) with h0 | hpos
+  · rw [h0]
+    have : Nat.log 2 x ≤ Nat.log 2 (N + 1) := Nat.log_mono_right (by omega)
+    simp [hgt]; omega
+  · rw [hgt_of_pos hpos]
+    have hy : 2 ^ Nat.log 2 ((N + 1 - x) / 2) ≤ (N + 1 - x) / 2 :=
+      Nat.pow_log_le_self 2 (by omega)
+    have e1 : 2 ^ (Nat.log 2 ((N + 1 - x) / 2) + 1) = 2 * 2 ^ Nat.log 2 ((N + 1 - x) / 2) := by
+      rw [Nat.pow_succ, Nat.mul_comm]
+    have := pow_add_pow_le (u := Nat.log 2 x) (v := Nat.log 2 ((N + 1 - x) / 2) + 1)
+      (M := N + 1) (by omega)
+    omega
+
+/-- **Free steps.**  Every fold sequence of length `N` (valid or not) has at most
+`⌊log₂(N+1)⌋ + ⌊log₂((N+1)/3)⌋ + 1` free steps.  (For `N ≥ 2` this is attained by
+semi-symmetric sequences; see `PROOFS.txt`.) -/
+theorem numFree_le {N : Nat} {a : List Nat} (hf : IsFoldSeq N a) :
+    numFree N a ≤ Nat.log 2 (N + 1) + Nat.log 2 ((N + 1) / 3) + 1 := by
+  match a, hf with
+  | [], _ => simp [numFree, freeCount]
+  | x :: t, hf =>
+    have hnd := nodup_of_foldSeq hf
+    have hb : ∀ y ∈ [x] ++ t, 1 ≤ y ∧ y ≤ N := fun y hy =>
+      (mem_range'_of_perm hf).1 (by simpa using hy)
+    have hx := hb x (by simp)
+    have hxt : ∀ f ∈ t, x ≠ f := by
+      intro f hf e; subst e; rw [List.nodup_cons] at hnd; exact hnd.1 hf
+    have hbt : ∀ f ∈ t, 1 ≤ f ∧ f ≤ N := fun f hf => hb f (by simp [hf])
+    have key := freeCount_le t [x] (x / 2) ((N + 1 - x) / 2) (by simpa using hnd) hb
+      (fun f hf hfl hff => by
+        have := (hff.far (x := x) (by simp) (hxt f hf) hx.1 hx.2 (hbt f hf).1
+          (hbt f hf).2).1 hfl
+        omega)
+      (fun f hf hfr hff => by
+        have := (hff.far (x := x) (by simp) (hxt f hf) hx.1 hx.2 (hbt f hf).1
+          (hbt f hf).2).2 hfr
+        omega)
+    have h1 := hgt_half hx.1
+    have h2 := hgt_first_le hx.1 hx.2
+    have h3 : (if FreeStep N [] x then 1 else 0) ≤ 1 := by split <;> omega
+    unfold numFree freeCount
+    simp only [List.nil_append] at key ⊢
+    omega
+
 end Folds
