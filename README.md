@@ -17,11 +17,10 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 |---|---|
 | `Defs.lean` | `reach`, `IsFoldSeq`, `SymStep`, `SemiStep`, `Symmetric`, `SemiSymmetric`, `APFree` |
 | `Basic.lean` | `Symmetric.semiSymmetric`, `symmetric_iff_apFree`, `semiStep_iff_of_compl`, `SemiSymmetric.reverse`, `SemiSymmetric.mirror` |
-| `Compute.lean` | Bool checkers proven equal to the Props; counts for `N ≤ 8` (`native_decide`); check of the cyclic reformulation for `N ≤ 10` |
+| `Decide.lean` | Bool checkers proven equal to the Props (decidability); statement of the cyclic reformulation `CyclicStep` |
 
-The theorems in `Basic.lean` are proven for all `N`. The checks in `Compute.lean` use
-`native_decide`. The permutation enumerator there is only checked (length `N!`, no
-duplicates, every entry a fold sequence) for `N ≤ 8`, not proven correct in general.
+The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
+outside Lean (see `experiments/` and the Rust crate), not with `native_decide`.
 
 ## Data (`experiments/semi_counts.txt`, computed by `experiments/semi.c`)
 
@@ -46,7 +45,7 @@ The semi-symmetric sequence is **not in the OEIS**.
    With the panel centre `c = m - ½`, the counting function `F` and the discrepancy
    `E(x) = F(x) - s·x/N` (period `N`), this becomes **`E(2c) = 2·E(c)`**: placing the
    panel at `c` is allowed iff the discrepancy doubles under the doubling map
-   `x ↦ 2x (mod N)`. (Checked in Lean for `N ≤ 10`, see `semiStep_iff_cyclicStep_small`.)
+   `x ↦ 2x (mod N)`. (Checked by brute force for `N ≤ 10`; Lean proof in progress.)
 4. **Complement / reversal.** A step's validity is unchanged if `S` is replaced by its
    complement inside the window. Hence reversing a semi-symmetric sequence gives a
    semi-symmetric one (proven), and so does mirroring `m ↦ N+1-m` (proven). For
