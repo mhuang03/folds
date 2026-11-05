@@ -180,4 +180,126 @@ theorem not_extends_three_block {N j : Nat} (hj : 2 ≤ j) (hN : 4 * j ≤ N + 3
     not_extends_block_mirror hj hN (by simp; omega) (by simp) (by simp) (by simp)
       (by intro m hm; simp at hm; omega)⟩
 
+/-! ## Dead corners for odd `N`: the 3-subsets of `{1, 2, N-1, N}` -/
+
+/-- A prefix after which no step is valid cannot be completed. -/
+theorem not_extends_of_stuck {N : Nat} {p : List Nat} (hlen : p.length < N)
+    (h : ∀ m, 1 ≤ m → m ≤ N → m ∉ p → ¬ SemiStep N p m) : ¬ Extends N p := by
+  rintro ⟨a, hf, hs, hpre⟩
+  have hnd := nodup_of_foldSeq hf
+  have hla : a.length = N := by rw [hf.length_eq]; simp
+  have hk : p.length < a.length := by omega
+  have e := List.prefix_iff_eq_take.1 hpre
+  have hstep := hs p.length hk
+  have hm := (mem_range'_of_perm hf).1 (List.getElem_mem hk)
+  have hnot : a[p.length] ∉ a.take p.length := by
+    rw [getElem_mem_take_iff hnd hk]; omega
+  rw [← e] at hstep hnot
+  exact h _ hm.1 hm.2 hnot hstep
+
+/-- Only the listed panels of `T` are valid next steps after `S`: a prefix with the same
+elements as `S`, followed by any panel, is followed by a panel in `T`. -/
+theorem next_mem {N : Nat} {a : List Nat} (hf : IsFoldSeq N a) (hs : SemiSymmetric N a)
+    {k : Nat} (hk : k < a.length) {S : List Nat} (hS : ∀ x, x ∈ a.take k ↔ x ∈ S)
+    {P : Nat → Prop} (hP : ∀ m, 1 ≤ m → m ≤ N → m ∉ S → SemiStep N S m → P m) : P a[k] := by
+  have hnd := nodup_of_foldSeq hf
+  have hm := (mem_range'_of_perm hf).1 (List.getElem_mem hk)
+  have hnot : a[k] ∉ a.take k := by rw [getElem_mem_take_iff hnd hk]; omega
+  rw [hS] at hnot
+  exact hP _ hm.1 hm.2 hnot ((semiStep_congr hS).1 (hs k hk))
+
+theorem mem_take_succ_iff {a : List Nat} {k : Nat} (hk : k < a.length) (x : Nat) :
+    x ∈ a.take (k + 1) ↔ x ∈ a.take k ∨ x = a[k] := by
+  rw [List.take_add_one, List.getElem?_eq_getElem hk, List.mem_append]
+  simp
+
+/-- Arithmetic form of a step after an explicit list of distinct panels. -/
+theorem semiStep_list_iff {N m : Nat} {S : List Nat} (hnd : S.Nodup) :
+    SemiStep N S m ↔
+      S.countP (fun x => decide (m - min (m - 1) (N - m) ≤ x ∧ x < m)) =
+        S.countP (fun x => decide (m < x ∧ x ≤ m + min (m - 1) (N - m))) := by
+  unfold SemiStep; rw [leftCount_eq hnd, rightCount_eq hnd]; rfl
+
+theorem stuck_one_two_N {N m : Nat} (hN : N % 2 = 1) (h5 : 5 ≤ N) (hm1 : 1 ≤ m)
+    (hmN : m ≤ N) (hm : m ∉ [1, 2, N]) : ¬ SemiStep N [1, 2, N] m := by
+  simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at hm
+  rw [semiStep_list_iff (by simp; omega)]
+  simp only [List.countP_cons, List.countP_nil, decide_eq_true_eq]
+  split_ifs <;> omega
+
+theorem stuck_one_N1_N {N m : Nat} (hN : N % 2 = 1) (h5 : 5 ≤ N) (hm1 : 1 ≤ m)
+    (hmN : m ≤ N) (hm : m ∉ [1, N - 1, N]) : ¬ SemiStep N [1, N - 1, N] m := by
+  simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at hm
+  rw [semiStep_list_iff (by simp; omega)]
+  simp only [List.countP_cons, List.countP_nil, decide_eq_true_eq]
+  split_ifs <;> omega
+
+theorem next_one_two_N1 {N m : Nat} (hN : N % 2 = 1) (h7 : 7 ≤ N) (hm1 : 1 ≤ m)
+    (hmN : m ≤ N) (hm : m ∉ [1, 2, N - 1]) (h : SemiStep N [1, 2, N - 1] m) : m = N := by
+  simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at hm
+  rw [semiStep_list_iff (by simp; omega)] at h
+  simp only [List.countP_cons, List.countP_nil, decide_eq_true_eq] at h
+  split_ifs at h <;> omega
+
+theorem next_one_two_N1_N {N m : Nat} (hN : N % 2 = 1) (h7 : 7 ≤ N) (hm1 : 1 ≤ m)
+    (hmN : m ≤ N) (hm : m ∉ [1, 2, N - 1, N]) (h : SemiStep N [1, 2, N - 1, N] m) :
+    2 * m = N + 1 := by
+  simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at hm
+  rw [semiStep_list_iff (by simp; omega)] at h
+  simp only [List.countP_cons, List.countP_nil, decide_eq_true_eq] at h
+  split_ifs at h <;> omega
+
+theorem stuck_one_two_mid {N m : Nat} (hN : N % 2 = 1) (h7 : 7 ≤ N) (hm1 : 1 ≤ m)
+    (hmN : m ≤ N) (hm : m ∉ [1, 2, N - 1, N, (N + 1) / 2]) :
+    ¬ SemiStep N [1, 2, N - 1, N, (N + 1) / 2] m := by
+  simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at hm
+  rw [semiStep_list_iff (by simp; omega)]
+  simp only [List.countP_cons, List.countP_nil, decide_eq_true_eq]
+  split_ifs <;> omega
+
+/-- After `{1, 2, N-1}` (odd `N ≥ 7`) the only continuation is `N`, then the middle panel,
+and then nothing. -/
+theorem not_extends_corner3 {N : Nat} (hN : N % 2 = 1) (h7 : 7 ≤ N) {p : List Nat}
+    (hp : p.Perm [1, 2, N - 1]) : ¬ Extends N p := by
+  rintro ⟨a, hf, hs, hpre⟩
+  have hla : a.length = N := by rw [hf.length_eq]; simp
+  have e := List.prefix_iff_eq_take.1 hpre
+  have hl3 : p.length = 3 := by rw [hp.length_eq]; simp
+  have h3 : ∀ x, x ∈ a.take 3 ↔ x ∈ [1, 2, N - 1] := fun x => by
+    rw [← hl3, ← e]; exact hp.mem_iff
+  have a3 : a[3] = N := next_mem hf hs (by omega) h3 fun m hm1 hmN hm hst =>
+    next_one_two_N1 hN h7 hm1 hmN hm hst
+  have h4 : ∀ x, x ∈ a.take 4 ↔ x ∈ [1, 2, N - 1, N] := fun x => by
+    rw [mem_take_succ_iff (by omega), h3, a3]; simp; tauto
+  have a4 : 2 * a[4] = N + 1 := next_mem hf hs (by omega) h4 fun m hm1 hmN hm hst =>
+    next_one_two_N1_N hN h7 hm1 hmN hm hst
+  have h5 : ∀ x, x ∈ a.take 5 ↔ x ∈ [1, 2, N - 1, N, (N + 1) / 2] := fun x => by
+    rw [mem_take_succ_iff (by omega), h4, show a[4] = (N + 1) / 2 by omega]; simp; tauto
+  exact next_mem (P := fun _ => False) hf hs (by omega) h5 fun m hm1 hmN hm hst =>
+    stuck_one_two_mid hN h7 hm1 hmN hm hst
+
+/-- **Dead corners** (odd `N ≥ 7`): no prefix whose elements are `{1, 2, N}`,
+`{1, N-1, N}`, `{1, 2, N-1}` or `{2, N-1, N}` can be completed.  The first two admit no
+further step; after `{1, 2, N-1}` the only continuation is `N`, then the middle panel, and
+then nothing; `{2, N-1, N}` is the mirror image of `{1, 2, N-1}`. -/
+theorem not_extends_corner {N : Nat} (hN : N % 2 = 1) (h7 : 7 ≤ N) {p : List Nat}
+    (hp : p.Perm [1, 2, N] ∨ p.Perm [1, N - 1, N] ∨ p.Perm [1, 2, N - 1] ∨
+      p.Perm [2, N - 1, N]) : ¬ Extends N p := by
+  rcases hp with hp | hp | hp | hp
+  · refine not_extends_of_stuck (by rw [hp.length_eq]; simp; omega) fun m hm1 hmN hm hs => ?_
+    rw [hp.mem_iff] at hm
+    exact stuck_one_two_N hN (by omega) hm1 hmN hm ((semiStep_congr fun x => hp.mem_iff).1 hs)
+  · refine not_extends_of_stuck (by rw [hp.length_eq]; simp; omega) fun m hm1 hmN hm hs => ?_
+    rw [hp.mem_iff] at hm
+    exact stuck_one_N1_N hN (by omega) hm1 hmN hm ((semiStep_congr fun x => hp.mem_iff).1 hs)
+  · exact not_extends_corner3 hN h7 hp
+  · intro h
+    have hp' : (p.map (N + 1 - ·)).Perm [1, 2, N - 1] := by
+      refine (hp.map (N + 1 - ·)).trans ?_
+      simp only [List.map_cons, List.map_nil]
+      rw [show N + 1 - 2 = N - 1 by omega, show N + 1 - (N - 1) = 2 by omega,
+        show N + 1 - N = 1 by omega]
+      exact (List.reverse_perm [N - 1, 2, 1]).symm
+    exact not_extends_corner3 hN h7 hp' h.mirror
+
 end Folds
