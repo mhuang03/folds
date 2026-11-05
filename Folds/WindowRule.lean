@@ -649,4 +649,226 @@ theorem Wf_step {N : Nat} (hN : 2 ≤ N) :
     unfold Zf; omega
   rw [h1, h2, h3]
 
+/-- The parity-split closed form of `W(N)`. -/
+def WClosed (N : Nat) : Prop :=
+  (N % 2 = 0 → 72 * Wf N + 3 * (N * N) + 30 * N = 8 * (N * N * N) + 8 * (2 * N % 3)) ∧
+  (N % 2 = 1 → 72 * Wf N + 3 * (N * N) + 12 * N + 9 = 8 * (N * N * N) + 8 * (2 * N % 3))
+
+theorem Wf_small : Wf 0 = 0 ∧ Wf 1 = 0 ∧ Wf 2 = 0 ∧ Wf 3 = 2 := by
+  refine ⟨rfl, rfl, rfl, ?_⟩
+  simp [Wf, Zf, Finset.sum_Icc_succ_top]
+
+theorem mod6_cases (k : ℕ) :
+    k % 6 = 0 ∨ k % 6 = 1 ∨ k % 6 = 2 ∨ k % 6 = 3 ∨ k % 6 = 4 ∨ k % 6 = 5 := by omega
+
+/-- Arithmetic core of the even step (`N + 2 = 2k + 2`, `A = k²`, `B = k³`). -/
+theorem WClosed_step_even (k A B W W' C : ℕ)
+    (hstep : W' = W + (4 * A + 8 * k + 4) / 4 + C + ((2 - 0) * (k + 1) + (A + 2 * k + 1) / 4 +
+      (A + 2 * k + 1) / 4) + ((A + 4 * k + 4) / 4 + (A + 4 * k + 4) / 4))
+    (hC : 6 * C + 2 * (2 * k + 2) + 3 * ((2 * k + 2) % 2) + 2 * ((2 * k + 2) % 3 % 2) =
+      4 * A + 8 * k + 4)
+    (ih : 72 * W + 3 * (4 * A + 8 * k + 4) + 30 * (2 * k + 2) =
+      8 * (8 * B + 24 * A + 24 * k + 8) + 8 * (2 * (2 * k + 2) % 3))
+    (f2 : 4 * ((A + 2 * k + 1) / 4) + (k + 1) % 2 = A + 2 * k + 1)
+    (f3 : 4 * ((A + 4 * k + 4) / 4) + (k + 2) % 2 = A + 4 * k + 4) :
+    72 * W' + 3 * (4 * A + 16 * k + 16) + 30 * (2 * k + 2 + 2) =
+      8 * (8 * B + 48 * A + 96 * k + 64) + 8 * (2 * (2 * k + 2 + 2) % 3) := by
+  have g1 : (4 * A + 8 * k + 4) / 4 = A + 2 * k + 1 := by clear hstep hC ih f2 f3; omega
+  rw [g1] at hstep
+  generalize (A + 2 * k + 1) / 4 = F0 at hstep f2
+  generalize (A + 4 * k + 4) / 4 = F1 at hstep f3
+  rcases mod6_cases k with h | h | h | h | h | h
+  · have m0 : (k + 1) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 2 + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 1) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 2) % 3 % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 2 + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 1) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 2 + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 1) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 2 + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 1) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 2) % 3 % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 2 + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 1) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 2 + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+
+/-- Arithmetic core of the odd step (`N + 2 = 2k + 3`, `A = k²`, `B = k³`). -/
+theorem WClosed_step_odd (k A B W W' C : ℕ)
+    (hstep : W' = W + (4 * A + 12 * k + 9) / 4 + C + ((2 - 1) * (k + 2) + (A + 4 * k + 4) / 4 +
+      (A + 6 * k + 9) / 4) + ((A + 4 * k + 4) / 4 + (A + 6 * k + 9) / 4))
+    (hC : 6 * C + 2 * (2 * k + 1 + 2) + 3 * ((2 * k + 1 + 2) % 2) +
+      2 * ((2 * k + 1 + 2) % 3 % 2) = 4 * A + 12 * k + 9)
+    (ih : 72 * W + 3 * (4 * A + 12 * k + 9) + 12 * (2 * k + 1 + 2) + 9 =
+      8 * (8 * B + 36 * A + 54 * k + 27) + 8 * (2 * (2 * k + 1 + 2) % 3))
+    (f2 : 4 * ((A + 4 * k + 4) / 4) + (k + 2) % 2 = A + 4 * k + 4)
+    (f3 : 4 * ((A + 6 * k + 9) / 4) + (k + 2 + 1) % 2 = A + 6 * k + 9) :
+    72 * W' + 3 * (4 * A + 20 * k + 25) + 12 * (2 * k + 1 + 2 + 2) + 9 =
+      8 * (8 * B + 60 * A + 150 * k + 125) + 8 * (2 * (2 * k + 1 + 2 + 2) % 3) := by
+  have g1 : (4 * A + 12 * k + 9) / 4 = A + 3 * k + 2 := by clear hstep hC ih f2 f3; omega
+  rw [g1] at hstep
+  generalize (A + 4 * k + 4) / 4 = F0 at hstep f2
+  generalize (A + 6 * k + 9) / 4 = F1 at hstep f3
+  rcases mod6_cases k with h | h | h | h | h | h
+  · have m0 : (k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2 + 1) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 1 + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 1 + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 1 + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 1 + 2 + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2 + 1) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 1 + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 1 + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 1 + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 1 + 2 + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2 + 1) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 1 + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 1 + 2) % 3 % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 1 + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 1 + 2 + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2 + 1) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 1 + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 1 + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 1 + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 1 + 2 + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 2) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2 + 1) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 1 + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 1 + 2) % 3 % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 1 + 2) % 3 = 1 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 1 + 2 + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+  · have m0 : (k + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m1 : (k + 2 + 1) % 2 = 0 := by clear hstep hC ih f2 f3; omega
+    have m2 : (2 * k + 1 + 2) % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m3 : (2 * k + 1 + 2) % 3 % 2 = 1 := by clear hstep hC ih f2 f3; omega
+    have m4 : 2 * (2 * k + 1 + 2) % 3 = 2 := by clear hstep hC ih f2 f3; omega
+    have m5 : 2 * (2 * k + 1 + 2 + 2) % 3 = 0 := by clear hstep hC ih f2 f3; omega
+    simp only [m0, m1, m2, m3, m4, m5] at hstep hC ih f2 f3 ⊢
+    clear h m0 m1 m2 m3 m4 m5
+    linarith
+
+theorem Wf_closed : ∀ N, WClosed N
+  | 0 => by unfold WClosed; rw [Wf_small.1]; omega
+  | 1 => by unfold WClosed; rw [Wf_small.2.1]; omega
+  | 2 => by unfold WClosed; rw [Wf_small.2.2.1]; omega
+  | 3 => by unfold WClosed; rw [Wf_small.2.2.2]; omega
+  | N + 4 => by
+    have ih := Wf_closed (N + 2)
+    have hstep := Wf_step (N := N + 2) (by omega)
+    have hC := Cf_closed (N + 2) (by omega)
+    rw [show N + 4 = N + 2 + 2 from rfl]
+    unfold WClosed at ih ⊢
+    generalize Wf (N + 2 + 2) = W' at hstep ⊢
+    generalize Wf (N + 2) = W at hstep ih
+    generalize Cf (N + 2) = C at hstep hC
+    rcases Nat.even_or_odd' N with ⟨k, rfl | rfl⟩
+    · -- `N + 2 = 2k + 2`
+      have p : (2 * k + 2) % 2 = 0 := by omega
+      rw [p] at hstep
+      rw [show (2 * k + 2 + 1) / 2 = k + 1 by omega,
+        show (2 * k + 2 + 2) / 2 = k + 2 by omega] at hstep
+      simp only [hs_zero] at hstep
+      have f2 := sq_div_four_mod (k + 1)
+      have f3 := sq_div_four_mod (k + 2)
+      have x1 : (2 * k + 2) * (2 * k + 2) = 4 * (k * k) + 8 * k + 4 := by ring
+      have x2 : (k + 1) * (k + 1) = k * k + 2 * k + 1 := by ring
+      have x3 : (k + 2) * (k + 2) = k * k + 4 * k + 4 := by ring
+      have x4 : (2 * k + 2) * (2 * k + 2) * (2 * k + 2) =
+          8 * (k * k * k) + 24 * (k * k) + 24 * k + 8 := by ring
+      have x5 : (2 * k + 2 + 2) * (2 * k + 2 + 2) = 4 * (k * k) + 16 * k + 16 := by ring
+      have x6 : (2 * k + 2 + 2) * (2 * k + 2 + 2) * (2 * k + 2 + 2) =
+          8 * (k * k * k) + 48 * (k * k) + 96 * k + 64 := by ring
+      rw [x4] at ih
+      rw [x1] at hstep hC ih
+      rw [x2] at f2 hstep
+      rw [x3] at f3 hstep
+      rw [x6, x5]
+      generalize k * k * k = B at ih ⊢
+      generalize k * k = A at *
+      exact ⟨fun _ => WClosed_step_even k A B W W' C hstep hC (ih.1 (by omega)) f2 f3,
+        fun h => absurd h (by omega)⟩
+    · -- `N + 2 = 2k + 3`
+      have p : (2 * k + 1 + 2) % 2 = 1 := by omega
+      rw [p] at hstep
+      rw [show (2 * k + 1 + 2 + 1) / 2 = k + 2 by omega,
+        show (2 * k + 1 + 2 + 2) / 2 = k + 2 by omega] at hstep
+      simp only [hs_zero, hs_one] at hstep
+      have f2 := sq_div_four_mod (k + 2)
+      have f3 := sq_div_four_mod (k + 2 + 1)
+      have x1 : (2 * k + 1 + 2) * (2 * k + 1 + 2) = 4 * (k * k) + 12 * k + 9 := by ring
+      have x2 : (k + 2) * (k + 2) = k * k + 4 * k + 4 := by ring
+      have x3 : (k + 2 + 1) * (k + 2 + 1) = k * k + 6 * k + 9 := by ring
+      have x4 : (2 * k + 1 + 2) * (2 * k + 1 + 2) * (2 * k + 1 + 2) =
+          8 * (k * k * k) + 36 * (k * k) + 54 * k + 27 := by ring
+      have x5 : (2 * k + 1 + 2 + 2) * (2 * k + 1 + 2 + 2) = 4 * (k * k) + 20 * k + 25 := by ring
+      have x6 : (2 * k + 1 + 2 + 2) * (2 * k + 1 + 2 + 2) * (2 * k + 1 + 2 + 2) =
+          8 * (k * k * k) + 60 * (k * k) + 150 * k + 125 := by ring
+      rw [x4] at ih
+      rw [x1] at hstep hC ih
+      rw [x2] at f2 hstep
+      rw [x3] at f3 hstep
+      rw [x6, x5]
+      generalize k * k * k = B at ih ⊢
+      generalize k * k = A at *
+      exact ⟨fun h => absurd h (by omega),
+        fun _ => WClosed_step_odd k A B W W' C hstep hC (ih.2 (by omega)) f2 f3⟩
+
 end Folds
