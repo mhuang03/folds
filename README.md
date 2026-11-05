@@ -97,6 +97,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Independence` (M) | exact independence of constraints: compatible windows (disjoint, or one window inside an arm of the other) give #(C_a ∧ C_b) = N!·w_a·w_b; chain product formula `card_constrSeqs_chain`; dyadic upper bound `semiCount_mul_le_dyadic` |
 | `Copies` (M) | general doubling splits a((2j+1)n) ≥ 2a(jn)a((j+1)n) for all j; copy criterion (X is a copy ⇔ every element is a valid last step); Beatty copies; near-class copy for odd N |
 | `ShiftedCount` (M) | a(2n) ≥ 2a(n)² + a(n−1)a(n+1) (odd n), and the halved version for even n |
+| `Independence2` (M) | the one-outside-element independence case (`card_pair_one_outside` and its mirror), and chains ending in such a pair |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -145,7 +146,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/growth/PROOFS.txt` | composition, splits, upper bounds, SMC |
 | `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
 | `experiments/descents/PROOFS.txt` | descent and LDS bounds, SAT data |
-| `experiments/independence/PROOFS.txt` | pair independence, including the one-outside-element case (paper) |
+| `experiments/independence/PROOFS.txt` | pair independence, including the one-outside-element case |
 | `experiments/labelling/PROOFS.txt` | labelling / right-heavy reformulation of the descent bound, failed and surviving lemma candidates |
 | `experiments/live/FINDINGS.txt` | dead and live prefixes, Beatty copies |
 | `docs/LITERATURE.md` | literature and OEIS survey |

@@ -116,7 +116,7 @@ Note the key extra fact compared to section 3: C_b is NOT invariant under relabe
 W_a (e is invisible to C_b, the other elements are not), but C_b is independent of the
 rank of e within L ∪ {e}, which is all that the relabelling argument needs.
 
-Lean status: not formalized.  It needs (1) the section-1 lemma with fibres over orderings
+Lean status: formalized in Folds/Independence2.lean (card_pair_one_outside).  It needs (1) the section-1 lemma with fibres over orderings
 of M with fixed rank of e (a straightforward variant of card_fiber_eq), and (2) Step 1, a
 Wallis-style split at b keeping track of the rank of e (the telescoping above).  (2) is the
 bulk of the work.
