@@ -24,12 +24,13 @@ Files
 -----------------
 T(N,1) = N
 T(N,2) = floor(N^2/2)                                                     [N = 1..400]
-T(N,3) = 2/9 N^3 - 1/12 N^2 + l(N) N + e(N),                             [N = 1..400]
+T(N,3) = 2/9 N^3 - 1/12 N^2 + l(N) N + e(N),                [N = 1..400 and 995..1000]
          l = -5/6 (N even), -1/3 (N odd);
          e = -1/4 [N odd] + (0, 4/9, 2/9) for N = 0,1,2 mod 3.
    Equivalently 36 T(N,3) = 8N^3 - 3N^2 - 30N + c (N even), 8N^3 - 3N^2 - 12N + c (N odd),
    c = 0, 7, 8, -9, 16, -1 for N = 0..5 mod 6.  Period 6.
-T(N,4) = 4283/48384 N^4 - 353/3024 N^3 + q2(N) N^2 + q1(N) N + q0(N)      [N = 1..400]
+T(N,4) = 4283/48384 N^4 - 353/3024 N^3 + q2(N) N^2 + q1(N) N + q0(N)
+                                           [fitted on N = 1..400, held out: N = 600..603]
          q2 = -265/672 (N even), -631/896 (N odd)
          q1 = (7/12, 35/32, 7/12, 9/32)[N mod 4] + (0, -8/27, -7/27)[N mod 3]
          q0 = A(N mod 24) + B(N mod 7), B = (0, 4/7, 0, -2/7, 2/7, -4/7, 0),
@@ -38,8 +39,8 @@ T(N,4) = 4283/48384 N^4 - 353/3024 N^3 + q2(N) N^2 + q1(N) N + q0(N)      [N = 1
                   -22/27, -1583/6912, 19/16, 11153/6912, -13/54, 259/256, 161/432, 3601/6912
    Period 168 = 8*3*7.  The fit has 40 unknowns and was checked on 360 further values; it
    holds from N = 1 (no exceptional small N).
-V(N,2) = floor(N^2/3)                                                     [N = 1..220+]
-V(N,3) = 23/216 N^3 - 1/12 N^2 + v1(N) N + v0(N),                         [N = 1..220+]
+V(N,2) = floor(N^2/3)                                                     [N = 1..260]
+V(N,3) = 23/216 N^3 - 1/12 N^2 + v1(N) N + v0(N),                         [N = 1..260]
          v1 = (-1/3 if N even, -5/24 if N odd) - 1/9 [3 does not divide N]
          v0 = -1/2 [N = 3 mod 4] + (0, 8/27, 10/27)[N mod 3].      Period 12.
 
@@ -61,11 +62,12 @@ Leading coefficients c_k = lim T(N,k)/N^k, EXACT (polytope volumes, section 4):
    1, 1, 0.889, 0.944, 0.870, 0.950: the true process is slightly below the model, with
    the same even/odd alternation that a(N) shows.
 
-V leading coefficients: 1/3 (k=2), 23/216 (k=3), ~0.022091 (k=4, numerical).  As a fraction
+V leading coefficients: 1/3 (k=2), 23/216 (k=3), ~0.022091 (k=4, numerical; V is a union
+over orderings, so it is not one polytope per order type).  As a fraction
 of all k-sets: 2/3, 23/36, ~0.5302.
 
 Not determined: an exact quasi-polynomial for T(N,5) (N <= ~200), T(N,6) (N <= 90) and V(N,4)
-(N <= ~260).  The L-step difference test excludes any period L <= 27 (T5) and <= 41 (V4), and
+(N <= 260).  The L-step difference test excludes any period L <= 27 (T5) and <= 51 (V4), and
 a few hundred layered/additive ansaetze (msearch.py) with periods built from 16, 3, 5, 7, 15
 fail.  verts.py bounds the period by the lcm of vertex denominators of the hyperplane
 arrangement: 2 (k=2), 12 (k=3), 168 (k=4), 1680 = 16*3*5*7 (k=5) for sequences; for sets
@@ -178,7 +180,8 @@ a sum of Ehrhart-type quasi-polynomials, one polytope per order type.  This is t
 behind quasi-polynomiality, and it gives the leading coefficient as a finite sum of exact
 volumes, c_k = Sum_pi vol(P_pi(1)) (volumes.py reproduces 2/9 and 4283/48384, and gives c_5,
 c_6).  Number of admissible order types (those with nonempty P_pi for large N):
-   k = 1..6:  1, 2, 6, 24, 116, 660    (k = 7: >= 4256 at N = 34)   -- not in the OEIS.
+   k = 1..7:  1, 2, 6, 24, 116, 660, 4260   (contpatterns.py; pieces.c sees 4256 of the 4260
+   already at N = 34)   -- not in the OEIS.
    The missing ones for k = 5 are 12453, 12543, 54123, 54213.
 Inadmissible example: 12453 (x1 < x2 < x5 < x3 < x4).  x5 has A = 2 above, B = 2 below, so
 its window must hold x1, which needs 2x5 <= N + x1; but x2 is a new maximum when placed, so
