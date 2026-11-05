@@ -150,7 +150,7 @@ N <= 63); the corrected conjectures are
 4. INVARIANTS TESTED AND REFUTED (what does NOT work)
 ----------------------------------------------------
 (a) Pair projection.  Pairs {2y, 2y+1}, y = 1..floor((N-1)/2), N' = floor((N-1)/2), so that
-    lg(N'+2) = lg(N+1) - 1.  Let d = order of first occurrence of the pairs.
+    lg(N'+1) = lg(N+1) - 1.  Let d = order of first occurrence of the pairs.
     PROVEN: des(a) >= des(d) + 1 whenever des(a) >= 1.  [The last run c_1 < ... < c_t of a valid
     sequence has c_{i+1} >= 2 c_i (last-run lemma), so no pair {2y,2y+1}, y >= 1, meets the last
     run twice, and every pair met by the last run occurred before it; hence all first
@@ -189,7 +189,9 @@ N <= 63); the corrected conjectures are
   #{d <= r_m : rho(m-d) <= rho(m)} = #{d <= r_m : rho(m+d) < rho(m)} for all m.
 * Window-inequality form: replace "=" by "<=" (this is all the Window Lemma uses, and it covers
   LDS as well).  satwords.py --ineq computes the minimal t for this relaxation: see
-  sat_ineq.txt.  If it equals lg(N+1) for all N (it does in the range computed), the exact
+  sat_ineq.txt: lg(N+1)-1 labels are impossible for every N <= 62, and lg(N+1) labels are
+  possible (also at N = 25, where the equality version needs one more), so the relaxation
+  sees the lower bound but not the exceptions.  If this persists for all N, the exact
   lower bounds for BOTH des and LDS reduce to a purely static statement about words:
       if c : [1..N] -> [t] and #{x in W_L(m) : c x <= c m} <= #{x in W_R(m) : c x < c m}
       for every m, then N <= 2^(t+1) - 2.
