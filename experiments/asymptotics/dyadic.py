@@ -22,7 +22,7 @@ for ln in lines:
         continue
     a = list(map(int, ln.split()))
     snaps.setdefault(a[0], []).append(a[1:])
-N = int(fn.split('_')[-1].split('.')[0])
+N = int(fn.split("dump_")[1].split("_")[0].split(".")[0])
 L = N.bit_length() - 1
 assert 1 << L == N
 

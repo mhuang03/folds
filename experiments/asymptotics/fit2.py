@@ -86,6 +86,32 @@ for mu in np.linspace(-3, 6, 181):
         best = (chi, mu, b, np.sqrt(np.mean(r ** 2)))
 print(f"  C: ln(lnN + mu) + b                     mu={best[1]:.2f} b={best[2]:.4f} rms={best[3]:.4f} "
       f"chi2/dof={best[0] / max(1, len(sel) - 2):.2f}")
+# C2: the Feynman-Kac form sigma = A(lnN - ln sigma) + B, i.e. d = ln(lnN - ln sigma + mu) + b with
+# sigma ~ sigma_bar; use ln sigma ~ ln lnN + const (absorbed in mu): d = ln(lnN - lnlnN + mu) + b
+best = None
+for mu in np.linspace(-3, 8, 221):
+    arg = L - LL + mu
+    if np.any(arg <= 0):
+        continue
+    y = d - np.log(arg); b = np.sum(w ** 2 * y) / np.sum(w ** 2); r = y - b
+    chi = np.sum((r * w) ** 2)
+    if best is None or chi < best[0]:
+        best = (chi, mu, b, np.sqrt(np.mean(r ** 2)))
+print(f"  C2: ln(lnN - lnlnN + mu) + b            mu={best[1]:.2f} b={best[2]:.4f} rms={best[3]:.4f} "
+      f"chi2/dof={best[0] / max(1, len(sel) - 2):.2f}")
+# predictions at larger N from each model (fitted on the selected points)
+def pred_table(Ns_new):
+    out = {}
+    for name, cols in [("A'", lambda L_: [L_, np.ones_like(L_), 1 / L_]),
+                       ("B", lambda L_: [np.log(L_), np.ones_like(L_)]),
+                       ("D", lambda L_: [np.log(L_), np.ones_like(L_), 1 / L_])]:
+        A = np.column_stack(cols(L)); coef, *_ = np.linalg.lstsq(A * w[:, None], d * w, rcond=None)
+        Ln = np.log(np.array(Ns_new, float)); out[name] = np.column_stack(cols(Ln)) @ coef
+    return out
+if '-pred' in sys.argv:
+    newN = [4096, 8192, 2 ** 16, 2 ** 20]
+    pt = pred_table(newN)
+    print("  predicted d(N):", {k: np.round(v, 4).tolist() for k, v in pt.items()}, "at", newN)
 
 # sigma_J at t = 1/2 from diagnostics
 sig = {}; dpred = {}

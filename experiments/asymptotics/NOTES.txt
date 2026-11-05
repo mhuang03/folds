@@ -94,38 +94,51 @@ n0, 2n0, 4n0, ... (n0 odd, pinned to 0 at the bottom).  J is small iff the Fouri
 is nearly constant along doubling chains and small at odd n, with weight 1/n^2.
 A random k-set has |S^(n)|^2 ~ k(1 - k/N) for all n (white), so var J ~ k/3: the Wallis model.
 
-2.3 Gaussian Feynman-Kac model                                  [heur]
+2.3 Gaussian Feynman-Kac model                                  [heur; fkmodel.py]
 -------------------------------
-Model: each step adds a point at a random position, kicking every Delta_n by an independent
-unit-size random complex amount (E|kick|^2 = 2); the path weight is
-     prod_k sigma_J(k)^{-1} = exp(-(1/2) sum_k ln var J(k)).
-Linearise ln var J around its typical value s^2 (Hartree/self-consistent approximation):
-weight ~ exp(-sum_k sum_{n>0} c_n |Delta_n(k)|^2),  c_n = 1/(pi^2 n^2 s^2).
-For a random walk with diffusion D = 2 per step and a quadratic potential c|x|^2 per step,
-the Feynman-Kac path measure has stationary marginal = ground state squared:
-     E|Delta|^2 = 1/sqrt(2c)   (NOT the static Gibbs value 1/c),
-relaxation time ~ 1/sqrt(2cD).  Hence
-     E|Delta_n|^2 = pi n s / sqrt(2),    contribution to var J:  2 E|Delta_n|^2/(pi n)^2 = sqrt(2) s/(pi n),
-as long as the relaxation time (~ pi n s) is below the available time ~ N, i.e. for
-n < n* ~ N/(pi s); above n* the modes are free (contribution sum_{n>n*} N/(pi n)^2 ~ s/pi).
-Every octave of frequencies below n* contributes the same amount sqrt(2) s ln2 / pi to var J,
-so  var J = s^2 = (sqrt(2)/pi) s (ln n* + O(1)),  i.e.
-     sigma_J = A (ln N - ln sigma_J) + B,      A_model = sqrt(2)/pi = 0.45.
-Predictions and checks (dyadic.py, N = 256..1024, t = 1/2):
- * sigma_J grows linearly in ln N (not like sqrt(ln N), and not like a power of N).
-   [The static Gibbs version of the same model gives sigma_J = O(1); the time direction is
-   what makes it logarithmic: each mode is only penalised for as long as it lives.]
- * low-frequency structure factor |S^(n)|^2 ~ sqrt(2) pi s n: linear in n, prefactor ~ sigma_J,
-   independent of N at fixed n.  Measured: |S^(n)|^2 = 7.7 n, 8.1 n, 8.4 n at n = 1 and
-   ~8 n up to n ~ N/16 (N = 256, 512, 1024): linear in n, prefactor 0.6 x model, slowly growing.
-   (A random set has |S^(n)|^2 = N/4; the valid sets are "hyperuniform" below n ~ 0.1 N.)
- * equal contribution per octave of n to var J, growing with sigma_J: measured at N = 1024,
-   t = 1/2, octaves n in [2^j, 2^{j+1}): 1.72, 1.58, 1.44, 1.35, 0.99, 0.71, 0.59, 0.30, 0.16
-   (model: 1.37 for n = 1, then 0.95 per octave).  At fixed octave the contribution grows
-   with N (j = 2: 1.02, 1.26, 1.44 at N = 256, 512, 1024).
- * the single mode n = 1 alone contributes 1.6-1.7 to var J (model sqrt(2) s/pi = 1.37).
-The model gets the mechanism and the order of magnitude; its constant A is about 30-40% low
-(fitted A ~ 0.6-0.7, see 3.3).
+Model: the Fourier modes S^(n) are the dynamical variables; each step adds a point at a
+random position, which kicks every S^(n) by an independent unit complex amount e(-n x/N).
+The path weight is  prod_k sigma_J(k)^{-1} = exp(-(1/2) sum_k ln var J(k)).  Linearise
+ln var J around its typical value s^2 (self-consistent / Hartree approximation):
+     weight ~ exp(-sum_k sum_{n>0} c_n |Delta_n(k)|^2),   c_n = 1/(pi n s)^2.
+For a random walk under a quadratic potential applied at every step, the Feynman-Kac path
+measure has, in the bulk, the marginal (ground state)^2: for one real coordinate with kick
+variance D and potential c x^2, var = sqrt(D/(8c)), NOT the static Gibbs value 1/(2c), and the
+relaxation time is ~ 1/sqrt(cD).  Single-mode version (ignore that Delta_n shares S^(n/2) with
+Delta_{n/2}; kicks to Delta_n have E|kick|^2 = 2):
+     E|Delta_n|^2 = pi n s / sqrt(2),   contribution to var J:  2 E|Delta_n|^2/(pi n)^2 = sqrt(2) s/(pi n),
+for n below n* ~ N/(pi s), where the relaxation time ~ pi n s reaches the available time N;
+above n* the modes are free and add ~ s/pi.  Every octave of n < n* contributes the same
+amount, proportional to s, so
+     s^2 = var J = (sqrt(2)/pi) s (ln n* + O(1))   =>   sigma_J = A (ln N - ln sigma_J) + B,
+with A = sqrt(2)/pi = 0.45.  The version with the chain coupling (potential v^T K v on each
+doubling chain n0, 2n0, 4n0, ..., self-consistency  sum_chains tr sqrt(K) = 1) gives the same
+law with A = 0.345 (fkmodel.py: tr sqrt(K~) = 0.345 ln M + const).
+[The static Gibbs version of the same model gives sigma_J = O(1).  The time direction is what
+makes it logarithmic: a mode is penalised only for as long as it lives, so its equilibrium
+amplitude is ~ c^{-1/2} instead of c^{-1}, and the per-mode contributions sigma/n add up to
+sigma ln N.]
+Checks (dyadic.py on SMC snapshots, t = 1/2):
+ * sigma_J grows like ln N, not like sqrt(ln N) (each octave would then contribute an
+   N-independent amount; it does not, see below) - but faster than the model at the
+   available N (local slope d sigma/d lnN = 0.45-0.5 for N <= 512, 0.55-0.6 for N = 1024-2048,
+   fitted A(lnN - ln sigma) + B: A = 0.64, B = -0.74; section 3.3).
+ * The low-frequency structure factor is linear in n, as predicted (|S^(n)|^2 ~ E|Delta|^2
+   summed along the chain ~ n s): |S^(n)|^2 ~ 8 n for 1 <= n <= N/16 at N = 256..1024
+   (|S^(1)|^2 = 7.7, 8.1, 8.4, 10.8 at N = 256, 512, 1024, 2048), against N/4 for a random set:
+   valid sets are "hyperuniform" below n ~ 0.1 N.
+ * Contribution of the octave n in [2^j, 2^{j+1}) to var J at t = 1/2:
+      N = 1024: 1.72 1.58 1.44 1.35 0.99 0.71 0.59 0.30 0.16
+      N = 2048: 2.13 2.18 1.80 1.59 1.39 1.13 0.88 0.51 0.28 0.16
+   (single-mode model: 1.37 for n = 1, then 0.95 per octave at s = 3).  Nearly flat over the
+   octaves below ~N/32, as predicted, and growing with N at fixed octave (j = 2: 1.02, 1.26,
+   1.44, 1.80 at N = 256, 512, 1024, 2048) - like sigma^{1.5} rather than sigma^1, which is
+   why the effective growth is faster than the model's.
+ * The level terms of 1.2 have total variance 4-4.5 times var I; cross-level covariances
+   (adjacent levels correlate at -0.2 to -0.3) cancel 74-78% of it.
+The model captures the mechanism (selection along the path + doubling chains) and the
+logarithmic law; its constant is a factor ~1.5-2 too small and it does not explain the
+slow increase of the local slope.
 
 2.4 Consequence for a(N)                                         [heur]
 ------------------------
@@ -142,7 +155,41 @@ N ln ln N, fitted on N <= 2048, is 1.3-1.6, and e^{d(N)}/ln N still drifts (0.74
 =========================================================================================
 3. NUMERICS
 =========================================================================================
-@NUMERICS@
+3.1 Method and the bias of earlier estimates
+--------------------------------------------
+smc3.c: same estimator as growth/smc.c (prod_k mean_i V_i, resampling by V, uniform child),
+but (i) J is maintained incrementally by the dipole lemma on a compact list of free panels,
+O(N - k) per particle and step; (ii) the population grows as the free set shrinks,
+P_k = min(64 P, P N/(N - k)) (same total cost), which removes the extinctions near the end
+(growth/smc.c went extinct at N = 1024 in one of two runs; smc2.c with P = 1000 dies for
+N >= 1024).  A varying population keeps the estimator unbiased.
+The estimator of a(N) is unbiased, but ln of it is biased low, and the bias is large:
+replicate spread and the change with P give  bias(ln a) ~ -b(N)/P with b(N) ~ 0.04 N^2:
+   N = 512:  P = 1000: 1807.2 (sd 2.8, one extinction in 8);  4000: 1811.4;  16000: 1815.9;
+             64000: 1815.7 (3 runs);  256000: 1815.4  ->  ln a(512) = 1815.8 +- 0.6.
+   N = 1024: P = 1000: ~4158;  4000: ~4168;  6000: 4177.7 (4 runs, sd 5.8);
+             24000: 4183.5, 4180.5  ->  ln a(1024) = 4182 +- 3
+   (growth/PROOFS.txt had 4153.5 from P = 2000: 28 too low; its deficit 1.880 becomes 1.852).
+   N = 2048: P = 3000: 9389, 9435 (+2 extinct);  12000: 9490;  48000: 9501.6, 9487.2.
+The replicate spread grows like N/sqrt(P) (sd 1 at N = 512, P = 64000; sd 10 at N = 2048,
+P = 48000), so for the deficit d(N) = (ln N! - ln a)/N the error is ~ 1/sqrt(P) only:
+0.002 at N = 1024, 0.005 at N = 2048, @E4096@ at N = 4096.
+Exact checks: N = 20: 26.72 (exact 26.712), N = 33: 53.48 (exact 53.500), P = 20000.
+
+3.2 Estimates (largest P; sd = replicate spread; d = (ln N! - ln a)/N)
+   N      ln a(N)     sd     d(N)    e^d/lnN   sigma_J(1/2)  sigma_bar  frac*sigma*sqrt(2pi)
+@TABLE@
+(sigma_bar = exp(mean_t ln sigma_J(t)) is the t-average that enters d(N): by 1.3,
+ d(N) = ln sqrt(2pi) + ln sigma_bar - mean_t ln G, and mean_t ln G = 0.016-0.048.)
+
+3.3 Which growth law for sigma_J?
+---------------------------------
+@SIGMA@
+
+3.4 Fits of ln a(N)
+-------------------
+@FITS@
+
 
 
 =========================================================================================
