@@ -309,16 +309,54 @@ pub fn combine_odd_fused<W: Word>(lay: &Layout, chk: &Checker, ring: Ring, layer
     let rows = shape.rows(lay);
     let m = ring.modulus as u128;
     let (ps, pd) = (&layer.shape, &layer.data[..]);
-    rows.par_iter()
+    let h = lay.h;
+    // Off-diagonal blocks: tiles of TR consecutive rows.  For U = (L, c, R) the
+    // complement sits in block (h-j, h-i, 1-c) at row C(h,j)-1-rank R and column
+    // C(h,i)-1-rank L (complementing reverses colex order), so walking a tile
+    // column by column reads short contiguous runs instead of one cache miss per entry.
+    const TR: usize = 16;
+    let mut tiles: Vec<(crate::layout::Block, usize, usize, usize)> = Vec::new();
+    for &(bl, row, _start, len) in &rows {
+        if bl.i < bl.j {
+            match tiles.last_mut() {
+                Some(t) if t.0.off == bl.off && t.1 + t.2 == row && t.2 < TR => t.2 += 1,
+                _ => tiles.push((bl, row, 1, len)),
+            }
+        }
+    }
+    let off_sum = tiles
+        .par_iter()
+        .map_init(Vec::<W>::new, |tmp, &(bl, r0, nr, len)| {
+            tmp.clear();
+            tmp.resize(nr * len, W::default());
+            for q in 0..nr {
+                offdiag_row(lay, chk, ring, ps, pd, &bl, r0 + q, &mut tmp[q * len..(q + 1) * len]);
+            }
+            let ci = lay.binom[h][bl.i] as usize;
+            let cj = lay.binom[h][bl.j] as usize;
+            let sl = ps.slot[2 * (h - bl.j) + (1 - bl.c)];
+            debug_assert_eq!(sl.rowlen, ci);
+            let mut t = 0u128;
+            for col in 0..len {
+                let base = sl.off + (cj - 1 - col) * ci + (ci - 1 - r0);
+                let mut acc = 0u128;
+                for q in 0..nr {
+                    let gu = tmp[q * len + col].get();
+                    acc += gu * unsafe { pd.get_unchecked(base - q).get() };
+                }
+                t = if m != 0 { (t + acc % m) % m } else { t + acc };
+            }
+            if m != 0 { 2 * t % m } else { 2 * t }
+        })
+        .reduce(|| 0u128, |a, b| if m != 0 { (a + b) % m } else { a + b });
+    let diag_rows: Vec<_> = rows.iter().filter(|r| r.0.i == r.0.j).copied().collect();
+    let diag_sum = diag_rows
+        .par_iter()
         .with_min_len(4)
         .map_init(Vec::<W>::new, |tmp, &(bl, row, _start, len)| {
             tmp.clear();
             tmp.resize(len, W::default());
-            if bl.i < bl.j {
-                offdiag_row(lay, chk, ring, ps, pd, &bl, row, tmp);
-            } else {
-                generic_row(lay, chk, ring, ps, pd, &bl, row, tmp);
-            }
+            generic_row(lay, chk, ring, ps, pd, &bl, row, tmp);
             let mut t = 0u128;
             for col in 0..len {
                 let gu = tmp[col].get();
@@ -332,7 +370,8 @@ pub fn combine_odd_fused<W: Word>(lay: &Layout, chk: &Checker, ring: Ring, layer
             }
             t
         })
-        .reduce(|| 0u128, |a, b| if m != 0 { (a + b) % m } else { a + b })
+        .reduce(|| 0u128, |a, b| if m != 0 { (a + b) % m } else { a + b });
+    if m != 0 { (off_sum + diag_sum) % m } else { off_sum + diag_sum }
 }
 
 /// Full meet-in-the-middle count.  Returns `a(N)` (exact, or mod `ring.modulus`).

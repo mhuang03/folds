@@ -27,7 +27,12 @@ New terms are recorded in `results/semi.txt`.
      where `(S∪p)^c` again has size `k`.
 
    So only layers `0..⌊N/2⌋` are computed, and only two of them are held in memory at
-   a time.
+   a time. For odd `N`, the default is the **fused** form
+   `a = Σ_{|U|=k+1} g(U)·g(U^c)` (`U^c` lies in layer `k`). Layer `k+1` is computed
+   row by row into a scratch buffer and consumed at once, so it is never stored. This
+   needs 1 random lookup per entry instead of ~k/2. For N=35 the unfused combination
+   took > 20 min per residue under load, and the fused one takes a few minutes. The
+   direct formula is kept as `count_direct` and is cross-checked in `folds check`.
 2. **Pull DP, layer by layer:** `g(T) = Σ_{p∈T, (T\p,p) valid} g(T\p)`. Each entry is
    written exactly once, so rows are processed in parallel with rayon and no atomics.
    Validity is two popcounts (`semi`) or one bit-reversal compare (`sym`).
