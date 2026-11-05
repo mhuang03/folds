@@ -1,0 +1,4 @@
+N=63 t=5: UNSAT (167.9s, 29862 vars, 152747 clauses, solver=cadical153)
+N=63 t=5: UNSAT (113.0s, 29862 vars, 152999 clauses, solver=cadical153, norm)
+N=63 t=5: UNSAT (147.8s, 29862 vars, 152747 clauses, solver=kissat404)
+N=63 t=5: UNSAT (148.6s, 29862 vars, 152999 clauses, solver=kissat404, norm)

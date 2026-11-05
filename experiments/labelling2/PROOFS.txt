@@ -1,0 +1,170 @@
+ADMISSIBLE LABELLINGS, SECOND ATTEMPT
+=====================================
+
+Notation as in experiments/labelling/PROOFS.txt.  Panels 1..N, M = N+1, r(m) = min(m-1, N-m),
+L(m) = [m-r, m-1], R(m) = [m+1, m+r].  c : [1..N] -> {0..t-1} is ADMISSIBLE if for all m
+        #{x in L(m) : c(x) <= c(m)}  <=  #{x in R(m) : c(x) < c(m)}.                    (WI)
+CONJECTURE: admissible with t labels  =>  N <= 2^(t+1) - 2.  (Equivalently every right-heavy
+permutation of [N] has a decreasing subsequence of length lg(N+1), lg = floor log2.)
+
+SUMMARY
+  * The general conjecture is still NOT proved.
+  * NEW: for each fixed t the conjecture is a FINITE computation (section 2): the left-half
+    part of (WI) does not depend on N, so the left-half-only relaxation is monotone in N, and
+    it is infeasible from some K(t) on (K(t) = 3, 9, 21, 61, 157 for t = 1..5, exact).
+  * Hence the conjecture is now PROVED for t <= 5, for every N:
+      t <= 2: formally, in Lean (Folds/Labelling.lean: the reduction and its search are
+              proved, the finite checks are kernel-evaluated; no sorry, no native_decide);
+      t = 3:  exhaustive search (dfs_nodes.py / enum.c / SAT: N = 15..20 full, N = 21 left);
+      t = 4:  SAT (N = 31..60 full problem, N = 61 left-half-only);
+      t = 5:  SAT (N = 63..159 full problem, N = 157 left-half-only), section 3.
+    Consequences (section 2.3): every right-heavy permutation has
+        LDS >= min(lg(N+1), 6),     so min LDS = lg(N+1) exactly for all N <= 126,
+    and every semi-symmetric fold sequence has des >= lg(N+1) - 1 for N <= 126 and
+    des >= 5 for all N >= 63 (by mirror symmetry also LIS >= min(lg(N+1), 6)).
+    The Lean file proves the reduction (bound_of_checks) and the t <= 2 part:
+    min(lg(N+1), 3) <= des a + 1 and <= LDS.  The t = 3 checks (~160k prefixes) are beyond
+    what the kernel can evaluate in a few GB (section 2.4).
+  * Inversion form of (WI) (section 1): every panel forms an inversion with at least half of
+    its window.  Cleaner, symmetric under reverse-mirror.
+  * Aggregated LP certificates (one weighted sum of the (WI)) exist for t = 2 (from N = 7)
+    but NOT for t = 3 at N = 15, 16: there are probability distributions of labellings that
+    satisfy every (WI) on average.  They exist again from N = 17.  For large t no weighting
+    can work (block labellings), section 4.  So any proof must use integrality/case analysis.
+  * Several further lemma candidates fail (section 5).
+
+
+1. INVERSION FORM (proved)
+--------------------------
+Call x in W(m) INVERTED with m if (x - m)(c(x) - c(m)) < 0, i.e. x < m with c(x) > c(m), or
+x > m with c(x) < c(m).  inv(m) := number of x in W(m) inverted with m.  Then
+        (WI) at m   <=>   inv(m) >= r(m)  (= |W(m)| / 2).
+Proof: #{x in L(m): c(x) <= c(m)} = r - #{x in L(m): c(x) > c(m)}, so (WI) reads
+r - #{L: c > c(m)} <= #{R: c < c(m)}.                                                         □
+So: c is admissible iff every panel is inverted with at least half of its window.  Ties
+count as non-inversions.  Reverse-mirror (x -> M-x, c -> t-1-c) preserves inversions.
+Popcount (N = 2^(t+1)-2, c = t - popcount) has inv(m) = r(m) everywhere (it is valid).
+
+
+2. REDUCTION TO FINITELY MANY N FOR EACH t (proved; Lean: bound_of_checks)
+---------------------------------------------------------------------------
+2.1 Left-half-only problem.  LH(K, t): is there c : [1..K] -> {0..t-1} satisfying (WI) at
+    every m with 2m <= K+1?  For such m, r(m) = m-1, L(m) = [1, m-1], R(m) = [m+1, 2m-1]:
+    the constraint does not depend on K (only on m and the labels in [1, 2m-1]).
+    Lemma (monotonicity).  (a) If c is admissible on [1..N] and K <= N, then c restricted to
+    [1..K] is a solution of LH(K, t).  (b) If LH(K, t) has no solution, neither has LH(K', t)
+    for any K' >= K, and there is no admissible labelling with t labels for any N >= K.
+    Proof.  (a) For 2m <= K+1 <= N+1 the window of m in [1..N] is [1, 2m-1] subset [1..K], and
+    the inequality is the same.  (b) restriction of a solution of LH(K') is a solution of
+    LH(K) by the same argument, and (a).                                                     □
+    (The previous attempt computed the left-only thresholds 2, 8, 20, 60, 155..159 but did not
+    use that they are monotone, so the SAT checks "N <= 62 at every t" covered only finitely
+    many N for each t; the conjecture for t = 3, 4 was not established for N >= 63.)
+2.2 Theorem.  Let K(t) be such that LH(K(t), t) is infeasible.  If the full problem is
+    infeasible for every N in [2^(t+1)-1, K(t)), then the conjecture holds for t (all N).
+    Data (sat2.py --left, and cpsat.py --left as a second solver for t <= 4):
+        t           1   2    3    4    5
+        max LH      2   8   20   60   156
+        K(t)        3   9   21   61   157
+    Full problem infeasible in the ranges [3,3), [7,9), [15,21), [31,61), [63,157):
+      t = 1, 2: Lean kernel computation (search over prefixes, section 2.4);
+      t = 3: SAT (fixed_t_small.txt) and exhaustive search (dfs_nodes.py, enum.c);
+      t = 4: SAT (fixed_t_small.txt, and earlier sat_ineq.txt with the old encoding);
+      t = 5: SAT, section 3.
+    Hence THE CONJECTURE HOLDS FOR t <= 5.
+2.3 Consequences.  For a right-heavy permutation (in particular a valid = semi-symmetric fold
+    sequence), the patience level is admissible with LDS labels, and the run index with des+1
+    labels (labelling/PROOFS.txt 1.1).  So
+        LDS >= min(lg(N+1), 6),     des + 1 >= min(lg(N+1), 6)   for every N,
+    and by the mirror symmetry of valid sequences also LIS >= min(lg(N+1), 6).  Since
+    lg(N+1) labels are attainable for N <= 62 (sat_ineq.txt; attainment for N in 63..126 was
+    not checked here), min LDS of right-heavy permutations = lg(N+1) for N <= 62, and the
+    LOWER bound LDS >= lg(N+1), des >= lg(N+1) - 1 holds for all N <= 126.
+2.4 The Lean proof (Folds/Labelling.lean).
+    WinIneq/Admissible: (WI) in the countP form of window_lemma.  leftWin_of_admissible = 2.1(a).
+    levelsFrom left N t L k j: from the prefixes L of length k, the prefixes of length k + j
+    all of whose extensions pass the optimistic test stepOK (every checked constraint whose
+    window contains the last panel, with unknown panels counted in favour of m; left = true:
+    only left-half panels).  pre_mem_levelsFrom (soundness): prefixes of a labelling that
+    satisfies the checked constraints survive.  Dead q: no extension of q survives;
+    dead_of_children splits a search into subtrees.  bound_of_checks = Theorem 2.2.
+    Kernel checks (decide +kernel): Dead at the root for t = 1 (K = 3) and t = 2 (K = 9,
+    N = 7, 8).  admissible_le_two, then for fold sequences labelling_le_two,
+    lds_exact_le_two, descents_exact_le_two:  min(lg(N+1), 3) <= des a + 1 (and <= LDS).
+    t = 3 in the kernel: the searches have 65757 (K = 21, left) and 6943..21044 (N = 15..20)
+    prefixes; kernel evaluation costs ~1 ms and ~0.3-1 MB per prefix, so a single
+    declaration exceeds 3.5 GB already for N = 15; even split into subtrees of <= 500 prefixes
+    (gen_lean_checks.py emits such a split proof, ~900 declarations) two such leaves already
+    went past 3.5 GB; the cost is the kernel's evaluation itself (also with prefixes encoded
+    as base-4 numerals and with a depth-first formulation).  So t = 3 rests on the computer
+    checks above (two independent programs: dfs_nodes.py exhaustive, sat2.py).
+
+3. SAT DATA (sat2.py)
+---------------------
+3.1 Encoding.  y[m,v] = [c(m) <= v].  (WI) at m with c(m) = v is the cardinality constraint
+    #{x in L(m): c(x) <= v} + #{x in R(m): c(x) >= v} <= r(m) (section 1), encoded by an
+    upward totalizer capped at r+1 whose top output is forbidden under [c(m) = v].  About half
+    the clauses of the old two-sided encoding; N = 63, t = 5: 168 s (old: 278 s).
+    --norm adds the normalisation of labelling/PROOFS.txt 1.3 (every panel of label v >= 1
+    has a panel of label <= v-1 to its right; satisfiability is preserved because the
+    patience relabelling c' has this property and at most as many labels): 113 s at N = 63.
+    Kissat 4.0.4 (via pysat): 148 s.  CP-SAT (cpsat.py, 1 worker) is much slower on the hard
+    instances (no answer in 500 s at N = 63) and was only used as a cross-check.
+3.2 t = 5 (sweep_t5.txt): the full problem is UNSAT for every N = 67..159 (N = 63..66 were
+    done before: labelling/sat_63_5.txt, sat_64_66_5.txt; N = 63 re-checked, timing63.txt).
+    The instances get EASIER away from the threshold: 83 s at N = 67, 15-30 s for N = 75..110,
+    30 s at N = 126, 50-75 s at N = 140..159 (bigger formulas).  CaDiCaL 1.5.3, 1 core.
+    Left-half-only (left_t5.txt): SAT at N = 156, UNSAT at N = 157..160 (~20 s each), so the
+    exact one-sided threshold is 156 and K(5) = 157.
+3.3 t = 6, N = 127 (t6.txt): see the file.
+
+
+4. AGGREGATED (LP) CERTIFICATES
+-------------------------------
+Weighted sums: if w >= 0 and sum_m w(m) D_m(c) > 0 for EVERY labelling c with t labels,
+D_m = LHS - RHS of (WI), then no admissible labelling exists.  In pair form
+    sum_m w(m) D_m(c) = sum_{x<y} gamma(x,y) [c(x) <= c(y)] - sum_x w(x) r(x),
+    gamma(x,y) = w(y)[y-x <= r(y)] + w(x)[y-x <= r(x)],
+i.e. "the gamma-weighted non-inversions exceed half of the total weight".  By LP duality
+such w exists iff no probability distribution on labellings satisfies all (WI) on average.
+lpcert.py (column generation, MILP pricing) / lpdist.py (brute force):
+    t = 2: certificate for every N = 7..12 (and w = 1 works for N = 7..16, wfamily.py);
+           N = 7: w = 1 on panels 3, 4, 5.
+    t = 3: NO certificate at N = 15, 16 (a fractional admissible distribution exists),
+           certificates at N = 17, 18, 19, 20 (margins 0.019, 0.051, 0.074, 0.110).
+           w = 1 fails for all N = 15..24.
+So the threshold is not seen by any single weighted inequality, already for t = 3.  For
+large t no weighting can work at any N: a block labelling (t blocks of length N/t with
+decreasing labels) violates (WI) only at panels with r(m) <~ N/t, and gains
+~ (1 - N/(t r(m))) at the others; e.g. for w = 1/r the total is ~ N - (N/t)(2 ln t + 1) > 0.
+(w must then concentrate near the edges, where only the one-sided problem lives, whose
+threshold is ~2.7^t.)  A proof must use case analysis / integrality.
+
+
+5. FURTHER FAILED CANDIDATES (each tested on the complete lists for t = 3, N <= 14 and
+   t = 4, N = 15..21, and the 718 labellings at N = 62, t = 5)
+-------------------------------------------------------------------------------------------
+(a) Monotonicity by deleting one panel (labels unchanged) fails: e.g. 221201120100 (N = 12),
+    2212101210100, 22121102110100, 3323222302120211 have no panel whose deletion leaves an
+    admissible labelling (mono_test.py).  (Monotonicity is not needed any more: 2.1.)
+(b) Splitting inv(m) = |A_m| + |B_m| (A: higher labels on the left, B: lower labels on the
+    right) and bounding |A_m| by a function of the number of labels above c(m) fails: |A|
+    can be ~lg N with one label above (top-class doubling chain), and with 3 labels above
+    |A| reaches 27 at N = 62 (> 2^4 - 2) (ab_test.py).
+(c) Prefixes: [1, s] need not contain lg(s+1) labels (fails at s = 7, 8, 15, ...;
+    prefix_labels.py) -- consistent with the one-sided thresholds.
+(d) Chains starting at panel N: the longest decreasing subsequence starting at N can have
+    length 1 for N = 15, 16 (t = 4) (chain_from.py); candidate (B) of labelling/ is only a
+    near-threshold phenomenon.
+
+
+6. REMARKS ON THE GENERAL CASE
+------------------------------
+* The finite reduction makes the conjecture "decidable per t", but K(t) grows like ~2.7^t
+  (2, 8, 20, 60, ~157), so the full-problem range [2^(t+1)-1, K(t)) grows too; for t = 6 it
+  would be roughly [127, 420], with formulas of ~10^7 clauses near the top (beyond the 2 GB
+  budget with this encoding).
+* A proof for all t must combine the two edges; any statement about one edge alone (prefix
+  label counts, one-sided chains, Claim A') fails, and so does any single averaged
+  inequality (section 4).  The most promising surviving statement remains candidate (A) of
+  labelling/PROOFS.txt (inner runs of labels < j have length <= 2^(j+1) - 2).
