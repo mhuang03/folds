@@ -1,0 +1,503 @@
+import Folds.Live2
+
+/-!
+# Live pairs, part 3: residue chains at `ν = ±1`
+
+`experiments/live3/PROOFS.txt`.
+-/
+
+namespace Folds
+namespace Live3
+
+open Live2
+
+/-! ## Elementary arithmetic -/
+
+theorem mod_two {x q : Nat} (h : x < 2 * q) : x % q = if x < q then x else x - q := by
+  split_ifs with hx
+  · exact Nat.mod_eq_of_lt hx
+  · rw [Nat.mod_eq_sub_mod (by omega), Nat.mod_eq_of_lt (by omega)]
+
+theorem div_two {x q : Nat} (h : x < 2 * q) : x / q = if x < q then 0 else 1 := by
+  split_ifs with hx
+  · exact Nat.div_eq_of_lt hx
+  · have hq : 0 < q := by omega
+    rw [Nat.div_eq_sub_div hq (by omega), Nat.div_eq_of_lt (by omega)]
+
+/-- The cyclic offset `(s - t) mod q`. -/
+def cc (q s t : Nat) : Nat := (s + q - t) % q
+
+theorem cc_eq {q s t : Nat} (hs : s ≤ q) (ht : 1 ≤ t ∧ t ≤ q) :
+    cc q s t = if t ≤ s then s - t else s + q - t := by
+  unfold cc
+  rw [mod_two (by omega)]
+  split_ifs <;> omega
+
+theorem cc_lt {q s t : Nat} (hs : s ≤ q) (ht : 1 ≤ t ∧ t ≤ q) : cc q s t < q := by
+  rw [cc_eq hs ht]; split_ifs <;> omega
+
+/-- The left summand of `CycBal` is the indicator of `1 ≤ cc ≤ ρ`. -/
+theorem termL {q s t ρ : Nat} (hs : 1 ≤ s ∧ s ≤ q) (ht : 1 ≤ t ∧ t ≤ q) (hρ : ρ < q) :
+    ((s + 2 * q - ρ - 1 - t) % q + ρ) / q =
+      if 1 ≤ cc q s t ∧ cc q s t ≤ ρ then 1 else 0 := by
+  have hc := cc_lt hs.2 ht
+  have e : (s + 2 * q - ρ - 1 - t) % q = (cc q s t + (q - ρ - 1)) % q := by
+    unfold cc
+    rw [show s + 2 * q - ρ - 1 - t = (s + q - t) + (q - ρ - 1) by omega, Nat.add_mod,
+      Nat.mod_eq_of_lt (show q - ρ - 1 < q by omega)]
+  rw [e, mod_two (by omega)]
+  split_ifs with h1 h2 h2
+  · rw [div_two (by omega)]; split_ifs <;> omega
+  · rw [div_two (by omega)]; split_ifs <;> omega
+  · rw [div_two (by omega)]; split_ifs <;> omega
+  · rw [div_two (by omega)]; split_ifs <;> omega
+
+/-- The right summand of `CycBal` is the indicator of `q - ρ ≤ cc`. -/
+theorem termR {q s t ρ : Nat} (hs : 1 ≤ s ∧ s ≤ q) (ht : 1 ≤ t ∧ t ≤ q) (hρ : ρ < q) :
+    ((s + q - t) % q + ρ) / q = if q - ρ ≤ cc q s t then 1 else 0 := by
+  have hc := cc_lt hs.2 ht
+  have : (s + q - t) % q = cc q s t := rfl
+  rw [this, div_two (by omega)]
+  split_ifs <;> omega
+
+theorem sum_ite_eq_countP (A : List Nat) (p : Nat → Prop) [DecidablePred p] :
+    (A.map fun t => if p t then 1 else 0).sum = A.countP (fun t => decide (p t)) := by
+  induction A with
+  | nil => simp
+  | cons a A ih =>
+    simp only [List.map_cons, List.sum_cons, List.countP_cons, ih]
+    split_ifs <;> simp_all <;> omega
+
+/-- **Counting form of `CycBal`.** -/
+theorem cycBal_iff {q s ρ : Nat} {A : List Nat} (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q)
+    (hs : 1 ≤ s ∧ s ≤ q) (hρ : ρ < q) :
+    CycBal q A s ρ ↔ A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ ρ)) =
+      A.countP (fun t => decide (q - ρ ≤ cc q s t)) := by
+  unfold CycBal
+  rw [List.map_congr_left (fun t ht => termL hs (hA t ht) hρ),
+    List.map_congr_left (fun t ht => termR hs (hA t ht) hρ),
+    sum_ite_eq_countP, sum_ite_eq_countP]
+
+theorem countP_add_of {A : List Nat} {p r u : Nat → Bool}
+    (h : ∀ t ∈ A, (if p t then 1 else 0) + (if r t then 1 else 0) = (if u t then 1 else 0)) :
+    A.countP p + A.countP r = A.countP u := by
+  induction A with
+  | nil => simp
+  | cons a A ih =>
+    simp only [List.countP_cons]
+    have h1 := h a (by simp)
+    have h2 := ih (fun t ht => h t (by simp [ht]))
+    split_ifs at h1 ⊢ <;> simp_all <;> omega
+
+/-- **Duality** `ρ ↔ q - 1 - ρ`. -/
+theorem cycBal_dual {q s ρ : Nat} {A : List Nat} (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q)
+    (hs : 1 ≤ s ∧ s ≤ q) (hρ : ρ < q) :
+    CycBal q A s ρ ↔ CycBal q A s (q - 1 - ρ) := by
+  rw [cycBal_iff hA hs hρ, cycBal_iff hA hs (by omega)]
+  have e1 : A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ q - 1 - ρ)) +
+      A.countP (fun t => decide (q - ρ ≤ cc q s t)) = A.countP (fun t => decide (1 ≤ cc q s t)) :=
+    countP_add_of fun t ht => by
+      have := cc_lt hs.2 (hA t ht)
+      simp only [decide_eq_true_eq]; split_ifs <;> omega
+  have e2 : A.countP (fun t => decide (q - (q - 1 - ρ) ≤ cc q s t)) +
+      A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ ρ)) =
+        A.countP (fun t => decide (1 ≤ cc q s t)) :=
+    countP_add_of fun t ht => by
+      have := cc_lt hs.2 (hA t ht)
+      simp only [decide_eq_true_eq]; split_ifs <;> omega
+  omega
+
+/-- The reflection `σ t = ((ν - t) mod q) + 1` of the class labels. -/
+def sig (q ν t : Nat) : Nat := (ν + q - t) % q + 1
+
+theorem sig_eq {q ν t : Nat} (hν : ν < q) (ht : 1 ≤ t ∧ t ≤ q) :
+    sig q ν t = if t ≤ ν then ν - t + 1 else ν + q - t + 1 := by
+  unfold sig
+  rw [mod_two (by omega)]
+  split_ifs <;> omega
+
+theorem sig_mem {q ν t : Nat} (hν : ν < q) (ht : 1 ≤ t ∧ t ≤ q) : 1 ≤ sig q ν t ∧ sig q ν t ≤ q := by
+  rw [sig_eq hν ht]; split_ifs <;> omega
+
+theorem sig_sig {q ν t : Nat} (hν : ν < q) (ht : 1 ≤ t ∧ t ≤ q) : sig q ν (sig q ν t) = t := by
+  have h1 := sig_mem hν ht
+  rw [sig_eq hν h1, sig_eq hν ht]
+  split_ifs <;> omega
+
+theorem cc_sig {q ν s t : Nat} (hν : ν < q) (hs : 1 ≤ s ∧ s ≤ q) (ht : 1 ≤ t ∧ t ≤ q) :
+    cc q (sig q ν s) (sig q ν t) = cc q t s := by
+  have h1 := sig_mem hν hs
+  have h2 := sig_mem hν ht
+  rw [cc_eq h1.2 h2, cc_eq ht.2 hs, sig_eq hν hs, sig_eq hν ht]
+  split_ifs <;> omega
+
+/-- **Reflection** of the class labels exchanges the two sides of `CycBal`. -/
+theorem cycBal_sig {q ν s ρ : Nat} {A : List Nat} (hν : ν < q)
+    (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q) (hs : 1 ≤ s ∧ s ≤ q) (hρ : ρ < q) :
+    CycBal q (A.map (sig q ν)) (sig q ν s) ρ ↔ CycBal q A s ρ := by
+  have hA' : ∀ t ∈ A.map (sig q ν), 1 ≤ t ∧ t ≤ q := by
+    intro t ht
+    obtain ⟨u, hu, rfl⟩ := List.mem_map.1 ht
+    exact sig_mem hν (hA u hu)
+  rw [cycBal_iff hA' (sig_mem hν hs) hρ, cycBal_iff hA hs hρ, List.countP_map, List.countP_map]
+  have e1 : A.countP ((fun t => decide (1 ≤ cc q (sig q ν s) t ∧ cc q (sig q ν s) t ≤ ρ)) ∘
+      sig q ν) = A.countP (fun t => decide (q - ρ ≤ cc q s t)) := by
+    apply List.countP_congr
+    intro t ht
+    have := cc_lt hs.2 (hA t ht)
+    have := hA t ht
+    simp only [Function.comp, decide_eq_true_eq, cc_sig hν hs (hA t ht)]
+    rw [cc_eq (hA t ht).2 hs, cc_eq hs.2 (hA t ht)]
+    split_ifs <;> omega
+  have e2 : A.countP ((fun t => decide (q - ρ ≤ cc q (sig q ν s) t)) ∘ sig q ν) =
+      A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ ρ)) := by
+    apply List.countP_congr
+    intro t ht
+    have := hA t ht
+    simp only [Function.comp, decide_eq_true_eq, cc_sig hν hs (hA t ht)]
+    rw [cc_eq (hA t ht).2 hs, cc_eq hs.2 (hA t ht)]
+    split_ifs <;> omega
+  rw [e1, e2]
+  exact eq_comm
+
+/-- **Strip form**: in the `q`-strip, a valid step is a `CycBal` condition at the reach. -/
+theorem semiStep_iff_cycBal {q s : Nat} {A : List Nat} (hnd : A.Nodup)
+    (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q) (hs : 1 ≤ s ∧ s ≤ q) :
+    SemiStep q A s ↔ CycBal q A s (reach q s) := by
+  rw [cycBal_iff hA hs (by unfold reach; omega)]
+  unfold SemiStep
+  rw [leftCount_eq hnd, rightCount_eq hnd]
+  have e1 : A.countP (fun x => decide (s - reach q s ≤ x ∧ x < s)) =
+      A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ reach q s)) := by
+    apply List.countP_congr
+    intro t ht
+    simp only [decide_eq_true_eq]
+    rw [cc_eq hs.2 (hA t ht)]
+    have := hA t ht
+    unfold reach
+    split_ifs <;> omega
+  have e2 : A.countP (fun x => decide (s < x ∧ x ≤ s + reach q s)) =
+      A.countP (fun t => decide (q - reach q s ≤ cc q s t)) := by
+    apply List.countP_congr
+    intro t ht
+    simp only [decide_eq_true_eq]
+    rw [cc_eq hs.2 (hA t ht)]
+    have := hA t ht
+    unfold reach
+    split_ifs <;> omega
+  rw [e1, e2]
+
+theorem sig_injOn {q ν : Nat} (hν : ν < q) {l : List Nat} (hl : ∀ t ∈ l, 1 ≤ t ∧ t ≤ q) :
+    ∀ x ∈ l, ∀ y ∈ l, sig q ν x = sig q ν y → x = y := by
+  intro x hx y hy e
+  have h1 := sig_sig hν (hl x hx)
+  rw [e, sig_sig hν (hl y hy)] at h1
+  exact h1.symm
+
+/-- **Chains from strip sequences** (live2 2.2, PROOFS.txt 1.1(e)): if `π` and `σ ∘ π` are
+both valid sequences of the `q`-strip, `π` is a residue chain for `ν`. -/
+theorem chainOK_of_valid {q ν : Nat} (hν : ν < q) {π : List Nat} (hf : IsFoldSeq q π)
+    (h1 : SemiSymmetric q π) (h2 : SemiSymmetric q (π.map (sig q ν))) : ChainOK q ν π := by
+  have hnd := nodup_of_foldSeq hf
+  have hb : ∀ t ∈ π, 1 ≤ t ∧ t ≤ q := fun t ht => (mem_range'_of_perm hf).1 ht
+  intro i hi
+  have hs : 1 ≤ π[i] ∧ π[i] ≤ q := hb _ (List.getElem_mem hi)
+  have hA : ∀ t ∈ π.take i, 1 ≤ t ∧ t ≤ q := fun t ht => hb t (List.mem_of_mem_take ht)
+  have hndA := take_nodup hnd i
+  constructor
+  · have h := (semiStep_iff_cycBal hndA hA hs).1 (h1 i hi)
+    unfold reach at h
+    rcases Nat.le_total (π[i] - 1) (q - π[i]) with hle | hle
+    · rwa [min_eq_left hle] at h
+    · rw [min_eq_right hle, show q - π[i] = q - 1 - (π[i] - 1) by omega,
+        ← cycBal_dual hA hs (by omega)] at h
+      exact h
+  · have h2i := h2 i (by simpa using hi)
+    rw [List.getElem_map, ← List.map_take] at h2i
+    have hndA' : ((π.take i).map (sig q ν)).Nodup := nodup_map_of_injOn hndA (sig_injOn hν hA)
+    have hA' : ∀ t ∈ (π.take i).map (sig q ν), 1 ≤ t ∧ t ≤ q := by
+      intro t ht
+      obtain ⟨u, hu, rfl⟩ := List.mem_map.1 ht
+      exact sig_mem hν (hA u hu)
+    have hsm := sig_mem hν hs
+    have h := (semiStep_iff_cycBal hndA' hA' hsm).1 h2i
+    have hsig : sig q ν π[i] - 1 = (ν + q - π[i]) % q := by unfold sig; omega
+    have hlt : (ν + q - π[i]) % q < q := Nat.mod_lt _ (by omega)
+    unfold reach at h
+    rcases Nat.le_total (sig q ν π[i] - 1) (q - sig q ν π[i]) with hle | hle
+    · rw [min_eq_left hle, cycBal_sig hν hA hs (by omega), hsig] at h
+      exact h
+    · rw [min_eq_right hle, show q - sig q ν π[i] = q - 1 - (sig q ν π[i] - 1) by omega,
+        ← cycBal_dual hA' hsm (by omega), cycBal_sig hν hA hs (by omega), hsig] at h
+      exact h
+
+/-! ## Lemma W: doubling-ordered sequences -/
+
+/-- Every even entry `v` of `β` comes after `v / 2`. -/
+def Doubling (β : List Nat) : Prop :=
+  ∀ i (h : i < β.length), β[i] % 2 = 0 → β[i] / 2 ∈ β.take i
+
+theorem doubling_nil : Doubling [] := fun i h => absurd h (by simp)
+
+/-- **Lemma W.**  For every odd `v₀ ≤ k` there is a valid sequence of the `k`-strip starting
+with `v₀` in which `v` comes before `2v` (for all `v` with `2v ≤ k`). -/
+theorem lemmaW : ∀ k v₀, v₀ % 2 = 1 → v₀ ≤ k →
+    ∃ β, IsFoldSeq k β ∧ SemiSymmetric k β ∧ β.head? = some v₀ ∧ Doubling β := by
+  intro k
+  induction k using Nat.strong_induction_on with
+  | _ k ih =>
+    intro v₀ hv hvk
+    obtain ⟨σ, hσf, hσs, hpre⟩ := extends_single ((k + 1) / 2) ((v₀ + 1) / 2) (by omega)
+      (by omega)
+    obtain ⟨τ, hτf, hτs, hτd⟩ : ∃ τ, IsFoldSeq (k / 2) τ ∧ SemiSymmetric (k / 2) τ ∧
+        Doubling τ := by
+      by_cases hk : k / 2 = 0
+      · rw [hk]
+        exact ⟨[], List.Perm.refl _, fun i h => absurd h (by simp), doubling_nil⟩
+      · obtain ⟨τ, h1, h2, -, h4⟩ := ih (k / 2) (by omega) 1 rfl (by omega)
+        exact ⟨τ, h1, h2, h4⟩
+    have hτf' : IsFoldSeq ((k + (1 - 1)) / 2) τ := by simpa using hτf
+    refine ⟨σ.map (scale 1) ++ τ.map (scale 0), hσf.blocks (by norm_num) hτf',
+      (semiSymmetric_blocks_iff (by norm_num) hσf hτf').2 ⟨hσs, by simpa using hτs⟩, ?_, ?_⟩
+    · obtain ⟨t, rfl⟩ := hpre
+      simp only [List.map_cons, List.cons_append, List.head?_cons, Option.some.injEq]
+      unfold scale; omega
+    · intro i hi heven
+      have hlen : (σ.map (scale 1)).length = (k + 1) / 2 := by
+        rw [List.length_map, hσf.length_eq]; simp
+      by_cases hiσ : i < (σ.map (scale 1)).length
+      · exfalso
+        rw [List.getElem_append_left hiσ, List.getElem_map] at heven
+        have := (mem_range'_of_perm hσf).1 (List.getElem_mem (l := σ) (by simpa using hiσ))
+        unfold scale at heven; omega
+      · obtain ⟨j, rfl⟩ : ∃ j, i = (σ.map (scale 1)).length + j :=
+          ⟨i - (σ.map (scale 1)).length, by omega⟩
+        have hj : j < τ.length := by simp at hi; omega
+        rw [List.getElem_append_right (by omega)] at heven ⊢
+        simp only [Nat.add_sub_cancel_left, List.getElem_map] at heven ⊢
+        rw [List.take_length_add_append, List.mem_append]
+        have hτj := (mem_range'_of_perm hτf).1 (List.getElem_mem hj)
+        have e2 : scale 0 τ[j] / 2 = τ[j] := by unfold scale; omega
+        rw [e2]
+        by_cases hodd : τ[j] % 2 = 1
+        · left
+          refine List.mem_map.2 ⟨(τ[j] + 1) / 2, (mem_range'_of_perm hσf).2 ⟨by omega, by omega⟩,
+            by unfold scale; omega⟩
+        · right
+          have := hτd j hj (by omega)
+          rw [← List.map_take]
+          exact List.mem_map.2 ⟨τ[j] / 2, this, by unfold scale; omega⟩
+
+/-- In a doubling-ordered sequence, `2 β[i]` is not placed before `β[i]`. -/
+theorem double_not_before {β : List Nat} (hnd : β.Nodup) (hd : Doubling β) {i : Nat}
+    (hi : i < β.length) : 2 * β[i] ∉ β.take i := by
+  intro hm
+  obtain ⟨m, hm', e⟩ := List.getElem_of_mem hm
+  have hmi : m < i := by simp at hm'; omega
+  rw [List.getElem_take] at e
+  have h := hd m (by omega) (by rw [e]; omega)
+  rw [e, show 2 * β[i] / 2 = β[i] by omega] at h
+  obtain ⟨m', hm'', e'⟩ := List.getElem_of_mem h
+  rw [List.getElem_take] at e'
+  have : m' = i := (hnd.getElem_inj_iff).1 e'
+  simp at hm''; omega
+
+theorem semiStep_reach_zero {N m : Nat} {S : List Nat} (h : reach N m = 0) : SemiStep N S m := by
+  unfold SemiStep leftCount rightCount; rw [h]; simp
+
+/-- **Shift**: `β + 1` followed by `1` is valid in the `(k+1)`-strip. -/
+theorem semiSymmetric_shift {k : Nat} {β : List Nat} (hf : IsFoldSeq k β)
+    (hs : SemiSymmetric k β) (hd : Doubling β) :
+    SemiSymmetric (k + 1) (β.map (· + 1) ++ [1]) := by
+  have hnd := nodup_of_foldSeq hf
+  have hb : ∀ t ∈ β, 1 ≤ t ∧ t ≤ k := fun t ht => (mem_range'_of_perm hf).1 ht
+  rw [semiSymmetric_append_iff]
+  refine ⟨fun i hi => ?_, fun j hj => ?_⟩
+  · simp only [List.length_map] at hi
+    rw [List.getElem_map, ← List.map_take]
+    have h := hs i hi
+    have hndt := take_nodup hnd i
+    have hndt' : ((β.take i).map (· + 1)).Nodup :=
+      nodup_map_of_injOn hndt fun x _ y _ e => by omega
+    have hbi := hb _ (List.getElem_mem hi)
+    have hnot := double_not_before hnd hd hi
+    have hS : ∀ x ∈ β.take i, 1 ≤ x ∧ x ≤ k := fun x hx => hb x (List.mem_of_mem_take hx)
+    unfold SemiStep at h ⊢
+    rw [leftCount_eq hndt, rightCount_eq hndt] at h
+    rw [leftCount_eq hndt', rightCount_eq hndt', List.countP_map, List.countP_map]
+    have e1 : (β.take i).countP ((fun x => decide (β[i] + 1 - reach (k + 1) (β[i] + 1) ≤ x ∧
+        x < β[i] + 1)) ∘ (· + 1)) =
+        (β.take i).countP (fun x => decide (β[i] - reach k β[i] ≤ x ∧ x < β[i])) := by
+      apply List.countP_congr
+      intro x hx
+      have := hS x hx
+      simp only [Function.comp, decide_eq_true_eq]
+      unfold reach; omega
+    have e2 : (β.take i).countP ((fun x => decide (β[i] + 1 < x ∧
+        x ≤ β[i] + 1 + reach (k + 1) (β[i] + 1))) ∘ (· + 1)) =
+        (β.take i).countP (fun x => decide (β[i] < x ∧ x ≤ β[i] + reach k β[i])) := by
+      apply List.countP_congr
+      intro x hx
+      have := hS x hx
+      have hx2 : x ≠ 2 * β[i] := fun e => hnot (e ▸ hx)
+      simp only [Function.comp, decide_eq_true_eq]
+      unfold reach; omega
+    rw [e1, e2]; exact h
+  · have hj0 : j = 0 := by simp at hj; omega
+    subst hj0
+    exact semiStep_reach_zero (by simp [reach])
+
+/-! ## Theorem H: palindromic chains at `ν = 1` -/
+
+theorem sig_one_odd {k v : Nat} (hv : 1 ≤ v ∧ v ≤ k) :
+    sig (2 * k + 1) 1 (2 * v + 1) = 2 * (k + 1 - v) := by
+  rw [sig_eq (by omega) ⟨by omega, by omega⟩]; split_ifs <;> omega
+
+theorem sig_one_even {k v : Nat} (hv : 1 ≤ v ∧ v ≤ k) :
+    sig (2 * k + 1) 1 (2 * (k + 1 - v)) = 2 * v + 1 := by
+  rw [sig_eq (by omega) ⟨by omega, by omega⟩]; split_ifs <;> omega
+
+/-- **Theorem H** (PROOFS.txt 1.4).  For `q = 2k + 1` and odd `v₀ ≤ k` there is a residue chain
+`π` for `ν = 1` whose reverse is a chain too, starting with `2 v₀ + 1` and ending with
+`q + 1 - 2 v₀`. -/
+theorem palindromic_chain {k v₀ : Nat} (hv : v₀ % 2 = 1) (hvk : v₀ ≤ k) :
+    ∃ π, IsFoldSeq (2 * k + 1) π ∧ ChainOK (2 * k + 1) 1 π ∧
+      ChainOK (2 * k + 1) 1 π.reverse ∧ π.head? = some (2 * v₀ + 1) ∧
+      π.reverse.head? = some (2 * (k + 1 - v₀)) := by
+  obtain ⟨β, hf, hs, hhead, hd⟩ := lemmaW k v₀ hv hvk
+  have hnd := nodup_of_foldSeq hf
+  have hb : ∀ t ∈ β, 1 ≤ t ∧ t ≤ k := fun t ht => (mem_range'_of_perm hf).1 ht
+  set α := β.map (· + 1) ++ [1] with hαdef
+  have hαf : IsFoldSeq (k + 1) α := by
+    refine perm_range'_of_nodup_subset ?_ ?_ ?_
+    · rw [List.nodup_append]
+      refine ⟨nodup_map_of_injOn hnd fun x _ y _ e => by omega, List.nodup_singleton 1, ?_⟩
+      intro a ha b hb'
+      obtain ⟨x, hx, rfl⟩ := List.mem_map.1 ha
+      simp at hb'; have := hb x hx; omega
+    · intro y hy
+      rw [List.mem_append, List.mem_map] at hy
+      rcases hy with ⟨x, hx, rfl⟩ | hy
+      · have := hb x hx; omega
+      · simp at hy; omega
+    · rw [hαdef, List.length_append, List.length_map, hf.length_eq]; simp
+  have hαs : SemiSymmetric (k + 1) α := semiSymmetric_shift hf hs hd
+  set δ := revMirror k β with hδdef
+  have hδf : IsFoldSeq k δ := hf.revMirror
+  have hδs : SemiSymmetric k δ := SemiSymmetric.revMirror hf hs
+  have hα' : IsFoldSeq ((2 * k + 1 + 1) / 2) α := by
+    rw [show (2 * k + 1 + 1) / 2 = k + 1 by omega]; exact hαf
+  have hδ' : IsFoldSeq ((2 * k + 1 + (1 - 1)) / 2) δ := by
+    rw [show (2 * k + 1 + (1 - 1)) / 2 = k by omega]; exact hδf
+  set π := α.map (scale 1) ++ δ.map (scale 0) with hπdef
+  have hπf : IsFoldSeq (2 * k + 1) π := hα'.blocks (by norm_num) hδ'
+  have hπs : SemiSymmetric (2 * k + 1) π :=
+    (semiSymmetric_blocks_iff (by norm_num) hα' hδ').2
+      ⟨by rw [show (2 * k + 1 + 1) / 2 = k + 1 by omega]; exact hαs,
+       by rw [show (2 * k + 1 + (1 - 1)) / 2 = k by omega]; exact hδs⟩
+  -- the explicit form of `π`
+  have hA : α.map (scale 1) = β.map (fun v => 2 * v + 1) ++ [1] := by
+    rw [hαdef, List.map_append, List.map_map]
+    refine congrArg₂ (· ++ ·) (List.map_congr_left fun v _ => ?_) rfl
+    show scale 1 (v + 1) = 2 * v + 1
+    unfold scale; omega
+  have hB : δ.map (scale 0) = (β.map (fun v => 2 * (k + 1 - v))).reverse := by
+    rw [hδdef]
+    unfold revMirror
+    rw [List.map_reverse, List.map_map]
+    exact congrArg List.reverse (List.map_congr_left fun v _ => by
+      show scale 0 (k + 1 - v) = 2 * (k + 1 - v)
+      unfold scale; omega)
+  have hπe : π = β.map (fun v => 2 * v + 1) ++ [1] ++
+      (β.map (fun v => 2 * (k + 1 - v))).reverse := by
+    rw [hπdef, hA, hB]
+  have hmap : π.map (sig (2 * k + 1) 1) = π.reverse := by
+    rw [hπe]
+    simp only [List.map_append, List.map_reverse, List.map_map, List.reverse_append,
+      List.reverse_reverse, List.map_cons, List.reverse_cons, List.append_assoc,
+      List.singleton_append]
+    have e1 : β.map (sig (2 * k + 1) 1 ∘ fun v => 2 * v + 1) =
+        β.map (fun v => 2 * (k + 1 - v)) :=
+      List.map_congr_left fun v hv' => sig_one_odd (hb v hv')
+    have e2 : β.map (sig (2 * k + 1) 1 ∘ fun v => 2 * (k + 1 - v)) =
+        β.map (fun v => 2 * v + 1) :=
+      List.map_congr_left fun v hv' => sig_one_even (hb v hv')
+    have e3 : sig (2 * k + 1) 1 1 = 1 := by unfold sig; simp
+    rw [e1, e2, e3]
+  refine ⟨π, hπf, ?_, ?_, ?_, ?_⟩
+  · exact chainOK_of_valid (by omega) hπf hπs (by rw [hmap]; exact hπs.reverse hπf)
+  · refine chainOK_of_valid (by omega) ((List.reverse_perm _).trans hπf) (hπs.reverse hπf) ?_
+    rw [List.map_reverse, hmap, List.reverse_reverse]; exact hπs
+  · rw [hπe]
+    cases β with
+    | nil => simp at hhead
+    | cons b β' =>
+      simp only [List.head?_cons, Option.some.injEq] at hhead
+      subst hhead; simp
+  · rw [hπe]
+    cases β with
+    | nil => simp at hhead
+    | cons b β' =>
+      simp only [List.head?_cons, Option.some.injEq] at hhead
+      subst hhead; simp
+
+/-! ## From chains to co-reachability -/
+
+theorem chainOK_append_left {q ν : Nat} {A B : List Nat} (h : ChainOK q ν (A ++ B)) :
+    ChainOK q ν A := by
+  intro i hi
+  have := h i (by simp; omega)
+  rwa [List.take_append_of_le_length (by omega), List.getElem_append_left hi] at this
+
+/-- A full chain ending with `s` gives the residue transfer through the class of `s`. -/
+theorem coReach_of_chain_last {q N s : Nat} (hq : 0 < q) (hqN : q ≤ N) {L : List Nat}
+    (hf : IsFoldSeq q L) (hc : ChainOK q (N % q) L) (hlast : L.reverse.head? = some s)
+    {D : Finset Nat} (hDs : D ⊆ Finset.Icc 1 (ccount q s N))
+    (hD : CoReach (ccount q s N) D) : CoReach N (D.image (cls q s)) := by
+  obtain ⟨R, hR⟩ : ∃ R, L.reverse = s :: R := by
+    cases h : L.reverse with
+    | nil => rw [h] at hlast; simp at hlast
+    | cons a R => rw [h] at hlast; simp at hlast; exact ⟨R, by rw [hlast]⟩
+  have hL : L = R.reverse ++ [s] := by
+    rw [← List.reverse_reverse L, hR, List.reverse_cons]
+  have hnd := nodup_of_foldSeq hf
+  rw [hL] at hnd hc
+  have hmem : ∀ t, t ∈ L ↔ 1 ≤ t ∧ t ≤ q := fun t => mem_range'_of_perm hf
+  have hs := (hmem s).1 (by rw [hL]; simp)
+  rw [List.nodup_append] at hnd
+  refine coReach_res hq hqN hs.1 hs.2 (π := R.reverse) ?_ hnd.1 (chainOK_append_left hc) hDs hD
+  intro t
+  constructor
+  · intro ht
+    have htL : t ∈ L := by rw [hL]; simp [ht]
+    have h12 := (hmem t).1 htL
+    refine ⟨h12.1, h12.2, ?_⟩
+    rintro rfl
+    exact hnd.2.2 t ht t (by simp) rfl
+  · rintro ⟨h1, h2, hne⟩
+    have htL := (hmem t).2 ⟨h1, h2⟩
+    rw [hL, List.mem_append, List.mem_singleton] at htL
+    rcases htL with h | h
+    · exact h
+    · exact absurd h hne
+
+/-- **Residue transfer at `ν = 1` for every odd `q`** (Corollary of PROOFS.txt 1.4): for
+`N ≡ 1 (mod q)` the classes `s = 2 v₀ + 1` and `s = q + 1 - 2 v₀` (`v₀` odd, `2 v₀ < q`), i.e.
+`s ≡ 3` and `s ≡ q - 1 (mod 4)`, have a reachable complement, so co-reachable sets of their
+class strip stay co-reachable. -/
+theorem coReach_nu_one {q N s v₀ : Nat} (hqodd : q % 2 = 1) (hqN : q ≤ N) (hN : N % q = 1)
+    (hv : v₀ % 2 = 1) (hvq : 2 * v₀ < q) (hs : s = 2 * v₀ + 1 ∨ s = q + 1 - 2 * v₀)
+    {D : Finset Nat} (hDs : D ⊆ Finset.Icc 1 (ccount q s N))
+    (hD : CoReach (ccount q s N) D) : CoReach N (D.image (cls q s)) := by
+  obtain ⟨k, rfl⟩ : ∃ k, q = 2 * k + 1 := ⟨q / 2, by omega⟩
+  obtain ⟨π, hf, hc, hcr, hh, hl⟩ := palindromic_chain (k := k) hv (by omega)
+  have hc' : ChainOK (2 * k + 1) (N % (2 * k + 1)) π := by rw [hN]; exact hc
+  have hcr' : ChainOK (2 * k + 1) (N % (2 * k + 1)) π.reverse := by rw [hN]; exact hcr
+  rcases hs with rfl | rfl
+  · exact coReach_of_chain_last (by omega) hqN ((List.reverse_perm _).trans hf) hcr'
+      (by rw [List.reverse_reverse]; exact hh) hDs hD
+  · exact coReach_of_chain_last (by omega) hqN hf hc'
+      (by rw [hl]; congr 1; omega) hDs hD
+
+end Live3
+end Folds
