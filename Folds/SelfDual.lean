@@ -271,4 +271,139 @@ theorem card_revMirrorFixed (N : ℕ) : (revMirrorFixed N).card = (validHalf N).
     simp only [validHalf, coe_filter, Set.mem_ofPred_eq] at ht
     exact take_half_expand (mem_halfSeqs.1 ht.1).2.1
 
+/-! ## The flip lemma
+
+Let `S` contain exactly one panel from each pair `{y, N + 1 - y}` other than the pair
+`{x, N + 1 - x}` (and neither `x` nor `N + 1 - x`).  Write `σ y = N + 1 - y`.  Placing `σ x`
+after `S` is valid iff placing `x` after `σ(S)` is, and inside the window of `x`, `σ(S)` is
+the complement of `S`, except at `σ x` when `σ x` lies in the window.
+
+* **outer pair** (`3 · min(x, N+1-x) ≤ N + 1`): `σ x` is outside the window of `x`, so `x`
+  and `σ x` are valid together (`flip_outer`);
+* **inner pair** (`3 · min(x, N+1-x) > N + 1`, `x ≠ σ x`): at most one of them is valid
+  (`flip_inner`).
+-/
+
+theorem countP_add_three (l : List ℕ) (p q s : ℕ → Bool)
+    (h : ∀ d ∈ l, (if p d then 1 else 0) + (if q d then 1 else 0) + (if s d then 1 else 0) = 1) :
+    l.countP p + l.countP q + l.countP s = l.length := by
+  induction l with
+  | nil => simp
+  | cons a l ih =>
+    have ha := h a (by simp)
+    have := ih (fun d hd => h d (by simp [hd]))
+    simp only [List.countP_cons, List.length_cons]
+    revert ha; cases p a <;> cases q a <;> cases s a <;> simp <;> omega
+
+theorem mem_map_mirror' {N y : ℕ} {S : List ℕ} (hS : ∀ z ∈ S, z ≤ N) (hy1 : 1 ≤ y) (hy : y ≤ N) :
+    y ∈ S.map (N + 1 - ·) ↔ N + 1 - y ∈ S := by
+  have := mem_map_mirror (S := S) hS (y := N + 1 - y) (by omega)
+  rwa [show N + 1 - (N + 1 - y) = y by omega] at this
+
+section Flip
+
+variable {N x : ℕ} {S : List ℕ}
+
+/-- The counting identities behind the flip lemma. -/
+theorem flip_counts (hS : ∀ y ∈ S, 1 ≤ y ∧ y ≤ N) (hx1 : 1 ≤ x) (hxN : x ≤ N)
+    (htr : ∀ y, 1 ≤ y → y ≤ N → y ≠ x → y ≠ N + 1 - x → (y ∈ S ↔ N + 1 - y ∉ S))
+    (hxS : x ∉ S) (hσS : N + 1 - x ∉ S) :
+    leftCount N (S.map (N + 1 - ·)) x + leftCount N S x +
+        (List.range' 1 (reach N x)).countP (fun d => decide (x - d = N + 1 - x)) = reach N x ∧
+      rightCount N (S.map (N + 1 - ·)) x + rightCount N S x +
+        (List.range' 1 (reach N x)).countP (fun d => decide (x + d = N + 1 - x)) =
+          reach N x := by
+  have hS' : ∀ z ∈ S, z ≤ N := fun z hz => (hS z hz).2
+  have key : ∀ y, 1 ≤ y → y ≤ N → y ≠ x →
+      (if decide (y ∈ S.map (N + 1 - ·)) then 1 else 0) + (if decide (y ∈ S) then 1 else 0) +
+        (if decide (y = N + 1 - x) then 1 else 0) = 1 := by
+    intro y hy1 hyN hyx
+    simp only [mem_map_mirror' hS' hy1 hyN]
+    by_cases hyσ : y = N + 1 - x
+    · have : N + 1 - y = x := by omega
+      rw [this]; simp [hxS, hyσ, hσS]
+    · have := htr y hy1 hyN hyx hyσ
+      by_cases hyS : y ∈ S
+      · have : N + 1 - y ∉ S := this.1 hyS
+        simp [hyS, this, hyσ]
+      · have : N + 1 - y ∈ S := by
+          by_contra hc; exact hyS (this.2 hc)
+        simp [hyS, this, hyσ]
+  unfold leftCount rightCount
+  constructor
+  · have := countP_add_three (List.range' 1 (reach N x))
+      (fun d => decide (x - d ∈ S.map (N + 1 - ·))) (fun d => decide (x - d ∈ S))
+      (fun d => decide (x - d = N + 1 - x)) (fun d hd => by
+        rw [List.mem_range'_1] at hd
+        exact key (x - d) (by unfold reach at hd; omega) (by omega) (by omega))
+    simpa using this
+  · have := countP_add_three (List.range' 1 (reach N x))
+      (fun d => decide (x + d ∈ S.map (N + 1 - ·))) (fun d => decide (x + d ∈ S))
+      (fun d => decide (x + d = N + 1 - x)) (fun d hd => by
+        rw [List.mem_range'_1] at hd
+        exact key (x + d) (by omega) (by unfold reach at hd; omega) (by omega))
+    simpa using this
+
+theorem semiStep_partner_iff (hS : ∀ y ∈ S, 1 ≤ y ∧ y ≤ N) (hx1 : 1 ≤ x) (hxN : x ≤ N) :
+    SemiStep N S (N + 1 - x) ↔ SemiStep N (S.map (N + 1 - ·)) x := by
+  have := semiStep_mirror_iff (S := S) (m := N + 1 - x) (fun z hz => (hS z hz).2)
+    (by omega) (by omega)
+  rw [show N + 1 - (N + 1 - x) = x by omega] at this
+  exact this.symm
+
+/-- **Flip lemma, outer pair.** -/
+theorem flip_outer (hS : ∀ y ∈ S, 1 ≤ y ∧ y ≤ N) (hx1 : 1 ≤ x) (hxN : x ≤ N)
+    (htr : ∀ y, 1 ≤ y → y ≤ N → y ≠ x → y ≠ N + 1 - x → (y ∈ S ↔ N + 1 - y ∉ S))
+    (hxS : x ∉ S) (hσS : N + 1 - x ∉ S) (hout : 3 * min x (N + 1 - x) ≤ N + 1) :
+    SemiStep N S x ↔ SemiStep N S (N + 1 - x) := by
+  obtain ⟨h1, h2⟩ := flip_counts hS hx1 hxN htr hxS hσS
+  have c1 : (List.range' 1 (reach N x)).countP (fun d => decide (x - d = N + 1 - x)) = 0 := by
+    rw [List.countP_eq_zero]; intro d hd; rw [List.mem_range'_1] at hd
+    unfold reach at hd; simp; omega
+  have c2 : (List.range' 1 (reach N x)).countP (fun d => decide (x + d = N + 1 - x)) = 0 := by
+    rw [List.countP_eq_zero]; intro d hd; rw [List.mem_range'_1] at hd
+    unfold reach at hd; simp; omega
+  rw [semiStep_partner_iff hS hx1 hxN]
+  unfold SemiStep
+  omega
+
+theorem countP_range'_eq_one {r c : ℕ} (p : ℕ → Prop) [DecidablePred p] (h1 : 1 ≤ c)
+    (h2 : c ≤ r) (hp : ∀ d, 1 ≤ d → d ≤ r → (p d ↔ d = c)) :
+    (List.range' 1 r).countP (fun d => decide (p d)) = 1 := by
+  have e : (List.range' 1 r).countP (fun d => decide (p d)) =
+      (List.range' 1 r).countP (fun d => decide (d = c)) := by
+    apply List.countP_congr; intro d hd; rw [List.mem_range'_1] at hd
+    simp only [decide_eq_true_eq]; exact hp d (by omega) (by omega)
+  rw [e, countP_eq_nodup (List.nodup_range' ..)]
+  have : c ∈ List.range' 1 r := by rw [List.mem_range'_1]; omega
+  simp [this]
+
+/-- **Flip lemma, inner pair.** -/
+theorem flip_inner (hS : ∀ y ∈ S, 1 ≤ y ∧ y ≤ N) (hx1 : 1 ≤ x) (hxN : x ≤ N)
+    (htr : ∀ y, 1 ≤ y → y ≤ N → y ≠ x → y ≠ N + 1 - x → (y ∈ S ↔ N + 1 - y ∉ S))
+    (hxS : x ∉ S) (hσS : N + 1 - x ∉ S) (hne : 2 * x ≠ N + 1)
+    (hin : N + 1 < 3 * min x (N + 1 - x)) :
+    ¬ (SemiStep N S x ∧ SemiStep N S (N + 1 - x)) := by
+  obtain ⟨h1, h2⟩ := flip_counts hS hx1 hxN htr hxS hσS
+  rw [semiStep_partner_iff hS hx1 hxN]
+  unfold SemiStep
+  rintro ⟨e1, e2⟩
+  rcases Nat.lt_or_gt_of_ne hne with h | h
+  · -- `x` left of centre, `σ x` on the right of the window
+    have c1 : (List.range' 1 (reach N x)).countP (fun d => decide (x - d = N + 1 - x)) = 0 := by
+      rw [List.countP_eq_zero]; intro d hd; rw [List.mem_range'_1] at hd
+      unfold reach at hd; simp; omega
+    have c2 := countP_range'_eq_one (r := reach N x) (c := N + 1 - 2 * x)
+      (fun d => x + d = N + 1 - x) (by omega) (by unfold reach; omega) (fun d _ _ => by omega)
+    omega
+  · have c2 : (List.range' 1 (reach N x)).countP (fun d => decide (x + d = N + 1 - x)) = 0 := by
+      rw [List.countP_eq_zero]; intro d hd; rw [List.mem_range'_1] at hd
+      unfold reach at hd; simp; omega
+    have c1 := countP_range'_eq_one (r := reach N x) (c := 2 * x - (N + 1))
+      (fun d => x - d = N + 1 - x) (by omega) (by unfold reach; omega)
+      (fun d _ hd => by unfold reach at hd; omega)
+    omega
+
+end Flip
+
 end Folds
