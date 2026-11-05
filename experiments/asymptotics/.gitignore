@@ -2,3 +2,4 @@ smc2
 smc3
 *.o
 runs/dump_*
+desc
