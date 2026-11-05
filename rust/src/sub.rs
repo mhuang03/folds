@@ -719,6 +719,14 @@ fn pair_sum<W: Word>(sl: &SubLayout, ring: Ring, s: &SB, x: &[W], y: &Acc<W>) ->
     }
 }
 
+/// A `kB` field of `/proc/self/status`.
+fn rss_kb(field: &str) -> u64 {
+    std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| s.lines().find(|l| l.starts_with(field)).and_then(|l| l.split_whitespace().nth(1)?.parse().ok()))
+        .unwrap_or(0)
+}
+
 /// Words per page for `W`.
 fn page_words<W: Word>() -> usize {
     4096 / W::BYTES
@@ -851,11 +859,14 @@ pub fn count<W: Word>(n: usize, t: usize, chk: &Checker, ring: Ring, verbose: bo
         if verbose && tj >= next_report {
             next_report += nj / 40 + 1;
             eprintln!(
-                "  job {:6}/{}: {:?} sim.live {:.2} GB rss.peak {:.2} GB t={:.1}s",
+                "  job {:6}/{}: {:?} sim.live {:.2} GB rss {:.2} GB (anon {:.2}, file {:.2}) rss.peak {:.2} GB t={:.1}s",
                 tj,
                 nj,
                 jb,
                 (plan.live[tj] * W::BYTES) as f64 / 1e9,
+                rss_kb("VmRSS:") as f64 / 1e6,
+                rss_kb("RssAnon:") as f64 / 1e6,
+                rss_kb("RssFile:") as f64 / 1e6,
                 crate::block::peak_rss() as f64 / 1e9,
                 t0.elapsed().as_secs_f64()
             );
