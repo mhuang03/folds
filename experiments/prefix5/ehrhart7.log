@@ -3,3 +3,4 @@ k=3: 8 candidates, 6 nonempty classes, 6 order types, 0 with >1 class
 k=4: 48 candidates, 24 nonempty classes, 24 order types, 0 with >1 class
 k=5: 384 candidates, 116 nonempty classes, 116 order types, 0 with >1 class
 k=6: 3712 candidates, 660 nonempty classes, 660 order types, 0 with >1 class
+k=7: 42240 candidates, 4260 nonempty classes, 4260 order types, 0 with >1 class

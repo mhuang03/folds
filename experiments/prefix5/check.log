@@ -1,0 +1,9 @@
+T(N,5) = series on brute5_1_60.txt: 60 values, N in [1]..[60]
+T(N,5) = series on heldout5_a.txt: 4 values, N in [197]..[301] [197, 211, 250, 301]
+T(N,5) = series on heldout5_b.txt: 1 values, N in [420]..[420] [420]
+T(N,5) = series on ../prefix/T5.txt: 124 values, N in [1]..[124]
+T(N,5) = series on ../prefix/T5b.txt: 72 values, N in [125]..[196]
+T(N,6) = series on brute6_1_60.txt: 60 values, N in [1]..[60]
+T(N,6) = series on heldout6_a.txt: 2 values, N in [97]..[120] [97, 120]
+T(N,6) = series on ../prefix/T6.txt: 90 values, N in [1]..[90]
+T(N,4) fitted formula (../prefix/formulas.py) = exact series for N = 1..1008

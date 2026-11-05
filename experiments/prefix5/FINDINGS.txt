@@ -7,6 +7,9 @@ semi-symmetric).  See ../prefix/FINDINGS.txt for the polytope mechanism.
 RESULT (exact, derived; no fitting)
   T(N,5): degree 5, period 1680 = 16*3*5*7 (exactly; attained only in the constant term).
   T(N,6): degree 6, period 104160 = 32*3*5*7*31 (exactly; attained only in the constant term).
+  T(N,7): period exactly 624960 = 64*9*5*7*31 (no full table).
+  General: period(T(N,k)) = B(k) = lcm(2^{k-1}, 2^a (2^s - 1) : a + s = k - 1), k = 2..7 except
+  k = 3 (6 = B(3)/2).  The coefficient of N^{k-m} has period B(m), independent of k.
   Both quasi-polynomials hold for ALL N >= 0, with no exceptional small N.
   As a byproduct, the fitted T(N,4) of ../prefix (period 168) is now derived exactly.
 
@@ -50,7 +53,7 @@ T(N,6) only in T6_compact.txt (qp6_c0.txt, 3 MB, is git-ignored; it is regenerat
 check.py and checkpieces.py.  All agree exactly:
   * T(N,5): brute force (prefix.c 'brute', i.e. the definition) for N = 1..60
     [brute5_1_60.txt]; ../prefix/T5.txt + T5b.txt, N = 1..196; held-out prefix.c runs at
-    N = 197, 211, 250, 301 [heldout5_a.txt].
+    N = 197, 211, 250, 301, 420 [heldout5_a.txt, heldout5_b.txt].
   * T(N,6): brute force for N = 1..60 [brute6_1_60.txt]; ../prefix/T6.txt, N = 1..90; held out
     at N = 97, 120 [heldout6_a.txt].
   * Class by class: at N = 60 each of the 24 / 116 / 660 class counts of pieces.c
@@ -121,9 +124,30 @@ T(N,6) = sum_{j=0..6} c_j(N) N^j, common denominator 10667989204992000.
   Only 4 of the 660 classes have lcm(d) = 104160, and 86 have 1680.
 
 
+4b. T(N,7): period and staircase (k7.py, k7.log)
+-------------------------------------------------
+ehrhart.py 7 runs in about 4 min: 42240 candidates, 4260 classes (the 4260 of contpatterns.py),
+again one class per order type.  All class GFs are proper.  The lcm of the class periods is
+624960 = 2^6 3^2 5 7 31 = B(7); only 2 classes attain it (134 have 104160).  Building the
+full exact table is out of reach in pure Python (134 classes of period 104160), so k7.py
+establishes the following instead:
+  * c_7 = sum num(1)/(prod d * 7!) = 12908310624317597/3982715969863680000, exactly the volume sum
+    of ../prefix (vol7_half.txt).
+  * T(N,7) mod q (q = 2^31-1 and 2147483629) for N < 9P, by numpy expansion of the 229
+    denominator groups; agrees with ../prefix/T7.txt (N <= 48).
+  * The period is EXACTLY 624960: P is a period (proven: lcm of the proper class GFs).  For
+    Q = P/2, P/3, P/5, P/7, P/31 the 8-fold Q-step difference of T is nonzero mod q, which
+    rigorously certifies that Q is not a period.
+  * Staircase: Delta_Q^8 T has degree max{ j : c_j(N) not Q-periodic }.  For Q = P/d, d = 2,
+    3, 4, 5, 7, 8, 9, 16, 31, 32, 64, the measured degrees 0,0,1,2,3,2,4,3,1,4,5 equal the
+    staircase prediction period(c_{7-m}) = B(m) in all 11 cases.  So T(N,7) has c_7, c_6
+    constant, and c_5, c_4, c_3, c_2, c_1, c_0 of periods dividing 2, 12, 168, 1680, 104160,
+    624960, with the p-parts attained as tested.
+
+
 5. Structure of the periods
 ---------------------------
-The period of T(N,k) is 2, 6, 168, 1680, 104160 for k = 2..6.  Coefficient by coefficient the
+The period of T(N,k) is 2, 6, 168, 1680, 104160, 624960 for k = 2..7.  Coefficient by coefficient the
 periods form a staircase that does not depend on k:
 
    period of c_{k-m}(N), the coefficient of N^{k-m}:
@@ -133,7 +157,9 @@ periods form a staircase that does not depend on k:
         m = 4:     168
         m = 5:     1680
         m = 6:     104160
-   verified for every coefficient of T(N,3), T(N,4), T(N,5), T(N,6).
+        m = 7:     624960      (k = 7, section 4b)
+   verified exactly for every coefficient of T(N,3)..T(N,6), and by the difference test of
+   section 4b for T(N,7).
 
 So the period of T(N,k) is B(k), with
    B(m) = lcm( 2^{m-1}, 2^a (2^s - 1) for a + s = m - 1, s >= 1 ):
@@ -167,8 +193,8 @@ These are the doubling-map orbits of the README's cyclic form E(2c) = 2E(c): 2^s
 number of periodic points of x -> 2x mod 1 of period dividing s, and 2^a is the number of
 preimages along a chain.  The same primes appear in the denominators of the leading
 coefficients: 7 at k = 4; 5, 7 at k = 5; 7, 31 at k = 6.
-Prediction: T(N,7) has period B(7) = lcm(64, 16*3, 8*7, 4*15, 2*31, 63) = 624960 = 2^6 3^2 5 7 31.
-This would be the first time 9 appears, from 63 = 2^6 - 1.
+k = 7 confirms this (section 4b): the period is B(7) = lcm(64, 16*3, 8*7, 4*15, 2*31, 63) =
+624960 = 2^6 3^2 5 7 31, with 9 appearing for the first time (from 63 = 2^6 - 1).
 
 
 6. Files
@@ -182,4 +208,5 @@ This would be the first time 9 appears, from 63 = 2^6 - 1.
   denoms.py K       common denominators
   check.py          the data comparisons of section 2
   checkpieces.py K FILE   class-by-class comparison with pieces.c output
-  logs: combine5.log, qpoly5.log, qpoly6.log, ehrhart6.log
+  k7.py             T(N,7): c_7, exact period, staircase test (mod-q series to 9P)
+  logs: k7.log, combine5.log, qpoly5.log, qpoly6.log, ehrhart6.log

@@ -1,0 +1,28 @@
+c_7 = 12908310624317597/3982715969863680000 = 0.003241082397537734
+matches ../prefix value 12908310624317597/3982715969863680000: True
+P = 624960
+229 distinct denominators
+q=2147483647: T7.txt N = 1..48 agree: True
+   Q = P/2 = 312480: NOT a period (first N with D != 0: 1)
+   Q = P/3 = 208320: NOT a period (first N with D != 0: 0)
+   Q = P/5 = 124992: NOT a period (first N with D != 0: 0)
+   Q = P/7 = 89280: NOT a period (first N with D != 0: 0)
+   Q = P/31 = 20160: NOT a period (first N with D != 0: 0)
+q=2147483629: T7.txt N = 1..48 agree: True
+   Q = P/2 = 312480: NOT a period (first N with D != 0: 1)
+   Q = P/3 = 208320: NOT a period (first N with D != 0: 0)
+   Q = P/5 = 124992: NOT a period (first N with D != 0: 0)
+   Q = P/7 = 89280: NOT a period (first N with D != 0: 0)
+   Q = P/31 = 20160: NOT a period (first N with D != 0: 0)
+staircase test (last q):
+   Q = P/2 = 312480: max j with c_j not Q-periodic = 0  (staircase predicts 0)
+   Q = P/3 = 208320: max j with c_j not Q-periodic = 0  (staircase predicts 0)
+   Q = P/4 = 156240: max j with c_j not Q-periodic = 1  (staircase predicts 1)
+   Q = P/5 = 124992: max j with c_j not Q-periodic = 2  (staircase predicts 2)
+   Q = P/7 = 89280: max j with c_j not Q-periodic = 3  (staircase predicts 3)
+   Q = P/8 = 78120: max j with c_j not Q-periodic = 2  (staircase predicts 2)
+   Q = P/9 = 69440: max j with c_j not Q-periodic = 4  (staircase predicts 4)
+   Q = P/16 = 39060: max j with c_j not Q-periodic = 3  (staircase predicts 3)
+   Q = P/31 = 20160: max j with c_j not Q-periodic = 1  (staircase predicts 1)
+   Q = P/32 = 19530: max j with c_j not Q-periodic = 4  (staircase predicts 4)
+   Q = P/64 = 9765: max j with c_j not Q-periodic = 5  (staircase predicts 5)
