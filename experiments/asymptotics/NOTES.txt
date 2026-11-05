@@ -1,0 +1,394 @@
+ASYMPTOTICS OF a(N): HEURISTIC THEORY, NUMERICS, RIGOROUS PIECES   (experiments/asymptotics/)
+=========================================================================================
+
+Notation as in ../growth/PROOFS.txt.  S = panels bisected so far, k = |S|, f = N - k free
+panels, V(S) = number of valid next panels.  "[Lean]" = Folds/Asymptotics.lean (no sorry,
+no native_decide), "[paper]" = proved here, "[data]" = computed, "[heur]" = heuristic.
+
+The imbalance field.  J(m) = J_S(m) = #(S in right arm of m) - #(S in left arm of m).
+A free panel m is a valid move iff J(m) = 0, so V(S) = #{free m : J(m) = 0}.
+In cyclic form J(m) = P~(2m-1) - 2 P(m-1) + (0 or -1 local term) ~ E(2c) - 2E(c),
+E(x) = P(x) - k x/N the discrepancy, c = m - 1/2.
+
+SUMMARY
+-------
+Conjecture (best supported):   c = 1, with a ln ln N second-order term:
+     ln a(N) = N ln N - N - N ln sigma_bar(N) - O(N),   sigma_bar(N) = Theta(ln N) (heuristic),
+     a(N) = N! / (kappa_N ln N)^N  with kappa_N slowly varying (0.92 at N = 1024, 0.96 at 2048,
+     1.01 at 4096, rising; heuristic limit ~1.4), i.e. a(N) = N!/(Theta(log N))^{N(1+o(1))}, as the growth agent conjectured.
+The exact mechanism, in three steps:
+ (1) [data] Acceptance is a local CLT: V/(N-k) = G/(sqrt(2pi) sigma_J), G = 1.02-1.05, where
+     sigma_J is the spread of the integer imbalance field J over the free panels (valid move
+     = free zero of J).  This holds to 2-5% at every N = 64..4096 and every stage k/N.
+     So  d(N) := (ln N! - ln a(N))/N = ln sqrt(2pi) + mean_t ln sigma_J(t) - mean_t ln G.
+ (2) [data + heur] Low discrepancy is produced by SELECTION, not by the dynamics: the uniform
+     random greedy has sigma_J ~ 10-70 and never completes (0/100 runs, N = 64..16384).
+     a(N) is a Feynman-Kac (directed-polymer) partition function: random set paths weighted
+     by prod_k 1/sigma_J(S_k).  The "soft" model that keeps only this weight (toy.c: random
+     permutations weighted by prod_k (N-k)/(sqrt(2pi) sigma_J)) reproduces sigma_J of the
+     true process within 4-7% and d(N) within 0.04-0.1 for N = 64..2048.
+ (3) [heur] Gaussian Feynman-Kac analysis of the Fourier modes along doubling chains
+     (var J = sum_n |S^(n/2) - S^(n)|^2/(pi n)^2): each mode is confined only while it lives,
+     giving equal contributions ~ sigma_J per octave of frequencies up to ~N/sigma_J, hence
+     sigma_J^2 ~ A sigma_J ln N, i.e. sigma_J = A (ln N - ln sigma_J) + B: LOGARITHMIC, not
+     sqrt(log N) and not a power.  Predicted A = 0.35-0.45; fitted A = 0.66.
+Numerics (smc3.c, a corrected and much faster SMC; N up to 4096, 1-2 cores):
+   * old SMC estimates were biased low by up to 28 in ln a at N = 1024 (ln of an unbiased
+     estimator; bias ~ 0.04 N^2/P).  New: ln a(512) = 1815.8(6), ln a(1024) = 4182(3),
+     ln a(2048) = 9494(8), ln a(4096) = 21269 (+-10).
+   * sigma_bar(N) = exp(mean_t ln sigma_J) = 1.36, 1.65, 1.99, 2.32, 2.69, 3.07, 3.48 for
+     N = 64, 128, ..., 2048, 4096: fits (ln N)^{1.35} or A(lnN - ln sigma)+B (rms 0.015-0.021),
+     not N^g (rms 0.054, systematic residuals) and not sqrt(ln N) (rms 0.065).  The local power exponent
+     d ln sigma / d ln N falls: 0.30, 0.25, 0.21, 0.21, 0.19, 0.19, 0.17 (N = 128 .. 3072);
+     out of sample, the fits on N <= 2048 predicted sigma_bar(4096) = 3.38-3.43 (log forms)
+     or 3.71 (power): measured 3.48.
+   * d(N) fits: alpha ln ln N + b + e/ln N with alpha = 1.7 (rms 0.004), or c' ln N + b + e/ln N
+     with c' = 0.15 (i.e. c = 0.85, rms 0.0015) - the deficit alone cannot decide; the sigma_J
+     analysis (falling local exponent, logarithmic per-octave structure) is what favours c = 1.
+Rigorous (new, Lean, Folds/Asymptotics.lean, no sorry/native_decide):
+   * dipole lemma (imb_cons): adding x changes J by +1 on [x/2+1, x-1], -1 on [x+1, (N+x)/2];
+   * binary-digit decomposition (dyadic_defect, semiStep_iff_dyadic): for N = 2^L the cyclic
+     defect P~(2m-1) - 2P(m-1) is a sum over the one-bits of m-1 of doubling-balance terms
+     #(2 I_j) - 2 #(I_j) of the dyadic intervals along its binary expansion, plus one local bit;
+   * half-circle balance (half_balance): for N = 2h, if m and m+h are both valid then exactly
+     |S|/2 points of S lie in [m, m+h-1] (generalises the parity lemma).
+   No super-exponential lower bound was proved.  Section 4 reduces it to exhibiting a
+   dead-end-free strategy with N^{c'} choices on a positive fraction of steps, and explains why
+   the natural candidates (unguided moves; equal-count rounds = the composition theorem) fail.
+
+
+
+=========================================================================================
+1. EXACT STRUCTURE OF THE VALIDITY CONDITION
+=========================================================================================
+
+1.1 Dipole lemma                                              [Lean: imb_cons]
+-----------------
+Adding a new panel x (x not in S) changes J at every panel m != x by
+     +1  if  m < x <= 2m - 1        (x in the right arm of m; m in [floor(x/2)+1, x-1])
+     -1  if  2m - N <= x < m        (x in the left arm of m;  m in [x+1, floor((N+x)/2)])
+      0  otherwise.
+The two supports have floor((x-1)/2) and floor((N-x)/2) panels (card_plus_support,
+card_minus_support): every placed panel moves the field on about half of the strip
+(the "1/2" of the window rule).  On the circle R/NZ the dipole of x is +1 on (x/2, x),
+-1 on (x, (x+N)/2): the two preimages of x under the doubling map are its ends.
+A panel whose window misses x is unaffected (imb_cons_of_not_mem_window,
+semiStep_cons_iff).  smc*.c and desc.c update J by exactly this rule, O(N) per step.
+
+1.2 Binary-digit decomposition (N = 2^L)        [Lean: dyadic_defect, semiStep_iff_dyadic]
+----------------------------------------
+Write positions 0..N-1 (panel p <-> position p-1), S' = S - 1, n(w) = |S' in I_w| for the
+dyadic interval I_w of a binary word w, sigma(w) = w without its first digit (sigma is the
+doubling map on intervals: 2 I_{aw'} = I_{w'}).  For x = m - 1 = sum_i b_i 2^{L-i}:
+     I(x) := P~(2m-1) - 2 P(m-1)
+           = sum_{i=1}^{L} b_i(x) D(w_i(x))  +  1[2x mod N in S'],
+     w_i(x) = b_1 .. b_{i-1} 0,     D(w) := n(sigma w) - 2 n(w)
+(free m is valid iff I(x) = 0).  Proof: [0, y) is the disjoint union of the intervals
+I_{b_1..b_{j-1}0} over the digits b_j(y) = 1, so P(y) = sum_{j: b_j=1} n(b_1..b_{j-1}0);
+apply this to y = x and to 2x+1 mod N, whose digits are b_2..b_L 1 (the doubling map
+shifts digits), and use s = n(0) + n(1) for the wrap term b_1 s.  The i-th term compares
+the count in a level-(i-1) interval with twice the count in one of its two preimages under
+doubling.  D(w) = 0 for all w means: the counting measure is invariant under the doubling
+map, and splits equally between the two preimages.  dyadic.py verifies the identity on
+every SMC snapshot (N = 256, 512, 1024; 600 sets each).
+Consequence: valid sets are "doubling-balanced at every scale" along the digit path of the
+new panel; the condition is a sum of L level terms, which is why discrepancies at all
+scales enter and why log N (the number of scales) appears.
+
+1.3 The acceptance is a local CLT                               [data]
+---------------------------------
+Along the SMC paths (uniform measure on valid prefixes) the share of free panels with J = 0 is
+    frac = V/(N-k) = G / (sqrt(2 pi) sigma_J),   G = 1.02 - 1.05,
+sigma_J = standard deviation of J over the free panels, for every N = 64..4096 and every
+t = k/N in [1/8, 7/8] (diag3.py; the integrated mean_t log G is 0.016-0.048, table in 3.2).
+The histogram of J over free panels is close to Gaussian (kurtosis 3.2-3.6, h(0) ~ h(+-1)).
+So the whole question is the size of sigma_J(N, t):
+    ln a(N) = ln N! - N d(N),    d(N) = mean_t ln(sqrt(2 pi) sigma_J(t)) - mean_t ln G.
+(The max discrepancy Dmax = max_x |E(x)| is about 1.4 sigma_J at N = 64 and 1.75 sigma_J at
+N = 2048, so frac x Dmax = G (Dmax/sigma_J)/sqrt(2pi) = 0.58-0.72: this is the growth agent's
+"fraction x discrepancy ~ 0.65".  The relevant quantity is the typical spread sigma_J, not Dmax.)
+
+
+=========================================================================================
+2. HEURISTIC THEORY: WHY sigma_J GROWS LIKE ln N
+=========================================================================================
+
+2.1 Low discrepancy is selection, not dynamics                  [data: desc.c]
+-----------------------------------------------
+The uniform random greedy process (each step a uniformly random valid panel) does NOT keep
+the discrepancy small: sigma_J grows fast (sigma_J ~ 10-70 already at k ~ N/4 for N = 4096),
+frac drops to 0.002-0.02, and the process dies: 0 of 20 runs complete for each of
+N = 64, 256, 1024, 4096, 16384 (median death at k/N = 0.35-0.6).  The uniform measure on
+valid sequences is the greedy process reweighted by prod_k V(S_k):
+     a(N) = E_greedy[ 1{complete} prod_k V(S_k) ]             (importance sampling identity)
+          = N! E_perm[ prod_k 1{x_k valid} ] = N! E[ prod_k p_k ],  p_k ~ 1/(sqrt(2pi) sigma_J(S_k)).
+So a(N) is a Feynman-Kac (directed-polymer) partition function: the path of sets S_k is
+weighted by exp(-sum_k ln sigma_J(S_k)).  Low-discrepancy paths dominate the COUNT because
+they have exponentially more continuations.  This is why the SMC (which resamples by V)
+sees small sigma_J while unguided paths blow up, and why no "potential" is preserved by
+the dynamics itself.
+
+Test of this picture (toy.c, "soft model"): random permutations (each step a uniformly random
+FREE panel, valid or not) weighted by prod_k (N-k)/(sqrt(2pi) sigma_J(S_k)) - the hard constraint
+replaced by its local-CLT average, nothing else kept.  Population SMC, P = 4000-16000:
+     N            64     128    256    512    1024   2048
+     sigma(1/2)  1.53   1.86   2.18   2.48   2.88   3.29     (true process: 1.64 1.96 2.28 2.64 3.00 3.44)
+     sigma_bar   1.27   1.55   1.88   2.20   2.57   2.93     (true: 1.36 1.65 1.99 2.32 2.69 3.07)
+     d(N)        1.06   1.29   1.48   1.65   1.81   1.95     (true: 1.17 1.37 1.54 1.70 1.85 1.99)
+The soft model tracks the true sigma_J within 4-7% with the same growth, and its deficit
+converges to the true one.  So the asymptotics of a(N) is that of this Feynman-Kac problem
+with potential ln sigma_J; the exact zero condition only adds a lower-order correction.
+
+2.2 Fourier form of sigma_J                                      [paper, continuum version]
+---------------------------
+With S^(n) = sum_{x in S} e(-n x/N) and E^(n) = S^(n)/(2 pi i n),
+     J^(n) = E^(n/2)[n even] - 2E^(n) = (S^(n/2)[n even] - S^(n)) / (pi i n),
+     var_x J = sum_{n != 0} |Delta_n|^2 / (pi n)^2,    Delta_n := S^(n/2)[n even] - S^(n).
+Every frequency n >= 1 carries one "spring" Delta_n linking n to n/2 along its doubling chain
+n0, 2n0, 4n0, ... (n0 odd, pinned to 0 at the bottom).  J is small iff the Fourier transform of S
+is nearly constant along doubling chains and small at odd n, with weight 1/n^2.
+A random k-set has E|S^(n)|^2 = k(1 - k/N) for all n (white), so var J = (5/12) k (1 - k/N)
+(sum over odd n of 1/n^2 plus twice the even ones): the Wallis model, acceptance ~ k^{-1/2}.
+
+2.3 Gaussian Feynman-Kac model                                  [heur; fkmodel.py]
+-------------------------------
+Model: the Fourier modes S^(n) are the dynamical variables; each step adds a point at a
+random position, which kicks every S^(n) by an independent unit complex amount e(-n x/N).
+The path weight is  prod_k sigma_J(k)^{-1} = exp(-(1/2) sum_k ln var J(k)).  Linearise
+ln var J around its typical value s^2 (self-consistent / Hartree approximation):
+     weight ~ exp(-sum_k sum_{n>0} c_n |Delta_n(k)|^2),   c_n = 1/(pi n s)^2.
+For a random walk under a quadratic potential applied at every step, the Feynman-Kac path
+measure has, in the bulk, the marginal (ground state)^2: for one real coordinate with kick
+variance D and potential c x^2, var = sqrt(D/(8c)), NOT the static Gibbs value 1/(2c), and the
+relaxation time is ~ 1/sqrt(cD).  Single-mode version (ignore that Delta_n shares S^(n/2) with
+Delta_{n/2}; kicks to Delta_n have E|kick|^2 = 2):
+     E|Delta_n|^2 = pi n s / sqrt(2),   contribution to var J:  2 E|Delta_n|^2/(pi n)^2 = sqrt(2) s/(pi n),
+for n below n* ~ N/(pi s), where the relaxation time ~ pi n s reaches the available time N;
+above n* the modes are free and add ~ s/pi.  Every octave of n < n* contributes the same
+amount, proportional to s, so
+     s^2 = var J = (sqrt(2)/pi) s (ln n* + O(1))   =>   sigma_J = A (ln N - ln sigma_J) + B,
+with A = sqrt(2)/pi = 0.45.  The version with the chain coupling (potential v^T K v on each
+doubling chain n0, 2n0, 4n0, ..., self-consistency  sum_chains tr sqrt(K) = 1) gives the same
+law with A = 0.345 (fkmodel.py: tr sqrt(K~) = 0.345 ln M + const).
+[The static Gibbs version of the same model gives sigma_J = O(1).  The time direction is what
+makes it logarithmic: a mode is penalised only for as long as it lives, so its equilibrium
+amplitude is ~ c^{-1/2} instead of c^{-1}, and the per-mode contributions sigma/n add up to
+sigma ln N.]
+Checks (dyadic.py on SMC snapshots, t = 1/2):
+ * sigma_J grows like ln N, not like sqrt(ln N) (each octave would then contribute an
+   N-independent amount; it does not, see below) - but faster than the model at the
+   available N (local slope d sigma/d lnN = 0.45-0.5 for N <= 512, 0.55-0.6 for N = 1024-2048,
+   fitted A(lnN - ln sigma) + B: A = 0.66-0.68; section 3.3).
+ * The low-frequency structure factor is linear in n, as predicted (|S^(n)|^2 ~ E|Delta|^2
+   summed along the chain ~ n s): |S^(n)|^2 ~ 8 n for 1 <= n <= N/16 at N = 256..1024
+   (|S^(1)|^2 = 7.7, 8.1, 8.4, 10.8 at N = 256, 512, 1024, 2048), against N/4 for a random set:
+   valid sets are "hyperuniform" below n ~ 0.1 N.
+ * Contribution of the octave n in [2^j, 2^{j+1}) to var J at t = 1/2:
+      N = 1024: 1.72 1.58 1.44 1.35 0.99 0.71 0.59 0.30 0.16
+      N = 2048: 2.13 2.18 1.80 1.59 1.39 1.13 0.88 0.51 0.28 0.16
+   (single-mode model: 1.37 for n = 1, then 0.95 per octave at s = 3).  Nearly flat over the
+   octaves below ~N/32, as predicted, and growing with N at fixed octave (j = 2: 1.02, 1.26,
+   1.44, 1.80 at N = 256, 512, 1024, 2048) - like sigma^{1.5} rather than sigma^1, which is
+   why the effective growth is faster than the model's.
+ * The level terms of 1.2 have total variance 4-4.5 times var I; cross-level covariances
+   (adjacent levels correlate at -0.2 to -0.3) cancel 74-78% of it.
+The model captures the mechanism (selection along the path + doubling chains) and the
+logarithmic law; its constant is a factor ~1.5-2 too small and it does not explain the
+slow increase of the local slope.  Since the soft model (2.1) reproduces the data, the
+discrepancy is in the Gaussian/linearised treatment of the FK problem, not in the FK picture.
+Likely cause: ln var J is concave, so linearising it over-penalises large excursions of the
+few lowest modes, which carry 20-40% of var J (octaves 0-2 above).
+
+2.4 Consequence for a(N)                                         [heur]
+------------------------
+With sigma_J(t) ~ A s(t) ln N (shape s(t) <= s(1/2) = 1 independent of N) and frac = G/(sqrt(2pi) sigma_J):
+     ln a(N) = ln N! - N ln ln N - beta N + O(N ln ln N / ln N)
+             = N ln N - N - N ln ln N - beta N + ...,
+     a(N) = N! / (kappa ln N)^{N (1 + o(1))},   kappa = sqrt(2 pi) A exp(mean_t ln s(t)) / G.
+So c = 1 in ln a ~ c N ln N, with the second-order term -N ln ln N (coefficient exactly 1).
+Because sigma_J = A(ln N - ln sigma_J) + B, the approach is slow: the effective coefficient of
+N ln ln N, fitted on N <= 4096, is 1.35-1.7, and e^{d(N)}/ln N still drifts (0.74 at N = 33,
+0.92 at N = 1024, 0.96 at N = 2048, 1.01 at N = 4096) towards kappa ~ sqrt(2pi) A e^{<ln s>}/G
+~ 1.4 (A = 0.655, e^{<ln s>} = sigma_bar/sigma(1/2) ~ 0.90, G ~ 1.03).
+
+
+=========================================================================================
+3. NUMERICS
+=========================================================================================
+3.1 Method and the bias of earlier estimates
+--------------------------------------------
+smc3.c: same estimator as growth/smc.c (prod_k mean_i V_i, resampling by V, uniform child),
+but (i) J is maintained incrementally by the dipole lemma on a compact list of free panels,
+O(N - k) per particle and step; (ii) the population grows as the free set shrinks,
+P_k = min(64 P, P N/(N - k)) (same total cost), which removes the extinctions near the end
+(growth/smc.c went extinct at N = 1024 in one of two runs; smc2.c with P = 1000 dies for
+N >= 1024).  A varying population keeps the estimator unbiased.
+The estimator of a(N) is unbiased, but ln of it is biased low, and the bias is large:
+replicate spread and the change with P give  bias(ln a) ~ -b(N)/P with b(N) ~ 0.04 N^2:
+   N = 512:  P = 1000: 1807.2 (sd 2.8, one extinction in 8);  4000: 1811.4;  16000: 1815.9;
+             64000: 1815.7 (3 runs);  256000: 1815.4  ->  ln a(512) = 1815.8 +- 0.6.
+   N = 1024: P = 1000: ~4158;  4000: ~4168;  6000: 4177.7 (4 runs, sd 5.8);
+             24000: 4183.5, 4180.5  ->  ln a(1024) = 4182 +- 3
+   (growth/PROOFS.txt had 4153.5 from P = 2000: 28 too low; its deficit 1.880 becomes 1.852).
+   N = 2048: P = 3000: 9389, 9435 (+2 extinct);  12000: 9490;  48000: 9501.6, 9487.2.
+The replicate spread grows like N/sqrt(P) (sd 1 at N = 512, P = 64000; sd 10 at N = 2048,
+P = 48000), so for the deficit d(N) = (ln N! - ln a)/N the error is ~ 1/sqrt(P) only:
+0.002 at N = 1024, 0.005 at N = 2048, ~0.003 at N = 4096.
+Exact checks: N = 20: 26.72 (exact 26.712), N = 33: 53.48 (exact 53.500), P = 20000.
+
+3.2 Estimates (largest P; sd = replicate spread; d = (ln N! - ln a)/N)
+      N    ln a(N)     sd     d(N)  e^d/lnN  sigma(1/2) sigma_bar   G_bar     (P, runs)
+     48       89.0    0.0   1.0764   0.7579                                  (32000, 2)
+     64      130.5    0.1   1.1660   0.7717     1.644     1.363    1.024     (32000, 2)
+     96      222.0    0.1   1.2848   0.7918     1.850     1.552    1.037     (32000, 2)
+    128      321.6    0.1   1.3656   0.8075     1.960     1.654    1.016     (32000, 2)
+    192      538.6    0.2   1.4710   0.8281     2.159     1.852    1.049     (32000, 2)
+    256      772.4    0.3   1.5422   0.8431     2.280     1.990    1.033     (32000, 2)
+    384     1275.8    0.8   1.6383   0.8649     2.495     2.190    1.037     (32000, 2)
+    512     1816.1    1.0   1.6992   0.8767     2.638     2.324    1.037    (256000, 2)
+    768     2964.6    2.0   1.7891   0.9007     2.857     2.527    1.034     (24000, 2)
+   1024     4182.0    2.1   1.8518   0.9192     3.004     2.689    1.033     (24000, 2)
+   1536     6762.6    8.7   1.9372   0.9458     3.260     2.917    1.032     (16000, 2)
+   2048     9494.4   10.2   1.9910   0.9604     3.436     3.074    1.031     (48000, 2)
+   3072                                         3.314 (sigma_bar)            (32000, 1; died at k = N-4)
+   4096    21269.0  ~10     2.1264   1.0080     3.854     3.480    1.025     (64000, 1)
+  (N = 4096, P = 16000: 21208.8, d = 2.141, sigma(1/2) = 4.05 and 4.13: at this P the population
+   drifts to worse states; P = 64000 is needed.  The 1536 row is P = 16000, probably ~5 low.)
+  G_bar = exp(mean_t ln(sqrt(2pi) sigma_J frac)) is the local-CLT constant of 1.3.
+(sigma_bar = exp(mean_t ln sigma_J(t)) is the t-average that enters d(N): by 1.3,
+ d(N) = ln sqrt(2pi) + ln sigma_bar - mean_t ln G, and mean_t ln G = 0.016-0.048.)
+
+3.3 Which growth law for sigma_J?
+---------------------------------
+sigma_bar(N) (the t-average entering d(N)), N = 64 .. 4096, 13 points (fit2.py):
+   C (ln N)^beta          beta = 1.35, C = 0.197         rms 0.015
+   A (ln N - ln s) + B    A = 0.655, B = -1.18 (FK form)  rms 0.021
+   a ln N + b             a = 0.51                        rms 0.034
+   C N^g                  g = 0.222                       rms 0.054, residuals - + + + + + + + - - -- (systematic)
+   a sqrt(ln N) + b                                       rms 0.065, systematic
+Local exponents between consecutive N:
+   N          128   256   512   768  1024  1536  2048  3072
+   d ln s / d ln N (local power)   0.30 0.25 0.21 0.22 0.21 0.19 0.19 0.17   (falling)
+   d ln s / d ln ln N              1.44 1.38 1.34 1.49 1.45 1.37 1.47 1.39   (flat, ~1.4)
+Out-of-sample test: fits on N <= 2048 predicted sigma(1/2) at N = 4096 = 3.73-3.77 (logarithmic
+forms) or 4.03 (power law); measured 3.85 with P = 64000 (the bias at this P is ~ +0.05; at
+P = 16000 it is +0.2-0.3), i.e. ~3.80.  Same for sigma_bar: predicted 3.38-3.43 (log forms)
+vs 3.71 (power); measured 3.48.
+Conclusion: sigma_J grows like a power of ln N with effective exponent ~1.35-1.4 on
+N = 64..4096; a power law N^g is disfavoured (its local exponent keeps falling, and it
+overshoots the out-of-sample point).  The FK form A(ln N - ln sigma) + B (asymptotic exponent 1)
+has effective exponent A ln N/(sigma + A) = 1.3-1.4 in this range, so it is consistent too.
+
+3.4 Fits of ln a(N)
+-------------------
+d(N) = (ln N! - ln a(N))/N on N = 64..4096 (fit2.py, weights from replicate spread + bias):
+   A   c' ln N + b                       c' = 0.243               rms 0.029  (bad)
+   A'  c' ln N + b + e/ln N              c' = 0.150, e = -2.80    rms 0.0014
+   B   alpha ln ln N + b                 alpha = 1.35             rms 0.012
+   D   alpha ln ln N + b + e/ln N        alpha = 1.69, e = +1.83  rms 0.0036
+   C   ln(ln N + mu) + b                 (alpha = 1)              rms 0.026
+Out-of-sample: fitted on N <= 2048 these predicted d(4096) = 2.126 (A'), 2.117 (D), 2.092 (B);
+measured 2.126 (P = 64000; bias about -0.003, so ~2.123 +- 0.006).
+In words: ln a(N) = ln N! - N d(N) with d(N) ~ (1.35-1.7) ln ln N + const over the range.
+The two-point exponent c from ln a/N = c ln N + b is 0.73, 0.76, 0.77, 0.80, 0.80 for
+N = 128-256, ..., 2048-4096 (still rising), and ln a(N)/ln N! = 0.662, 0.676, 0.688, 0.700,
+0.710 at N = 256, ..., 4096 (growth/PROOFS.txt had 0.683 at N = 1024 from biased estimates).
+A c < 1 law (A', c = 0.85) fits the deficit as well as c = 1 laws (D) - the deficit alone
+cannot decide, because d(N) = ln sqrt(2pi) + ln sigma_bar - ln G_bar and ln of a power of
+ln N looks like a small power of N over two decades.  The decision rests on sigma_bar
+(3.3) and on the theory (section 2), both of which favour logarithmic growth, i.e. c = 1.
+Best formula for extrapolation (c = 1 form, D):
+   ln a(N) ~ ln N! - N (1.69 ln ln N - 1.675 + 1.83/ln N)        (N >= 64; error < 0.01 N).
+
+
+
+=========================================================================================
+4. RIGOROUS RESULTS AND THE SUPER-EXPONENTIAL LOWER BOUND
+=========================================================================================
+4.1 What is proved here
+-----------------------
+* Dipole lemma and its corollaries (1.1) [Lean: imb_cons, ...].
+* Binary-digit decomposition (1.2) [Lean: dyadic_defect for arbitrary sets A, B and x < 2^L;
+  semiStep_iff_dyadic: for N = 2^L a step is semi-symmetric iff
+  sum_{j<L} dyTerm A B (m-1) j + [2(m-1) mod N + 1 in S] = 0; also checked on SMC sets].
+* Half-circle balance [Lean: half_balance].  N = 2h, 1 <= m <= h.  The panels m and m + h
+  have the same doubled position on the circle (2m - 1 and 2m - 1 + N), and
+  P~(j + N) = P~(j) + |S| (cycBelow_add_N), so their cyclic conditions differ exactly by
+  |S| - 2 #(S in [m, m+h-1]).  Hence if m and m + h are both valid,
+        #(S in [m, m + h - 1]) = |S| / 2       (exactly half of S in the half circle),
+  and  V(S) <= h + #{m <= h : #(S in [m, m+h-1]) = |S|/2}.
+  For |S| odd this is the parity lemma (Growth.lean: not_both_valid, V <= h); in general it
+  is the top-scale term of 1.2 and says a valid antipodal pair forces zero discrepancy of
+  S on the half circle starting at m.  Repeating the argument at scale N/2^j relates
+  validity of the 2^j panels m + i N/2^j to the balance of S over arcs of length N/2^j
+  (the level-j terms of 1.2); a rigorous upper bound would need this for typical paths.
+* Entropy reduction [paper, standard].  For every probability distribution Q on valid
+  sequences, a(N) >= exp(H(Q)) (Gibbs: log #A >= H(Q) for Q supported on A).  For a sequential
+  strategy that, from every state it can reach, has a nonempty set C(S) of allowed valid
+  moves (all of whose children are again such states) and picks uniformly from it,
+  H(Q) = E sum_k ln |C(S_k)|.  Also, for the uniform greedy, a(N) = E[1{complete} prod_k V_k]
+  exactly, so a(N) >= P(complete) exp(E[sum_k ln V_k | complete]) (Jensen).
+  Hence:  a(N) >= exp(c N ln N)  follows from ANY dead-end-free strategy that has at least
+  N^{c'} allowed moves on at least c''N steps.  This is the precise target; neither of the
+  two ingredients (no dead ends, many moves) is hard alone - the composition skeleton has no
+  dead ends and the first steps have N/2 moves - but no strategy is known that has both.
+
+4.2 Why the natural strategies fail                              [data + paper]
+-----------------------------------
+* Unconstrained moves: the uniform greedy dies on 100% of runs (2.1), so P(complete) is
+  exponentially small, and (2.1) shows the low-discrepancy states are reached only by
+  selection.  A proof must build in the global coordination that the uniform measure gets by
+  reweighting.
+* Equal-count rounds = composition.  By 1.2, if every block I_u (|u| = L - r, length 2^r) holds
+  the same number of points, all coarse terms D(w), |w| <= L - r, vanish (n(sigma w) = 2 n(w)
+  for unions of equally filled blocks), and validity of x depends only on the fine digits:
+  on the configuration inside the block of x and inside the two blocks 2u, 2u+1 (mod 2^{L-r})
+  that cover its doubling image.  During a round that gives each block one new point, the
+  coarse part of I(x) is I^Q_E(u) - 1[2u mod Q in E], where I^Q_E is the same function for
+  the coarse strip of Q = 2^{L-r} blocks and E is the set of blocks already served in this
+  round: the round is itself a Q-strip process.  If moreover every round uses one offset for
+  all blocks, the rounds add whole residue classes mod 2^r and we are in the composition
+  theorem a(qn) >= a(q) a(n)^q (q = 2^r offsets, n = Q blocks), which only gives
+  exponential growth (PROOFS.txt 1.1).  Any super-exponential family has to let the blocks
+  carry DIFFERENT configurations whose fine-scale terms still cancel - i.e. control of
+  sum_i b_i D(w_i) along all digit paths at once.  This is the statistical cancellation seen
+  in the data: the individual level terms b_i D(w_i) have total variance 3.8-4.5 times var I,
+  the cross-level covariances cancel 74-78% of it (dyadic.py, N = 256..1024).
+* Free blocks, splits, interleavings: PROOFS.txt 1.4.  The outer thirds [1, N/3] and
+  [2N/3, N] are mutually non-conflicting (dipole supports), but inside each third every
+  two panels conflict, so this gives one binomial factor C(2N/3, N/3), not a recursion.
+
+4.3 Upper bounds
+----------------
+The local CLT frac = G/(sqrt(2pi) sigma_J) is a statement about typical states, not a bound:
+crafted sets have V(S) = N - k (e.g. S = odds, where J = 0 on all evens).  A rigorous
+a(N) <= N!/(something)^N would need that valid paths cannot keep many free zeros of J for
+most of their length (the max path product is 0.87 ln N!, PROOFS.txt 2.4).  Nothing new is
+proved here; the FK picture suggests the right object is the largest eigenvalue of the
+transfer operator restricted to "low-discrepancy" states, which is not accessible.
+
+4.4 Status of the rigorous bounds
+---------------------------------
+Unchanged:  (1/2) e^{1.2829 N} <= a(N) <= N! e^{-(floor((N+1)/2)-1)/16}  (PROOFS.txt).
+No super-exponential lower bound was obtained.  The heuristic of section 2 says the truth is
+a(N) = N! / (kappa ln N)^{N(1+o(1))}.
+
+
+=========================================================================================
+5. FILES
+=========================================================================================
+smc2.c     SMC with the incremental field J (full arrays) and J-histogram diagnostics
+smc3.c     SMC with compact free lists, population growing near the end (P_k = P N/(N-k)),
+           diagnostics (frac, sigma_J, Dmax, structure function of E) and set snapshots
+desc.c     uniform random greedy descent (no resampling): death statistics, sigma_J growth
+toy.c      the soft Feynman-Kac model (random permutations weighted by prod (N-k)/(sqrt(2pi) sigma_J))
+fkmodel.py Gaussian Feynman-Kac model on doubling chains (A = 0.345);  table.py  table of 3.2
+diag.py, diag3.py   summaries of the diagnostics;  dyadic.py  binary-digit identity check,
+           level variances and Fourier/octave decomposition of var J;  fit2.py  fits
+sweep1.sh, sweep2.sh, pscan.sh, big.sh   run scripts;  runs/   outputs (prod.txt, pscan.txt,
+           big.txt: estimates; d_N_P_seed.txt: diagnostics; desc.txt: greedy runs)
+Lean: Folds/Asymptotics.lean (imb, semiStep_iff_imb, leftCount_cons, rightCount_cons,
+           imb_cons [dipole lemma], imb_cons_of_not_mem_window, semiStep_cons_iff,
+           card_plus_support, card_minus_support; cnt, dyTerm, dyadic_defect,
+           below_eq_cnt, cycBelow_eq_cnt, semiStep_iff_dyadic [binary-digit decomposition];
+           cycBelow_add_N, half_balance [antipodal pairs]).

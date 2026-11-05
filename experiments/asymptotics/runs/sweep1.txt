@@ -1,0 +1,8 @@
+N=64 P=1000 loga_est=131.2707 logN!=205.1682 ratio=0.63982 deficit=1.15465
+N=128 P=1000 loga_est=320.9604 logN!=496.4055 ratio=0.64657 deficit=1.37066
+N=256 P=1000 loga_est=771.9363 logN!=1167.2573 ratio=0.66132 deficit=1.54422
+N=512 P=1000 loga_est=1799.6443 logN!=2686.0605 ratio=0.66999 deficit=1.73128
+N=1024 extinct at k=1021
+N=2048 extinct at k=2021
+N=4096 extinct at k=3994
+N=8192 extinct at k=6197

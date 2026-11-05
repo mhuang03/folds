@@ -1,0 +1,10 @@
+N=256 P=4000 toy_logw=787.854 deficit=1.4820 sigma(1/4)=2.163 sigma(1/2)=2.176 sigma(3/4)=1.926 sigma_bar=1.876
+N=512 P=4000 toy_logw=1841.148 deficit=1.6502 sigma(1/4)=2.468 sigma(1/2)=2.478 sigma(3/4)=2.237 sigma_bar=2.200
+N=1024 P=4000 toy_logw=4220.329 deficit=1.8143 sigma(1/4)=2.880 sigma(1/2)=2.879 sigma(3/4)=2.631 sigma_bar=2.567
+N=2048 P=4000 toy_logw=9534.808 deficit=1.9713 sigma(1/4)=3.220 sigma(1/2)=3.365 sigma(3/4)=3.153 sigma_bar=2.980
+N=4096 P=4000 toy_logw=21268.726 deficit=2.1264 sigma(1/4)=3.767 sigma(1/2)=3.948 sigma(3/4)=3.527 sigma_bar=3.457
+
+real	2m18.765s
+user	1m17.641s
+sys	0m0.106s
+N=2048 P=16000 toy_logw=9571.010 deficit=1.9536 sigma(1/4)=3.176 sigma(1/2)=3.288 sigma(3/4)=3.002 sigma_bar=2.928

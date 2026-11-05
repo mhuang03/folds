@@ -31,6 +31,7 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `Extremal.lean` (Mathlib) | exact extremal laws. Left-to-right maxima: at most ⌊log₂N⌋+1, attained (`lrmax_le`, `exists_lrmax`). Free steps (window empty): at most ⌊log₂(N+1)⌋+⌊log₂((N+1)/3)⌋+1, attained (`numFree_le`, `max_free`). Shifted parity blocks (`shifted_blocks`) |
 | `Growth.lean` (Mathlib) | composition `semiCount_comp`: a(qn) ≥ a(q)·a(n)^q; doubling splits a(3n) ≥ 2a(n)a(2n) (also for 5n, 7n); branching upper bound `semiCount_le_prod`; parity upper bound `semiCount_even_le_prod`: a(2h) ≤ (2h)!·(√e/2)^{h(1+o(1))} |
 | `WindowRule.lean` (Mathlib) | `semiStep_iff_window`: the window rule (above/below counts decide the half and which panels the window holds); `card_validSuffixes`: valid suffixes = valid prefixes; dead 2-prefixes (1,N),(N,1) for even N; **`card_validPrefixes_three_formula`**: 36·T(N,3) = 8N³ − 3N² − (30 or 12)N + c(N mod 6) |
+| `Asymptotics.lean` (Mathlib) | dipole lemma `imb_cons` (how adding a panel changes the imbalance field); binary-digit decomposition of the step condition (`dyadic_defect`, `semiStep_iff_dyadic` for N = 2^L); half-circle balance `half_balance` |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
@@ -145,3 +146,9 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
   - So 0 ≤ c ≤ 1 is all that is rigorously known for log a(N) ~ c·N log N.
   - Sequential Monte Carlo estimates to N = 1024 give a local c of about 0.78, still
     rising, which is consistent with a(N) = N!/(O(log N))^N.
+- `experiments/asymptotics/NOTES.txt`. **Asymptotic conjecture:** a(N) = N!/(κ_N ln N)^N,
+  with κ_N slowly varying, so c = 1 with a second-order N ln ln N term.
+  - The acceptance rate of a step is a local CLT, G/(√(2π)σ_J), where σ_J is the spread of
+    the imbalance field.
+  - A Feynman–Kac / Gaussian analysis gives σ_J ~ A·ln N.
+  - Debiased sequential Monte Carlo (SMC) estimates up to N = 4096: ln a(4096) ≈ 21269.
