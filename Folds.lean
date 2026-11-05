@@ -8,3 +8,4 @@ import Folds.Blocks
 import Folds.Radius
 import Folds.Counting
 import Folds.Recursion
+import Folds.Congruence
