@@ -1,0 +1,183 @@
+Valid prefixes of fixed length: exact quasi-polynomials and the polytope mechanism
+==================================================================================
+
+Notation.  T(N,k) = number of length-k sequences of distinct panels of [1..N] in which every
+step is semi-symmetric.  V(N,k) = number of k-sets S with g(S) > 0.  c_k = lim T(N,k)/N^k.
+All counts below were computed on 1-2 cores with the programs in this directory.
+
+Files
+  prefix.c    T(N,1..K): DFS to depth K-1, last level by a breakpoint sweep (checked vs brute, N<=30)
+  sets.c      V(N,1..K) and sum_{|S|=k} g(S) (= T, used as a cross-check)
+  levels.c    full subset DP, N <= 22: T, V, completable prefixes, live sets per level
+  pieces.c    order-type decomposition (one polytope per order type, see section 4)
+  volumes.py  exact c_k as a sum of exact polytope volumes (scipy vertices snapped to Q, checked)
+  derive3.py  the hand derivations of T(N,2), T(N,3) (continuous and discrete), checked
+  fit.py, qfit.py, msearch.py, period.py   exact quasi-polynomial fitting / period screening
+  formulas.py the formulas below, checked against the data files
+  neighbor.c, suffix.py, deadpref.py, verts.py, oeis.py   side checks
+  data: T4.txt (k<=4, N<=400), T5.txt+T5b.txt (k<=5, N<=~200), T6.txt (k<=6, N<=90),
+        T7.txt (k<=7, small N), V4.txt+V4b.txt (V, k<=4, N<=~260), levels.txt (N<=22),
+        p3..p6.txt (pattern classes)
+
+
+1. Exact formulas
+-----------------
+T(N,1) = N
+T(N,2) = floor(N^2/2)                                                     [N = 1..400]
+T(N,3) = 2/9 N^3 - 1/12 N^2 + l(N) N + e(N),                             [N = 1..400]
+         l = -5/6 (N even), -1/3 (N odd);
+         e = -1/4 [N odd] + (0, 4/9, 2/9) for N = 0,1,2 mod 3.
+   Equivalently 36 T(N,3) = 8N^3 - 3N^2 - 30N + c (N even), 8N^3 - 3N^2 - 12N + c (N odd),
+   c = 0, 7, 8, -9, 16, -1 for N = 0..5 mod 6.  Period 6.
+T(N,4) = 4283/48384 N^4 - 353/3024 N^3 + q2(N) N^2 + q1(N) N + q0(N)      [N = 1..400]
+         q2 = -265/672 (N even), -631/896 (N odd)
+         q1 = (7/12, 35/32, 7/12, 9/32)[N mod 4] + (0, -8/27, -7/27)[N mod 3]
+         q0 = A(N mod 24) + B(N mod 7), B = (0, 4/7, 0, -2/7, 2/7, -4/7, 0),
+              A = 0, -4399/6912, 193/432, 451/256, -17/54, 8785/6912, 19/16, 785/6912,
+                  -20/27, -125/256, 161/432, 13969/6912, 1/2, 5969/6912, 193/432, 67/256,
+                  -22/27, -1583/6912, 19/16, 11153/6912, -13/54, 259/256, 161/432, 3601/6912
+   Period 168 = 8*3*7.  The fit has 40 unknowns and was checked on 360 further values; it
+   holds from N = 1 (no exceptional small N).
+V(N,2) = floor(N^2/3)                                                     [N = 1..220+]
+V(N,3) = 23/216 N^3 - 1/12 N^2 + v1(N) N + v0(N),                         [N = 1..220+]
+         v1 = (-1/3 if N even, -5/24 if N odd) - 1/9 [3 does not divide N]
+         v0 = -1/2 [N = 3 mod 4] + (0, 8/27, 10/27)[N mod 3].      Period 12.
+
+Leading coefficients c_k = lim T(N,k)/N^k, EXACT (polytope volumes, section 4):
+   k   c_k                                   k! c_k              c_k/c_{k-1}
+   1   1                                     1
+   2   1/2                                   1                   0.5
+   3   2/9                                   4/3                 0.4444
+   4   4283/48384      (48384 = 2^8 3^3 7)   4283/2016           0.3983
+   5   6214319/203212800 (2^11 3^4 5^2 7^2)  6214319/1693440     0.3455
+   6   21205971559/2031997943808 (2^18 3^6 7^3 31)  ~7.514       0.3413
+   c_5, c_6 agree with least-squares fits of the data (0.030580, 0.010436).
+   Numerators 4283, 6214319, 21205971559 are prime.  No product (Wallis-type) formula: the
+   denominators contain 7 = 2^3-1, 5, 31 = 2^5-1, i.e. the periods of the doubling map
+   x -> 2x mod 1 show up already in the volumes.
+   Comparison with the "random earlier set" product model, in which step j (j-1 earlier
+   points) is accepted with probability p_j = (2m+1) C(2m,m) / (4^m j), m = floor((j-1)/2)
+   (a Wallis factor): product = 1, 1/2, 1/4, 3/32, 9/256, 45/4096.  The ratio c_k/product is
+   1, 1, 0.889, 0.944, 0.870, 0.950: the true process is slightly below the model, with
+   the same even/odd alternation that a(N) shows.
+
+V leading coefficients: 1/3 (k=2), 23/216 (k=3), ~0.022091 (k=4, numerical).  As a fraction
+of all k-sets: 2/3, 23/36, ~0.5302.
+
+Not determined: an exact quasi-polynomial for T(N,5) (N <= ~200), T(N,6) (N <= 90) and V(N,4)
+(N <= ~260).  The L-step difference test excludes any period L <= 27 (T5) and <= 41 (V4), and
+a few hundred layered/additive ansaetze (msearch.py) with periods built from 16, 3, 5, 7, 15
+fail.  verts.py bounds the period by the lcm of vertex denominators of the hyperplane
+arrangement: 2 (k=2), 12 (k=3), 168 (k=4), 1680 = 16*3*5*7 (k=5) for sequences; for sets
+(both directions of comparison) 6, 84, 840.  T(N,4) attains the bound 168, so T(N,5) very
+likely needs period 1680 in its constant term, which needs N in the thousands.
+Lower coefficients are still accessible: T(N,6) and T(N,3) columns satisfy the period-6 test,
+T(N,2) the period-2 test, from the same data.
+
+
+2. Suffixes, completions, and T'(N,k)
+-------------------------------------
+* Suffix version = prefix version.  The number of length-k sequences that are valid as the
+  LAST k steps equals T(N,k) exactly (suffix.py, N <= 9, k <= 5).  Reason: in the window of
+  b_i the complement of S = [N] \ {b_i..b_k} is {b_{i+1}..b_k}, and validity is invariant
+  under complementation inside the window, so the reversed suffix is a valid prefix.  The same
+  argument gives Sum_{|S|=N-2} g(S) g(S^c) = a(N) with g({u,v}) = number of valid orders
+  of the pair, i.e. the meet-in-the-middle identity.
+* T'(N,k) := Sum_{|S|=N-k} g(S) = T(N,N-k).  T(N,N-1) = a(N); T(N,N-2)/a(N) = 0.80, 0.86,
+  0.83, 0.94, 0.90, ..., 0.966 at N = 22 (levels.txt).  Not a nice function (it is a(N)
+  times a ratio that drifts to 1 slowly); no further structure found.
+* Almost every short valid prefix can be completed (levels.c, N <= 22):
+     T(N,2) - #completable 2-prefixes = 2 if N even, 0 if N odd.
+     The only dead 2-prefixes are (1,N), (N,1) for even N: every later window then contains
+     exactly one of the panels 1, N (only the middle panel of odd N sees both).
+     T(N,3) - #completable 3-prefixes: N even: N/2 (N = 0 mod 4), (N-6)/2 (N = 2 mod 4) for
+     N = 6..22; N odd: 6, 20, 14, 18, 16, 20, 18, 22, 20 (N = 5..21).
+  So dead prefixes are a lower-order effect, O(N^{k-2}) for k = 2, 3.
+
+
+3. Derivations by hand (checked in derive3.py)
+----------------------------------------------
+Dipole picture.  x in S lies in the window of c iff its mirror image 2c - x about c is still
+in [1,N].  Hence, as a function of the candidate c, each earlier point x contributes
+   phi_x(c) = -1 on its left arm  A-_x = [ceil((x+1)/2), x-1]   (x is right of c, inside window)
+              +1 on its right arm A+_x = [x+1, floor((N+x)/2)]  (x is left of c, inside window)
+               0 elsewhere,
+and c is a valid step iff Sum_{x in S} phi_x(c) = 0.  |A-_x| = floor((x-1)/2),
+|A+_x| = floor((N-x)/2).  Continuum: arms (a/2, a) and (a, (1+a)/2), total length exactly 1/2
+for EVERY a.  This "every point blocks exactly half the strip" is the source of the 1/2's.
+
+T(N,2).  b is valid after a iff b is outside both arms of a, i.e. 2b <= a or 2b >= N+a+1.
+The number of such b is floor(a/2) + floor((N+1-a)/2), so
+   T(N,2) = Sum_a floor(a/2) + floor((N+1-a)/2) = 2 Sum_{a=1}^N floor(a/2) = 2 floor(N^2/4)
+          = floor(N^2/2).
+V(N,2).  For a < b: order (a,b) is valid iff 2b > N+a, order (b,a) iff 2a <= b.  The pair is
+unreachable iff a < b <= min(2a-1, floor((N+a)/2)), i.e. for min(a-1, floor((N-a)/2)) values
+of b.  So V(N,2) = C(N,2) - Sum_a max(0, min(a-1, floor((N-a)/2))) = floor(N^2/3) (checked
+N < 200).  The 3 comes from the crossing 2a = (N+a)/2 at a = N/3.
+
+T(N,3), continuum (c_3 = 2/9).  Given a valid (a,b), the measure of valid c is
+   Z(a,b) = |A-a & A-b| + |A+a & A+b| + 2|A+a & A-b| + 2|A-a & A+b|
+(because |A_a| = |A_b| = 1/2: c is valid iff it is outside both supports, or in arms of
+opposite sign).  By mirror symmetry take b < a/2 (the other case is b > (1+a)/2) and double.
+Then A-_b lies left of everything, A+_a and A-_b are disjoint, and
+   Z = (1+b)/2       if b >= 2a-1   (A+_b swallows all of A-_a),
+   Z = 1 + b - a     if b <  2a-1.
+The switch line b = 2a-1 meets the boundary b = a/2 at a = 2/3.  Integrating:
+   c_3 = 2 [ Int_0^{1/2} Int_0^{a/2} (1+b)/2
+           + Int_{1/2}^{2/3} ( Int_0^{2a-1} (1+b-a) + Int_{2a-1}^{a/2} (1+b)/2 )
+           + Int_{2/3}^1 Int_0^{a/2} (1+b-a) ] = 2/9.
+T(N,3), exact.  Valid 3-sequences fall into exactly 6 classes, one per order type, each the
+lattice points of ONE polytope (a, b, c = x1, x2, x3):
+   123:  a < b < c,  2b > N+a,  2c > N+b                       count P123 (period 4, ~N^3/48)
+   213:  b < a < c,  2b <= a,   2c > N+a                       count P213 = Sum_a floor(a/2) floor((N+1-a)/2)
+                                                               = N(N^2-1)/24 (N odd), N(N^2-4)/24 (N even)
+   132:  a < c < b,  2b > N+a,  max(a+1, ceil((b+1)/2)) <= c <= floor((N+a)/2)
+                                                               count P132 (period 12, ~7N^3/144)
+   and the mirror images 321, 231, 312 with the same counts.
+   (In 132, c must be inside the right arm of a AND the left arm of b: if it were outside
+   the arm of a, it would have to be outside the arm of b too, forcing b >= 2c > N + a > N.)
+   T(N,3) = 2(P123 + P213 + P132): volumes 2(1/48 + 1/24 + 7/144) = 2/9.  The periods 4 and 12
+   of the pieces partly cancel and the total has period 6.  The 3 comes from piece 132: the
+   lower bound for c switches from a+1 to ceil((b+1)/2) on the line b = 2a, which meets the
+   facet 2b = N+a at a = N/3 (the same crossing as in V(N,2); a = 2N/3 in the mirror image).
+   derive3.py checks P123, P213, P132 and the formula above against brute force (N <= 40).
+
+
+4. Mechanism: one polytope per order type (Ehrhart)
+---------------------------------------------------
+For a sequence x_1..x_k let sigma_ij (i < j) be +1 / -1 / 0 according as x_j lies in the right
+arm, the left arm, or neither arm of x_i.  Validity of the whole sequence is "every column
+of sigma sums to 0".  Given the order type pi and the matrix sigma, all conditions are
+linear inequalities of the form  x_i < x_j,  2x_j <= x_i,  2x_j >= x_i + 1,  2x_j <= N + x_i,
+2x_j >= N + x_i + 1,  1 <= x <= N, so each (pi, sigma) class is the set of lattice points of
+one parametric polytope P(N) = {A x <= b + N c}, and its count is a quasi-polynomial in N.
+
+Empirical theorem (pieces.c: k = 3, 4 for N <= 80; k = 5 for N <= 80; k = 6 for N <= 40 and
+N = 60; k = 7 at N = 34; no exceptions):
+   for a VALID sequence, sigma is a function of the order type alone.
+So
+   T(N,k) = Sum over admissible order types pi of #(Z^k ∩ P_pi(N)),
+a sum of Ehrhart-type quasi-polynomials, one polytope per order type.  This is the mechanism
+behind quasi-polynomiality, and it gives the leading coefficient as a finite sum of exact
+volumes, c_k = Sum_pi vol(P_pi(1)) (volumes.py reproduces 2/9 and 4283/48384, and gives c_5,
+c_6).  Number of admissible order types (those with nonempty P_pi for large N):
+   k = 1..6:  1, 2, 6, 24, 116, 660    (k = 7: >= 4256 at N = 34)   -- not in the OEIS.
+   The missing ones for k = 5 are 12453, 12543, 54123, 54213.
+For k <= 4 sigma follows a simple "neighbour rule": a new point that is a new minimum or
+maximum has no earlier point in its window, and an interior new point has exactly its two
+immediate neighbours (one each side) in its window (neighbor.c: 0 violations for k = 3, N <= 80 and k = 4, N <= 60).
+From k = 5 on, an interior point may also see 2+2 earlier points (e.g. 1,9,5,13,7 at N = 16),
+but which case occurs is still decided by the order type.
+
+Where the periods come from: the vertex denominators of these polytopes.  Constraints of type
+2x_j = x_i + {0, N} chain along the sequence; an undirected cycle of such halvings closes up as
+x = (stuff +- x/2^m), giving denominators 2^m +- 1 (3, 5, 7, 15, 31, ...), and chains of
+halvings give powers of 2.  So the periods are exactly "orbits of the doubling map" data:
+period 2 (k=2), 6 (k=3), 168 = 8*3*7 (k=4), presumably 1680 (k=5).  The same numbers appear
+in the denominators of c_k (7 at k=4; 5^2, 7^2 at k=5; 7^3, 31 at k=6).
+
+
+5. OEIS
+-------
+No matches (searched via oeis.py): T(N,3) from N=3, T(N,4) from N=4, T(N,5) from N=5,
+V(N,3), V(N,4), and the admissible-order-type counts 1,2,6,24,116,660.

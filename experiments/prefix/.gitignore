@@ -1,0 +1,7 @@
+prefix
+sets
+levels
+pieces
+neighbor
+__pycache__/
+*.out
