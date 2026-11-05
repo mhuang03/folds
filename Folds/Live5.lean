@@ -347,5 +347,173 @@ theorem inward_fSet_compl {n : Nat} (hn : 6 ≤ n) (he : n % 2 = 0) :
     simp only [List.range', List.countP_cons, List.countP_nil]
     split_ifs <;> simp only [decide_eq_true_eq] at * <;> omega
 
+/-! ## The copy `X_N = {1, 4, 6, …, N-3, N}` (`N = 2n - 1`, `n` even) is co-reachable
+
+Its complement `{2, N-1} ∪ {3, 5, …, N-2}` is the image of `[1, n]` under `psiX`
+(`1 ↦ 2`, `n ↦ N - 1`, `y ↦ 2y - 1`), which preserves the window relation except for the
+pairs `(1, 2)` and `(n, n - 1)`.  A full sequence of the `n`-strip placing `1` before `2` and
+`n` before `n - 1` is `τ ++ reverse φ`, with `τ` ordering the complement of `F` and `φ`
+ordering `F` from scratch (both by Theorem G). -/
+
+/-- `1 ↦ 2`, `n ↦ 2n - 2`, `y ↦ 2y - 1`. -/
+def psiX (n y : Nat) : Nat := if y = 1 then 2 else if y = n then 2 * n - 2 else 2 * y - 1
+
+/-- `1 ↦ 1`, `n - 1 ↦ 2n - 1`, `y ↦ 2y`: the copy `X_N`. -/
+def chiX (n y : Nat) : Nat := if y = 1 then 1 else if y = n - 1 then 2 * n - 1 else 2 * y
+
+/-- The pairs where `psiX` does not preserve the window relation. -/
+def excX (n i j : Nat) : Prop := (i = 1 ∧ j = 2) ∨ (i = n ∧ j = n - 1)
+
+theorem agree_psiX {n i j : Nat} (hn : 6 ≤ n) (hi1 : 1 ≤ i) (hin : i ≤ n) (hj1 : 1 ≤ j)
+    (hjn : j ≤ n) (_hij : i ≠ j) (he : ¬ excX n i j) : Agree (2 * n - 1) n (psiX n) i j := by
+  unfold excX at he; unfold Agree psiX reach; split_ifs <;> omega
+
+theorem psiX_inj {n a b : Nat} (hn : 6 ≤ n) (ha1 : 1 ≤ a) (han : a ≤ n) (hb1 : 1 ≤ b)
+    (hbn : b ≤ n) (e : psiX n a = psiX n b) : a = b := by
+  unfold psiX at e; split_ifs at e <;> omega
+
+theorem winEmb_chiX {n : Nat} (hn : 6 ≤ n) : WinEmb (2 * n - 1) (n - 1) (chiX n) := by
+  refine ⟨fun y h1 h2 => ?_, fun x y hx1 hxp hy1 hyp e => ?_, fun j y hj1 hjp hy1 hyp => ?_,
+    fun j y hj1 hjp hy1 hyp => ?_⟩
+  · unfold chiX; split_ifs <;> omega
+  · unfold chiX at e; split_ifs at e <;> omega
+  · unfold chiX reach; split_ifs <;> omega
+  · unfold chiX reach; split_ifs <;> omega
+
+theorem mem_image_psiX {n x : Nat} (hn : 6 ≤ n) :
+    x ∈ (Finset.Icc 1 n).image (psiX n) ↔
+      x = 2 ∨ x = 2 * n - 2 ∨ (x % 2 = 1 ∧ 3 ≤ x ∧ x ≤ 2 * n - 3) := by
+  rw [Finset.mem_image]
+  constructor
+  · rintro ⟨y, hy, rfl⟩; rw [Finset.mem_Icc] at hy; unfold psiX; split_ifs <;> omega
+  · intro h
+    rcases h with rfl | rfl | h
+    · exact ⟨1, Finset.mem_Icc.2 ⟨le_rfl, by omega⟩, by simp [psiX]⟩
+    · exact ⟨n, Finset.mem_Icc.2 ⟨by omega, le_rfl⟩, by unfold psiX; split_ifs <;> omega⟩
+    · exact ⟨(x + 1) / 2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by
+        unfold psiX; split_ifs <;> omega⟩
+
+theorem mem_image_chiX {n x : Nat} (hn : 6 ≤ n) :
+    x ∈ (Finset.Icc 1 (n - 1)).image (chiX n) ↔
+      x = 1 ∨ x = 2 * n - 1 ∨ (x % 2 = 0 ∧ 4 ≤ x ∧ x ≤ 2 * n - 4) := by
+  rw [Finset.mem_image]
+  constructor
+  · rintro ⟨y, hy, rfl⟩; rw [Finset.mem_Icc] at hy; unfold chiX; split_ifs <;> omega
+  · intro h
+    rcases h with rfl | rfl | h
+    · exact ⟨1, Finset.mem_Icc.2 ⟨le_rfl, by omega⟩, by simp [chiX]⟩
+    · exact ⟨n - 1, Finset.mem_Icc.2 ⟨by omega, le_rfl⟩, by unfold chiX; split_ifs <;> omega⟩
+    · exact ⟨x / 2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by
+        unfold chiX; split_ifs <;> omega⟩
+
+/-- An ordering of `[1, n]` given by a list with the right set is a complete sequence. -/
+theorem isFoldSeq_of_toFinset {n : Nat} {l : List Nat} (hnd : l.Nodup)
+    (hs : l.toFinset = Finset.Icc 1 n) : IsFoldSeq n l := by
+  unfold IsFoldSeq
+  rw [List.perm_ext_iff_of_nodup hnd (List.nodup_range' ..)]
+  intro x
+  rw [← List.mem_toFinset, hs, Finset.mem_Icc, List.mem_range'_1]
+  omega
+
+/-- A set `B ⊆ [1, N]` that is co-reachable: an ordering of its complement. -/
+theorem coReach_list {N : Nat} {B : Finset Nat} (h : CoReach N B) :
+    ∃ l : List Nat, l.Nodup ∧ l.toFinset = Finset.Icc 1 N \ B ∧ SemiSymmetric N l := by
+  unfold CoReach g at h
+  rw [Finset.card_pos] at h
+  obtain ⟨l, hl⟩ := h
+  rw [mem_semiOrders] at hl
+  exact ⟨l, hl.1.1, hl.1.2, hl.2⟩
+
+/-- **`X_N` is co-reachable** (`N = 2n - 1`, `n` even, `n ≥ 6`). -/
+theorem coReach_X {n : Nat} (hn : 6 ≤ n) (he : n % 2 = 0) :
+    0 < g (2 * n - 1) (Finset.Icc 1 (2 * n - 1) \ (Finset.Icc 1 (n - 1)).image (chiX n)) := by
+  have hF : fSet n ⊆ Finset.Icc 1 n := fun x hx => by
+    rw [mem_fSet] at hx; rw [Finset.mem_Icc]; omega
+  obtain ⟨τ, hτn, hτs, hτv⟩ := coReach_list (coReach_of_inward hF (inward_fSet hn he))
+  obtain ⟨φ, hφn, hφs, hφv⟩ := coReach_list (coReach_of_inward Finset.sdiff_subset
+    (inward_fSet_compl hn he))
+  rw [Finset.sdiff_sdiff_eq_self hF] at hφs
+  have hτm : ∀ x, x ∈ τ ↔ x ∈ Finset.Icc 1 n ∧ x ∉ fSet n := fun x => by
+    rw [← List.mem_toFinset, hτs, Finset.mem_sdiff]
+  have hφm : ∀ x, x ∈ φ ↔ x ∈ fSet n := fun x => by rw [← List.mem_toFinset, hφs]
+  obtain ⟨ρ, hρ⟩ : ∃ ρ, ρ = τ ++ φ.reverse := ⟨_, rfl⟩
+  have hρn : ρ.Nodup := by
+    rw [hρ, List.nodup_append]
+    refine ⟨hτn, List.nodup_reverse.2 hφn, fun a ha b hb e => ?_⟩
+    subst e
+    rw [List.mem_reverse, hφm] at hb
+    exact ((hτm a).1 ha).2 hb
+  have hρs : ρ.toFinset = Finset.Icc 1 n := by
+    ext x
+    rw [List.mem_toFinset, hρ, List.mem_append, List.mem_reverse, hτm, hφm]
+    constructor
+    · rintro (h | h)
+      · exact h.1
+      · exact hF h
+    · intro h; by_cases hx : x ∈ fSet n
+      · exact Or.inr hx
+      · exact Or.inl ⟨h, hx⟩
+  have hρb : ∀ x ∈ ρ, 1 ≤ x ∧ x ≤ n := fun x hx => by
+    have := List.mem_toFinset.2 hx; rw [hρs, Finset.mem_Icc] at this; exact this
+  have hρf := isFoldSeq_of_toFinset hρn hρs
+  have hρv : SemiSymmetric n ρ := by
+    subst hρ
+    exact semiSymmetric_append_rev hρf hτv (by rw [List.reverse_reverse]; exact hφv)
+  have h1 : (1 : Nat) ∉ fSet n := by rw [mem_fSet]; omega
+  have hn' : n ∉ fSet n := by rw [mem_fSet]; omega
+  have h2 : (2 : Nat) ∈ fSet n := by rw [mem_fSet]; omega
+  have hn1 : n - 1 ∈ fSet n := by rw [mem_fSet]; omega
+  -- `1` and `n` come before `2` and `n - 1`
+  have hprec : Prec (excX n) ρ := by
+    intro p hp j hj hex
+    subst hρ
+    have hpos : ∀ a, (τ ++ φ.reverse)[p] = a → a ∉ fSet n → p < τ.length ∧ j ∈ τ := by
+      intro a ha haF
+      have hpt : p < τ.length := by
+        by_contra hge
+        push Not at hge
+        have : (τ ++ φ.reverse)[p] ∈ φ.reverse := by
+          rw [List.getElem_append_right hge]; exact List.getElem_mem _
+        rw [List.mem_reverse, hφm, ha] at this
+        exact haF this
+      refine ⟨hpt, ?_⟩
+      rw [List.take_append_of_le_length hpt.le] at hj
+      exact List.mem_of_mem_take hj
+    rcases hex with ⟨ha, rfl⟩ | ⟨ha, rfl⟩
+    · exact ((hτm 2).1 (hpos 1 ha h1).2).2 h2
+    · exact ((hτm (n - 1)).1 (hpos n ha hn').2).2 hn1
+  have hmap : SemiSymmetric (2 * n - 1) (ρ.map (psiX n)) :=
+    semiSymmetric_near hρb hρn hρv hprec (fun a b ha1 han hb1 hbn e => psiX_inj hn ha1 han hb1 hbn e)
+      (fun _ _ hi1 hin hj1 hjn hij he' => agree_psiX hn hi1 hin hj1 hjn hij he')
+  unfold g
+  rw [Finset.card_pos]
+  refine ⟨ρ.map (psiX n), mem_semiOrders.2 ⟨⟨nodup_map_of_injOn hρn fun a ha b hb e =>
+    psiX_inj hn (hρb a ha).1 (hρb a ha).2 (hρb b hb).1 (hρb b hb).2 e, ?_⟩, hmap⟩⟩
+  ext x
+  have hx : x ∈ ρ.map (psiX n) ↔ x ∈ (Finset.Icc 1 n).image (psiX n) := by
+    rw [List.mem_map, Finset.mem_image]
+    constructor
+    · rintro ⟨a, ha, e⟩
+      exact ⟨a, by rw [← hρs, List.mem_toFinset]; exact ha, e⟩
+    · rintro ⟨a, ha, e⟩
+      exact ⟨a, by rw [← List.mem_toFinset, hρs]; exact ha, e⟩
+  rw [List.mem_toFinset, hx, mem_image_psiX hn, Finset.mem_sdiff, mem_image_chiX hn,
+    Finset.mem_Icc]
+  omega
+
+/-- **Transfer through `X_N`**: `{1, n - 1}` co-reachable in `[n - 1]` gives `{1, 2n - 1}`
+co-reachable in `[2n - 1]`. -/
+theorem coReach_one_X {n : Nat} (hn : 6 ≤ n) (he : n % 2 = 0)
+    (h : CoReach (n - 1) {1, n - 1}) : CoReach (2 * n - 1) {1, 2 * n - 1} := by
+  have := coReach_winEmb (winEmb_chiX hn) (coReach_X hn he) (D := {1, n - 1})
+    (fun x hx => by
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+      rw [Finset.mem_Icc]; omega) h
+  convert this using 1
+  rw [Finset.image_insert, Finset.image_singleton]
+  have e1 : chiX n 1 = 1 := by simp [chiX]
+  have e2 : chiX n (n - 1) = 2 * n - 1 := by unfold chiX; split_ifs <;> omega
+  rw [e1, e2]
+
 end Live5
 end Folds
