@@ -322,4 +322,33 @@ theorem semiStep_iff_dyadic {L N m : Nat} {S : List Nat} (hNL : N = 2 ^ L) (hnd 
       linarith
     exact_mod_cast this
 
+/-! ## Antipodal pairs: the top-scale balance
+
+For `N = 2h` the panels `m` and `m + h` have doubled positions `2m - 1` and `2m - 1 + N`, which
+coincide on the circle, so their cyclic conditions differ only by the count of `S` in the half
+circle `[m, m + h - 1]`.  If both are valid, that half circle holds exactly half of `S`
+(`half_balance`).  For `|S|` odd this is the parity lemma `not_both_valid` of `Growth.lean`;
+in general it gives `V(S) ≤ h + #{m ≤ h : the half circle [m, m+h-1] holds |S|/2 points}`. -/
+
+theorem cycBelow_add_N {N : Nat} (S : List Nat) (hN : 0 < N) (j : Nat) :
+    cycBelow N S (j + N) = cycBelow N S j + S.length := by
+  unfold cycBelow
+  rw [Nat.add_mod_right, Nat.add_div_right _ hN, Nat.add_mul, Nat.one_mul, Nat.add_assoc]
+
+/-- **Half-circle balance.**  For `N = 2h`, if `m` and `m + h` (`1 ≤ m ≤ h`) are both valid
+next panels, then exactly half of `S` lies in `[m, m + h - 1]`. -/
+theorem half_balance {h m : Nat} {S : List Nat} (hnd : S.Nodup)
+    (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ 2 * h) (hm1 : 1 ≤ m) (hmh : m ≤ h)
+    (h1 : m ∉ S ∧ SemiStep (2 * h) S m) (h2 : m + h ∉ S ∧ SemiStep (2 * h) S (m + h)) :
+    S.length = 2 * (below S (m - 1 + h) - below S (m - 1)) := by
+  have c1 := (semiStep_iff_cyclicStep hnd hS hm1 (by omega) h1.1).1 h1.2
+  have c2 := (semiStep_iff_cyclicStep hnd hS (by omega) (by omega) h2.1).1 h2.2
+  unfold CyclicStep at c1 c2
+  have e : 2 * (m + h) - 1 = (2 * m - 1) + 2 * h := by omega
+  have e2 : m + h - 1 = m - 1 + h := by omega
+  rw [e, cycBelow_add_N S (by omega), e2] at c2
+  have mono : below S (m - 1) ≤ below S (m - 1 + h) := by
+    rw [below_split S (Nat.le_add_right (m - 1) h)]; omega
+  omega
+
 end Folds

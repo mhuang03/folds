@@ -197,8 +197,21 @@ Exact checks: N = 20: 26.72 (exact 26.712), N = 33: 53.48 (exact 53.500), P = 20
 =========================================================================================
 4.1 What is proved here
 -----------------------
-* Dipole lemma and its corollaries (1.1) [Lean].
-* Binary-digit decomposition (1.2) [paper; machine-checked on 1800 sets].
+* Dipole lemma and its corollaries (1.1) [Lean: imb_cons, ...].
+* Binary-digit decomposition (1.2) [Lean: dyadic_defect for arbitrary sets A, B and x < 2^L;
+  semiStep_iff_dyadic: for N = 2^L a step is semi-symmetric iff
+  sum_{j<L} dyTerm A B (m-1) j + [2(m-1) mod N + 1 in S] = 0; also checked on SMC sets].
+* Half-circle balance [Lean: half_balance].  N = 2h, 1 <= m <= h.  The panels m and m + h
+  have the same doubled position on the circle (2m - 1 and 2m - 1 + N), and
+  P~(j + N) = P~(j) + |S| (cycBelow_add_N), so their cyclic conditions differ exactly by
+  |S| - 2 #(S in [m, m+h-1]).  Hence if m and m + h are both valid,
+        #(S in [m, m + h - 1]) = |S| / 2       (exactly half of S in the half circle),
+  and  V(S) <= h + #{m <= h : #(S in [m, m+h-1]) = |S|/2}.
+  For |S| odd this is the parity lemma (Growth.lean: not_both_valid, V <= h); in general it
+  is the top-scale term of 1.2 and says a valid antipodal pair forces zero discrepancy of
+  S on the half circle starting at m.  Repeating the argument at scale N/2^j relates
+  validity of the 2^j panels m + i N/2^j to the balance of S over arcs of length N/2^j
+  (the level-j terms of 1.2); a rigorous upper bound would need this for typical paths.
 * Entropy reduction [paper, standard].  For every probability distribution Q on valid
   sequences, a(N) >= exp(H(Q)) (Gibbs: log #A >= H(Q) for Q supported on A).  For a sequential
   strategy that, from every state it can reach, has a nonempty set C(S) of allowed valid
@@ -264,4 +277,6 @@ sweep1.sh, sweep2.sh, pscan.sh, big.sh   run scripts;  runs/   outputs (prod.txt
            big.txt: estimates; d_N_P_seed.txt: diagnostics; desc.txt: greedy runs)
 Lean: Folds/Asymptotics.lean (imb, semiStep_iff_imb, leftCount_cons, rightCount_cons,
            imb_cons [dipole lemma], imb_cons_of_not_mem_window, semiStep_cons_iff,
-           card_plus_support, card_minus_support).
+           card_plus_support, card_minus_support; cnt, dyTerm, dyadic_defect,
+           below_eq_cnt, cycBelow_eq_cnt, semiStep_iff_dyadic [binary-digit decomposition];
+           cycBelow_add_N, half_balance [antipodal pairs]).
