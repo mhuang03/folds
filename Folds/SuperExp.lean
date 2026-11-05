@@ -7,7 +7,7 @@ import Folds.Counting
 import Folds.Cyclic
 
 /-!
-# Slips: the key lemma of the super-exponential lower bound
+# Slips and a super-exponential lower bound
 
 `N = 2n`.  Fix `d : ℕ → ℕ` with values in `{0, 1}`, `d 0 = 0` and `d n = 0` (the slip set
 is `D = {k : d k = 1} ⊆ [1, n-1]`).  Put
@@ -27,9 +27,22 @@ harmless as soon as one order relation holds in the block sequence:
   `σ.map (slipS d)` is semi-symmetric on top of the complete first block;
 * `slip_mem_semiSeqs`: the concatenation is a semi-symmetric fold sequence of `2n`.
 
-(`x mod* n` is the representative of `x` in `[1, n]`.)  Paper proof, the counting
-argument and the resulting bound `a(N) ≥ exp(c N log N)` (`c = 1/48` for all `N`,
-`c ≈ 0.116` for `N = 2^L`): `experiments/superexp/PROOFS.txt`.
+(`x mod* n` is the representative of `x` in `[1, n]`.)
+
+Counting (`semiCount_slip`): the slip map is injective, so
+`∑_{D ⊆ [1, n-1]} #{τ : cond_F(D)} · #{σ : cond_S(D)} ≤ a(2n)`.
+
+Parity-block inputs (`semiCount_paritySlip`): if `τ` and `σ` are odds-first parity-block
+sequences of `[n]`, the conditions hold for every `D ⊆ C_n` (odd `k`; for odd `n` also
+`2k + 1 ≤ n`), because `k`, `p(k)` are odd and `q(k)`, `k + 1` even.  Hence
+* `a(2n) ≥ 2^{|C_n|} · (a(⌈n/2⌉) · a(⌊n/2⌋))²`,
+* `semiCount_four_mul`: `a(4m) ≥ 2^m · a(m)^4`,
+* `semiCount_four_mul_add_two`: `a(4m+2) ≥ 2^{⌊(m+1)/2⌋} · a(m)² · a(m+1)²`,
+* `pow_le_semiCount_pow_four`: `N^N ≤ a(N)^8` for `N = 4^j`, i.e. `a(N) ≥ N^{N/8}`:
+  **a super-exponential lower bound**.
+
+Paper proof of `ln a(N) ≥ (1/32) N ln N - (ln 2 / 4) N` for all `N` from these
+recursions: `experiments/superexp/PROOFS.txt`.
 -/
 
 namespace Folds

@@ -4,210 +4,206 @@ A SUPER-EXPONENTIAL LOWER BOUND FOR a(N)                         (experiments/su
 Notation as in README / growth/PROOFS.txt.  Panels [N] = {1..N}; a step (S, m) is valid
 iff S has as many panels in the left arm of m as in the right arm.  V_n = set of valid
 (semi-symmetric) sequences of the n-strip, a(n) = |V_n|.  "x mod* n" is the representative
-of x in [1, n].  [Lean] = proven in Folds/SuperExp.lean (no sorry, no native_decide).
+of x in [1, n].  [Lean] = proven in Folds/SuperExp.lean (namespace Folds.Slip; no sorry,
+no native_decide; axioms propext, Classical.choice, Quot.sound only).
 
 RESULTS
 -------
-Theorem 1 (slip lemma) [Lean: slip_mem_semiSeqs].  Let N = 2n and D a subset of [1, n-1],
-d_i = [i in D].  Put  f_i = 2i + d_i,  s_i = 2i - 1 - d_{i-1}  (d_0 = d_n = 0).
+Theorem 1 (slip lemma) [Lean: slip_mem_semiSeqs].  Let N = 2n, D a subset of [1, n-1],
+d_i = [i in D] (so d_0 = d_n = 0), and
+        f_i = 2i + d_i,        s_i = 2i - 1 - d_{i-1}        (1 <= i <= n).
+(A "slip" at k in D exchanges the panels 2k and 2k+1 between the two parity classes.)
 If tau, sigma in V_n satisfy, for every k in D,
-      tau   places k            before  q(k) = 2k mod* n,
-      sigma places p(k) = (2k+1) mod* n  before  k+1,
+      tau   places k                    before  q(k) = 2k mod* n,
+      sigma places p(k) = (2k+1) mod* n  before  k + 1,
 then  (f_{tau_1}, ..., f_{tau_n}, s_{sigma_1}, ..., s_{sigma_n})  is in V_{2n}.
-
-Corollary (slip count inequality) [Lean: semiCount_slip].  For n >= 1
+Different (D, tau, sigma) give different sequences, so [Lean: semiCount_slip]
    sum_{D subset [1,n-1]}  #{tau in V_n : cond_F(D)} * #{sigma in V_n : cond_S(D)}  <=  a(2n).
 
-Theorem 2 (super-exponential lower bound) [paper, using Theorem 1].
-   (a) For every N >= 1:      a(N)  >=  4 * ( N^{1/48} / 4 )^N,
-       i.e. ln a(N) >= (1/48) N ln N - N ln 4 + ln 4.
-   (b) For N = 2^L:           ln a(N) >= c_2 N ln N - O(N),   c_2 = h*/(2 ln 2) = 0.11624...,
-       h* = max_delta (1/2 - 3 delta) H(delta/(1/2 - 3 delta)) = 0.161142 (delta = 0.0754),
-       H the natural-log entropy.  Numerically ln a(2^L) >= 0.1162 N ln N - 0.39 N for
-       L <= 40 (bound.py).
-So  liminf ln a(N)/(N ln N) >= 1/48  and  limsup ln a(N)/(N ln N) >= 0.1162.
-Previously only exponential lower bounds were known (1/2 e^{1.28 N}).  The bound is far
-from the conjectured exponent 1 (a(N) = N!/(kappa ln N)^N), and the method cannot give more
-than 1/4 (section 6).  But it is the first lower bound with N log N growth of ln a(N).
+Theorem 2 (parity-slip recursion) [Lean: semiCount_paritySlip].  For n >= 1
+        a(2n)  >=  2^{|C_n|} * a(ceil(n/2))^2 * a(floor(n/2))^2,
+   C_n = {odd k <= n-1}  (n even, |C_n| = n/2),   {odd k : 2k+1 <= n}  (n odd,
+   |C_n| = floor((n+1)/4)).  In particular [Lean: semiCount_four_mul,
+   semiCount_four_mul_add_two]
+        a(4m)   >=  2^m * a(m)^4,                 a(4m+2)  >=  2^{floor((m+1)/2)} a(m)^2 a(m+1)^2.
+
+Theorem 3 (super-exponential lower bounds).
+   (a) [Lean: pow_le_semiCount_pow_four]   N^N <= a(N)^8  for N = 4^j,  i.e.
+            a(N) >= N^{N/8}                (N = 4^j);
+       and a(2N) >= 2 a(N)^2 gives a(N) >= 2 (N/2)^{N/8} for N = 2 * 4^j.
+   (b) [paper, section 4, from Theorem 2 and a(2n+1) >= 2a(n)a(n+1)]  for every N >= 1
+            log2 a(N)  >=  (1/32) N log2 N - N/4 + 1/12,
+       i.e.  a(N) >= 2^{1/12} N^{N/32} 2^{-N/4}.
+So  ln a(N) >= c N ln N - O(N)  with  c = 1/8 along N = 4^j (and 2*4^j) and c = 1/32 for all
+N.  Previously only exponential lower bounds were known (a(N) >= 1/2 e^{1.28 N}).
+Upper bound: a(N) <= N! e^{-Theta(N)}, so  1/32 <= liminf ln a(N)/(N ln N) <= 1  and
+limsup >= 1/8.  The conjectured truth is exponent 1 (a(N) = N!/(kappa ln N)^N); the slip
+method cannot exceed exponent 1/4 (section 6.1).
 
 
 =========================================================================================
-1. HOW THE CONSTRUCTION WAS FOUND (halfsplit.c, topsets.c, slips.c, defect*.py)
+1. HOW THE CONSTRUCTION WAS FOUND
 =========================================================================================
 a(N) = sum_{|X| = n} g(X) g(X^c) (N = 2n, g = number of valid orderings from scratch;
 README recursion).  halfsplit.c: the largest term is the parity split, w = a(n)^2, but the
-number of X with w(X) >= a(n)^2/16 grows exponentially (38, 104, 202, 618, 900, 2106, 3792,
-10140 for N = 8, 10, ..., 22).  topsets.c lists them: they are the parity classes with
-local "slips" -- an adjacent pair 2k, 2k+1 exchanged between the two classes -- and each
-slip costs only a constant factor (0.6 - 0.8 at N = 20), roughly multiplicatively.
-defect.py / defect2.py / multislip.py: the window system induced on the slipped class
-differs from the n-strip in EXACTLY ONE pair per slip and per block (plus one offset in the
-second block), and the slips do not interact (checked for all D at N <= 24 and random D
-to N = 30).  slips.c: sum_D g(X_D) g(X_D^c) / a(n)^2 = 1.8, 3.0, 4.3, 6.0, 13.7, 18.1,
-28.7, 52.8, 99.3, 142.7 for N = 6, 8, ..., 24 (all 2^{n-1} slip sets D contribute) --
-an exponential gain per level, which iterated over log N levels is super-exponential.
-Theorem 1 says exactly which block orders survive a slip.
+number of X with w(X) >= a(n)^2/16 grows exponentially: 38, 104, 202, 618, 900, 2106, 3792,
+10140 for N = 8, 10, ..., 22.  topsets.c lists the top sets: parity classes with local
+"slips" (2k and 2k+1 exchanged between the classes), each slip costing only a constant
+factor of g (0.6 - 0.8 at N = 20), roughly multiplicatively.
+defect.py, defect2.py, multislip.py: the window system induced on a slipped class differs
+from the n-strip in EXACTLY ONE pair per slip and per block (plus one offset in the second
+block), and slips do not interact (all D at N <= 24, random D to N = 30).
+slips.c: sum_D g(X_D) g(X_D^c) / a(n)^2 = 1.8, 3.0, 4.3, 6.0, 13.7, 18.1, 28.7, 52.8, 99.3,
+142.7 for N = 6, 8, ..., 24 -- every one of the 2^{n-1} slip sets contributes, an
+exponential gain per level.  Iterated over log N levels this is super-exponential.
+Theorem 1 says exactly which block orders survive the slips; Theorem 2 picks block orders
+for which the survival is automatic.
 
 
 =========================================================================================
 2. PROOF OF THEOREM 1
 =========================================================================================
-Cyclic form (README 3, Lean semiStep_iff_cyclicStep).  For S subset [N] with s = |S|,
+Cyclic form (README 3, Lean semiStep_iff_cyclicStep).  For S subset [N], s = |S|,
 P(y) = |S n [1, y]|, P~(y) = P(y mod N) + floor(y/N) s.  The step (S, m) is valid iff
         P~(2m - 1) = 2 P(m - 1).
 Write t, t~ for the same functions of an index set T subset [n] in the n-strip.
 
 Elementary facts.  (i) For y = n a + r with 0 <= r <= n: t~(y) = t(r) + a|T|  (cycBelow_rep).
 (ii) t~(y+1) = t~(y) + [ (y mod n) + 1 in T ]  (cycBelow_succ).  (iii) f is strictly
-increasing, f_i in {2i, 2i+1}; s strictly increasing, s_i in {2i-1, 2i-2}; and
-{f_i, s_{i+1}} = {2i, 2i+1} (1 <= i < n), s_1 = 1, f_n = 2n, so f, s map [n] onto
+increasing with f_i in {2i, 2i+1}; s is strictly increasing with s_i in {2i-1, 2i-2};
+{f_i, s_{i+1}} = {2i, 2i+1} for 1 <= i < n, s_1 = 1, f_n = 2n: f and s map [n] onto
 complementary halves of [2n].
 
 2.1 First block.  T = indices placed before j, S = f(T).  Since 2x + d_x <= 2r + 1 iff x <= r,
-   P(2r + 1) = t(r)   and hence (by (i), with 2y + 1 = 2n a + (2r+1))
-   P~(2y + 1) = t~(y)   for 0 <= y < 2n                                  (cycBelow_mapF)
-Also P(f_j - 1) = t(j - 1) (f strictly increasing).  Now 2 f_j - 1 = 2(2j - 1 + d_j) + 1, so
-the actual condition is  t~(2j - 1 + d_j) = 2 t(j-1),  the strip condition is
-t~(2j - 1) = 2 t(j-1).  If d_j = 0 they coincide.  If d_j = 1, by (ii)
-t~(2j) = t~(2j - 1) + [q(j) in T]  with q(j) = ((2j-1) mod n) + 1 = 2j mod* n; so they
-coincide when q(j) is not yet placed.                                (semiStep_slipF_iff)
+   P(2r + 1) = t(r),   hence (by (i), with 2y + 1 = 2n a + (2r + 1))
+   P~(2y + 1) = t~(y)   for 0 <= y < 2n.                                  (cycBelow_mapF)
+Also P(f_j - 1) = t(j - 1) (f strictly increasing).  As 2 f_j - 1 = 2(2j - 1 + d_j) + 1, the
+actual condition is  t~(2j - 1 + d_j) = 2 t(j - 1);  the strip condition is
+t~(2j - 1) = 2 t(j - 1).  If d_j = 0 they coincide.  If d_j = 1, by (ii)
+t~(2j) = t~(2j - 1) + [q(j) in T],  q(j) = ((2j - 1) mod n) + 1 = 2j mod* n,
+so they coincide when q(j) has not been placed yet.                  (semiStep_slipF_iff)
 2.2 Second block, on top of the complete first block F = f([n]).  U = indices placed
-before j.  For 0 <= r < n: |F n [1, 2r+1]| = r and #{x in U : s_x <= 2r+1} = u(r+1)
+before j.  For 0 <= r < n: |F n [1, 2r + 1]| = r, and #{x in U : s_x <= 2r + 1} = u(r + 1)
 (2x - 1 - d_{x-1} <= 2r + 1 iff x <= r + 1).  With (i):
-   P~(2y + 1) = y + u~(y + 1)   for 0 <= y < 2n                          (cycBelow_second)
-and P(s_j - 1) = (j - 1 - e) + u(j - 1), e = d_{j-1} (first block: 2x + d_x <= 2j - 2 - e
-iff x <= j - 1 - e).  As 2 s_j - 1 = 2(2j - 2 - e) + 1 the actual condition is
-   (2j - 2 - e) + u~(2j - 1 - e) = 2(j - 1 - e) + 2u(j - 1),  i.e.  u~(2j-1-e) + e = 2u(j-1).
-e = 0: the strip condition.  e = 1: by (ii) u~(2j-1) = u~(2j-2) + [p(j-1) in U] with
-p(j-1) = ((2j-2) mod n) + 1 = (2(j-1)+1) mod* n; if p(j-1) is placed this is again the strip
-condition.                                                           (semiStep_slipS_iff)
-2.3 Both blocks are valid step by step; their union is [2n] by (iii).  QED
-Remarks.  * [data, slipcheck.c] For N = 2n <= 18, all D and all strip-valid tau / sigma: the
-conditions are also NECESSARY (no strip-valid block order outside them is valid).
-* Type B: reversing the whole sequence gives the odds-first version: first the s-block in
-the order rev(sigma) (needs k+1 before p(k)), then the f-block in the order rev(tau) (needs
-q(k) before k).  Also checked in slipcheck.c.
+   P~(2y + 1) = y + u~(y + 1)   for 0 <= y < 2n,                        (cycBelow_second)
+and P(s_j - 1) = (j - 1 - e) + u(j - 1) with e = d_{j-1} (in the first block,
+2x + d_x <= 2j - 2 - e iff x <= j - 1 - e).  As 2 s_j - 1 = 2(2j - 2 - e) + 1 the actual
+condition is  (2j - 2 - e) + u~(2j - 1 - e) = 2(j - 1 - e) + 2u(j - 1),  i.e.
+   u~(2j - 1 - e) + e = 2u(j - 1).
+e = 0: the strip condition.  e = 1: by (ii) u~(2j - 1) = u~(2j - 2) + [p(j-1) in U] with
+p(j - 1) = ((2j - 2) mod n) + 1 = (2(j-1) + 1) mod* n; if p(j-1) has been placed, this is
+again the strip condition.                                           (semiStep_slipS_iff)
+2.3 Both blocks are valid step by step, and by (iii) the result is a permutation of [2n].
+Injectivity: i in D iff 2i + 1 is among the first n entries; then f, s are injective.  QED
+Remarks.  * [slipcheck.c] For N = 2n <= 18, all D, all tau, sigma in V_n: 0 failures, and
+the conditions are also NECESSARY among strip-valid block orders.
+* Reversing the whole sequence gives the odds-first variant (the s-block first in the order
+rev(sigma), needing k+1 before p(k); then the f-block in the order rev(tau), needing q(k)
+before k), also checked in slipcheck.c.
 
 
 =========================================================================================
-3. THE SLIP FAMILY
+3. PROOF OF THEOREM 2
 =========================================================================================
-Order conditions are guaranteed if the two panels lie in DIFFERENT blocks of a block
-sequence.  So we build a family of sequences whose block structure is known.
-
-Definition.  F(1) = {(1)}.  Every member rho of F(N) is a sequence "first block, then
-second block", with second block S(rho):
- * N = 2m + 1 (parity node): rho = (2x for x in rho1) ++ (2y - 1 for y in rho2), rho1 in
-   F(m), rho2 in F(m+1); S(rho) = the odds.  Valid by the parity-block theorem (Lean
-   semiSymmetric_blocks_iff).  |F(2m+1)| >= |F(m)| |F(m+1)| (injective).
- * N = 2n (slip node): for sigma', tau' in F(n) let sigma = rev sigma', tau = rev tau'
-   (valid by reversal symmetry; they START with the blocks S(sigma'), S(tau')), and for
-   D subset G(sigma', tau') with |D| = s(N):  rho = Phi(sigma, tau, D) as in Theorem 1,
-   S(rho) = {s_i}.  Here
-      G = { k in [1, n-1] :  k in S(tau'),  q(k) not in S(tau'),
-                             p(k) in S(sigma'), k+1 not in S(sigma') }.
-   For k in G, in tau the panel k is in the first block and q(k) in the second, so k comes
-   before q(k); in sigma, p(k) comes before k+1.  Theorem 1 applies: rho is valid.
-   rho determines D (i in D iff 2i+1 is among the first n entries), hence tau, sigma
-   (Lean slipMap_injOn), so the members are distinct and
-        |F(2n)| >= |F(n)|^2 * min_{sigma',tau'} C(|G(sigma',tau')|, s(N)).
-In all cases S(rho) = (odds of [N]) symmetric-difference Delta(rho), where the displaced set
-Delta(rho) = U_{k in D(rho)} {2k, 2k+1} has 2|D(rho)| elements (D = empty at parity nodes).
-
-Kill lemma.  Let C_n = {k odd in [1, n-1]} if n is even, {k odd : 2k + 1 <= n} if n is odd;
-|C_n| = n/2, resp. floor((n+1)/4).  Then
-        |G(sigma', tau')|  >=  |C_n| - 3|D(sigma')| - 3|D(tau')|.
-Proof.  For k in C_n: k odd, k+1 even; q(k) = 2k (if 2k <= n) or 2k - n, even (n even, or
-n odd where only 2k + 1 <= n occurs); p(k) = 2k+1 or 2k+1-n, odd likewise.  So if none of
-k, q(k) is displaced in tau' and none of p(k), k+1 in sigma', the four membership
-conditions hold.  A slip e of tau' displaces 2e and 2e+1: 2e can only be q(k) (k = e or
-e + n/2; k = 2e is even), 2e+1 only k (q(k) is even): at most 3 kills.  A slip e of sigma'
-displaces 2e (only k + 1 = 2e, one k) and 2e+1 (only p(k) = 2e+1, k in {e, e + n/2}): at
-most 3 kills.  [killcheck.py: 20000 random checks, n <= 200.]  QED
-
-Choice of s.  With s(2n) <= |C_n| - 6 s(n) (s(odd) = 0) every slip node has enough room:
-     ln|F(2n)| >= 2 ln|F(n)| + ln C(|C_n| - 6 s(n), s(2n)),   ln|F(2m+1)| >= ln|F(m)| + ln|F(m+1)|.
-And a(N) >= |F(N)| =: B(N).
+Take tau and sigma ODDS-FIRST parity-block sequences of [n]:
+   (2x - 1 for x in alpha) ++ (2y for y in beta),  alpha in V_{ceil(n/2)}, beta in V_{floor(n/2)}
+(valid by the parity-block theorem, Lean semiSymmetric_blocks_iff; there are
+a(ceil(n/2)) a(floor(n/2)) of them, Lean blockMap_injOn).  Let k in C_n.  Then k and k + 1
+have opposite parities (k odd), q(k) = 2k mod* n is even and p(k) = (2k+1) mod* n is odd:
+for n even because reduction mod an even number keeps parity, for n odd because
+2k + 1 <= n means no reduction happens.  In an odds-first sequence every odd panel comes
+before every even panel, so tau places k before q(k) and sigma places p(k) before k + 1.
+So every D subset C_n satisfies the conditions of Theorem 1 for ALL such tau, sigma, and
+the injectivity in Theorem 1 gives
+   a(2n) >= sum_{D subset C_n} (a(ceil(n/2)) a(floor(n/2)))^2 = 2^{|C_n|} a(ceil(n/2))^2 a(floor(n/2))^2.
+[Lean: oddFirst_sub_condF, oddFirst_sub_condS, semiCount_paritySlip.]
+[parityslip.py: all these sequences for 2n <= 18 built explicitly: counts 1, 2, 8, 64, 128,
+2048, 6400, 160000, 313600 = formula, all distinct, all valid by brute force.]
+Theorem 3(a): a(4^{j+1}) >= 2^{4^j} a(4^j)^4, and by induction a(4^j)^8 >= (4^j)^{4^j}
+(2^8 = 4^4).  [Lean: pow_le_semiCount_pow_four.]
 
 
 =========================================================================================
-4. ASYMPTOTICS
+4. PROOF OF THEOREM 3(b) (ALL N)
 =========================================================================================
-4.1 All N: s(2n) = floor(n/16).  For n odd, G >= floor((n+1)/4) >= 4 floor(n/16); for n
-even, G >= n/2 - 6 floor(n/32) >= 5n/16 >= 4 floor(n/16).  As C(G, s) >= (G/s)^s,
-     gain(2n) := ln C(G, s) >= s ln 4 >= gamma n - beta,  gamma = ln4/16, beta = ln 4
-(for n < 16 the gain is 0 >= gamma n - beta).  Claim: with c = gamma/(6 ln 2) = 1/48,
-     f(N) := ln B(N) >= c N ln N - beta N + beta        for all N >= 1.
-Induction.  N = 1: 0 >= 0.  Even N = 2n:
-  f(N) >= 2f(n) + gamma n - beta >= c N ln N - beta N + [N(gamma/2 - c ln 2) + 2 beta - beta]
-  and gamma/2 - c ln 2 = ln2/16 - ln2/48 > 0.
-Odd N = 2m+1 (m >= 1): of m, m+1 one is odd (o) and one even (2j); N = o + 2j, o = 2j +- 1.
-  f(N) >= f(o) + f(2j) >= f(o) + 2 f(j) + gamma j - beta
-       >= c (o ln o + 2j ln j) - beta N + 3 beta + gamma j - beta.
-  By convexity o ln o + 2j ln(2j) >= N ln(N/2), so o ln o + 2j ln j >= N ln N - (N + 2j) ln 2,
-  and with 2j <= (N+1)/2, j >= (N-1)/4:
-  c(o ln o + 2j ln j) + gamma j >= c N ln N - c ln2 (3N+1)/2 + gamma (N-1)/4
-                                 = c N ln N - gamma/3          (since 6 c ln 2 = gamma),
-  so f(N) >= c N ln N - beta N + beta + (beta - gamma/3) >= c N ln N - beta N + beta.  QED
-Hence  a(N) >= exp(N ln N / 48 - N ln 4 + ln 4) = 4 (N^{1/48}/4)^N.
-(Numerically the recursion is much better: ln B(N)/(N ln N) = 0.035 (N = 1000), 0.047
-(10^4), 0.086 (2^20), bound.py; the theorem's constant is limited by odd nodes.)
-
-4.2 Powers of two: s(2^l) = floor(delta 2^{l-1}), delta <= 1/8.  Inputs of a slip node of
-size 2n = 2^l have even size n, so G >= n/2 - 6 floor(delta n/2) >= (1/2 - 3 delta) n.
-ln C(ceil(a n), floor(b n)) >= n a H(b/a) - O(ln n) (Stirling), so
-  f(2^L) >= sum_{l=2}^{L} 2^{L-l} [2^{l-1} (1/2 - 3delta) H(delta/(1/2-3delta)) - O(l)]
-         = (N/2) log_2 N * (1/2 - 3delta) H(...) - O(N).
-Optimizing delta (= 0.0754): ln a(N) >= (h*/(2 ln 2)) N ln N - O(N) = 0.11624 N ln N - O(N).
-(The O(N) is about 0.39 N, bound.py.)
+f(N) = log2 a(N), phi(x) = x log2 x (convex).  Proven recursions:
+   (R1) f(2n+1) >= 1 + f(n) + f(n+1)                 (n >= 1)    [Lean semiCount_odd]
+   (R2) f(4m)   >= m + 4 f(m)                        (m >= 1)    [Lean semiCount_four_mul]
+   (R3) f(4m+2) >= floor((m+1)/2) + 2 f(m) + 2 f(m+1)            [Lean ..._four_mul_add_two]
+Claim: f(N) >= g(N) := c phi(N) - K N + M with c = 1/32, K = 1/4, M = 1/12, all N >= 1.
+Base N <= 5: g(N) <= N (c log2 5 - K) + M < 0 <= f(N)  (c log2 5 = 0.0726).
+N = 4m >= 8: f >= m + 4 g(m) = c (phi(N) - 2N) - KN + 4M + m
+              = g(N) + [N/4 - N/16 + 3M] >= g(N).          (4 phi(N/4) = phi(N) - 2N)
+N = 4m+2 >= 6: by convexity phi(m) + phi(m+1) >= 2 phi(N/4), and floor((m+1)/2) >= (N-2)/8:
+   f >= (N-2)/8 + c (phi(N) - 2N) - KN + 4M = g(N) + [N/16 - 1/4 + 3M] = g(N) + N/16.
+N = 2n+1 >= 7: let B be the even one of n, n+1 (B >= 4, B >= n = (N-1)/2) and A the
+   other; expand B by (R2)/(R3): f(B) >= gamma_B + sum of four f(x_i), x_i >= 1,
+   sum x_i = B, gamma_B >= (B-2)/8.  With sum phi(x_i) >= 4 phi(B/4) = phi(B) - 2B and
+   phi(A) + phi(B) >= 2 phi(N/2) = phi(N) - N:
+   f(N) >= 1 + g(A) + gamma_B + sum g(x_i)
+        >= c (phi(N) - N - 2B) - KN + 5M + 1 + (B - 2)/8
+        = g(N) + [1 + 4M - 1/4 - cN + B (1/8 - 2c)]
+        >= g(N) + [13/12 - N/32 + (N-1)/32] > g(N).                         QED
+[bound2.py: iterating (R1)-(R3) and a(2n) >= 2a(n)^2 numerically, the bound stays >= g(N)
+for all N <= 1.1 * 10^6 (min margin 0.167); its effective exponent log2 B/(N log2 N) is
+0.135 at N = 10^4, 0.116 at 10^6, i.e. far above the proven 1/32 in this range.]
 
 
 =========================================================================================
 5. VERIFICATION (all on 1 core)
 =========================================================================================
-slipcheck.c   Theorem 1 exhaustively: N = 2n <= 18, every D subset [1,n-1], every tau and
-              sigma in V_n: the implications hold (0 failures), both types (E-first and
-              O-first); no strip-valid block order outside the conditions is valid.
-              n = 2..9: 6, 16, 72, 244, 1404, 4592, 40956, 150512 implications checked.
-multislip.py  the induced window systems of all slip sets (N <= 24, random D to N = 30) are
-              the strip plus exactly the predicted changed pairs and offsets.
-family.py     F*(N) (all D subset G) enumerated for N <= 16: all members valid and
-              distinct; random members of F_s(N) (s(2n) = floor(n/13)) for every N <= 199
-              and N = 256, 300, 511, 512, 513, 1000, 1024, 2048, 3000, 4096: all valid
-              (brute-force Fenwick-tree check), and G always large enough; stress test with
-              D = all of G and D = random half of G: all valid.
-killcheck.py  the kill lemma on 20000 random slip-set pairs.
-bound.py      the numerical value of the bound B(N).
-Lean          Folds/SuperExp.lean: slipF_semiSymmetric, slipS_steps, slip_mem_semiSeqs
-              (Theorem 1) and semiCount_slip (the counting corollary, injectivity
-              included).  The family recursion, the kill lemma and the asymptotics of
-              sections 3-4 are on paper only.
+slipcheck.c    Theorem 1 exhaustively: N = 2n <= 18, every D subset [1,n-1], every tau,
+               sigma in V_n (6, 16, 72, 244, 1404, 4592, 40956, 150512 implications for
+               n = 2..9): 0 failures, both orientations; the conditions are also necessary
+               among strip-valid block orders.
+multislip.py   induced window systems of all slip sets (N <= 24, random to N = 30) = strip
+               + exactly the predicted changed pairs and offsets.
+parityslip.py  Theorem 2: every sequence built, 2n <= 18: valid, distinct, count = formula.
+family.py      the recursive slip family of section 6.2 (with kills): all members valid
+               for N <= 16 (exhaustive) and random members up to N = 4096.
+killcheck.py   the kill lemma of section 6.2 on 20000 random cases.
+bound.py, bound2.py   numerical values of the bounds.
+copies.c, halfsplit.c, topsets.c, slips.c, defect*.py   exploration (section 1, 6.3).
+Lean           Folds/SuperExp.lean: Theorem 1 (slipF_semiSymmetric, slipS_steps,
+               slip_mem_semiSeqs, semiCount_slip), Theorem 2 (semiCount_paritySlip,
+               semiCount_four_mul, semiCount_four_mul_add_two) and Theorem 3(a)
+               (pow_le_semiCount_pow_four).  Theorem 3(b) is on paper (section 4).
 
 
 =========================================================================================
-6. LIMITS OF THE METHOD, AND THE OTHER ROUTES
+6. REMARKS, LIMITS, AND THE OTHER ROUTES
 =========================================================================================
-6.1 Only odd k can be guaranteed.  The four membership conditions force the alternation of
-types (E-first nodes need O-first inputs, which is why the inputs are reversed); for even
-k both panels of a condition lie in the same block of the input and recursing into that
-block always ends in a failing membership pattern.  So at most |C_n| ~ n/2 slips per node
-of size 2n, gain <= (n/2) ln 2, and c <= 1/4 for any variant of this family.  The kills
-cost the rest (c = 0.116).  Reaching c = 1 needs control of the inner orders of typical
-sequences (asymptotics/NOTES 4.4), not just of the block structure.
+6.1 Limit of the method.  Only odd k can be guaranteed by block membership: for even k
+both panels of a condition (k, q(k), resp. p(k), k+1) fall into the same parity class of the
+input, and their order there is not controlled.  So at most ~n/2 slips per node of size
+2n, gain <= (n/2) bits; and a node whose inputs carry slips themselves loses candidates
+(6.2).  Alternating "slip / no slip" levels is exactly what (R2) does (the inputs of a
+slip node are parity-block sequences, whose halves are arbitrary), giving 1/8.  Any
+variant of this scheme stays below 1/4.  Exponent 1 needs control of the inner orders of
+typical sequences (asymptotics/NOTES 4.4), not just of block membership.
 
-6.2 Route 1 (prefix liveness).  Not needed; but note: window copies are polynomially few
-(copies.c: e.g. N = 18: 54, 54, 89, 28, 54, ... copies of size 2, 3, 4, 5, 6, ...), so
-liveness transfer through copies alone cannot give exponentially many structured live
-prefixes.  The slip family does give them: every prefix of a member is live.
-6.3 Route 2 (interleaving).  Commutation-type freedom is provably only exponential:
-adjacent steps x, y can be swapped iff they do not conflict (x not in W_y, y not in W_x);
-two left-half (or two right-half) panels always conflict, so the conflict graph has
-independence number <= 3 (two edge panels aside), every commutation class of a valid
-sequence is the set of linear extensions of a poset of width O(1), of size <= C^N.  The
-slips are not interleavings: they change the SETS of the two blocks, and that is where
-the exponential number of choices per level comes from.
-6.4 Route 3 (edge freedom).  The outer thirds commute (growth/PROOFS 1.4), giving one
-factor C(2N/3, N/3); but the middle third cannot be placed as a block at all (from scratch
-every window of a middle panel covers the whole middle third, so each step would need an
-exact median split of the placed middle panels, impossible once an odd number is placed:
-g(middle third) = 0 for |M| >= 2).  Edge freedom does not recurse.
+6.2 A recursive variant with slips at every level (family.py).  Inputs that carry slips
+themselves still guarantee most odd k: if sigma' and tau' are slip sequences with slip
+sets D', D'', the guaranteed set contains C_n minus at most 3|D'| + 3|D''| "killed"
+positions (a slip e displaces 2e and 2e+1; 2e can only spoil k = e, e + n/2 (via q) or
+2e - 1 (via k+1), 2e + 1 only k = 2e + 1 (via k) or e, e + n/2 (via p)).  Using a fixed
+fraction delta of slips per node and C(G, s) choices gives c = max_delta (1/2 - 3delta)
+H(delta/(1/2-3delta)) / (2 ln 2) = 0.1162 for N = 2^L (delta = 0.0754) -- slightly worse
+than the alternating scheme of Theorem 2 (1/8), which is also kill-free.
+
+6.3 Route 1 (prefix liveness).  Window copies are polynomially few (copies.c: e.g. N = 18:
+54, 54, 89, 28, 54, ... copies of size 2, 3, 4, 5, 6, ...), so transfer through copies
+alone cannot produce exponentially many structured live prefixes.  (The slip sequences do:
+each of their prefixes is live.)
+6.4 Route 2 (interleaving).  Freedom from commuting adjacent steps is only exponential:
+x, y can be swapped iff they do not conflict (x not in W_y and y not in W_x).  Any two
+panels of the same half conflict (the window of a left-half panel y >= 2 is [1, 2y-1]), and
+the middle panel of an odd strip conflicts with everything, so at most 2 panels are
+pairwise non-conflicting; the commutation class of a valid sequence is the set of linear
+extensions of a poset of width <= 2, of size <= 2^N.  The slips are not interleavings:
+they change the SETS of the two blocks, and that is where the 2^{n/2} choices come from.
+6.5 Route 3 (edge freedom).  The outer thirds commute (growth/PROOFS 1.4), giving one
+factor C(2N/3, N/3), but the middle third cannot be placed as a block at all: from
+scratch, every window of a middle panel covers the whole middle third, so each step would
+need the already placed middle panels to be split evenly around it, impossible once an
+odd number is placed (g(middle third) = 0 for |M| >= 2).  Edge freedom does not recurse.
