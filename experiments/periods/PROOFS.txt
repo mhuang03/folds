@@ -278,3 +278,107 @@ predicts: 6 = 2.3 is first of the form 2^a(2^s - 1) at a + s = 3 (m = 4), 12 = 4
 and an order-3 component, never an order-12 one.
 
 4.5 m = 8 prediction check: no vertex of index 45 at k = 8 (section 3, verts8.log).
+
+
+5. Exact c_8 and c_9
+--------------------
+classes.py K: admissible order types by LP (sigma forced by the window rule):
+   k = 2..9:  2, 6, 24, 116, 660, 4260, 30812, 244802     (types_K.txt; types_9.txt, 4 MB, is not
+   committed: `python3 classes.py 9`, about 25 min).  Ratios 3, 4, 4.83, 5.69, 6.45, 7.23, 7.95.
+vol.py K: c_K = sum of exact volumes (Normaliz multiplicity of the cone over Pbar_pi / K!, one
+representative per mirror pair).  Reproduces c_4..c_7 of ../prefix exactly.
+   c_8 = 5766402363187232751941221 / 5807018243102153166028800000
+       = 9.930057254490e-4,      8! c_8 = 40.03799085
+       denominator 2^34 3^5 5^5 7^6 31^3 127,   numerator 109 . 503 . 105174500942733192623
+   c_9 = 711571496885945219267863028707401619 / 2538651374251719934973912775917568000000
+       = 2.802950826975e-4,      9! c_9 = 101.71347961
+       denominator 2^42 3^11 5^6 7^7 17 31^4 127^2,
+       numerator 661 . 466717 . 2306553135166264942439398387
+   (vol8_0of1.txt, vol9_0of2.txt + vol9_1of2.txt: per-class volumes; c_9 = sum of the two TOTALs.)
+Independent check: the continuum SMC (cont.c, section 6) gives p_8 = 0.30639 (exact 0.306381)
+and p_9 = 0.28208 (exact 0.282269) at M = 200000.
+The primes in the denominators are those of 2^s - 1, s <= k - 1: 127 = 2^7 - 1 appears at k = 8,
+and 17 at k = 9 as a factor of 255 = 2^8 - 1.  The leading coefficient sees the same
+doubling-orbit faces (through the volumes of the pieces they cut off).
+
+
+6. Growth of c_k and the continuum acceptance
+---------------------------------------------
+c_k = lim T(N,k)/N^k is the probability that k i.i.d. uniform points of (0,1), taken in order,
+form a valid sequence.  So p_k := c_k / c_{k-1} is the probability that a uniform new point is
+valid given k - 1 valid points (averaged over the uniform measure on valid configurations), and
+k! c_k = expected number of valid orderings of a uniform random k-set = prod_{j <= k} (j p_j).
+(So the acceptance probability is c_k/c_{k-1}; k c_k/c_{k-1} is the ratio of consecutive k! c_k.)
+   k        2      3      4      5      6      7      8      9
+   p_k   .5000  .4444  .3983  .3455  .3413  .3106  .3064  .2823        (exact)
+   k p_k  1.000  1.333  1.593  1.727  2.048  2.174  2.451  2.540
+   k!c_k  1      1.333  2.125  3.670  7.514  16.34  40.04  101.7
+(parity alternation: a big drop at odd k, a small one at even k, as in a(N) and the Wallis model;
+the SMC continues it: p_10 = 0.2845 > p_9.)
+
+k! c_k is NOT ~ C rho^k: k p_k keeps growing (p_k decays much more slowly than 1/k), so k! c_k
+grows super-exponentially, k! c_k = k! prod_j p_j.  The question is how p_k decays.
+
+Continuum SMC (cont.c).  Given points x_1..x_{k-1} the valid set is {c : F(c) = 0},
+F = sum_i phi_{x_i}, phi_x = -1 on (x/2, x), +1 on (x, (1+x)/2) (Lemma 1 with N -> infinity),
+so p_k = E[|{F = 0}|].  Particles are resampled by |{F = 0}| and extended by a uniform valid
+point: the standard unbiased Feynman-Kac estimator of c_k.  It reproduces p_2..p_9 (above).
+Population bias: at large k the population lags behind the selection and p_k is biased LOW
+(biastab.py): octave [512, 1024): M = 1000: 0.1005, 4000: 0.1032, 16000: 0.1072, 32000: 0.1066.
+A first run with M = 4000 to k = 2600 looked like a clean power law p ~ 0.45 k^-0.225 -- that
+was largely this bias.  Bias-corrected octave means (two largest M, 1/M extrapolation; the last
+octave is uncertain, 0.106-0.108):
+   octave centre k   11.3   22.6   45.3   90.5   181    362    724
+   p                .2702  .2209  .1856  .1598  .1412  .1247  ~.107
+   1/p              3.70   4.53   5.39   6.26   7.08   8.02   ~9.4
+   increment of 1/p   -    0.83   0.86   0.87   0.82   0.94   ~1.2-1.4
+   local exponent     -    0.29   0.25   0.22   0.18   0.18   ~0.2
+   s = (int F^2)^1/2 1.64   2.03   2.42   2.77   3.09   3.48   4.07
+   G = sqrt(2 pi) s p 1.11  1.13   1.13   1.11   1.09   1.09   1.08
+Reading:
+  * Local CLT: p ~ G/(sqrt(2 pi) s) with G = 1.08-1.13, as in the discrete process
+    (../asymptotics: G = 1.02-1.05).  So the decay of p is the growth of the imbalance s.
+  * Through k ~ 500, 1/p grows by an almost constant 0.82-0.94 per octave and s by a constant
+    0.32-0.39 per octave, while the local power exponent FALLS (0.29 -> 0.18): this is the
+    logarithmic law, s ~ 0.56 ln k, p ~ 0.75/(ln k + 0.25) (fit on all octaves, rms 0.024; the
+    power fit p = 0.44 k^-0.218 has rms 0.025).  It is the continuum analogue of the per-octave
+    mechanism of ../asymptotics/NOTES.txt section 2 (each octave of the doubling chains adds
+    the same amount to s; in the continuum the octaves are cut off by the point spacing ~1/k
+    instead of 1/N).
+  * The last octave (512-1024) has a larger increment; it is also where the SMC bias is
+    largest (4% between M = 4000 and 16000), so it is not conclusive.  Fitted on k >= 45 the
+    power law is better (rms 0.010 vs 0.021) because of that octave.  VERDICT: the data favour
+    p_k ~ A/ln k (constant increments of 1/p and of s over 5 octaves, falling local exponent),
+    but a slowly decaying power k^-0.2 cannot be excluded with k <= 1024; an unbiased answer
+    needs M >> 32000 beyond k = 512 (memory: 2 x 16 bytes x 3k per particle).
+Comparison with a(N).  T(N,k+1)/T(N,k) = (N - k) p_{k+1}^(N), with p^(N) -> p (continuum) for
+fixed k, so a(N) = N! prod_{k <= N} p_k^(N), and the deficit d(N) = (ln N! - ln a(N))/N is the
+mean of ln(1/p_k^(N)).  Replacing p^(N) by the continuum p_k (M = 64000 to k = 512, 32000 above):
+   N                       64     128    256    512    1024
+   continuum  mean ln 1/p  1.525  1.681  1.824  1.956  2.098
+   discrete   d(N)         1.166  1.366  1.542  1.699  1.852     (../asymptotics, SMC)
+   continuum  e^d / ln N   1.105  1.107  1.117  1.133  1.176
+   discrete   e^d / ln N   0.772  0.808  0.843  0.877  0.919
+The continuum product has the conjectured form N!/(kappa ln N)^N with an almost constant
+kappa_cont ~ 1.1-1.18 (for p_k = A/(ln k + b) one gets e^{mean ln 1/p} ~ ln N / A).  The discrete
+deficit is smaller (finite N helps: late steps choose among few panels and the octaves are cut
+at 1/N), with a gap 0.36, 0.32, 0.28, 0.26, 0.25 that SHRINKS with N, and the discrete kappa_N
+(0.77 -> 0.92 here, 1.01 at N = 4096) rises towards the continuum value.  So the exact polytope
+picture (c_k, k <= 9) and the continuum acceptance support a(N) = N!/(kappa ln N)^{N(1+o(1))}:
+as far as the data go the acceptance decays like 1/log k, not like a power.  (A power law
+k^-alpha would give ln a(N) ~ (1 - alpha) N ln N, contradicting c = 1 of ../asymptotics; the
+same 1/log-vs-power ambiguity exists there, and the continuum data, free of the finite-N end
+effects, are somewhat cleaner but not decisive.)
+
+
+7. Files
+--------
+  poly.py         class polytopes (window rule, inequalities with strictness)
+  classes.py K    admissible order types -> types_K.txt
+  vol.py K [i/n]  exact c_K (Normaliz) -> volK_iofn.txt
+  faces.py K      all faces, indices D_F, check of the face lemma (faces6.log)
+  verts.py K      vertex indices only (verts8.log)
+  fourier.py K q  Laurent coefficients at roots of unity per class (uses ../prefix5/classes_K.json)
+  component.py K q PI..   the same from fresh Normaliz Hilbert series of chosen classes
+  cont.c          continuum SMC for p_k (gcc -O2 -o cont cont.c -lm; ./cont K M seed > runs/...)
+  biastab.py      population-bias table, octave means and fits (runs/*.txt)
