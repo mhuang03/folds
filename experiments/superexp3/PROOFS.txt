@@ -29,7 +29,7 @@ round produced:
      n <= 12 (section 2.1).  The interleaved sequences in F(16) = 64738 are interleavings only
      in the trivial sense that their half-time set is not a parity class.
  (3) With parity-block inputs the chain is OPTIMAL up to constant factors among ALL general-X
-     slips (section 2.3): summing Theorem A over every X with PB inputs gives 1.4 - 3.6 times the
+     slips (section 2.3): summing Theorem A over every X with PB inputs gives 2.1 - 4.9 times the
      chain's count (n = 4..14), with no exponential gain; the extra X certified by the free
      halves alone are worth O(1) bits (section 2.4); residue-class inputs mod 3, 4 are worse
      (2.5); odd N has no free general slips at all (2.6).
