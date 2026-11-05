@@ -5,3 +5,4 @@ import Folds.Cyclic
 import Folds.Parity
 import Folds.RevMirror
 import Folds.Blocks
+import Folds.Radius
