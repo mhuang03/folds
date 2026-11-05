@@ -33,6 +33,7 @@ macro_rules! word {
         }
     };
 }
+word!(u16);
 word!(u32);
 word!(u64);
 word!(u128);

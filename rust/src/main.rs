@@ -25,8 +25,9 @@ fn known(rule: Rule, n: usize) -> Option<u128> {
     t.get(n - 1).copied()
 }
 
-/// Moduli for the low-memory CRT mode (pairwise coprime, all ≤ 2^32).
-const MODULI: [u64; 4] = [1 << 32, 4294967291, 4294967279, 4294967231];
+/// Moduli for the low-memory CRT modes (pairwise coprime).
+const MOD32: [u64; 4] = [1 << 32, 4294967291, 4294967279, 4294967231];
+const MOD16: [u64; 8] = [1 << 16, 65521, 65519, 65497, 65479, 65449, 65447, 65437];
 
 fn inv_mod(a: u64, m: u64) -> u64 {
     let (mut t, mut nt, mut r, mut nr) = (0i128, 1i128, m as i128, (a % m) as i128);
@@ -39,34 +40,53 @@ fn inv_mod(a: u64, m: u64) -> u64 {
     t.rem_euclid(m as i128) as u64
 }
 
-/// Garner reconstruction from residues mod MODULI[0..3]; result < 2^96.
-fn crt3(r: &[u64; 3]) -> u128 {
-    let m = &MODULI;
-    let (m0, m1, m2) = (m[0] as u128, m[1] as u128, m[2] as u128);
-    let x0 = r[0] as u128;
-    // x = x0 + m0*t1 + m0*m1*t2
-    let t1 = ((r[1] as u128 + m1 - x0 % m1) % m1) * inv_mod(m[0] % m[1], m[1]) as u128 % m1;
-    let x01 = x0 + m0 * t1; // < m0*m1
-    let inv01 = inv_mod(((m0 * m1) % m2) as u64, m[2]) as u128;
-    let t2 = ((r[2] as u128 + m2 - x01 % m2) % m2) * inv01 % m2;
-    x01 + m0 * m1 * t2
+/// Garner reconstruction of `x mod Π m_i` (the product must stay below 2^128).
+fn crt(res: &[u64], mods: &[u64]) -> u128 {
+    let mut x: u128 = 0;
+    let mut prod: u128 = 1;
+    for (&r, &m) in res.iter().zip(mods) {
+        let mm = m as u128;
+        let t = ((r as u128 + mm - x % mm) % mm) * inv_mod((prod % mm) as u64, m) as u128 % mm;
+        x += prod * t;
+        prod = prod.checked_mul(mm).expect("CRT modulus product overflows u128");
+    }
+    x
 }
 
-fn count(n: usize, rule: Rule, modmode: bool, verbose: bool) -> (u128, f64) {
+#[derive(Clone, Copy, PartialEq, Debug)]
+enum Mode {
+    Exact,
+    /// `u32` residues, number of moduli
+    M32(usize),
+    /// `u16` residues, number of moduli
+    M16(usize),
+}
+
+fn count(n: usize, rule: Rule, mode: Mode, verbose: bool) -> (u128, f64) {
     let chk = Checker::new(n, rule);
     let t = Instant::now();
-    let v = if !modmode {
-        assert!(n <= 41, "u64 exactness needs N <= 41");
-        dp::count::<u64>(n, &chk, dp::Ring { modulus: 0 }, verbose)
-    } else {
-        let mut r = [0u64; 3];
-        for (q, ri) in r.iter_mut().enumerate() {
-            *ri = dp::count::<u32>(n, &chk, dp::Ring { modulus: MODULI[q] }, verbose) as u64;
-            if verbose {
-                eprintln!("  residue mod {} = {} ({:.1}s)", MODULI[q], ri, t.elapsed().as_secs_f64());
-            }
+    let v = match mode {
+        Mode::Exact => {
+            assert!(n <= 41, "u64 exactness needs N <= 41");
+            dp::count::<u64>(n, &chk, dp::Ring { modulus: 0 }, verbose)
         }
-        crt3(&r)
+        Mode::M32(q) | Mode::M16(q) => {
+            let mods: &[u64] = if let Mode::M32(_) = mode { &MOD32[..q] } else { &MOD16[..q] };
+            let mut res = vec![];
+            for &m in mods {
+                let ring = dp::Ring { modulus: m };
+                let r = if let Mode::M32(_) = mode {
+                    dp::count::<u32>(n, &chk, ring, verbose)
+                } else {
+                    dp::count::<u16>(n, &chk, ring, verbose)
+                } as u64;
+                res.push(r);
+                if verbose {
+                    eprintln!("  N={} residue mod {} = {} ({:.1}s)", n, m, r, t.elapsed().as_secs_f64());
+                }
+            }
+            crt(&res, mods)
+        }
     };
     (v, t.elapsed().as_secs_f64())
 }
@@ -78,7 +98,8 @@ fn usage() -> ! {
   folds stats <semi|sym> N [--threads T]               refined statistics (full forward DP)
   folds check                                          validate against brute force and known terms
 options:
-  --mod       store u32 residues (half the memory), 3 runs + CRT (exact below 2^96)
+  --mod32 Q   store u32 residues (1/2 the memory), Q runs + CRT (exact below 2^(32Q)), Q<=4
+  --mod16 Q   store u16 residues (1/4 the memory), Q runs + CRT (exact below 2^(16Q)), Q<=7
   --threads   worker threads (default 3)"
     );
     std::process::exit(2)
@@ -87,7 +108,7 @@ options:
 fn main() {
     let mut args: Vec<String> = std::env::args().skip(1).collect();
     let mut threads = 3usize;
-    let mut modmode = false;
+    let mut mode = Mode::Exact;
     let mut verbose = false;
     let mut i = 0;
     while i < args.len() {
@@ -96,9 +117,13 @@ fn main() {
                 threads = args[i + 1].parse().unwrap();
                 args.drain(i..i + 2);
             }
-            "--mod" => {
-                modmode = true;
-                args.remove(i);
+            "--mod32" => {
+                mode = Mode::M32(args[i + 1].parse().unwrap());
+                args.drain(i..i + 2);
+            }
+            "--mod16" => {
+                mode = Mode::M16(args[i + 1].parse().unwrap());
+                args.drain(i..i + 2);
             }
             "-v" => {
                 verbose = true;
@@ -126,7 +151,7 @@ fn main() {
             let a: usize = args.get(1).unwrap_or_else(|| usage()).parse().unwrap();
             let b: usize = args.get(2).map(|s| s.parse().unwrap()).unwrap_or(a);
             for n in a..=b {
-                let (v, secs) = count(n, rule, modmode, verbose);
+                let (v, secs) = count(n, rule, mode, verbose);
                 let tag = match known(rule, n) {
                     Some(k) if k == v => "  (matches known)",
                     Some(_) => "  MISMATCH WITH KNOWN VALUE",
@@ -153,12 +178,9 @@ fn check() {
                 vals.push(("subset", g[(1usize << n) - 1]));
             }
             vals.push(("mitm64", dp::count::<u64>(n, &chk, dp::Ring { modulus: 0 }, false)));
-            if n <= 16 {
-                let mut r = [0u64; 3];
-                for q in 0..3 {
-                    r[q] = dp::count::<u32>(n, &chk, dp::Ring { modulus: MODULI[q] }, false) as u64;
-                }
-                vals.push(("crt32", crt3(&r)));
+            if n <= 18 {
+                vals.push(("crt32", count(n, rule, Mode::M32(3), false).0));
+                vals.push(("crt16", count(n, rule, Mode::M16(6), false).0));
             }
             if let Some(k) = known(rule, n) {
                 vals.push(("known", k));
