@@ -1,165 +1,139 @@
 # Folds: symmetric and semi-symmetric bisection orders
 
-Panels `1..N`. A fold sequence is a permutation `a` of `[1..N]`, and step `k` bisects
-panel `m = a_k`. Let `S` be the set of panels bisected before step `k`. The window around
-`m` reaches `r = min(m-1, N-m)` panels on each side.
+Panels `1..N` lie between existing creases. A **fold sequence** is a permutation `a` of
+`[1..N]`, and step `k` bisects panel `m = a_k` by folding the nearer edge onto a
+reference crease. Let `S` be the set of panels bisected before step `k`. The panels
+between the edge and the crease are `m ± d` for `1 ≤ d ≤ r`, with `r = min(m-1, N-m)`.
 
-* **symmetric step:** for all `1 ≤ d ≤ r`, `m-d ∈ S ⇔ m+d ∈ S`
+* **symmetric step:** for all `d ≤ r`, `m-d ∈ S ⇔ m+d ∈ S`
 * **semi-symmetric step:** `#{d ≤ r : m-d ∈ S} = #{d ≤ r : m+d ∈ S}`
 
+`a(N)` is the number of sequences in which every step is semi-symmetric.
+
 Two corrections to the informal statement: the window size depends on the *panel*
-`a_k`, so it is `min(a_k - 1, N - a_k)`, not `min(k-1, N-k)`. And the semi-symmetric
-count tests `a_k ± d ∈ S`, not `a_{k±d}`.
+`a_k`, so it is `min(a_k - 1, N - a_k)`, not `min(k-1, N-k)`. And the count tests
+`a_k ± d ∈ S`, not `a_{k±d}`.
 
-## Lean (`Folds/`). Build with `lake exe cache get && lake build`. Files marked (Mathlib) use Mathlib
+## Status at a glance
 
-| file | contents |
+| question | status |
 |---|---|
-| `Defs.lean` | `reach`, `IsFoldSeq`, `SymStep`, `SemiStep`, `Symmetric`, `SemiSymmetric`, `APFree` |
-| `Basic.lean` | `Symmetric.semiSymmetric`, `symmetric_iff_apFree`, `semiStep_iff_of_compl`, `SemiSymmetric.reverse`, `SemiSymmetric.mirror` |
-| `Decide.lean` | Bool checkers proven equal to the Props (decidability) |
-| `Parity.lean` | `middle_index_even`: for odd N, the middle panel is always placed at an odd step |
-| `Blocks.lean` | `semiSymmetric_blocks_iff`: evens-then-odds (or the reverse) is semi-symmetric iff both halves are; `prefix_class_semiSymmetric` |
-| `Counting.lean` (Mathlib) | `semiCount_even`: a(2n) ≥ 2a(n)²; `semiCount_odd`: a(2n+1) ≥ 2a(n)a(n+1); `semiCount_ge_pow`: a(N) ≥ 2^{N−1}; `card_class_prefix` (exact count of sequences that start with a full parity class) |
-| `RevMirror.lean` | reversal∘mirror preserves semi-symmetry; `revMirror_no_fixed`: no fixed points when N ≡ 3 (mod 4) |
-| `Radius.lean` | capped-radius variant; radius 1 ⇔ each panel's time is a local max or min relative to its neighbours |
-| `Recursion.lean` (Mathlib) | **the recursion**: `g_eq_sum`, `semiCount_eq_g`, and the reversal/meet-in-the-middle identity `semiCount_eq_sum_split`: a(N) = Σ_{|S|=k} g(S)·g(Sᶜ) |
-| `Congruence.lean` (Mathlib) | `semiCount_mod_four`: a(N) ≡ c(N) (mod 4), where c(N) is the number of sequences fixed by reversal∘mirror; a(N) even for N ≥ 2; `semiCount_mod_four_of_three`: 4 ∣ a(N) when N ≡ 3 (mod 4) |
-| `Prefix.lean` (Mathlib) | `card_prefixTwo`: there are ⌊N²/2⌋ valid 2-step prefixes; `card_reachTwo`: ⌊N²/3⌋ reachable 2-sets |
-| `Wallis.lean` (Mathlib) | `card_wallisSeqs`: exactly N!·4^r·r!²/(2r+1)! permutations satisfy a single panel's constraint |
-| `SelfDual.lean` (Mathlib) | `card_revMirrorFixed`: c(N) = number of valid half sequences; flip lemmas and a mod-4 reduction of c(N) for even N |
-| `Extremal.lean` (Mathlib) | exact extremal laws. Left-to-right maxima: at most ⌊log₂N⌋+1, attained (`lrmax_le`, `exists_lrmax`). Free steps (window empty): at most ⌊log₂(N+1)⌋+⌊log₂((N+1)/3)⌋+1, attained (`numFree_le`, `max_free`). Shifted parity blocks (`shifted_blocks`) |
-| `Growth.lean` (Mathlib) | composition `semiCount_comp`: a(qn) ≥ a(q)·a(n)^q; doubling splits a(3n) ≥ 2a(n)a(2n) (also for 5n, 7n); branching upper bound `semiCount_le_prod`; parity upper bound `semiCount_even_le_prod`: a(2h) ≤ (2h)!·(√e/2)^{h(1+o(1))} |
-| `WindowRule.lean` (Mathlib) | `semiStep_iff_window`: the window rule (above/below counts decide the half and which panels the window holds); `card_validSuffixes`: valid suffixes = valid prefixes; dead 2-prefixes (1,N),(N,1) for even N; **`card_validPrefixes_three_formula`**: 36·T(N,3) = 8N³ − 3N² − (30 or 12)N + c(N mod 6) |
-| `Asymptotics.lean` (Mathlib) | dipole lemma `imb_cons` (how adding a panel changes the imbalance field); binary-digit decomposition of the step condition (`dyadic_defect`, `semiStep_iff_dyadic` for N = 2^L); half-circle balance `half_balance` |
-| `Descents.lean` (Mathlib) | `descents_bound`: N+1 ≤ (⌊log₂(N+1)⌋+2)^(des+1), so descents grow at least like log N/log log N; `labelling_bound`, which also covers LDS and LIS |
-| `Live.lean` (Mathlib) | `extends_single`: every panel is a live first step (so valid sequences exist for all N); transfer lemmas through parity, mod-3 and shifted copies; every dead 2- and 3-prefix proven dead |
-| `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
+| closed form for a(N) | **none found; very unlikely**. No OEIS match; huge prime factors; no holonomic recurrence; the symmetric analogue A003407 provably has no exponential growth rate |
+| recursive formula | **proven** (Lean): subset recursion `g`, and a(N) = Σ_{\|S\|=k} g(S)·g(Sᶜ) for every k |
+| terms | a(1..35) exact; ln a(N) estimated to N = 4096 |
+| exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (both **proven**); T(N,4) has period 168 (fitted); single-panel Wallis count (**proven**) |
+| congruences | a(N) ≡ c(N) (mod 4) (**proven**); 4 ∣ a(N) for N ≡ 3 (mod 4) (**proven**); no patterns modulo odd primes |
+| growth | rigorously ½e^{1.28N} ≤ a(N) ≤ N!·e^{−Θ(N)}. **Conjecture:** a(N) = N!/(κ ln N)^N |
+| arithmetic effect | multiples of 3 sit above trend (all N ≤ 33). Mechanism: the 2-cycle {N/3, 2N/3} of the doubling map |
 
-The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
-outside Lean (see `experiments/` and the Rust crate), not with `native_decide`.
+Here T(N,k) is the number of valid k-step prefixes, and c(N) is the number of sequences
+fixed by reversal∘mirror.
 
-## Data (`experiments/semi_counts.txt`; N ≤ 27 from `experiments/semi.c`, N = 28..35 from the Rust crate `rust/`)
+## Data
 
-Semi-symmetric counts for `N = 1..35`:
-1, 2, 4, 10, 28, 96, 256, 1120, 4256, 17878, 70960, 383476, 1620328, 9167908,
-47821296, 276182312, 1481994716, 10084180418, 55082188120, 398874108930,
+`experiments/semi_counts.txt`: N ≤ 27 come from `experiments/semi.c`; N = 28..35 come
+from the Rust crate `rust/`.
+
+a(1..35) = 1, 2, 4, 10, 28, 96, 256, 1120, 4256, 17878, 70960, 383476, 1620328,
+9167908, 47821296, 276182312, 1481994716, 10084180418, 55082188120, 398874108930,
 2505681033958, 18168130281086, 119006527671252, 979730153850974,
 6564449510287388, 55581983250573500, 413109755332919448, 3603074636066234798,
 27545080998591561856, 262878496654501774250, 2037247307316034896720,
 20222490725552617395966, 171668579369815966705184, 1711977358970374039688092,
 14916356465581456801127844.
 
-`rust/` uses a mirror-orbit, meet-in-the-middle layered DP: a(33) takes 74 s, and a(34)
-and a(35) used residue/CRT runs. N = 36 needs more than 16 GB of RAM (see
-`rust/README.md`).
+- The symmetric counts are OEIS A003407 (3-AP-free permutations).
+- c(N), for sequences fixed by reversal∘mirror, is known to N = 41
+  (`experiments/arith/`).
+- `rust/` uses a mirror-orbit, meet-in-the-middle layered DP: a(33) takes 74 s. N ≥ 36
+  needs more than 15 GB of RAM (see `rust/README.md`).
 
-The symmetric counts are OEIS A003407 (permutations with no 3-term AP), as expected.
-The semi-symmetric sequence is **not in the OEIS**.
+## Equivalent formulations (all proven in Lean)
 
-## Equivalent formulations
+1. **Symmetric ⇔ 3-AP-free.** No x, y with (x+y)/2 bisected between them.
+2. **Prefix form.** With `P(j) = |S ∩ [1,j]|` and `s = |S|`:
+   - left half: `P(2m−1) = 2P(m−1)`;
+   - right half: `s + P(2m−1−N) = 2P(m−1)`.
+3. **Cyclic / doubling form.** `P̃(2m−1) = 2P(m−1)` with `P̃(j) = P(j mod N) + ⌊j/N⌋s`.
+   Equivalently, the discrepancy `E(x) = F(x) − s·x/N` on `R/NZ` must satisfy
+   `E(2c) = 2E(c)` at the panel centre `c = m−½`. This is a doubling-map condition.
+4. **Window rule.** Let `A` and `B` be the numbers of earlier panels above and below
+   `m`.
+   - `A < B`: `m` is in the right half, and its window holds the A panels above it plus
+     exactly the A nearest below.
+   - `A > B`: the mirror case.
+   - `A = B`: the window covers all of `S`.
+5. **Complement.** Swapping placed and unplaced panels inside the window preserves
+   validity. Hence reversal and mirror invariance.
+6. **Binary digits** (N = 2^L). The step condition splits into one doubling-balance term
+   per 1-bit of `m−1`.
 
-1. **Symmetric ⇔ 3-AP-free** (proven: `symmetric_iff_apFree`).
-2. **Prefix counts.** Let `P(j) = |S ∩ [1,j]|` and `s = |S|`. For `m ∉ S`:
-   * left half (`2m-1 ≤ N`): the step is OK iff `P(2m-1) = 2·P(m-1)`. The crease
-     `2m-1` is the reference fold.
-   * right half: the step is OK iff `s + P(2m-1-N) = 2·P(m-1)`.
-3. **Cyclic / doubling form.** Wrap the strip into a circle of length `N` and extend
-   `P` by `P̃(j) = P(j mod N) + ⌊j/N⌋·s`. Both cases then read **`P̃(2m-1) = 2·P(m-1)`**.
-   With the panel centre `c = m - ½`, the counting function `F` and the discrepancy
-   `E(x) = F(x) - s·x/N` (period `N`), this becomes **`E(2c) = 2·E(c)`**: placing the
-   panel at `c` is allowed iff the discrepancy doubles under the doubling map
-   `x ↦ 2x (mod N)`. (Proven in Lean: `semiStep_iff_cyclicStep`.)
-4. **Complement / reversal.** A step's validity is unchanged if `S` is replaced by its
-   complement inside the window. Hence reversing a semi-symmetric sequence gives a
-   semi-symmetric one (proven), and so does mirroring `m ↦ N+1-m` (proven). For
-   `N ≤ 8` these are the only value-relabelings that preserve the set.
+## Lean formalization (`Folds/`)
 
-## Recursion
+Build with `lake exe cache get && lake build`. There is no `sorry` and no
+`native_decide`. Files marked (M) use Mathlib.
 
-The condition depends only on the *set* `S`, not on the order it was built in. So with
-`g(∅) = 1`:
+| file | main results |
+|---|---|
+| `Defs` | definitions: `reach`, `IsFoldSeq`, `SymStep`, `SemiStep`, `Symmetric`, `SemiSymmetric`, `APFree` |
+| `Basic` | symmetric ⇒ semi-symmetric; `symmetric_iff_apFree`; complement lemma; reversal and mirror invariance |
+| `Decide` | decidability via Bool checkers |
+| `Cyclic` | `semiStep_iff_cyclicStep` (doubling form); prefix forms; interval-count forms |
+| `Parity` | `middle_index_even`: for odd N, the middle panel is always placed at an odd step |
+| `Blocks` | `semiSymmetric_blocks_iff`: evens-then-odds is valid iff both halves are |
+| `RevMirror` | reversal∘mirror is an involution; no fixed points when N ≡ 3 (mod 4) |
+| `Radius` | radius-1 relaxation ⇔ every panel's time is a local max or min relative to its neighbours |
+| `Counting` (M) | a(2n) ≥ 2a(n)², a(2n+1) ≥ 2a(n)a(n+1), a(N) ≥ 2^{N−1}; exact count of sequences that start with a full parity class |
+| `Recursion` (M) | **recursion** `g_eq_sum`, `semiCount_eq_g`; split identity `semiCount_eq_sum_split` |
+| `Congruence` (M) | `semiCount_mod_four`: a ≡ c (mod 4); a(N) even; 4 ∣ a(N) when N ≡ 3 (mod 4) |
+| `Prefix` (M) | ⌊N²/2⌋ valid 2-prefixes; ⌊N²/3⌋ reachable 2-sets |
+| `WindowRule` (M) | window rule (iff); valid suffixes = valid prefixes; **T(N,3) closed form**: 36·T(N,3) = 8N³ − 3N² − (30 if N even, else 12)N + (0,7,8,−9,16,−1)[N mod 6] |
+| `Wallis` (M) | a single panel's constraint holds for exactly N!·4^r·r!²/(2r+1)! permutations |
+| `SelfDual` (M) | c(N) = number of valid half sequences; flip lemmas |
+| `Extremal` (M) | maximum left-to-right maxima = ⌊log₂N⌋+1; maximum free steps = ⌊log₂(N+1)⌋+⌊log₂((N+1)/3)⌋+1; shifted parity blocks |
+| `Growth` (M) | **composition** a(qn) ≥ a(q)·a(n)^q; doubling splits a(3n) ≥ 2a(n)a(2n) (also 5n, 7n); branching and parity upper bounds |
+| `Asymptotics` (M) | dipole lemma (how one panel changes the imbalance field); binary-digit decomposition; half-circle balance |
+| `Descents` (M) | N+1 ≤ (⌊log₂(N+1)⌋+2)^(des+1); the same for LDS and LIS |
+| `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
-    g(S ∪ {m}) += g(S)   whenever m ∉ S and the step (S, m) is semi-symmetric,
-    a(N) = g([1..N]).
+## Conjectures and open problems
 
-Reversal gives a meet-in-the-middle identity, checked for `N ≤ 12`:
+1. **Asymptotics.** a(N) = N!/(κ_N ln N)^N, i.e. ln a = N ln N − N ln ln N − O(N).
+   Evidence: debiased SMC to N = 4096 and a Feynman–Kac model; see
+   `experiments/asymptotics/NOTES.txt`. Rigorously, nothing super-exponential is known
+   in either direction.
+2. **Mod-3 effect.** Relative to the independence model, a(N) is above trend exactly
+   when 3 ∣ N (all N ≤ 33). The proposed mechanism is the 2-cycle {N/3, 2N/3} of the
+   doubling map.
+3. **T(N,k)** is a quasi-polynomial for every fixed k: proven via an Ehrhart
+   (polytope-counting) decomposition. The leading coefficients are exact for k ≤ 7. The
+   period of T(N,5) is unknown (likely 1680).
+4. **Minimum LDS = minimum LIS = ⌊log₂(N+1)⌋**, attained. Minimum descents are
+   ⌊log₂(N+1)⌋−1, except ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59. This would follow from the
+   labelling conjecture in `experiments/descents/PROOFS.txt` §5.
+5. **Liveness.** Every valid 2-prefix is live except (1,N) and (N,1) for even N and
+   (1,7), (7,1) at N = 7. Checked for N ≤ 31.
 
-    a(N) = Σ_{|S| = k} g(S) · g([1..N] \ S)    for every k,
+## Where things are
 
-so only sets of size `≤ ⌈N/2⌉` are needed.
+| directory | contents |
+|---|---|
+| `rust/` | the fast exact counter (see its README) |
+| `experiments/structure/FINDINGS.md` | relaxations, Wallis model, parity blocks, refined statistics |
+| `experiments/arith/FINDINGS.txt` | Burnside / mod 4, c(N) to 41, statistics polynomials |
+| `experiments/cluster/FINDINGS.txt` | pair correlations, mod-3 mechanism, Wallis asymptotics |
+| `experiments/prefix/FINDINGS.txt` | T(N,k) quasi-polynomials, Ehrhart mechanism, window rule |
+| `experiments/extremal/PROOFS.txt` | left-to-right maxima and free-step laws |
+| `experiments/growth/PROOFS.txt` | composition, splits, upper bounds, SMC |
+| `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
+| `experiments/descents/PROOFS.txt` | descent and LDS bounds, SAT data |
+| `experiments/live/FINDINGS.txt` | dead and live prefixes, Beatty copies |
+| `docs/LITERATURE.md` | literature and OEIS survey |
 
-## Why I don't expect a closed form
+## Practical note for folders
 
-* The terms have huge prime factors (e.g. `a(24) = 2 · 489865076925487`), which rules
-  out product formulas.
-* There is no linear recurrence with polynomial coefficients of order ≤ 5 and degree ≤ 5
-  (`experiments/guess.py`).
-* The growth is between exponential and factorial: `log a(N) / log N! ≈ 0.63` for
-  `N = 15..27`. Even `N` is relatively larger than odd `N`, because for odd `N` the middle
-  panel requires the two halves to be exactly balanced.
-* The symmetric analogue, A003407, has no known closed form either.
-
-## Practical note: dead ends
-
-A partial semi-symmetric sequence cannot always be completed. The smallest example is
-`N = 4`: bisect panels 1 then 4, and no next step is valid. Dead-end states for
-`N = 4..14`: 1, 2, 4, 18, 30, 63, 137, 293, 591, 1275, 2449.
-
-## Further findings
-
-- `experiments/structure/FINDINGS.md`. Exact formulas for relaxations: a single
-  constraint gives a Wallis factor, and radius 1 gives 2·E_N (alternating
-  permutations). Parity blocks give a(N) ≥ 2^{N−1} and a(2n) ≥ 2a(n)². The independent
-  product model a_W(N) = N!·Π(2r)!!/(2r+1)!! is within a factor of about 10 at N = 27.
-  There is a weak mod-3 signal.
-- `docs/LITERATURE.md`. Survey of 3-AP-free permutations (A003407) and their cyclic
-  versions, and the OEIS searches (no matches).
-- `experiments/arith/FINDINGS.txt`. Burnside analysis under reversal and mirror. c(N), the
-  number of sequences unchanged by reversal∘mirror, is computed to N = 41 using a
-  half-size 3^{N/2}-state reformulation. a(N) ≡ c(N) (mod 4), and 4 | a(N) when
-  N ≡ 3 (mod 4). The mod-3 growth effect is statistically significant. Empirical
-  log-size laws: minimum descents ⌊log2(N+1)⌋−1, and maximum number of free steps.
-- `experiments/cluster/FINDINGS.txt`.
-  - Exact pair correlations of the panel constraints, including the rule for when they
-    vanish and a large-window limit law K(γ).
-  - Exact Stirling asymptotics for the Wallis model.
-  - The asymptotic fit log a ≈ c·N log N − 0.82N + …, with c ≈ 0.66 and still rising.
-  - The mechanism of the mod-3 effect: the period-2 doubling orbit {N/3, 2N/3}, whose
-    two constraints read the same two prefix sets and force P(N/3) ≈ s/3.
-- `experiments/extremal/PROOFS.txt`. Proofs of the extremal laws. Shifted parity blocks
-  give a(2n) ≥ 2a(n)² + a(n−1)a(n+1) for odd n (on paper). 
-- `experiments/prefix/FINDINGS.txt`. **Exact formulas for valid prefixes of fixed
-  length k.** T(N,k) is the number of valid first-k-step sequences. It is a
-  quasi-polynomial in N:
-  - T(N,2) = ⌊N²/2⌋ (proven in Lean).
-  - T(N,3) = (2/9)N³ − (1/12)N² + ℓ(N)N + e(N), with period 6 (proven in Lean).
-  - T(N,4) has period 168.
-
-  Mechanism (proven): for a fixed relative order of the k panels, the validity conditions
-  are linear inequalities, so T(N,k) is a sum of lattice-point counts of polytopes
-  (Ehrhart theory). The leading coefficients are known exactly for k ≤ 7. The
-  denominators involve 2^m − 1 (doubling-map periods). The valid suffixes of length k are
-  counted by the same T(N,k).
-- `experiments/growth/PROOFS.txt`. Rigorous growth bounds.
-  - Lower bounds are only exponential (a(N) ≥ ½e^{1.28N} for N ≥ 17).
-  - Upper bounds are N!·e^{−Θ(N)}.
-  - So 0 ≤ c ≤ 1 is all that is rigorously known for log a(N) ~ c·N log N.
-  - Sequential Monte Carlo estimates to N = 1024 give a local c of about 0.78, still
-    rising, which is consistent with a(N) = N!/(O(log N))^N.
-- `experiments/asymptotics/NOTES.txt`. **Asymptotic conjecture:** a(N) = N!/(κ_N ln N)^N,
-  with κ_N slowly varying, so c = 1 with a second-order N ln ln N term.
-  - The acceptance rate of a step is a local CLT, G/(√(2π)σ_J), where σ_J is the spread of
-    the imbalance field.
-  - A Feynman–Kac / Gaussian analysis gives σ_J ~ A·ln N.
-  - Debiased sequential Monte Carlo (SMC) estimates up to N = 4096: ln a(4096) ≈ 21269.
-- `experiments/descents/PROOFS.txt`. Minimum descents.
-  - The lower bound ⌊log₂(N+1)⌋−1 holds for N ≤ 79 (SAT), but it is **not** always
-    attained: the true minimum is ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59.
-  - Better conjecture: the minimum LIS = minimum LDS = ⌊log₂(N+1)⌋, attained.
-  - A paper proof gives des ≥ 0.36·log₂N − O(1).
-- `experiments/live/FINDINGS.txt`. Dead prefixes, checked for N ≤ 31.
-  - Dead 2-prefixes: (1,N) and (N,1) for even N, plus (1,7) and (7,1) at N = 7.
-  - Dead 3-prefixes: an explicit family (D_j = {1,2j,2j+1} and its mirrors, plus corner sets
-    for odd N).
-  - Open: that every other pair is live. "Beatty copies" are a promising route.
+A partial semi-symmetric sequence can get stuck. For example, with N = 4, bisecting
+panels 1 then 4 leaves no valid move. Two sequences that are always safe:
+- the "parity block" order: recursively bisect all even panels in a valid order, then all
+  odd ones;
+- its generalisation by residue classes mod q (the composition theorem).
