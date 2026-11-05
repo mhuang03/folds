@@ -22,3 +22,4 @@ import Folds.Independence
 import Folds.Independence2
 import Folds.Copies
 import Folds.ShiftedCount
+import Folds.SuperExp
