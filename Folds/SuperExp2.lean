@@ -31,6 +31,12 @@ Together with `a(2n) ≥ B(n)` this gives, for `N = 2^L` (`pow_le_semiCount_pow_
         N^N ≤ 2^N · a(N)^6,     i.e.   a(N) ≥ (N/2)^{N/6},
 
 improving `a(N) ≥ N^{N/8}` (`N = 4^j`, `pow_le_semiCount_pow_four`).
+
+All `N` (`self_pow_le_semiCount_pow_25`): `N^N ≤ 2^{9N} a(N)^{25}`, i.e.
+`a(N) ≥ (N/512)^{N/25}`, improving the exponent `1/32` of `self_pow_le_semiCount`.  Strong
+induction on the triple (bound for `a(N)`, the same with a surplus `2^{2N}` for even `N`,
+bound for `B(N)` with surplus), from `a(2n) ≥ B(n)`, the chain recursion,
+`B(2m+1) ≥ 2^{⌊(m+1)/2⌋} a(m)² a(m+1)²` (`slipSum_odd`) and `a(2n+1) ≥ 2 a(n) a(n+1)`.
 Paper proofs: `experiments/superexp2/PROOFS.txt`.
 -/
 
@@ -378,6 +384,207 @@ theorem pow_two_aux (L : Nat) :
 theorem pow_le_semiCount_pow_six (L : Nat) :
     (2 ^ L) ^ (2 ^ L) ≤ 2 ^ (2 ^ L) * semiCount (2 ^ L) ^ 6 :=
   (pow_two_aux L).1
+
+/-! ## All `N`: `N^N ≤ 2^{9N} a(N)^{25}` -/
+
+section AllN2
+
+/-- The parity-slip bound for the slip sum: `2^{|C_n|} (a(⌈n/2⌉) a(⌊n/2⌋))² ≤ B(n)`. -/
+theorem paritySlip_le_slipSum {n : Nat} :
+    2 ^ cnt n * (semiCount ((n + 1) / 2) * semiCount (n / 2)) ^ 2 ≤ slipSum n := by
+  unfold slipSum
+  have hsub : (cset n).powerset ⊆ (Finset.Icc 1 (n - 1)).powerset :=
+    Finset.powerset_mono.2 (cset_sub n)
+  refine le_trans ?_ (Finset.sum_le_sum_of_subset hsub)
+  have : ∀ D ∈ (cset n).powerset,
+      (semiCount ((n + 1) / 2) * semiCount (n / 2)) ^ 2 ≤ (condF n D).card * (condS n D).card := by
+    intro D hD
+    rw [Finset.mem_powerset] at hD
+    rw [Nat.pow_two, ← card_oddFirst]
+    exact Nat.mul_le_mul (Finset.card_le_card (oddFirst_sub_condF hD))
+      (Finset.card_le_card (oddFirst_sub_condS hD))
+  refine le_trans ?_ (Finset.sum_le_sum this)
+  rw [Finset.sum_const, Finset.card_powerset, card_cset]
+  exact le_of_eq rfl
+
+/-- `2^{⌊(m+1)/2⌋} (a(m+1) a(m))² ≤ B(2m+1)`. -/
+theorem slipSum_odd (m : Nat) :
+    2 ^ ((m + 1) / 2) * (semiCount (m + 1) * semiCount m) ^ 2 ≤ slipSum (2 * m + 1) := by
+  have := paritySlip_le_slipSum (n := 2 * m + 1)
+  rwa [show cnt (2 * m + 1) = (m + 1) / 2 by unfold cnt; split <;> omega,
+    show (2 * m + 1 + 1) / 2 = m + 1 by omega, show (2 * m + 1) / 2 = m by omega] at this
+
+/-- Small cases of the slip-sum bound: `(2n)^{2n} 2^{4n} ≤ 2^{18n} B(n)^{25}` for `n ≤ 64`. -/
+theorem small_slipSum {n : Nat} (hn : n ≤ 64) :
+    (2 * n) ^ (2 * n) * 2 ^ (4 * n) ≤ 2 ^ (18 * n) * slipSum n ^ 25 := by
+  have e1 : (2 * n) ^ (2 * n) * 2 ^ (4 * n) = (8 * n) ^ (2 * n) := by
+    rw [show 8 * n = 2 * n * 4 by ring, Nat.mul_pow (2 * n) 4, Nat.pow_mul 4 2 n,
+      show (4 : Nat) ^ 2 = 2 ^ 4 by norm_num, ← Nat.pow_mul, Nat.mul_comm 4 n]
+  have e2 : (2 : Nat) ^ (18 * n) = 512 ^ (2 * n) := by
+    rw [show (512 : Nat) = 2 ^ 9 by norm_num, ← Nat.pow_mul]; ring_nf
+  rw [e1, e2]
+  calc (8 * n) ^ (2 * n) ≤ 512 ^ (2 * n) := Nat.pow_le_pow_left (by omega) _
+    _ ≤ 512 ^ (2 * n) * slipSum n ^ 25 :=
+        Nat.le_mul_of_pos_right _ (Nat.one_le_pow _ _ (slipSum_pos n))
+
+/-- The induction behind `self_pow_le_semiCount_pow_25`: for `N ≥ 1`,
+(i) `N^N ≤ 2^{9N} a(N)^25`, (ii) `N^N 2^{2N} ≤ 2^{9N} a(N)^25` for even `N` (a surplus),
+(iii) `(2N)^{2N} 2^{4N} ≤ 2^{18N} B(N)^25`. -/
+theorem alln_aux : ∀ N, 1 ≤ N →
+    N ^ N ≤ 2 ^ (9 * N) * semiCount N ^ 25 ∧
+      (N % 2 = 0 → N ^ N * 2 ^ (2 * N) ≤ 2 ^ (9 * N) * semiCount N ^ 25) ∧
+      (2 * N) ^ (2 * N) * 2 ^ (4 * N) ≤ 2 ^ (18 * N) * slipSum N ^ 25 := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+  intro hN
+  have hpow : ∀ k, 0 < 2 ^ k := fun k => Nat.two_pow_pos k
+  -- (iii)
+  have III : (2 * N) ^ (2 * N) * 2 ^ (4 * N) ≤ 2 ^ (18 * N) * slipSum N ^ 25 := by
+    rcases Nat.lt_or_ge 64 N with hl | hs
+    swap
+    · exact small_slipSum hs
+    rcases Nat.even_or_odd N with ⟨m, hm⟩ | ⟨m, hm⟩
+    · -- N = 2m: the chain recursion
+      rw [show N = 2 * m by omega] at ⊢
+      have hm1 : 1 ≤ m := by omega
+      have Qm := (ih m (by omega) hm1).1
+      have Bm := (ih m (by omega) hm1).2.2
+      have key := slipSum_chain hm1
+      have e : (2 * (2 * m)) ^ (2 * (2 * m)) * 2 ^ (4 * (2 * m)) * 2 ^ (4 * m) =
+          2 ^ (14 * m) * ((2 * m) ^ (2 * m) * 2 ^ (4 * m)) * (m ^ m) ^ 2 := by
+        rw [show 2 * (2 * m) = 2 * (2 * m) by rfl, Nat.mul_pow 2 (2 * m) (2 * (2 * m)),
+          show (2 * m) ^ (2 * (2 * m)) = (2 * m) ^ (2 * m) * (2 * m) ^ (2 * m) by
+            rw [← Nat.pow_add]; congr 1; ring,
+          show (2 * m) ^ (2 * m) = 2 ^ (2 * m) * (m ^ m) ^ 2 by
+            rw [Nat.mul_pow, ← Nat.pow_mul, Nat.mul_comm m 2, Nat.pow_mul]]
+        rw [show (2 : Nat) ^ (2 * (2 * m)) = 2 ^ (4 * m) by ring_nf]
+        ring
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (4 * m)) ?_ (hpow _)
+      rw [e]
+      calc 2 ^ (14 * m) * ((2 * m) ^ (2 * m) * 2 ^ (4 * m)) * (m ^ m) ^ 2
+          ≤ 2 ^ (14 * m) * (2 ^ (18 * m) * slipSum m ^ 25) * (2 ^ (9 * m) * semiCount m ^ 25) ^ 2 := by
+            gcongr
+        _ = 2 ^ (50 * m) * (semiCount m ^ 2 * slipSum m) ^ 25 := by ring
+        _ ≤ 2 ^ (25 * m) * 2 ^ (25 * m) * (semiCount m ^ 2 * slipSum m) ^ 25 := by
+            rw [← Nat.pow_add]; exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by omega) (by omega))
+        _ = 2 ^ (25 * m) * (2 ^ m * (semiCount m ^ 2 * slipSum m)) ^ 25 := by ring
+        _ ≤ 2 ^ (25 * m) * slipSum (2 * m) ^ 25 := by gcongr
+        _ ≤ 2 ^ (18 * (2 * m)) * slipSum (2 * m) ^ 25 * 2 ^ (4 * m) := by
+            rw [Nat.mul_right_comm, ← Nat.pow_add]
+            exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by omega) (by omega))
+    · -- N = 2m+1, m ≥ 32: the parity slip of the odd strip
+      rw [hm]
+      have hm1 : 20 ≤ m := by omega
+      have key := slipSum_odd m
+      generalize ht : (m + 1) / 2 = t at key
+      have ht' : m ≤ 2 * t := by omega
+      have hb := four_two_pow_le m (by omega)
+      -- the product bound, using the surplus of the even one of m, m + 1
+      have P : m ^ m * (m + 1) ^ (m + 1) * 2 ^ (2 * m) ≤
+          2 ^ (9 * (2 * m + 1)) * (semiCount (m + 1) * semiCount m) ^ 25 := by
+        rcases Nat.even_or_odd m with ⟨s, hs⟩ | ⟨s, hs⟩
+        · have E := (ih m (by omega) (by omega)).2.1 (by omega)
+          have Q1 := (ih (m + 1) (by omega) (by omega)).1
+          calc m ^ m * (m + 1) ^ (m + 1) * 2 ^ (2 * m) = (m ^ m * 2 ^ (2 * m)) * (m + 1) ^ (m + 1) := by
+                ring
+            _ ≤ (2 ^ (9 * m) * semiCount m ^ 25) * (2 ^ (9 * (m + 1)) * semiCount (m + 1) ^ 25) := by
+                gcongr
+            _ = 2 ^ (9 * (2 * m + 1)) * (semiCount (m + 1) * semiCount m) ^ 25 := by ring
+        · have E := (ih (m + 1) (by omega) (by omega)).2.1 (by omega)
+          have Q0 := (ih m (by omega) (by omega)).1
+          calc m ^ m * (m + 1) ^ (m + 1) * 2 ^ (2 * m)
+              ≤ m ^ m * (m + 1) ^ (m + 1) * 2 ^ (2 * (m + 1)) := by gcongr; omega
+            _ = m ^ m * ((m + 1) ^ (m + 1) * 2 ^ (2 * (m + 1))) := by ring
+            _ ≤ (2 ^ (9 * m) * semiCount m ^ 25) * (2 ^ (9 * (m + 1)) * semiCount (m + 1) ^ 25) := by
+                gcongr
+            _ = 2 ^ (9 * (2 * m + 1)) * (semiCount (m + 1) * semiCount m) ^ 25 := by ring
+      have e : (2 * (2 * m + 1)) ^ (2 * (2 * m + 1)) = (4 * m + 2) ^ (4 * m + 2) := by
+        congr 1 <;> ring
+      rw [e]
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (4 * m)) ?_ (hpow _)
+      calc (4 * m + 2) ^ (4 * m + 2) * 2 ^ (4 * (2 * m + 1)) * 2 ^ (4 * m)
+          ≤ 2 ^ (8 * m + 6) * ((m ^ m) ^ 2 * ((m + 1) ^ (m + 1)) ^ 2) * 2 ^ (4 * (2 * m + 1)) *
+              2 ^ (4 * m) := by gcongr
+        _ = 2 ^ (16 * m + 10) * (m ^ m * (m + 1) ^ (m + 1) * 2 ^ (2 * m)) ^ 2 := by ring
+        _ ≤ 2 ^ (16 * m + 10) * (2 ^ (9 * (2 * m + 1)) *
+              (semiCount (m + 1) * semiCount m) ^ 25) ^ 2 := by gcongr
+        _ = 2 ^ (16 * m + 10) * 2 ^ (18 * (2 * m + 1)) *
+              ((semiCount (m + 1) * semiCount m) ^ 2) ^ 25 := by ring
+        _ ≤ 2 ^ (25 * t + 4 * m) * 2 ^ (18 * (2 * m + 1)) *
+              ((semiCount (m + 1) * semiCount m) ^ 2) ^ 25 := by
+            exact Nat.mul_le_mul_right _
+              (Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by norm_num) (by omega)))
+        _ = 2 ^ (18 * (2 * m + 1)) * (2 ^ t * (semiCount (m + 1) * semiCount m) ^ 2) ^ 25 *
+              2 ^ (4 * m) := by ring
+        _ ≤ 2 ^ (18 * (2 * m + 1)) * slipSum (2 * m + 1) ^ 25 * 2 ^ (4 * m) := by gcongr
+  refine ⟨?_, ?_, III⟩
+  · -- (i)
+    rcases Nat.even_or_odd N with ⟨n, hn⟩ | ⟨n, hn⟩
+    · -- N = 2n: from (iii) of n
+      rw [show N = 2 * n by omega] at ⊢
+      have hn1 : 1 ≤ n := by omega
+      have Bn := (ih n (by omega) hn1).2.2
+      have := slipSum_le hn1
+      calc (2 * n) ^ (2 * n) ≤ (2 * n) ^ (2 * n) * 2 ^ (4 * n) := Nat.le_mul_of_pos_right _ (hpow _)
+        _ ≤ 2 ^ (18 * n) * slipSum n ^ 25 := Bn
+        _ ≤ 2 ^ (9 * (2 * n)) * semiCount (2 * n) ^ 25 := by
+            rw [show 9 * (2 * n) = 18 * n by ring]; gcongr
+    · -- N = 2n+1
+      rw [hn]
+      rcases Nat.eq_zero_or_pos n with h0 | hn1
+      · subst h0
+        simp only [Nat.mul_zero, Nat.zero_add, Nat.pow_one, Nat.mul_one]
+        exact le_trans (by norm_num) (Nat.le_mul_of_pos_right _ (Nat.one_le_pow _ _ (semiCount_pos 1)))
+      have key := semiCount_odd (n := n) hn1
+      have P : n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) ≤
+          2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 25 := by
+        rcases Nat.even_or_odd n with ⟨s, hs⟩ | ⟨s, hs⟩
+        · have E := (ih n (by omega) hn1).2.1 (by omega)
+          have Q1 := (ih (n + 1) (by omega) (by omega)).1
+          calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) = (n ^ n * 2 ^ (2 * n)) * (n + 1) ^ (n + 1) := by
+                ring
+            _ ≤ (2 ^ (9 * n) * semiCount n ^ 25) * (2 ^ (9 * (n + 1)) * semiCount (n + 1) ^ 25) := by
+                gcongr
+            _ = 2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 25 := by ring
+        · have E := (ih (n + 1) (by omega) (by omega)).2.1 (by omega)
+          have Q0 := (ih n (by omega) hn1).1
+          calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)
+              ≤ n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1)) := by gcongr; omega
+            _ = n ^ n * ((n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1))) := by ring
+            _ ≤ (2 ^ (9 * n) * semiCount n ^ 25) * (2 ^ (9 * (n + 1)) * semiCount (n + 1) ^ 25) := by
+                gcongr
+            _ = 2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 25 := by ring
+      have hb := odd_self_pow_le n hn1
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (2 * n)) ?_ (hpow _)
+      calc (2 * n + 1) ^ (2 * n + 1) * 2 ^ (2 * n)
+          ≤ 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1)) * 2 ^ (2 * n) := by gcongr
+        _ = 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)) := by ring
+        _ ≤ 2 ^ (2 * n + 2) * (2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 25) := by
+            gcongr
+        _ ≤ 2 ^ (2 * n + 25) * (2 ^ (9 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 25) := by
+            gcongr; omega
+        _ = 2 ^ (9 * (2 * n + 1)) * (2 * (semiCount n * semiCount (n + 1))) ^ 25 * 2 ^ (2 * n) := by
+            ring
+        _ ≤ 2 ^ (9 * (2 * n + 1)) * semiCount (2 * n + 1) ^ 25 * 2 ^ (2 * n) := by gcongr
+  · -- (ii)
+    intro he
+    obtain ⟨n, rfl⟩ : ∃ n, N = 2 * n := ⟨N / 2, by omega⟩
+    have hn1 : 1 ≤ n := by omega
+    have Bn := (ih n (by omega) hn1).2.2
+    have := slipSum_le hn1
+    calc (2 * n) ^ (2 * n) * 2 ^ (2 * (2 * n)) = (2 * n) ^ (2 * n) * 2 ^ (4 * n) := by ring_nf
+      _ ≤ 2 ^ (18 * n) * slipSum n ^ 25 := Bn
+      _ ≤ 2 ^ (9 * (2 * n)) * semiCount (2 * n) ^ 25 := by
+          rw [show 9 * (2 * n) = 18 * n by ring]; gcongr
+
+/-- **Super-exponential lower bound with exponent 1/25 for all `N`**:
+`N^N ≤ 2^{9N} a(N)^{25}`, i.e. `a(N) ≥ (N/512)^{N/25}`. -/
+theorem self_pow_le_semiCount_pow_25 {N : Nat} (hN : 1 ≤ N) :
+    N ^ N ≤ 2 ^ (9 * N) * semiCount N ^ 25 :=
+  (alln_aux N hN).1
+
+end AllN2
 
 end Slip
 end Folds
