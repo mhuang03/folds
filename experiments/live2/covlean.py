@@ -6,7 +6,7 @@ of mixed-parity 2-sets covered."""
 import sys
 from functools import lru_cache
 
-KMAX = int(sys.argv[3]) if len(sys.argv) > 3 else 16
+KMAX = int(sys.argv[3]) if len(sys.argv) > 3 else 12
 BASE = int(sys.argv[4]) if len(sys.argv) > 4 else 12
 
 

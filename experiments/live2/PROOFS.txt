@@ -155,12 +155,21 @@ sequence for nu starting with t, except when q is not a power of 2 and
         {u, 2u} with N = 3u - 1,
     one 2-set per N.  Both are valid in both orders; they need direct constructions.
 
-4.4 Unconditional coverage (smallk.py).  Using only moduli k <= 8 (for which RS is a finite
-    check) and strips of size <= 10 as the base (all of C verified there), residue reductions
-    alone prove C for about half of all 2-sets for N up to 60 (e.g. N = 40: 437 of 779;
-    N = 60: 867 of 1769), as against 95 reachable pairs at N = 40 with the earlier transfers
-    (parity, shifted blocks, mod 3 with 3 | N).  Mixed-parity pairs are now reached: a residue
-    class mod an odd q contains both parities.
+4.4 Unconditional coverage: the Lean family Cov (covlean.py, which recomputes exactly the
+    closure proven in Lean).  Base: Conjecture C for N <= 12 (explicit witnesses) and strips
+    with at most one panel left; steps: residue transfer mod q, 2 <= q <= 12, through every
+    non-exceptional class (chains checked by decide), and the mirror.  Non-dead 2-sets in
+    Cov (all / valid prefixes / mixed parity):
+        N = 20:   153 of 189   /  116 of 132   /   63 of 99
+        N = 40:   523 of 779   /  379 of 532   /  203 of 399
+        N = 60:  1085 of 1769  /  758 of 1199  /  435 of 899
+        N = 100: 2400 of 4949  / 1689 of 3332  /  822 of 2499
+        N = 200: 7131 of 19899 / 4971 of 13332 / 2225 of 9999
+    (Earlier proven transfers: 95 pairs at N = 40.)  With larger tables the family grows
+    (covlean.py N N K B; q <= 16 gives 2741 at N = 100, but the decide checks then need about
+    5 GB, so the Lean file stops at q = 12).  Its density tends to 0 slowly because the base
+    is finite: every reduction chain must end in a strip of size <= 12 or with distance 1 at
+    size <= 3.
 
 
 5. Copies and copy chains (exploration, N <= 22)
@@ -202,8 +211,10 @@ Proven (paper):  2.1, 2.2, the residue chain theorem, 2.3, 3.1.
 Proven (Lean, Folds/Live2.lean, no sorry / native_decide): co-reachability and its relation
   to liveness; 2.1 (`winEmb_res`); the weak split for sets (`coReach_winEmb`); 2.2 in the
   arithmetic form (`balanced_rUnion_iff`, `reach_cls_mod`); the residue chain theorem
-  (`res_chain`); the residue transfer (`coReach_res`, `extends_res`); and concrete chains,
-  see the file header.
+  (`res_chain`); the residue transfer (`coReach_res`, `extends_res`); RS for q <= 12 in the
+  form "a chain exists for every non-exceptional class" (`chainFor_ok`, `coReach_mod`); the
+  mirror (`coReach_mirror`); Conjecture C for N <= 12 (`coReach_base`); and the closure
+  `Cov` with `Cov.coReach` / `Cov.extends` (coverage in 4.4).
 Open: RS for primes q >= 3; the near residue classes of 4.3 (numerical); the Adjacent
   Lemma; the two one-per-N families of 4.3.  Together they would prove Conjecture C and
   hence the 2-prefix conjecture.
