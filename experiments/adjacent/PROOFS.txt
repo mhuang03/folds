@@ -1,0 +1,229 @@
+The Adjacent Lemma: every interval is co-reachable
+==================================================
+
+Notation as in experiments/live2/PROOFS.txt.  Panels [N] = {1..N}; reach(m) = min(m-1, N-m);
+arms L(m) = [m - reach, m - 1], R(m) = [m + 1, m + reach]; a step (S, m) is valid iff
+|S n L(m)| = |S n R(m)|.  A set D is CO-REACHABLE if [N] \ D has a semi-symmetric ordering from
+scratch (Lean `Live2.CoReach`).  For a set X of panels write
+        I_X(m) = |X n L(m)| - |X n R(m)|        (the imbalance of X at m),
+so (S, m) is valid iff I_S(m) = 0.  "Lean" refers to Folds/Adjacent.lean (no sorry, no
+native_decide, no decide).
+
+STATUS
+  * The Adjacent Lemma is PROVEN, for every N and every 1 <= r < N, together with its
+    generalisation to intervals: [N] \ [a, b] has a semi-symmetric ordering for all
+    1 <= a <= b <= N (Theorem G below, Corollary 1).  Fully in Lean
+    (`coReach_adjacent`, `coReach_interval`).
+  * The proof is a greedy algorithm with a sign invariant (Theorem G): it proves more, namely a
+    simple sufficient criterion for co-reachability of ANY set B, which covers e.g. every
+    2-set inside one half of the strip, and the exceptional classes C_q with N = -1 (mod q)
+    (Corollary 2; half of the exceptional classes, open since live2).  Added to the proven family: `Cov3` = Cov2 + Theorem G,
+    closed under residue transfers and the mirror.  Non-dead 2-sets proven co-reachable:
+        N = 20: 189 of 189 (Cov2: 164);   N = 40: 748 of 779 (631);
+        N = 60: 1625 of 1769 (1387);      N = 100: 4409 of 4949 (3373).
+    For N <= 30 Cov3 misses exactly {1, N} for odd N in {13, 15, 19, 23, 25, 27, 29}.
+  * Remaining for Conjecture C (all 2-sets co-reachable except the dead ones): the pairs {1, N},
+    N odd, and "wide mixed-parity" pairs (v - u odd and about >= 3N/4, e.g. (1, 30), (2, 31) at
+    N = 40) that neither the criterion nor residue transfers reach (section 4).
+
+
+1. Theorem G: the centre greedy
+-------------------------------
+THEOREM G.  Let B be a set of panels and c a real number (the CENTRE), not a panel outside B,
+such that every panel m outside B satisfies
+        m < c  ->  I_B(m) <= 0,            m > c  ->  I_B(m) >= 0.               (*)
+Then B is co-reachable.  [Lean: `coReach_of_inward`, with c = c2/2 and the criterion `Inward`.]
+In words: B may pull panels left of the centre to the right and panels right of the centre to
+the left, never outwards.  Equivalently: every panel outside B with I_B < 0 lies left of every
+panel outside B with I_B > 0 (then take c = (largest negative panel) + 1/2).
+
+Proof.  Run the following process on the BACKGROUND B: S := B (B counts as placed, its own
+steps are never checked); while some panel outside S remains, place (add to S) a panel x
+outside S with I_S(x) = 0 that is closest to c among all such panels.  Claim: the invariant
+        for every unplaced panel m:   m < c -> I_S(m) <= 0,   m > c -> I_S(m) >= 0    (Inv)
+holds throughout, and a valid panel always exists.
+  * Inv holds at the start by (*).
+  * Existence.  Let U be the set of unplaced panels, U nonempty.  If U has a panel right of c,
+    let M be the largest one.  Every panel > M is placed (it is right of c and not in U), so
+    R(M) is fully placed: I_S(M) = |S n L(M)| - reach(M) <= 0; with Inv, I_S(M) = 0, so M is
+    valid.  Otherwise all of U lies left of c (no panel at c by assumption), and the smallest
+    m0 in U has L(m0) fully placed: I_S(m0) = reach(m0) - |S n R(m0)| >= 0, so with Inv
+    I_S(m0) = 0.
+  * Inv is kept.  Placing x changes I(m) by +1 if x in L(m) (then x < m), by -1 if x in R(m)
+    (then x > m), and not otherwise.  The dangerous cases are: m < c and x in L(m), or m > c and
+    x in R(m).  In both, m lies strictly between x and c, so m is strictly closer to c than x;
+    since x was a valid panel closest to c, m was not valid: I_S(m) != 0, so by Inv
+    I_S(m) <= -1 (resp. >= 1), and after the step I(m) <= 0 (resp. >= 0).
+So the process orders all panels outside B; call the order l.  Every step of l is valid after
+B and the earlier steps of l.  In a complete sequence  S, m, T  the step m is valid after S iff
+after T ([N] \ {m} is balanced around m; Lean `Live4.semiStep_compl`), so every step of l is
+valid after the LATER steps of l: l read backwards is a semi-symmetric ordering of [N] \ B from
+scratch.  QED
+[Lean: `greedy` is the process in general form (any list S of placed panels, any target set U,
+every panel in S or U, no panel of U at the centre); `semiSymmetric_reverse_of_bg` the
+reversal; `coReach_of_inward` assembles them.]
+
+COROLLARY 1 (intervals; the ADJACENT LEMMA).  For 1 <= a <= b <= N, [N] \ [a, b] has a
+semi-symmetric ordering.  In particular {r, r+1} is co-reachable for every 1 <= r < N.
+Proof.  c = (a + b)/2 lies in [a, b], so no panel outside B = [a, b] sits at c.  A panel m < a
+has B n L(m) = {} (L(m) lies left of m), so I_B(m) <= 0; a panel m > b has B n R(m) = {}, so
+I_B(m) >= 0.  QED  [Lean: `inward_interval`, `coReach_interval`, `coReach_adjacent`.]
+Also every valid prefix whose set is an interval is live (`extends_interval`).
+
+COROLLARY 2 (symmetric sets; half of the exceptional classes).  Let B be mirror-symmetric
+(x in B <-> N+1-x in B) with I_B(m) <= 0 at every panel m outside B with 2m <= N + 1.  Then B is
+co-reachable.  In particular, if q | N + 1, the multiples of q, C_q = {q, 2q, ..., N + 1 - q},
+are co-reachable; C_q is a window copy (live2 2.1), so co-reachable sets of its strip transfer
+to [N] (weak split, live2 `coReach_winEmb`).  For q not a power of 2 and N = -1 (mod q) these
+are the exceptional classes of live2 3 / live3 1.3, which have no residue chain (Theorem E);
+live3 3.2 conjectured them co-reachable numerically.  (The other exceptional classes, C_1 with
+N = 1 (mod q), violate (*) for every centre: classinward.py, N <= 40.)
+Proof.  Centre c = (N + 1)/2 moved by 1/2 so that it is not a panel (c2 = 2 floor((N+1)/2) + 1).
+For m left of c the hypothesis gives I_B(m) <= 0; for m right of c, the mirror maps the arms
+of m onto the arms of N + 1 - m exchanged, so I_B(m) = -I_B(N + 1 - m) >= 0.  For C_q and m in
+the left half (window [1, 2m - 1]): |C_q n L(m)| = floor((m-1)/q) and |C_q n R(m)| =
+floor((m mod q + m - 1)/q) >= floor((m-1)/q).  QED
+[Lean: `leftCount_mirror`, `inward_of_symm`, `coReach_mult`, `coReach_mult_transfer`.]
+
+Remarks.
+  * The ordering is explicit and computed in O(N^3): place, among the valid panels, the one
+    nearest to the removed interval, then reverse.  (Before the proof was found, this "near"
+    greedy was observed numerically; greedy.py compares heuristics: nearest-to-the-pair never
+    fails, while max/min reach, max/min panel, farthest fail in most cases.)  Without the
+    reversal: the forward near greedy from scratch on [N] \ [a, b] also never fails
+    (greedyc.c: all intervals, N <= 64; adjacent pairs, N <= 120); this is Theorem G'' below
+    with B empty and Z = [a, b].
+  * checkG.py runs the background greedy and verifies the reversed orders (all intervals and
+    all 2-sets satisfying (*), N <= 30: 8169 sets).
+
+2. Generalisations
+------------------
+THEOREM G' (priorities and signs).  Let B be a set of panels, T = [N] \ B.  Suppose each m in T
+gets a sign sigma(m) in {<=, >=} with I_B(m) <= 0 resp. >= 0, and the relation "m > x whenever
+x in T lies in the left arm of m and sigma(m) is <=, or in the right arm of m and sigma(m) is
+>=" is acyclic.  Then B is co-reachable.
+Proof.  Take a linear order (priority) extending the relation and run the greedy "place the
+valid panel of highest priority".  The invariant I_S(m) has sign sigma(m) is kept by the same
+argument (a panel whose count moves the wrong way has higher priority than x, so it was not
+valid).  Existence: the unplaced panel m of LOWEST priority has its sigma-arm free of unplaced
+panels, so that arm is fully placed and I_S(m) = 0.  QED
+Theorem G is the case sigma = (<= left of c, >= right of c), ordered by distance to c.
+Acyclicity can be decided by peeling: repeatedly remove a panel m of T whose sigma-arm
+contains no remaining panel, sigma(m) being forced by the sign of I_B(m) when it is nonzero and
+free otherwise; removal is monotone, so a greedy peel decides the criterion (peel.py).
+On 2-sets G' proves exactly the same sets as G (N = 10, 20, 40), so the centre scheme is already the
+best static sign scheme for pairs.
+
+THEOREM G'' (an absent set).  Let [N] = B + U + Z (background, target, absent).  If there are
+signs and an acyclic relation as in G' on U such that sigma(m) = <= implies I_B(m) <= 0 and
+I_Z(m) <= 0, and sigma(m) = >= implies I_B(m) >= 0 and I_Z(m) >= 0, then U can be ordered
+validly on the background B (Z never placed).
+Proof.  As G'; in the existence step the lowest-priority m (say sigma(m) = >=) has R(m) inside
+S + Z, and I_S(m) <= 0 follows from I_Z(m) >= 0:  |S n L| <= |L| - |Z n L| <= |R| - |Z n R|
+= |S n R|.  QED  (The conditions are symmetric in B and Z, as the reversal requires.)
+Used in peel2.py for two-phase orderings (a block A ordered from scratch, then the rest on A):
+this adds a few 2-sets at small N (N = 14: 15 of the 23 not covered by G), but none of the
+wide mixed-parity pairs of section 4.
+
+3. The new family Cov3 and its coverage
+---------------------------------------
+Cov3 (Lean `Adjacent.Cov3`): constructors cov2 (every set of Live4.Cov2), inward (every
+D in [1, N] satisfying (*) for some centre), res (residue transfer through a good class, as
+in Cov2), mult (transfer through the multiples of q when q | N + 1, Corollary 2), mirror.  `Cov3.coReach`, `Cov3.extends` (valid 2-prefixes in the family are live),
+`Cov3.adjacent`.  covlean5.py computes the family faithfully (it reuses
+experiments/live4/covlean4.py for Cov2 and the good classes; for a 2-set the criterion (*)
+holds for some centre iff max{m : I_B(m) < 0} < min{m : I_B(m) > 0}).
+              non-dead   Cov2   (*) alone   Cov3     valid prefixes:     mixed parity:
+                                                      Cov2 / Cov3 of      Cov2 / Cov3 of
+  N = 20:       189       164      136       189      127 / 132 of 132    74 / 99 of 99
+  N = 40:       779       631      539       748      487 / 501 of 532   289 / 368 of 399
+  N = 60:      1769      1387     1209      1625     1027 / 1055 of 1199  633 / 757 of 899
+  N = 100:     4949      3373     3349      4409     2449 / 2792 of 3332 1405 / 2105 of 2499
+For 13 <= N <= 30 Cov3 misses only {1, N} with N odd in {13, 15, 19, 23, 25, 27, 29}; from
+N = 31 on also wide pairs, e.g. N = 32: (1, 30), (2, 31), (3, 32).  (The rule mult adds no
+2-set in these ranges: the pairs it reaches are already covered otherwise.)
+
+Which 2-sets satisfy (*)?  For B = {u, v}, u < v, panels outside [u, v] are harmless (I_B <= 0
+left of u, >= 0 right of v).  Inside, I_B(m) = [u in L(m)] - [v in R(m)]; it is +1 only if
+m - u <= reach(m) < v - m (m nearer to u) and -1 only if v - m <= reach(m) < m - u (m nearer to
+v).  So (*) fails iff BOTH kinds of inside panels exist.  E.g. every pair inside one half of the
+strip satisfies (*) (there reach(m) = m - 1 and no inside panel has I_B = -1).
+
+4. What remains for Conjecture C
+--------------------------------
+With the Adjacent Lemma proven, the reduction of live2 4.1 (residue transfers end at an
+adjacent pair) needs only RS for the classes used and the exceptional cases.  Numerically the
+gaps of Cov3 are:
+  (a) {1, N}, N odd (the class C_1 mod N - 1, exceptional): I_B = +1 on the whole left half and
+      -1 on the right half, the worst case for (*); also G'' two-phase fails.
+  (b) wide mixed-parity pairs: v - u odd and large (N = 40: the 31 pairs (1, 30), (1, 32), ...,
+      (11, 40), all with v - u in [29, 39]).  They have no even divisor (no parity transfer),
+      and the transfers through their odd divisors do not reach a covered pair.
+Neither is reached by Theorems G', G'' with one or two interval blocks (tp_test.py).
+
+5. Record of the exploration (before Theorem G)
+-----------------------------------------------
+Data (N <= 22; intervals.py, adjinfo.c, noncoreach.py, intreach.py, symadj.c, nested.c):
+  * Every interval [a, b] is co-reachable (N <= 22): the observation that led to Corollary 1.
+  * Last panels of orderings of [N] \ {r, r+1}: exactly the panels whose window avoids r, r+1;
+    first panels: almost every panel (a few exceptions near the pair or near an end).
+  * Non-co-reachable 3-sets: N = 16: {1, 2k, 2k+1} (2 <= k <= 7) and their mirrors; N = 17:
+    {1, 2k, 2k+1} (2 <= k <= 8), {1, 2, 16}, {1, 2, 17} and their mirrors: an adjacent pair
+    plus an end panel.
+  * Reachable intervals [b, c] (from scratch, N = 20, 21): b = 1: every c; b = 2: c even or
+    c = N; b >= 3: only c = b, c = N, and c = N - 1 when b = N - 1 (mod 2).
+  * SYMMETRIC orderings (3-AP-free type) of [N] \ {r, r+1} exist only for N <= 9.
+  * An ordering whose restrictions to [1, N'] are valid for all N' in a range (nested
+    orderings) exists for the full strip (N' <= 20) but not with a removed pair beyond a few
+    consecutive N'.
+Reductions found on the way (all superseded by Theorem G; scripts kept):
+  * SPLIT.  [N] \ {r, r+1} = [1, r-1] + [r+2, N]: order [1, r-1] from scratch (J(N, r-1)),
+    then [r+2, N] on it, which by the reversal is the same as ordering [r+2, N] on the
+    background {r, r+1} (P2(N, r), p2.c: solvable for all r, N <= 24).
+  * J(N, k) ([1, k] from scratch) for k <= (N+1)/2 is the half-infinite problem I(k), solved by
+    the RULER sequence: position p with 2-adic valuation l holds the next element of the run
+    [floor(k/2^(l+1)) + 1, floor(k/2^l)] in decreasing order (ruler.py; proof: the i-th top t
+    of a level sees i - 1 tops on the right and i - 1 smaller panels on the left, and the
+    smaller panels s_j satisfy 2 s_j + j <= k + 1 recursively).  Numerically it stays valid
+    up to k of about 2N/3.
+  * P2(N, r) for r >= (N-3)/2 is the half-infinite problem Q(n), n = N - r + 1, solved by
+    interleaving ascending tops with a recursive sequence (halfinf.c).  Together: the Adjacent
+    Lemma for (N-3)/2 <= r <= (N+3)/2 (and more with the ruler range), before Theorem G.
+  * Chain interleaving (chain.c): J(N, k) and P2 always have orderings in which a final segment
+    is placed monotonically, interleaved with a full valid sequence of a smaller strip
+    (h = 2k - N - 2 ... k - 1); not turned into a proof.
+  * Copy first (copyfirst.c): at N = 18 between 75 and 167 window copies X avoiding {r, r+1}
+    can be placed first; the remainder is a general background problem, no uniform family.
+  * Greedy heuristics (greedy.py, greedy2.py): only "nearest to the removed pair" never fails;
+    it fails for general 2-sets (383 co-reachable 2-sets at N <= 20), never for intervals.
+  * The min-greedy on [d+1, N] (nearest = smallest) shows a 2-adic run structure (trace.py,
+    imbal.py); imbal.py printed the imbalance field, whose constant sign (I >= 0 on all
+    unplaced panels) suggested the invariant of Theorem G.
+
+6. Programs (this directory; C: gcc -O2, 1 core, < 100 MB; Python needs LIVE2_DATA = the
+   directory of the R_N.bin bitsets of live2/reach.c only for lib.reachable)
+  greedy.py, greedy2.py, neargreedy.py, greedyc.c   greedy heuristics, near greedy (to N = 120)
+  checkG.py        constructive check of Theorem G
+  inward.py, covlean5.py   the criterion (*) on 2-sets; the family Cov3 and its coverage
+  peel.py, peel2.py, tp_test.py   Theorems G', G'' (peeling), two-phase search
+  classpeel.py, classinward.py    residue classes (exceptional ones) and the criteria
+  trace.py, imbal.py   greedy traces and imbalance fields
+  intervals.py, intreach.py, noncoreach.py, nonreach.py   interval / 3-set data
+  adjinfo.c, cuts.c, symadj.c, nested.c, jnest.c, jseg.c, halfinf.c, qj.c, rtw.c, p2.c,
+  chain.c, interleave.c, heap.c, ruler.py, popc.py, copyfirst.c   exploration of section 5
+
+7. Lean (Folds/Adjacent.lean)
+  greedy (N c2 : Nat) : ∀ n S U, U.card = n → S.Nodup → (∀ m ∈ U, m ∉ S) →
+      (∀ m ∈ U, 1 ≤ m ∧ m ≤ N) → (∀ z, 1 ≤ z → z ≤ N → z ∈ S ∨ z ∈ U) →
+      (∀ m ∈ U, 2 * m ≠ c2) → Inv N c2 S U →
+      ∃ l, l.Nodup ∧ l.toFinset = U ∧ ∀ k (hk : k < l.length), SemiStep N (S ++ l.take k) l[k]
+  semiSymmetric_reverse_of_bg : IsFoldSeq N (B ++ l) → (steps of l valid after B) →
+      SemiSymmetric N l.reverse
+  coReach_of_inward : B ⊆ Finset.Icc 1 N → Inward N c2 B → CoReach N B          (Theorem G)
+  inward_interval : a ≤ b → Inward N (a + b) (Finset.Icc a b)
+  coReach_interval : 1 ≤ a → a ≤ b → b ≤ N → CoReach N (Finset.Icc a b)
+  coReach_adjacent : 1 ≤ r → r + 1 ≤ N → CoReach N {r, r + 1}           (Adjacent Lemma)
+  inward_of_symm, coReach_mult : 0 < q → (N + 1) % q = 0 → CoReach N (rPanels q N q).toFinset
+  coReach_mult_transfer : ... → CoReach (ccount q q N) D → CoReach N (D.image (cls q q))
+  extends_interval : valid prefix p with p.toFinset = Icc a b (1 ≤ a ≤ b ≤ N) → Extends N p
+  Cov3 (cov2 / inward / res / mult / mirror), Cov3.coReach, Cov3.adjacent, Cov3.extends
