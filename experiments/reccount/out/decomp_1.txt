@@ -1,0 +1,2 @@
+N=1 a=1 I=1 J=1
+size #copies #neutral firstNeutralMass firstCopyMass copyPrefixMass

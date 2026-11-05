@@ -1,0 +1,7 @@
+N=6 a=96 I=24 J=16
+size #copies #neutral firstNeutralMass firstCopyMass copyPrefixMass
+1 6 0 0 0 96
+2 6 1 20 60 60
+3 2 2 32 16 32
+4 1 1 20 4 20
+5 0 0 0 0 0

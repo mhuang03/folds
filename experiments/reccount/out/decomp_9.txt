@@ -1,0 +1,10 @@
+N=9 a=4256 I=2928 J=648
+size #copies #neutral firstNeutralMass firstCopyMass copyPrefixMass
+1 9 0 0 0 4256
+2 13 0 0 2632 2632
+3 8 1 384 740 1480
+4 4 1 280 132 660
+5 1 1 280 40 280
+6 1 1 384 64 384
+7 0 0 0 0 0
+8 0 0 0 0 0

@@ -1,0 +1,4 @@
+2 J[min,max]=2 2 g[min,max]=2 2
+3 J[min,max]=2 2 g[min,max]=4 4
+4 J[min,max]=2 2 g[min,max]=10 10
+5 J[min,max]=18446744073709551615 0 g[min,max]=18446744073709551615 0
