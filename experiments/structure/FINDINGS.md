@@ -69,7 +69,7 @@ None of these are in OEIS.
 - **Fixed by reversal∘mirror:**
   - Counts: 1, 2, 0, 6, 4, 12, 0, 76, 16, 274, 0, 1088, 708, 5696, 0.
   - The count is 0 for N ≡ 3 (mod 4).
-  - a(N) ≡ 2·(this count) (mod 4).
+  - a(N) ≡ (this count) (mod 4) (see `experiments/arith/FINDINGS.txt`; earlier "2×" was wrong).
 - **Middle panel (odd N):**
   - It can only be placed at odd steps.
   - N = 7 is uniform: 64 at each of the 4 odd steps.

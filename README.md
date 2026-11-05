@@ -97,3 +97,8 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
   There is a weak mod-3 signal.
 - `docs/LITERATURE.md`. Survey of 3-AP-free permutations (A003407) and their cyclic
   versions, and the OEIS searches (no matches).
+- `experiments/arith/FINDINGS.txt`. Burnside analysis under reversal and mirror. c(N), the
+  number of sequences unchanged by reversal∘mirror, is computed to N = 41 using a
+  half-size 3^{N/2}-state reformulation. a(N) ≡ c(N) (mod 4), and 4 | a(N) when
+  N ≡ 3 (mod 4). The mod-3 growth effect is statistically significant. Empirical
+  log-size laws: minimum descents ⌊log2(N+1)⌋−1, and maximum number of free steps.
