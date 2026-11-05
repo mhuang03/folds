@@ -1,0 +1,355 @@
+GENERATING VALID FOLD SEQUENCES OF ANY LENGTH                     (experiments/generate/)
+=========================================================================================
+
+Notation as in README.  Panels [N] = {1..N}; window of m: radius r(m) = min(m-1, N-m).
+"Valid" = semi-symmetric.  "Symmetric" = every step symmetric = 3-AP-free (Lean
+symmetric_iff_apFree).  a(N) = number of valid sequences.  scale_c(y) = 2y - c (c = 1: odd
+panels, c = 0: even panels).  D_c(sigma, tau) = parity blocks: sigma on class c first, then
+tau on the other class (Folds/Blocks.lean: valid iff sigma and tau are).
+[Lean X] = proven in Folds/Generate.lean (namespace Folds.Gen), no sorry, no native_decide,
+axioms propext / Classical.choice / Quot.sound only.
+
+Files
+  brute.py      brute-force enumeration (N <= 11) and a step checker
+  families.py   sizes of the families produced by each construction, N <= 11 (section 6)
+  plus1.py      the "+1" question: data and the +1 criterion check (section 5)
+  gen.py        the generator / verifier CLI (section 7); `python3 gen.py --selftest`
+
+SUMMARY
+-------
+* The parity-block tree family G(N) = {G_ch(N)}: at every node of the binary recursion
+  (a residue class mod 2^d) choose which half (odd or even, relative to the class) goes
+  first.  Exactly 2^(N-1) distinct sequences, ALL symmetric and semi-symmetric, for every N.
+  [Lean gen_valid]
+* TRUNCATION THEOREM.  For every choice function ch and N <= M, deleting the panels > N
+  from G_ch(M) gives G_ch(N).  [Lean gen_filter]  The all-odds-first member at M = 2^k is
+  the bit-reversal order [bitrev_k(i) + 1 : i < 2^k]  [Lean gen_canon_pow]; so the
+  truncated bit-reversal order is symmetric and semi-symmetric for EVERY N <= 2^k
+  [Lean truncation, truncation_eq].  The family is exactly the set of truncations of the
+  "twisted bit reversals" of [1..2^k].
+* Random access in O(log N) [Lean genAt_eq]; streaming in amortised O(1) per element.
+* "Repeated squaring": the Montgomery ladder (R(m), R(m+1)) -> (R(2m), R(2m+1)) or
+  (R(2m+1), R(2m+2)), one parity-block step per binary digit of N [Lean ladder_eq,
+  ladder_valid].  O(log N) steps, O(N) total work.
+* The "+1" operation: an exact criterion for inserting panel N+1 into a valid N-sequence
+  (section 5).  Not every valid sequence extends (61% at N = 10 by a top insertion, 88% by
+  top or bottom); inside the tree family the extension always exists and is unique.
+* Families (section 6): tree 2^(N-1); ladder 2^(#sizes) = poly(N); mixed-radix
+  composition prod a(q_i)^(q_1...q_{i-1}), i.e. up to log2 a(B)/(B-1) bits per panel for
+  radix B; the slip recursion N^((1/8+o(1))N) (super-exponential), all implemented in
+  gen.py and verified for N up to 10^6.
+
+
+=========================================================================================
+1. THE PARITY-BLOCK TREE FAMILY
+=========================================================================================
+Nodes.  For d >= 0 and 0 <= r < 2^d let V(d, r) = {x in [N] : x - 1 = r mod 2^d} (a node;
+the root is V(0, 0) = [N]).  V(d, r) splits into its two children V(d+1, r) (residue bit
+d of x-1 equal to 0, the "odd" half relative to the node) and V(d+1, r + 2^d).
+|V(d, r)| = ceil((N - r)/2^d), so the sizes at depth d are floor(N/2^d) and ceil(N/2^d).
+A node is the image of the strip [1..|V|] under the affine map y -> r + 1 + (y-1) 2^d
+(a residue class is a window copy, Live2 `winEmb_res`); its two children are the odd and
+even panels of that strip.
+
+Definition.  A choice function F assigns a bit F(d, r) to every node.  G_F(N) lists the
+root's children as two blocks, the child with residue bit F(d, r) first (F = 0: odds first),
+recursively.  In Lean the node is addressed by the list p of its residue bits (least
+significant first) and gen ch N is
+
+    gen ch N = (gen ch_F ((N+1)/2)).map (2y-1) ++ (gen ch_T (N/2)).map (2y)   if ch [] = false
+               (gen ch_T (N/2)).map (2y) ++ (gen ch_F ((N+1)/2)).map (2y-1)   if ch [] = true
+
+with ch_F = fun p => ch (false :: p), ch_T = fun p => ch (true :: p) (gen_unfold; valid for
+every N including N <= 1).
+
+Theorem A [Lean gen_valid].  For every N and every ch, gen ch N is a fold sequence which is
+symmetric and semi-symmetric.
+  Proof.  Induction on N.  Semi-symmetric: Blocks.semiSymmetric_blocks_iff.  Symmetric
+  (new, Lean symmetric_blocks): consider a step at m = scale_c(j) on top of S = U ++
+  T.map(scale_c), where U is empty (first block) or the complete other class (second block).
+  For an odd distance d, m - d and m + d are both of the other parity and both lie in [N],
+  so both are in U or both are not.  For an even distance d = 2e, both are in class c:
+  m -+ 2e = scale_c(j -+ e), and 2e <= r_N(m) iff e <= r_{(N+c)/2}(j); so the condition is
+  the symmetric step of T at j (Lean symStep_scale).  QED
+  (Alternative: a 3-AP x, (x+y)/2, y has x = y mod 2; if the middle term has the other
+  parity it lies in the other block, hence not between x and y in time.)
+
+Theorem A' (count).  The 2^(N-1) relevant choice patterns give pairwise distinct sequences.
+  Only nodes of size >= 2 matter; a binary tree with N leaves has N - 1 internal nodes.
+  Distinct: at the first node (top-down) where two patterns differ, the first element of that
+  node's block differs in parity relative to the node.  This is the count a(N) >= 2^(N-1) of
+  Counting.lean.  Checked: `gen.py --selftest` enumerates all 2^(N-1) choice strings for
+  N <= 10 and gets 2^(N-1) distinct symmetric sequences.  Note a(N) and the symmetric count
+  A003407 are much larger: at N = 10, 512 vs 1066 symmetric vs 17878 valid.
+
+Characterisation.  G(N) is exactly the set of sequences that are "recursively parity
+blocked": every node's panels appear as two consecutive blocks, one per child, in either
+order.  There is no constraint between the choices: every one of the 2^(N-1) patterns is
+valid (the parity-block theorem is an "iff" with no side condition).  By Blocks.
+prefix_class_semiSymmetric, a valid sequence that starts with a full parity class has valid
+halves, so "recursively parity blocked AND valid" = "recursively parity blocked".
+
+
+=========================================================================================
+2. THE TRUNCATION THEOREM
+=========================================================================================
+For the symmetric property truncation is trivial: a 3-AP inside [1..N] is a 3-AP inside
+[1..2^k].  For semi-symmetry it is not: the radius min(m-1, N-m) shrinks with N, so the
+window contents change.  The parity-block structure makes it work.
+
+Lemma (filter commutes with scaling) [Lean filter_map_scale].  For c in {0,1} and a list L
+of positive integers,  filter(<= N)(L.map scale_c) = (filter(<= (N+c)/2) L).map scale_c,
+because 2y - c <= N  iff  y <= floor((N+c)/2).
+
+Theorem B (truncation, whole family) [Lean gen_filter].  For all N <= M and all ch,
+        filter(<= N)(gen ch M) = gen ch N.
+  Proof.  Strong induction on M.  For M <= 1 direct.  Otherwise unfold both sides with
+  gen_unfold (the same block order ch [] on both sides, since the choice is attached to the
+  residue class, not to the size), use filter_append and the lemma: the odd block becomes
+  filter(<= (N+1)/2)(gen ch_F ((M+1)/2)) = gen ch_F ((N+1)/2) and the even block
+  filter(<= N/2)(gen ch_T (M/2)) = gen ch_T (N/2) by induction ((N+1)/2 <= (M+1)/2 and
+  N/2 <= M/2).  QED
+
+Bit reversal [Lean bitRev, gen_canon_pow].  bitRev 0 i = 0, bitRev (k+1) i =
+2 bitRev_k(i mod 2^k) + floor(i/2^k) (the top bit becomes bit 0); e.g. k = 3 gives
+[1,5,3,7,2,6,4,8] (checked by `decide`).  gen canon (2^k) = [bitRev_k(i) + 1 : i < 2^k],
+canon = all odds-first.  Proof: induction on k, splitting range(2^(k+1)) = range(2^k) ++
+(2^k + range(2^k)).
+
+Corollary [Lean truncation].  For every N <= 2^k, the bit-reversal order of [1..2^k] with
+the panels > N deleted is a fold sequence of [N] that is symmetric and semi-symmetric.
+(Previously checked for N <= 128; now proven for all N.)
+
+Remarks.
+* The theorem holds for every M >= N, not only powers of 2, and for every member of the
+  family: deleting the panels > N from ANY tree-family sequence of [M] gives the tree-family
+  sequence of [N] with the same choices.  In particular "delete the largest panel" maps
+  G(N+1) onto G(N), and its inverse "insert N+1" is a +1 operation inside the family
+  (section 5).
+* Equivalent description by sort keys.  Let K = ceil(log2 N) and, for x in [N], let b_d be
+  bit d of x - 1 and r_d = (x-1) mod 2^d.  Then G_F(N) lists [N] in increasing order of
+        key_F(x) = sum_{d<K} (b_d XOR F(d, r_d)) 2^(K-1-d).
+  F = 0 gives key = bitrev_K(x-1): the truncated bit reversal.  This is how gen.py builds the
+  sequence (vectorised, one numpy argsort).
+
+
+=========================================================================================
+3. O(log N) RANDOM ACCESS AND STREAMING
+=========================================================================================
+With truncation the index shifts (the i-th element of the truncated list is not
+bitrev(i)+1), but the recursion gives the i-th element directly [Lean genAt, genAt_eq]:
+
+  genAt(N, i):  if N <= 1 return i + 1.  Let (n1, c1) = size and class of the first child
+                (odds first: n1 = ceil(N/2), class 2y-1; evens first: n1 = floor(N/2), 2y).
+                if i < n1 return scale_{c1}(genAt(n1, i))
+                else return scale_{1-c1}(genAt(N - n1, i - n1)).
+
+Depth ceil(log2 N), O(1) per level: O(log N) time, O(1) memory (iterative form gen.py
+tree_at, where the result is assembled as r + 1 from the residue bits chosen on the way
+down).  E.g. canonical N = 10^6, i = 123456 -> 875001 (Lean #eval and gen.py agree).
+
+Streaming (canonical): iterate i = 0, 1, ..., 2^K - 1 with a reverse-carry counter
+(bitrev(i+1) from bitrev(i) in amortised O(1)) and output bitrev(i) + 1 when it is <= N.
+Since 2^K < 2N, at most half the values are skipped: amortised O(1) per element, O(1)
+memory.  For a general F the same works with key order replaced by a DFS of the node tree.
+
+Inverse (position of panel x): pos(x) = #{y : key(y) < key(x)}, computable in O(log N) by
+walking down the K levels of x's path and adding the size of the first child whenever x is
+in the second one.
+
+
+=========================================================================================
+4. "REPEATED SQUARING": AN ALGEBRA OF OPERATIONS
+=========================================================================================
+Operations on valid sequences (all proven elsewhere in Lean, references in brackets):
+
+  D_c(sigma, tau)    sizes (ceil, floor) or (floor, ceil) -> N      parity blocks [Blocks]
+                     n, n -> 2n and n+1, n -> 2n+1.  No side condition.
+  sigma (x) pi       q, n -> qn: residue classes mod q as blocks in the order pi, class s
+                     internally in order sigma_s                     composition [Growth]
+  residue chain      q, (n_1..n_q) -> N for q not dividing N: classes mod q in order pi
+                     valid iff pi and sigma o pi are valid q-sequences,
+                     sigma(t) = ((N - t) mod q) + 1                  [Live2 res_chain]
+                     (q = 2: always, this is D)
+  shifted blocks     n-1, n+1 -> 2n                                   [Extremal]
+  slips              n, n -> 2n with 2^(|D|) slip patterns           [SuperExp, SuperExp3]
+  reversal, mirror   N -> N                                           [Basic]
+  +1 insertion       N -> N+1 under the +1 criterion                  (section 5)
+
+4.1 The ladder (exponentiation by squaring).  Write R(n) = gen canon n.  Then
+        R(2m) = D_1(R(m), R(m)),  R(2m+1) = D_1(R(m+1), R(m)),  R(2m+2) = D_1(R(m+1), R(m+1)).
+  So the pair (R(m), R(m+1)) determines the next pair, exactly as (x^m, x^(m+1)) in the
+  Montgomery ladder.  Reading the binary digits of N from the top:
+        (R(1), R(2)) = ([1], [1,2]);   bit 0: (R(2m), R(2m+1));   bit 1: (R(2m+1), R(2m+2)).
+  [Lean ladder (recursive on n/2), ladder_eq: ladder n = (R(n), R(n+1)), ladder_valid.]
+  floor(log2 N) steps; as lists the work is O(N) in total (sizes double), as an implicit
+  representation each step is O(1).  With N = 13 = 1101b: (1,2) -> (3,4) -> (6,7) -> (13,14).
+  Only O(log N) distinct sizes occur (at depth d: floor(N/2^d) and ceil(N/2^d)), which is
+  why the DAG is a ladder rather than a tree.
+
+  Choices on the ladder.  If the block order may depend on the size only (F(d, r) = f(|V(d,
+  r)|)), the ladder still works (each size computed once).  This "ladder family" has
+  2^(#sizes >= 2) members, #sizes <= 2 floor(log2 N): polynomial in N (e.g. 8, 32, 16, 32 at
+  N = 8, 9, 10, 11).  Every member is in the tree family (gen.py --mode ladder; the
+  selftest checks ladder(seed) = tree(F = f(size))).  To get the full 2^(N-1) one must give
+  up sharing: the tree.
+
+4.2 Multiplication and factorisations.  The composition (x) is a genuine product on sizes:
+  for N = q_1 q_2 ... q_t (any order, any factors >= 2) the mixed-radix tree places, at
+  depth i, the q_{i+1} residue classes mod Q_{i+1} = q_1...q_{i+1} inside each class mod
+  Q_i in the order of a valid q_{i+1}-sequence chosen for that node.  Validity: induction
+  with the composition theorem (all classes of a node have equal size since q_{i+1} divides
+  the node size).  Distinct choices give distinct sequences (Growth compMap_injOn), so with
+  block orders drawn from all of V_q the family has
+        prod_i a(q_{i+1})^(Q_i)    members, = a(B)^((N-1)/(B-1)) for N = B^t,
+  i.e. log2 a(B)/(B-1) bits per panel:
+        B     2    3    4      5      6      7      8      9      16     32     36
+        bits  1    1    1.107  1.202  1.317  1.333  1.447  1.507  1.869  2.390  2.488
+  Radix 2 is the tree family (for N = 2^t); radix 3 has the same count 2^(N-1) but is a
+  different set (N = 9: tree 256, composition 512 together, see section 6); radix B >= 4
+  beats 2^(N-1).  This is the "exponentiation via the factorisation of N" scheme: gen.py
+  --mode comp --radix q1,q2,... (default: prime factors).  Each node draws its block order
+  from all valid q-sequences for q <= 9 and from 64 tree-family members for larger q, so
+  prime N > 9 gains nothing over the tree; for N with many small factors (2^a 3^b ...)
+  it does better, e.g. --radix 8,8,... gives 1.447 bits/panel.
+  Caveat (section 6, data): with UNRESTRICTED inner orders, splitting off a factor q > 2
+  never beats the binary split: log2 of a(q) a(n)^q is below that of 2 a(qn/2)^2 for every
+  qn <= 37 (because a grows super-exponentially, few large blocks beat many small ones).
+  So composition is useful as a generator over small precomputed bases, not as a bound.
+
+4.3 Non-divisible sizes.  For q not dividing N the residue chain needs pi AND sigma o pi
+  valid (sigma a reflection depending on N mod q); for q = 2 every pi works, which is why
+  the binary scheme handles every N with no case analysis and no "+1" step: the odd case
+  2m+1 is itself a product D(R(m+1), R(m)).  This is the essential difference to
+  exponentiation, where x^(2m+1) needs a multiplication by x: here "+1" is absorbed into
+  the unequal halves.
+
+4.4 Slips: a super-exponential generator.  Superexp Theorem 2: for a node of size 2n, a slip
+  set D within C_n (odd k; |C_n| = n/2 for n even, floor((n+1)/4) for n odd) exchanges 2k and
+  2k+1 between the two blocks; with both blocks ordered by ODDS-FIRST parity blocks (forced
+  nodes) the side conditions of Theorem 1 hold automatically, and the four grandchildren
+  are free again.  So
+        bits(2n) = |C_n| + 2 bits_forced(n),   bits_forced(n) = bits(ceil(n/2)) + bits(floor(n/2)),
+  and a node uses the slip step when that beats the plain parity step (1 + bits(ceil) +
+  bits(floor)); this first happens at size 16.  Family sizes (log2): N = 16: 16 (tree 15),
+  64: 80 (63), 1024: 1792 (1023), 2^16: 163840, 2^20: 3145728 = 3N, 10^6: 2305264;
+  asymptotically (N/8) log2 N, i.e. N^((1/8+o(1))N) sequences: super-exponential, matching
+  the a(4^j) >= N^(N/8) bound.  gen.py --mode slip implements this level by level with numpy
+  (node = (size, local coordinate, forced flag, path id), one argsort at the end), 10^6 in
+  about 4 s; verified valid for all N < 300 (4 seeds) and for N = 10^6.  Slip sequences are
+  usually not symmetric.
+
+
+=========================================================================================
+5. THE "+1" OPERATION
+=========================================================================================
+Insert the new panel N+1 at position p (0 <= p <= N) of a sequence a of [N].
+
+Theorem (+1 criterion; proof on paper, checked by plus1.py against brute force for all
+valid a, N <= 10).  Let t(x) be the time (0-based position) of x in a, and a valid.  The
+extended sequence is valid for [N+1] iff
+        for every m with 2m >= N+2:   [ t(2m-N-1) < t(m) ]  =  [ p <= t(m) ].
+Equivalently: list the right-half panels m (2m >= N+2) by time; the bit
+beta(m) = [the doubling partner 2m-N-1 came before m] must read 0...0 1...1, and the valid
+positions p are those after the last 0-panel and up to the first 1-panel.
+  Proof.  New radius r'(m) = min(m-1, N+1-m).  If 2m <= N+1, r' = r and m + r <= N, so the
+  window of m is unchanged and does not contain N+1 (also the step of N+1 has radius 0).  If
+  2m >= N+2 then r = N-m <= m-2 and r' = r + 1: the window gains 2m-N-1 on the left and N+1
+  on the right.  Since the old step was balanced, the new one is balanced iff the two new
+  panels are both or neither placed before m.  QED
+  (2m - N - 1 is the doubling map of the cyclic form: the partner of m across the right
+  edge.  By mirror symmetry, inserting panel 1 has the analogous criterion with 2m - 1.)
+
+Data (plus1.py; ext_top = fraction of valid N-sequences with a valid position for N+1;
+ext_any = with a valid top or bottom insertion; del_ok = fraction of valid (N+1)-sequences
+whose largest panel can be deleted):
+        N       4     5     6     7     8     9     10
+        ext_top 1     1     .833  .797  .759  .773  .613
+        ext_any 1     1     1     .953  .914  .928  .878
+        del_ok  .714  .750  .719  .505  .438  .434  .362
+So "+1" is NOT a total operation on valid sequences, and not every valid (N+1)-sequence is
+an extension.  The number of valid positions is small (at most 6 for N <= 10) and they
+cluster in the middle of the sequence (position histogram symmetric under p -> N - p, by
+reversal).
+Inside the tree family the +1 step always exists and is forced (Theorem B): N+1 goes to the
+position #{x <= N : key_F(x) < key_F(N+1)} (O(log N) to compute; K grows by one when N =
+2^K, which appends a bit to every key and keeps their order).  So the whole family is built
+by repeated "+1" from the empty sequence, like a unary addition chain, while the ladder is
+the binary one.
+
+
+=========================================================================================
+6. FAMILY SIZES COMPARED (families.py, all members re-verified)
+=========================================================================================
+BT = tree family; LAD = ladder family; COMP = closure of {1} under parity blocks and
+composition (q | N); RES = also residue chains (q not dividing N, all q < N);
+ALL = also slips (both orientations via reversal), shifted blocks, reversal and mirror.
+sym = number of symmetric sequences in ALL / all symmetric (A003407).
+
+   N    BT   LAD   COMP    RES    ALL    a(N)   ALL/a(N)   sym in ALL / A003407
+   4     8     4      8     10     10      10    1.000        10 / 10
+   5    16     8     16     24     24      28    0.857        16 / 20
+   6    32     8     64     74     90      96    0.938        42 / 48
+   7    64    16     64    152    152     256    0.594        88 / 104
+   8   128     8    160    444    684    1120    0.611       236 / 282
+   9   256    32    512   1242   1242    4256    0.292       352 / 496
+  10   512    16   1408   3336   5884   17878    0.329       620 / 1066
+  11  1024    32   2048  11208  11976   70960    0.169      1536 / 2460
+
+Asymptotically (log2):  BT = N-1;  LAD <= 2 log2 N;  radix-B composition (N = B^t) up to
+(N-1) log2 a(B)/(B-1);  slips ~ (N/8) log2 N;  while log2 a(N) ~ N log2 N - N log2 ln N
+(conjectured; rigorously >= (N/22) log2 (N/512)).  All recursive constructions cover a
+vanishing fraction of V_N (ALL/a(N) decreasing).
+
+
+=========================================================================================
+7. THE GENERATOR  gen.py
+=========================================================================================
+  python3 gen.py N [--mode tree|ladder|comp|slip] [--seed S] [--choices BITS]
+                   [--radix q1,q2,...] [--index i] [--verify] [--quiet] [--out FILE]
+  python3 gen.py --selftest
+
+  tree   (default) canonical = truncated bit reversal; --seed S gives pseudo-random node
+         flips F(d, r) = hash(S, d, r) & 1; --choices BITS sets the flips of the N-1 nodes of
+         size >= 2 in (depth, residue) order, so the 2^(N-1) strings enumerate the family.
+         Symmetric and semi-symmetric.  --index i: O(log N) random access.
+  ladder Montgomery ladder; --seed picks a block order per size.
+  comp   mixed-radix composition (--radix, default prime factors).
+  slip   super-exponential slip family.
+  --verify  checks semi-symmetry in O(N log^2 N) with a numpy merge-sort tree (prefix
+         dominance counts), and symmetry (O(N^2)) when N <= 20000.
+Timings at N = 10^6 (1 core): tree 0.9 s, ladder 0.1 s, comp 1.1 s, slip 3.7 s to generate;
+verification 6-8 s; peak memory about 330 MB.  The selftest checks: canonical = truncated
+bit reversal = ladder (N < 300); random family members valid and symmetric, truncation of
+the whole family (G(N+37) restricted to [N]), tree_at = sequence, ladder = size-only flips
+(N < 120); the 2^(N-1) choice strings give distinct symmetric sequences (N <= 10); comp and
+slip members valid; both verifiers agree with brute force.
+
+
+=========================================================================================
+8. LEAN  (Folds/Generate.lean, namespace Folds.Gen, imports Folds.Blocks only)
+=========================================================================================
+  def gen (ch : List Bool → Bool) (N : Nat) : List Nat
+  theorem gen_unfold   -- the defining equation for every N
+  theorem symmetric_blocks (hc : c ≤ 1) (hσ : IsFoldSeq ((N+c)/2) σ)
+      (hτ : IsFoldSeq ((N+(1-c))/2) τ) (sσ : Symmetric _ σ) (sτ : Symmetric _ τ) :
+      Symmetric N (σ.map (scale c) ++ τ.map (scale (1 - c)))
+  theorem gen_valid (ch) (N) :
+      IsFoldSeq N (gen ch N) ∧ Symmetric N (gen ch N) ∧ SemiSymmetric N (gen ch N)
+  theorem gen_filter : ∀ M N ch, N ≤ M →
+      (gen ch M).filter (fun x => decide (x ≤ N)) = gen ch N
+  def bitRev : Nat → Nat → Nat        -- bitRev (k+1) i = 2 bitRev k (i % 2^k) + i / 2^k
+  theorem gen_canon_pow (k) :
+      gen canon (2^k) = (List.range (2^k)).map (fun i => bitRev k i + 1)
+  theorem truncation_eq (h : N ≤ 2^k) :
+      ((List.range (2^k)).map (fun i => bitRev k i + 1)).filter (· ≤ N) = gen canon N
+  theorem truncation (h : N ≤ 2^k) : let a := ((List.range (2^k)).map
+      (fun i => bitRev k i + 1)).filter (· ≤ N); IsFoldSeq N a ∧ Symmetric N a ∧ SemiSymmetric N a
+  def genAt (ch) (N i : Nat) : Nat;   theorem genAt_eq : (gen ch N)[i] = genAt ch N i
+  def ladder (n : Nat) : List Nat × List Nat   -- recursion on n / 2, one D step per bit
+  theorem ladder_eq (n) : ladder n = (gen canon n, gen canon (n + 1))
+  theorem ladder_valid (N) :
+      IsFoldSeq N (ladder N).1 ∧ Symmetric N (ladder N).1 ∧ SemiSymmetric N (ladder N).1
+Not formalised: the count 2^(N-1) of distinct members (Counting.lean already has
+a(N) >= 2^(N-1)), the +1 criterion, the mixed-radix and slip generators (they rest on the
+Lean theorems semiSymmetric_blocks / semiCount_comp and slip_mem_semiSeqs respectively).
