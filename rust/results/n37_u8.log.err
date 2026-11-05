@@ -1,0 +1,9 @@
+  layer  1:           19 orbits (0.00 GB) sim.peak 0.00 GB rss.peak 0.02 GB diag 1 orbits 0.0s t=0.0s
+  layer  2:          342 orbits (0.00 GB) sim.peak 0.00 GB rss.peak 0.02 GB diag 171 orbits 0.0s t=0.0s
+  layer  3:         3894 orbits (0.00 GB) sim.peak 0.00 GB rss.peak 0.02 GB diag 171 orbits 0.0s t=0.0s
+  layer  4:        33099 orbits (0.00 GB) sim.peak 0.00 GB rss.peak 0.02 GB diag 11781 orbits 0.0s t=0.0s
+  layer  5:       218025 orbits (0.00 GB) sim.peak 0.00 GB rss.peak 0.02 GB diag 11781 orbits 0.0s t=0.1s
+  layer  6:      1162800 orbits (0.00 GB) sim.peak 0.00 GB rss.peak 0.02 GB diag 333336 orbits 0.0s t=0.1s
+  layer  7:      5148144 orbits (0.01 GB) sim.peak 0.01 GB rss.peak 0.02 GB diag 333336 orbits 0.0s t=0.2s
+  layer  8:     19305540 orbits (0.02 GB) sim.peak 0.02 GB rss.peak 0.04 GB diag 4683330 orbits 0.1s t=0.7s
+  layer  9:     62203340 orbits (0.06 GB) sim.peak 0.07 GB rss.peak 0.08 GB diag 4683330 orbits 0.1s t=2.2s

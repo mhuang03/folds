@@ -25,3 +25,4 @@ semi N=36 mod 193 = 162 634.0s peak_rss 6.23 GB (blocks)
 # start idx 12 2026-11-05T09:25:44Z load 5.90 5.61 5.44 avail 15463828 kB
 semi N=36 mod 191 = 126 712.8s peak_rss 6.23 GB (blocks)
 # start idx 13 2026-11-05T09:37:36Z load 6.00 5.71 5.50 avail 15447260 kB
+semi N=36 mod 181 = 42 781.0s peak_rss 6.23 GB (blocks)

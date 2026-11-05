@@ -243,3 +243,10 @@
   layer  9:     47071640 orbits (0.05 GB) sim.peak 0.05 GB rss.peak 0.07 GB diag 0 orbits 0.0s t=1.5s
   layer 10:    127097712 orbits (0.13 GB) sim.peak 0.14 GB rss.peak 0.16 GB diag 36709596 orbits 0.8s t=4.5s
   layer 11:    300402648 orbits (0.30 GB) sim.peak 0.35 GB rss.peak 0.36 GB diag 0 orbits 0.0s t=14.1s
+  layer 12:    625848132 orbits (0.63 GB) sim.peak 0.75 GB rss.peak 0.76 GB diag 172320330 orbits 5.3s t=35.1s
+  layer 13:   1155394800 orbits (1.16 GB) sim.peak 1.42 GB rss.peak 1.44 GB diag 0 orbits 0.0s t=79.5s
+  layer 14:   1898164512 orbits (1.90 GB) sim.peak 2.47 GB rss.peak 2.49 GB diag 506399400 orbits 10.8s t=131.5s
+  layer 15:   2783951280 orbits (2.78 GB) sim.peak 3.69 GB rss.peak 3.70 GB diag 0 orbits 0.0s t=213.7s
+  layer 16:   3653957934 orbits (3.65 GB) sim.peak 5.05 GB rss.peak 5.06 GB diag 957403161 orbits 24.9s t=315.7s
+  layer 17:   4298748300 orbits (4.30 GB) sim.peak 6.22 GB rss.peak 6.23 GB diag 0 orbits 0.0s t=538.0s
+  layer 18 streamed + combined: rss.peak 6.23 GB t=781.0s
