@@ -173,7 +173,8 @@ Status: OPEN in general.  What is proven / checked:
 
 (a) Data.  min des = lg(N+1) - 1 for all N <= 22 (exact subset DP, dp.c; earlier data had
     N <= 18).  Sequences with lg(N+1) - 1 descents were found by a pruned DFS (desdfs.c) for
-    every N <= 34 (see mindes_dfs_out.txt), so the upper bound holds there.  Also, for N <= 11
+    every N <= 24 (mindes_dfs_out.txt; N = 25 timed out after 200 s), so the upper bound
+    holds there (N <= 22 also from the DP).  Also, for N <= 11
     (full enumeration), the minimum of the longest DECREASING subsequence, and of the longest
     increasing one, is also lg(N+1) (a stronger statement, since des >= LDS - 1).  So the
     natural strengthened conjecture is:  every valid sequence has a monotone (both kinds)
