@@ -26,6 +26,8 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `Recursion.lean` (Mathlib) | **the recursion**: `g_eq_sum`, `semiCount_eq_g`, and the reversal/meet-in-the-middle identity `semiCount_eq_sum_split`: a(N) = Σ_{|S|=k} g(S)·g(Sᶜ) |
 | `Congruence.lean` (Mathlib) | `semiCount_mod_four`: a(N) ≡ c(N) (mod 4), where c(N) is the number of sequences fixed by reversal∘mirror; a(N) even for N ≥ 2; `semiCount_mod_four_of_three`: 4 ∣ a(N) when N ≡ 3 (mod 4) |
 | `Prefix.lean` (Mathlib) | `card_prefixTwo`: there are ⌊N²/2⌋ valid 2-step prefixes; `card_reachTwo`: ⌊N²/3⌋ reachable 2-sets |
+| `Wallis.lean` (Mathlib) | `card_wallisSeqs`: exactly N!·4^r·r!²/(2r+1)! permutations satisfy a single panel's constraint |
+| `SelfDual.lean` (Mathlib) | `card_revMirrorFixed`: c(N) = number of valid half sequences; flip lemmas and a mod-4 reduction of c(N) for even N |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
