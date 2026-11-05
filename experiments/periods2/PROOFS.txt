@@ -1,0 +1,252 @@
+PERIODS II: EXACTNESS OF THE TOP COMPONENTS, TWO-CYCLE FACES, GENERATING FUNCTIONS
+==================================================================================
+(experiments/periods2/.  Notation as in ../periods/PROOFS.txt: T(N,k), classes, P_c, the face
+lemma, B(m), Theorem A (upper bound), Theorem B (single moduli).  n := k - 1 throughout.)
+
+SUMMARY
+  1. A LOCAL FORMULA (section 1): the Fourier part of the constant term c_0(N) of T(N,k) coming
+     from a vertex v is an explicit finite character sum over the VALID local cells at v; for
+     faces with free points the same holds with signed fibre volumes.  Checked against the
+     Normaliz class series for every case tried (k = 3..7).
+  2. COLUMN RULE AND CLASSIFICATION (sections 2-3, proved): at the "orbit" vertices (periodic
+     doubling orbits, carrying 2^n - 1) and the "chain" vertices (carrying 2^n) every column
+     has at most one valid side, so every valid vertex lies in exactly ONE class and contributes
+     a single monomial.  The valid ones are, for all n >= 3 (resp. n >= 5):
+        orbit vertices:  x_1 = 1/D, 3/D and mirrors                          (D = 2^n - 1)
+        chain vertices:  x_1 = 0 with words 1 0^(n-1), 1 1 0^(n-2), 1^n, and mirrors.
+  3. THEOREM C (proved): for every k >= 4 the constant term c_0(N) of T(N,k) has nonzero
+     Fourier components of EXACT orders 2^(k-1) and 2^(k-1) - 1.  Hence
+        2^(k-1) (2^(k-1) - 1)  divides  period(T(N,k))  divides  B(k).
+     For k = 3 the order-4 part vanishes identically (the known exception).
+  4. CANCELLATION EXPLAINED (section 5): the pure halving chain 1 0^(n-1) and the pure
+     increasing chain 1^n are complex conjugates at every mode; their sum is 2|W| cos((n+1)pi/2)
+     times a phase: it VANISHES EXACTLY FOR EVERY ODD k and doubles for even k.  This one
+     mechanism is the T(N,3) exception and the 12345/15432 cancellation at k = 5; for odd
+     k >= 5 the 2^(k-1) part survives only through the chain 1 1 0^(n-2) (and, at k = 5 only,
+     1101).  The odd part 2^n - 1 never cancels at the vertex level.  For m < k the extra free
+     points make the ROTATED orbit vertices valid, and these have exactly the size of the main
+     term (a cotangent identity), so near-cancellation is possible there (section 6).
+  5. TWO CYCLES / FACTOR 45 (section 7): "45 = lcm(3,15)" is an arithmetic slip: lcm(3,15) = 15,
+     which divides 2^4 - 1, so no index 45 can come from a 2-cycle and a 4-cycle.  Theorem B
+     (single moduli) holds for m <= 8 by the same counting.  Two disjoint cycles DO occur in
+     one face ((2,3) at k = 7, (2,4) and (3,3) at k = 8), and at m = 9 the faces (2,5) and
+     (3,4) exist, with indices 93 = 3.31 and 105 = 3.5.7 -- moduli dividing B(9) but no
+     single 2^a(2^s - 1), a + s <= 8.  [RESULT 93/105 below]  B(m) itself never needs
+     modification (Theorem A is proved for all m).
+  6. GENERATING FUNCTIONS (section 8): reduced denominators are prod_q Phi_q(t)^(k+1-m(q))
+     (exact for k <= 5 here, k <= 6 via ../prefix5); the bivariate series sum T(N,k) t^N u^k
+     is NOT D-finite (proved, from Theorem C): there is no finite transfer structure in k.
+
+
+1. The local formula
+--------------------
+Lemma 1.1 (vertex formula).  Let v be a vertex of the arrangement at which exactly k of the
+candidate equations are tight and independent: rows u_r(y) = a_r.y - b_r (a_r in Z^k, b_r in
+{0,1}), M = (a_r), D = |det M|.  Let C(v) be the set of open orthants (cells) eps in {+,-}^k
+of this local arrangement that consist of valid configurations.  Then the purely periodic part
+of the contribution of v to c_0(N) is
+     Phi_v(N) = (1/D) sum_{w} e(N <w,b>) sum_{eps in C(v)} prod_r F_r^{eps_r}(w_r),
+the sum over w in M^{-T}Z^k / Z^k with all w_r not in Z, where F_r^{side}(x) = sum over the
+integers u on that side of e(x u), with the boundary u = 0 included as the class inequalities
+say: halving rows 2y_j - y_i - c: boundary on the side u <= 0; equality rows y_a - y_b: on
+neither side; box y_i > 0: excluded; y_i <= 1: included (only the inner side is valid).
+Explicitly  F^{u>=0} = g(x), F^{u>0} = -h(x), F^{u<=0} = h(x), F^{u<0} = -g(x), with
+     g(x) = 1/(1 - e(x)),  h(x) = 1/(1 - e(-x)) = 1 - g(x),  |g(x)| = |h(x)| = 1/(2|sin pi x|).
+Proof.  The classes whose closure contains v have as tangent cones exactly the valid cells
+(each class polytope is convex and near v is cut out by the tight rows only), with the stated
+boundary conventions (the class inequalities, ../periods Lemma 2).  Brion's theorem (valid
+for half-open rational polytopes, by inclusion-exclusion over faces) gives
+L(N) = sum_v CT_{xi=0} sigma_{Nv + K_v}(xi).  In the coordinates u = M x - N b the lattice
+points of N v + K_v are the points of the coset M Z^k - N b in the cell; expanding its
+indicator in characters, 1 = (1/D) sum_w e(<w, u + N b>), turns sigma into
+(1/D) sum_w e(N<w,b>) e^{N<xi,v>} prod_r F_r(eta_r + 2 pi i w_r).  For w with all w_r not in Z
+the product is analytic at xi = 0, so it contributes exactly its value (a constant in N); the
+other w contribute poles, i.e. polynomial parts, and phases of order dividing the order of w
+restricted to the coordinates with w_r not in Z.  []
+For a face F of codimension m with free points (aff F = {cycle coordinates fixed}, lin F =
+the free coordinate subspace) the same computation in the transverse space, with the local
+Euler-Maclaurin formula (../periods section 2), gives the part of c_{k-m}(N) carried by the
+characters with all w_r not in Z as
+     sum_F (1/D) sum_w e(N<w,b>) integral over the free points z of
+                                     sum_{eps in C(v,z)} prod_r F_r^{eps_r}(w_r) dz,
+the cells now depending on z (face.py).
+
+Verification (local.py, face.py vs the Normaliz class series, fourier2.py):
+   k = 3 (q = 3, 4), k = 4 (q = 7, 8), k = 5 (q = 5, 15, 16): every vertex term equals the
+   per-class Laurent coefficient of ../periods/fourier.py exactly (each valid vertex is in one
+   class).  k = 6: q = 31, 32 (c_0).  Faces with free points: (m,k) = (5,6), q = 15 in c_1:
+   -0.093333 - 0.014297i; (4,5), q = 7 in c_1: -0.054279 + 0.042425i; (4,6), q = 7 in c_2:
+   -0.219451 - 0.059642i -- all equal to the Normaliz totals to 12 digits.
+   [k = 7 two-cycle check: section 7.]
+
+
+2. The column rule
+------------------
+Orbit vertices.  For theta of exact period n under T(x) = 2x mod 1, put x_1 = theta,
+x_j = T^(k-j) theta (so x_k = x_1, x_{j+1} = (x_j + c_j)/2, c_j in {0,1}); the word of the
+vertex is c_1 .. c_n, and theta = 0.(c_n c_(n-1) ... c_1) in binary.  Chain vertices: x_1 in
+{0,1}, x_{j+1} = (x_j + c_j)/2 with x_1 + c_1 odd (exact denominator 2^n).
+Lemma 2.1.  At these vertices the tight rows are exactly the n consecutive halvings (j, j+1)
+and the closing row (x_k = x_1, resp. the box row of x_1).  Proof: a halving 2x_j - x_i = c
+(i < j) holds iff x_i = T(x_j); along the vertex T(x_j) = x_(j-1), and the points are
+distinct apart from x_1 = x_k (exact period / exact denominators).  []
+So every column j has a FIXED sum s_j (signs of the non-tight earlier points, determined by v)
+plus the sign of its tight pair, which depends only on the side of that pair's hyperplane.
+The valid cells therefore form a product over columns.  Writing the condition out:
+Lemma 2.2 (column rule).  Placing x_(j+1) at the edge of x_j's arm, x_(j+1) is the midpoint of
+its own window I = (x_j, 1) (bit 1) or (0, x_j) (bit 0), and x_j sits on the boundary of I.
+Let L, R be the numbers of earlier points other than x_j in the half of I next to x_j, resp.
+in the far half.  The column is valid iff L - R in {-1, 0}; for L - R = -1 the point x_j must
+count as inside the window (bit 1: side u <= 0; bit 0: side u > 0), for L - R = 0 outside.
+At the closing step of an orbit vertex x_1 sits at the centre of I and counts in the near or
+the far half according to the side of x_k = x_1.  In every case AT MOST ONE side is valid.
+Proof.  Semi-symmetry: #(earlier points in the near half) = #(in the far half) (the window of
+c is (2c - 1, 1) resp. (0, 2c), of radius min(c, 1-c)).  x_j adds 1 to the near side iff it is
+inside.  The closing column has two tight pairs, but the halving moves x_j between "in" and
+"out" (a change of 1 on the near side) and the equality moves x_1 between near and far (a
+change of 2 in L - R), so the four combinations give four different values of L - R.  []
+Consequently: a valid orbit/chain vertex lies in exactly ONE class, and its term is a single
+monomial.  With sides s_t = +1 for "u <= 0" and -1 for "u > 0":
+   orbit:  Phi_theta(N) = (1/D) sum_{l=1}^{D-1} e(N l theta) . prod_t s_t . prod_{j=0}^{n-1} h(2^j l/D)
+                          . (-g(l/D) if x_k > x_1,  -h(l/D) if x_k < x_1),
+   chain (x_1 = 0):  W(N) = (1/2^n) sum_{l odd} e(N l x_k) . prod_t s_t . prod_{j=0}^{n-1} h(2^j l/2^n)
+                          . (-h(l/2^n))      (box factor of x_1 > 0),
+(mirror vertices give identical functions of N: the reflection x -> N + 1 - x maps class to
+class).  Since |g| = |h| = 1/(2|sin|), the modulus of the term at a given l is
+   M(l) / D,   M(l) = prod_{j=0}^{n-1} 1/(2|sin(pi 2^j l/D)|) . 1/(2|sin(pi l/D)|).
+(Check: k = 5, theta = 1/15, l = 14: (-1)^5/15 . g(14/15) prod h = 0.03333 - 0.15682i, the
+Normaliz value for class 15432.)
+
+
+3. Classification of the valid orbit and chain vertices
+--------------------------------------------------------
+Lemma 3.1 (orbits).  For n >= 3 the valid orbit vertices of exact period n are exactly
+theta = 1/D, 3/D, 1 - 3/D, 1 - 1/D (words 1 0^(n-1), 1 1 0^(n-2) and complements).  For
+n = 2: theta = 1/3, 2/3.
+Lemma 3.2 (chains).  For n >= 5 the valid chain vertices are, for x_1 = 0, the words 1 0^(n-1),
+1 1 0^(n-2), 1^n (points (0, 1/2, 1/4, ..., 2^-n), (0, 1/2, 3/4, 3/8, ..., 3/2^n),
+(0, 1/2, 3/4, ..., 1 - 2^-n)), and their mirrors (x_1 = 1).  For n = 4 there is in addition
+1101 (point (0, 1/2, 3/4, 3/8, 11/16), class 13524) and its mirror; n = 3: 100, 110, 111;
+n = 2: 10, 11.
+(colcheck.py confirms both lemmas for n <= 16 by exhaustion: colscan.log.)
+Proof of 3.1.  By the mirror symmetry assume c_1 = 1, and let r be the length of the initial
+run of 1s (r < n, else theta = 1).  The points of the run are x_i = 1 - (1 - theta)/2^(i-1),
+i <= r + 1, increasing, all > 1/2 for i >= 2.
+ (a) r >= 3, r <= n - 2: step r + 2 places x_(r+2) = x_(r+1)/2 with window (0, x_(r+1)); the
+     near half (x_(r+2), x_(r+1)) contains x_2, ..., x_r, so L >= r - 1 >= 2, and R <= 1 (only
+     theta can be in the far half): L - R >= 1, invalid.
+ (b) r = n - 1 (word 1^(n-1) 0, theta = 0.(0 1^(n-1)) < 1/2): at the closing step the window of
+     theta is (0, T theta) and its near half (theta, T theta) contains x_2, ..., x_(n-1);
+     L - R >= (n - 2) - 1 >= 1 for n >= 4.  Invalid.
+ (c) r = 1.  Step 3 (x_3 = x_2/2 = (1 + theta)/4, window (0, x_2)): theta is in the near half
+     iff theta > 1/3; so theta < 1/3.  During a run of 0s each step x_(i+1) = x_i/2 has window
+     (0, x_i), the earlier run points lie outside it, and theta must not be in the near half:
+     inductively theta < x_(i+1).  If after 1 0^s (s >= 1) a 1 is placed at a step <= n, then
+     with theta < x_(s+2) the near half (x_(s+2), x_(s+3)) of the window (x_(s+2), 1) contains
+     x_3, ..., x_(s+1) and x_2 (x_2 < x_(s+3) iff theta < x_(s+2)), and the far half contains
+     nothing: L - R = s >= 1, invalid.  So c_2 = ... = c_(n-1) = 0, and c_n = 1 would give
+     theta > 1/2 > 1/3.  Hence the word is 1 0^(n-1), theta = 1/D.
+ (d) r = 2.  Step 4 (x_4 = x_3/2 = (3 + theta)/8, window (0, x_3)): x_2 is in the near half,
+     so theta must be in the far half: theta < 3/7 and theta < x_4; the 0-run steps keep
+     theta < x_(i+1) as in (c).  A 1 after 1 1 0^s at a step <= n: the near half of the
+     window (x_(s+3), 1) contains x_4, ..., x_(s+2) and x_2, the far half contains x_3 (> 3/4 >
+     x_(s+4)), theta is outside: L - R = s - 1, so s = 1, prefix 1101 with theta < 3/7.  The
+     next step (if it is <= n, i.e. n >= 6) fails for both bits: bit 0 puts x_2 and x_4 in
+     the near half of (0, x_5) (L = 2, R <= 1); bit 1 puts x_3 in the near half (x_5, x_6) of
+     (x_5, 1) and nothing in (x_6, 1) (uses theta < 3/7).  c_n = 1 would give theta > 1/2.
+     Hence for n >= 6 the word is 1 1 0^(n-2), theta = 3/D.
+ Conversely 1/D and 3/D are valid for all n >= 3 (n >= 4 for 3/D; 3/7 at n = 3 by
+ computation): for 1/D every 0-step has empty near half and theta in the far half (L - R =
+ -1), and the closing step has x_1 in the far half (x_k > x_1); for 3/D step 4 has x_2 near
+ and theta far (L - R = 0) and all other steps are as for 1/D.  The cases n <= 5 are checked
+ exhaustively.  []
+Proof of 3.2.  The same argument with theta replaced by x_1 = 0+ (the perturbed box point,
+which lies in the far half of every bit-0 window and outside every bit-1 window); here every
+step is an ordinary step (no closing equality), so (b) becomes case (a) at step n + 1, the
+bit c_n is unrestricted by the theta < 1/3 argument, and 1^n is valid (all halves empty).
+The prefix 1101 survives at n = 4 (it is the whole word) and dies at the next step.  []
+
+
+4. Theorem C: the top components of the constant term are never zero
+---------------------------------------------------------------------
+THEOREM C.  For every k >= 4 the constant term c_0(N) of T(N,k) has a nonzero Fourier
+component of exact order 2^(k-1) - 1 and a nonzero component of exact order 2^(k-1).
+For k = 3 the order-3 component is nonzero and the order-4 component vanishes.
+Proof.  By the face lemma the modes of exact order D = 2^n - 1 (for n >= 3; Zsigmondy, or
+use 9 | 63 for n = 6) can only come from vertices with a single n-cycle, i.e. orbit vertices
+of exact period n, and modes of exact order 2^n only from chain vertices (a (R) component
+with a = n is a path, ../periods Lemma 5).  The coefficients of the modes e(N r/D),
+gcd(r, D) = 1, are Galois conjugates of each other (each term is a rational function of
+zeta^(r a^-1), zeta = e(1/D)), so it suffices to show that ONE coefficient is nonzero.
+Odd part.  n even: 3 | D, so 3/D is not of exact denominator D; the only contributions are
+theta = 1/D and its mirror, a single monomial (doubled): nonzero.  n odd: the mode e(N/D)
+gets 2 T_1 + 2 T_3, T_1 from theta = 1/D (l = 1), T_3 from theta = 3/D (l = 3^(-1) mod D).
+   |T_1| = M(1)/D >= (1/D) (D/2pi)^2 2^-(n-1) >= 1.5/(4 pi^2) > 0.038
+(the factors j = 0 and the Q-factor are 1/(2 sin(pi/D)) >= D/(2pi), the others >= 1/2).
+For T_3: 3 l = 1 + t D with t = 2 (D = 1 mod 3), so 3 . (2^j l/D mod 1) = M_j + 2^j/D with
+M_0 = 2 and M_(j+1) = 2 M_j mod 3, never 0: every angle lies in [1/3, 1/2 + 1/(6D)] or
+[2/3, 5/6 + 1/(6D)], and only j = n - 1 can exceed 5/6.  Hence every factor is <= 1 except one
+<= 1/(2 sin(pi/7)) < 1.16, and |T_3| < 1.16/D < 0.01 for n >= 7.  So T_1 + T_3 != 0.
+n = 3, 5 directly: k = 4: A_7 = 0.06906 + 0.10799i;  k = 6: A_31 = -1.70744 - 0.16984i
+(T_1 = -0.85261 - 0.08670i each, T_3 = -0.00111 + 0.00178i each).
+2-part.  The valid chains (Lemma 3.2) are W1 = 1 0^(n-1), W3 = 1^n, W2 = 1 1 0^(n-2) (x_1 = 0)
+and mirrors.  At the mode e(N/2^n), W1 has l = 1 and W3 has l = -1 (x_k = 1 - 2^-n), with all
+sides "u > 0", and h(-x) = conj h(x): W3 = conj(W1).  With h(x) = e(x/2 - 1/4)/(2 sin pi x)
+and the angles 1/2^n (box), 2^(j-1)/2^n (j = 1..n), which add up to 1,
+   arg W1 = arg[(-1)^n e(-(n+1)/4)],   so W1 + W3 = 2 Re W1 = 0 for n even,  = +-2|W1| for n odd.
+n odd: |W1| >= (1/2^n)(2^n/2pi)^2 2^-(n-1) = 1/(2pi^2) > 0.05, while W2 (l = 3^-1 mod 2^n:
+angles again in [1/3,1/2] u [2/3,5/6]) has |W2| <= 1/2^n; nonzero for n >= 5, and n = 3 by
+computation (A_8 = -0.32767 at k = 4).  n even >= 6: only W2 is left (and its mirror): a single
+monomial, nonzero.  n = 4 (k = 5): W2 + (1101) = 2(0.00969 - 0.00432)i != 0.  n = 2 (k = 3):
+the only chains are 10 = W1 and 11 = W3, which cancel.  []
+COROLLARY.  For every k >= 4, 2^(k-1)(2^(k-1) - 1) divides the period of T(N,k) (and of its
+constant term), which divides B(k).  E.g. k = 8: 128.127 | period | B(8) = 158739840.
+(Full exactness, period = B(k), needs also the components of order 2^s - 1, s < k - 1, which
+live on vertices/faces with an s-cycle plus extra points; these are certified for k <= 7 only.)
+
+
+5. When does cancellation happen?
+---------------------------------
+  * 2-power part, vertex level: ALWAYS for odd k between the two extreme chains (the halving
+    chain (0, 1/2, 1/4, ...) and the increasing chain (0, 1/2, 3/4, ...)): they are complex
+    conjugate at every mode and their phase is (-1)^n e(-(n+1)/4), purely imaginary for n even.
+    For even k they add.  The surviving 2^(k-1) part at odd k is carried by the chain
+    (0, 1/2, 3/4, 3/8, ..., 3/2^n) alone, and is much smaller: k = 5: 0.0107i (vs 0.19 per
+    chain), k = 7: -0.000693i (vs 9.80 per chain).  For k = 3 that chain coincides with the
+    increasing chain, hence the exception T(N,3).  (The "other preimage" pairing of
+    ../periods 4.3 is this pairing of W1 with W3.)
+  * Odd part 2^n - 1, vertex level: never (one monomial, or a dominant one).
+  * Faces with free points (m < k): the rotations theta = 2^i/D of the 1/D orbit, invalid at
+    k = m (Lemma 3.1 (c)), become valid when free points rebalance the failing column.  Their
+    moduli satisfy EXACTLY  sum_{i=1}^{n-1} M(2^i) = M(1)  (from 1/sin 2x = cot x - cot 2x and
+    2^n pi/D = pi + pi/D), so dominance fails and the total is a genuinely signed sum of
+    fibre volumes (section 6).  This is the regime where accidental cancellation is possible.
+  * Galois: at a given (k, m, q) all primitive modes vanish together, so cancellation is
+    always of the whole order-q component, never of a single mode.
+
+
+6. Faces with free points (m < k)
+---------------------------------
+[TABLE]
+
+
+7. Two disjoint cycles; the order-45 prediction; m = 9
+-------------------------------------------------------
+[TEXT]
+
+
+8. Generating functions
+-----------------------
+[TEXT]
+
+
+9. Files
+--------
+  local.py K Q [chain|orbit]   vertex formula, per-vertex Laurent coefficients
+  colcheck.py K | scan K0 K1 | fail K   column rule; valid orbit/chain vertices (colscan.log)
+  dominance.py NMAX            sizes M(l)/M(1) (rotations sum to exactly 1)
+  face.py M K [Q]              face formula with K - M = 0, 1, 2 free points (exact volumes)
+  fourier2.py JSON K Q M       Laurent coefficients from Normaliz class series
+  twocycle.py S1 S2 F          existence of faces with two disjoint cycles
+  twocomp.py S1 S2             order-lcm component of c_0 from two-cycle vertices (twocomp25.log ...)
+  gf.py K                      reduced generating function and cyclotomic denominator
