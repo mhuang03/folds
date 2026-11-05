@@ -357,6 +357,234 @@ theorem good_comp {j m c e a y : Nat} (hj : 0 < j) (hm : 0 < m) (hc : c < m) (he
         subst hh
         simp [blocks, hl]
 
+/-! ## Palindromic chains at `ν = 4r + 1` (odd `q`)
+
+PROOFS.txt section 2.  For `q = 2k + 1` and `ν = 4r + 1` the reflection `sig` fixes
+`t₀ = 2r + 1`.  The transversal `X_r` = (evens below `t₀`) + (odds above `t₀`) is the image of
+`phiR r` (`i ↦ 2i` for `i ≤ r`, `2i + 1` beyond), and `sig X_r` that of `psiR r`; on indices
+`sig` acts as `sig k (2r)`.  Both maps agree with the window relation of the `k`-strip except
+at the pairs `exc1` resp. `exc2`, so a sequence `β` of the `k`-strip which is good for `2r`
+and places these exceptional partners late (`CG k r β`) gives the palindromic chain
+`phiR β, t₀, reverse (psiR (sig β))`. -/
+
+/-- Membership-only dependence of a step. -/
+theorem semiStep_congr {N m : Nat} {S T : List Nat} (h : ∀ x, x ∈ S ↔ x ∈ T) :
+    SemiStep N S m ↔ SemiStep N T m := by
+  unfold SemiStep leftCount rightCount
+  simp only [h]
+
+/-- In a complete sequence `S, m, T`, the step `m` is valid after `S` iff it is valid
+after `T`. -/
+theorem semiStep_compl {N m : Nat} {S T : List Nat} (h : IsFoldSeq N (S ++ [m] ++ T)) :
+    SemiStep N S m ↔ SemiStep N T m := by
+  have hnd := nodup_of_foldSeq h
+  have hS : S.Nodup := (List.nodup_append.1 (List.nodup_append.1 hnd).1).1
+  have hT : T.Nodup := (List.nodup_append.1 hnd).2.1
+  rw [semiStep_iff_balanced_append hS, semiStep_iff_balanced_append hT]
+  have hf := (balanced_full (N := N) (m := m)).perm h.symm
+  unfold Balanced at *
+  simp only [List.countP_append, List.countP_cons, List.countP_nil] at *
+  simp only [lt_irrefl, and_false, false_and, decide_false, Bool.false_eq_true, if_false] at *
+  omega
+
+/-- A sequence `A ++ B` is valid if `A` is, and `B` read backwards is valid from scratch. -/
+theorem semiSymmetric_append_rev {N : Nat} {A B : List Nat} (h : IsFoldSeq N (A ++ B))
+    (hA : SemiSymmetric N A) (hB : SemiSymmetric N B.reverse) : SemiSymmetric N (A ++ B) := by
+  refine semiSymmetric_append_iff.2 ⟨hA, fun i hi => ?_⟩
+  have e : A ++ B = (A ++ B.take i) ++ [B[i]] ++ B.drop (i + 1) := by
+    simp only [List.append_assoc, List.singleton_append]
+    rw [← List.drop_eq_getElem_cons hi, List.take_append_drop]
+  rw [e] at h
+  rw [semiStep_compl h]
+  have hj : B.length - 1 - i < B.reverse.length := by simp; omega
+  have := hB (B.length - 1 - i) hj
+  rw [List.take_reverse, List.getElem_reverse] at this
+  rw [show B.length - (B.length - 1 - i) = i + 1 by omega] at this
+  have e2 : B.length - 1 - (B.length - 1 - i) = i := by omega
+  simp only [e2] at this
+  exact (semiStep_congr fun x => by simp).1 this
+
+/-- `φ` maps the window relation of `i` in the `k`-strip to that of `φ i` in the `Q`-strip,
+as far as `j` is concerned. -/
+def Agree (Q k : Nat) (φ : Nat → Nat) (i j : Nat) : Prop :=
+  ((φ i - reach Q (φ i) ≤ φ j ∧ φ j < φ i) ↔ (i - reach k i ≤ j ∧ j < i)) ∧
+  ((φ i < φ j ∧ φ j ≤ φ i + reach Q (φ i)) ↔ (i < j ∧ j ≤ i + reach k i))
+
+theorem near_step {Q k : Nat} {φ : Nat → Nat} {S : List Nat} {i : Nat} (hS : S.Nodup)
+    (hinj : ∀ a ∈ S, ∀ b ∈ S, φ a = φ b → a = b) (hag : ∀ j ∈ S, Agree Q k φ i j) :
+    SemiStep Q (S.map φ) (φ i) ↔ SemiStep k S i := by
+  have hS' := nodup_map_of_injOn hS hinj
+  unfold SemiStep
+  rw [leftCount_eq hS', rightCount_eq hS', leftCount_eq hS, rightCount_eq hS, List.countP_map,
+    List.countP_map]
+  have e1 : S.countP ((fun x => decide (φ i - reach Q (φ i) ≤ x ∧ x < φ i)) ∘ φ) =
+      S.countP (fun x => decide (i - reach k i ≤ x ∧ x < i)) :=
+    List.countP_congr fun j hj => by
+      simp only [Function.comp, decide_eq_true_eq]; exact (hag j hj).1
+  have e2 : S.countP ((fun x => decide (φ i < x ∧ x ≤ φ i + reach Q (φ i))) ∘ φ) =
+      S.countP (fun x => decide (i < x ∧ x ≤ i + reach k i)) :=
+    List.countP_congr fun j hj => by
+      simp only [Function.comp, decide_eq_true_eq]; exact (hag j hj).2
+  rw [e1, e2]
+
+/-- `β` places no exceptional partner `j` (`e β[p] j`) before `β[p]`. -/
+def Prec (e : Nat → Nat → Prop) (β : List Nat) : Prop :=
+  ∀ p (h : p < β.length), ∀ j ∈ β.take p, ¬ e β[p] j
+
+theorem semiSymmetric_near {Q k : Nat} {φ : Nat → Nat} {e : Nat → Nat → Prop} {β : List Nat}
+    (hb : ∀ x ∈ β, 1 ≤ x ∧ x ≤ k) (hnd : β.Nodup) (hv : SemiSymmetric k β) (hp : Prec e β)
+    (hinj : ∀ a b, 1 ≤ a → a ≤ k → 1 ≤ b → b ≤ k → φ a = φ b → a = b)
+    (hag : ∀ i j, 1 ≤ i → i ≤ k → 1 ≤ j → j ≤ k → i ≠ j → ¬ e i j → Agree Q k φ i j) :
+    SemiSymmetric Q (β.map φ) := by
+  intro p hp'
+  simp only [List.length_map] at hp'
+  rw [List.getElem_map, ← List.map_take]
+  have hi := hb _ (List.getElem_mem hp')
+  have hbt : ∀ x ∈ β.take p, 1 ≤ x ∧ x ≤ k := fun x hx => hb x (List.mem_of_mem_take hx)
+  refine (near_step (take_nodup hnd p) (fun a ha b hb' h => ?_) (fun j hj => ?_)).2 (hv p hp')
+  · exact hinj a b (hbt a ha).1 (hbt a ha).2 (hbt b hb').1 (hbt b hb').2 h
+  · have hj' := hbt j hj
+    refine hag _ _ hi.1 hi.2 hj'.1 hj'.2 ?_ (hp p hp' j hj)
+    intro h
+    obtain ⟨m, hm, e'⟩ := List.getElem_of_mem hj
+    rw [List.getElem_take] at e'
+    have : m = p := (hnd.getElem_inj_iff).1 (e'.trans h.symm)
+    simp at hm; omega
+
+def phiR (r i : Nat) : Nat := if i ≤ r then 2 * i else 2 * i + 1
+
+def psiR (r i : Nat) : Nat := if i ≤ r then 2 * i - 1 else 2 * i
+
+/-- Exceptional pairs of `phiR`: doubling `i ↦ 2i` above `r`, and `i ↦ 2i - k` below `r`. -/
+def exc1 (k r i j : Nat) : Prop := (j = 2 * i ∧ r < i ∧ 2 * i ≤ k) ∨ (j + k = 2 * i ∧ 1 ≤ j ∧ j ≤ r)
+
+/-- Exceptional pairs of `psiR`. -/
+def exc2 (r i j : Nat) : Prop := j + 1 = 2 * i ∧ i ≤ r ∧ r + 1 < 2 * i
+
+theorem agree_phi {k r i j : Nat} (hrk : 2 * r < k) (hi1 : 1 ≤ i) (hik : i ≤ k) (hj1 : 1 ≤ j)
+    (hjk : j ≤ k) (hij : i ≠ j) (he : ¬ exc1 k r i j) : Agree (2 * k + 1) k (phiR r) i j := by
+  unfold Agree phiR reach exc1 at *
+  split_ifs <;> omega
+
+theorem agree_psi {k r i j : Nat} (hrk : 2 * r < k) (hi1 : 1 ≤ i) (hik : i ≤ k) (hj1 : 1 ≤ j)
+    (hjk : j ≤ k) (hij : i ≠ j) (he : ¬ exc2 r i j) : Agree (2 * k + 1) k (psiR r) i j := by
+  unfold Agree psiR reach exc2 at *
+  split_ifs <;> omega
+
+theorem sig_phiR {k r i : Nat} (hrk : 2 * r < k) (hi : 1 ≤ i ∧ i ≤ k) :
+    sig (2 * k + 1) (4 * r + 1) (phiR r i) = psiR r (sig k (2 * r) i) := by
+  have h1 : 1 ≤ phiR r i ∧ phiR r i ≤ 2 * k + 1 := by unfold phiR; split_ifs <;> omega
+  rw [sig_eq (by omega) h1, sig_eq (by omega) hi]
+  unfold phiR psiR
+  split_ifs <;> omega
+
+theorem sig_psiR {k r i : Nat} (hrk : 2 * r < k) (hi : 1 ≤ i ∧ i ≤ k) :
+    sig (2 * k + 1) (4 * r + 1) (psiR r (sig k (2 * r) i)) = phiR r i := by
+  have h1 : 1 ≤ phiR r i ∧ phiR r i ≤ 2 * k + 1 := by unfold phiR; split_ifs <;> omega
+  rw [← sig_phiR hrk hi, sig_sig (by omega) h1]
+
+/-- The constrained problem for the transversal `X_r`. -/
+def CG (k r : Nat) (β : List Nat) : Prop :=
+  GoodL k (2 * r) β ∧ Prec (exc1 k r) β ∧ Prec (exc2 r) (β.map (sig k (2 * r)))
+
+/-- **Palindromic chains at `ν = 4r + 1`.**  A solution of the constrained problem in the
+`k`-strip starting with `b` gives a good class `phiR r b` mod `2k + 1` for `ν = 4r + 1`. -/
+theorem good_palin {k r b : Nat} (hrk : 2 * r < k) {β : List Nat} (hβ : CG k r β)
+    (hh : β.head? = some b) : Good (2 * k + 1) (4 * r + 1) (phiR r b) := by
+  obtain ⟨⟨hf, hv1, hv2⟩, hp1, hp2⟩ := hβ
+  have hb : ∀ x ∈ β, 1 ≤ x ∧ x ≤ k := fun x hx => (mem_range'_of_perm hf).1 hx
+  have hnd := nodup_of_foldSeq hf
+  have hν : 2 * r < k := hrk
+  set σβ := β.map (sig k (2 * r)) with hσβ
+  have hfσ : IsFoldSeq k σβ := isFoldSeq_map_sig (by omega) hf
+  have hbσ : ∀ x ∈ σβ, 1 ≤ x ∧ x ≤ k := fun x hx => (mem_range'_of_perm hfσ).1 hx
+  set x := β.map (phiR r) with hx
+  set y := σβ.map (psiR r) with hy
+  have hxv : SemiSymmetric (2 * k + 1) x :=
+    semiSymmetric_near hb hnd hv1 hp1
+      (fun a b _ _ _ _ h => by unfold phiR at h; split_ifs at h <;> omega)
+      (fun i j h1 h2 h3 h4 h5 h6 => agree_phi hrk h1 h2 h3 h4 h5 h6)
+  have hyv : SemiSymmetric (2 * k + 1) y :=
+    semiSymmetric_near hbσ (nodup_of_foldSeq hfσ) hv2 hp2
+      (fun a b _ _ _ _ h => by unfold psiR at h; split_ifs at h <;> omega)
+      (fun i j h1 h2 h3 h4 h5 h6 => agree_psi hrk h1 h2 h3 h4 h5 h6)
+  set π := x ++ [2 * r + 1] ++ y.reverse with hπ
+  -- the complete sequence
+  have hxb : ∀ z ∈ x, (∃ i, 1 ≤ i ∧ i ≤ k ∧ z = phiR r i) := by
+    intro z hz; obtain ⟨i, hi, rfl⟩ := List.mem_map.1 hz; exact ⟨i, (hb i hi).1, (hb i hi).2, rfl⟩
+  have hyb : ∀ z ∈ y, (∃ i, 1 ≤ i ∧ i ≤ k ∧ z = psiR r i) := by
+    intro z hz; obtain ⟨i, hi, rfl⟩ := List.mem_map.1 hz
+    exact ⟨i, (hbσ i hi).1, (hbσ i hi).2, rfl⟩
+  have hxnd : x.Nodup := nodup_map_of_injOn hnd fun a _ b _ h => by
+    unfold phiR at h; split_ifs at h <;> omega
+  have hynd : y.Nodup := nodup_map_of_injOn (nodup_of_foldSeq hfσ) fun a _ b _ h => by
+    unfold psiR at h; split_ifs at h <;> omega
+  have hπf : IsFoldSeq (2 * k + 1) π := by
+    refine perm_range'_of_nodup_subset ?_ ?_ ?_
+    · rw [hπ, List.nodup_append, List.nodup_append]
+      refine ⟨⟨hxnd, List.nodup_singleton _, ?_⟩, List.nodup_reverse.2 hynd, ?_⟩
+      · intro a ha b hb' e; simp at hb'
+        obtain ⟨i, h1, h2, h⟩ := hxb a ha; unfold phiR at h; split_ifs at h <;> omega
+      · intro a ha b hb' e
+        rw [List.mem_reverse] at hb'
+        obtain ⟨i, h1, h2, h⟩ := hyb b hb'
+        rw [List.mem_append] at ha
+        rcases ha with ha | ha
+        · obtain ⟨i', h1', h2', h'⟩ := hxb a ha
+          unfold psiR at h; unfold phiR at h'; split_ifs at h h' <;> omega
+        · simp at ha; unfold psiR at h; split_ifs at h <;> omega
+    · intro z hz
+      rw [hπ, List.mem_append, List.mem_append, List.mem_reverse] at hz
+      rcases hz with (hz | hz) | hz
+      · obtain ⟨i, h1, h2, rfl⟩ := hxb z hz; unfold phiR; split_ifs <;> omega
+      · simp at hz; omega
+      · obtain ⟨i, h1, h2, rfl⟩ := hyb z hz; unfold psiR; split_ifs <;> omega
+    · rw [hπ]; simp [hx, hy, hσβ, hf.length_eq]; omega
+  -- the middle step
+  have hmid : SemiStep (2 * k + 1) x (2 * r + 1) := by
+    unfold SemiStep
+    rw [leftCount_eq hxnd, rightCount_eq hxnd, hx, List.countP_map, List.countP_map,
+      hf.countP_eq, hf.countP_eq]
+    have hre : reach (2 * k + 1) (2 * r + 1) = 2 * r := by unfold reach; omega
+    rw [hre]
+    have e1 : (List.range' 1 k).countP ((fun z => decide (2 * r + 1 - 2 * r ≤ z ∧ z < 2 * r + 1))
+        ∘ phiR r) = (List.range' 1 k).countP (fun y => decide (1 ≤ y ∧ y ≤ r)) :=
+      List.countP_congr fun i hi => by
+        rw [List.mem_range'_1] at hi
+        simp only [Function.comp, decide_eq_true_eq]; unfold phiR; split_ifs <;> omega
+    have e2 : (List.range' 1 k).countP ((fun z => decide (2 * r + 1 < z ∧ z ≤ 2 * r + 1 + 2 * r))
+        ∘ phiR r) = (List.range' 1 k).countP (fun y => decide (r + 1 ≤ y ∧ y ≤ 2 * r)) :=
+      List.countP_congr fun i hi => by
+        rw [List.mem_range'_1] at hi
+        simp only [Function.comp, decide_eq_true_eq]; unfold phiR; split_ifs <;> omega
+    rw [e1, e2, countP_range'_interval, countP_range'_interval]
+    omega
+  have hπs : SemiSymmetric (2 * k + 1) π := by
+    rw [hπ]
+    refine semiSymmetric_append_rev hπf (semiSymmetric_append_iff.2 ⟨hxv, fun j hj => ?_⟩)
+      (by rwa [List.reverse_reverse])
+    have : j = 0 := by simp at hj; omega
+    subst this
+    simpa using hmid
+  have hmap : π.map (sig (2 * k + 1) (4 * r + 1)) = π.reverse := by
+    have ex : x.map (sig (2 * k + 1) (4 * r + 1)) = y := by
+      rw [hx, hy, hσβ, List.map_map, List.map_map]
+      exact List.map_congr_left fun i hi => sig_phiR hrk (hb i hi)
+    have ey : y.map (sig (2 * k + 1) (4 * r + 1)) = x := by
+      rw [hx, hy, hσβ, List.map_map, List.map_map]
+      exact List.map_congr_left fun i hi => sig_psiR hrk (hb i hi)
+    have et : sig (2 * k + 1) (4 * r + 1) (2 * r + 1) = 2 * r + 1 := by
+      rw [sig_eq (by omega) (by omega)]; split_ifs <;> omega
+    rw [hπ]
+    simp only [List.map_append, List.map_reverse, List.map_cons, List.map_nil, ex, ey, et,
+      List.reverse_append, List.reverse_reverse, List.reverse_cons, List.reverse_nil,
+      List.nil_append, List.append_assoc, List.singleton_append, List.cons_append]
+  refine ⟨π, ⟨hπf, hπs, by rw [hmap]; exact hπs.reverse hπf⟩, ?_⟩
+  rw [hπ, hx]
+  cases β with
+  | nil => simp at hh
+  | cons a β' => simp only [List.head?_cons, Option.some.injEq] at hh; subst hh; simp
+
 /-! ## The closure of the good classes, and the enlarged family -/
 
 /-- The good classes proven here (`experiments/live4/covlean4.py` computes this closure). -/
