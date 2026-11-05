@@ -1,0 +1,365 @@
+summary N=2 dead1=0 T2=2 dead2=0 T3=0 dead3=0
+summary N=3 dead1=0 T2=4 dead2=0 T3=4 dead3=0
+dead2 4 1 4
+dead2 4 4 1
+summary N=4 dead1=0 T2=8 dead2=2 T3=10 dead3=0
+dead3 5 1 4 5
+dead3 5 2 1 5
+dead3 5 2 5 1
+dead3 5 4 1 5
+dead3 5 4 5 1
+dead3 5 5 2 1
+summary N=5 dead1=0 T2=12 dead2=0 T3=24 dead3=6
+dead2 6 1 6
+dead2 6 6 1
+summary N=6 dead1=0 T2=18 dead2=2 T3=40 dead3=0
+dead2 7 1 7
+dead2 7 7 1
+dead3 7 1 5 4
+dead3 7 1 6 7
+dead3 7 1 7 4
+dead3 7 2 1 6
+dead3 7 2 1 7
+dead3 7 2 6 1
+dead3 7 2 6 7
+dead3 7 2 7 1
+dead3 7 3 7 4
+dead3 7 4 1 7
+dead3 7 4 7 1
+dead3 7 5 1 4
+dead3 7 6 1 7
+dead3 7 6 2 1
+dead3 7 6 2 7
+dead3 7 6 7 1
+dead3 7 6 7 2
+dead3 7 7 1 4
+dead3 7 7 2 1
+dead3 7 7 3 4
+summary N=7 dead1=0 T2=24 dead2=2 T3=70 dead3=20
+dead2 8 1 8
+dead2 8 8 1
+dead3 8 1 5 4
+dead3 8 4 8 5
+dead3 8 5 1 4
+dead3 8 8 4 5
+summary N=8 dead1=0 T2=32 dead2=2 T3=102 dead3=4
+dead3 9 1 8 9
+dead3 9 2 1 8
+dead3 9 2 1 9
+dead3 9 2 8 1
+dead3 9 2 8 9
+dead3 9 2 9 1
+dead3 9 5 1 4
+dead3 9 5 9 6
+dead3 9 8 1 9
+dead3 9 8 2 1
+dead3 9 8 2 9
+dead3 9 8 9 1
+dead3 9 8 9 2
+dead3 9 9 2 1
+summary N=9 dead1=0 T2=40 dead2=0 T3=152 dead3=14
+dead2 10 1 10
+dead2 10 10 1
+dead3 10 5 1 4
+dead3 10 6 10 7
+summary N=10 dead1=0 T2=50 dead2=2 T3=206 dead3=2
+dead3 11 1 7 6
+dead3 11 1 10 11
+dead3 11 2 1 10
+dead3 11 2 1 11
+dead3 11 2 10 1
+dead3 11 2 10 11
+dead3 11 2 11 1
+dead3 11 5 1 4
+dead3 11 5 11 6
+dead3 11 7 1 6
+dead3 11 7 11 8
+dead3 11 10 1 11
+dead3 11 10 2 1
+dead3 11 10 2 11
+dead3 11 10 11 1
+dead3 11 10 11 2
+dead3 11 11 2 1
+dead3 11 11 5 6
+summary N=11 dead1=0 T2=60 dead2=0 T3=282 dead3=18
+dead2 12 1 12
+dead2 12 12 1
+dead3 12 1 7 6
+dead3 12 5 1 4
+dead3 12 6 12 7
+dead3 12 7 1 6
+dead3 12 8 12 9
+dead3 12 12 6 7
+summary N=12 dead1=0 T2=72 dead2=2 T3=362 dead3=6
+dead3 13 1 12 13
+dead3 13 2 1 12
+dead3 13 2 1 13
+dead3 13 2 12 1
+dead3 13 2 12 13
+dead3 13 2 13 1
+dead3 13 5 1 4
+dead3 13 7 1 6
+dead3 13 7 13 8
+dead3 13 9 13 10
+dead3 13 12 1 13
+dead3 13 12 2 1
+dead3 13 12 2 13
+dead3 13 12 13 1
+dead3 13 12 13 2
+dead3 13 13 2 1
+summary N=13 dead1=0 T2=84 dead2=0 T3=470 dead3=16
+dead2 14 1 14
+dead2 14 14 1
+dead3 14 5 1 4
+dead3 14 7 1 6
+dead3 14 8 14 9
+dead3 14 10 14 11
+summary N=14 dead1=0 T2=98 dead2=2 T3=582 dead3=4
+dead3 15 1 9 8
+dead3 15 1 14 15
+dead3 15 2 1 14
+dead3 15 2 1 15
+dead3 15 2 14 1
+dead3 15 2 14 15
+dead3 15 2 15 1
+dead3 15 5 1 4
+dead3 15 7 1 6
+dead3 15 7 15 8
+dead3 15 9 1 8
+dead3 15 9 15 10
+dead3 15 11 15 12
+dead3 15 14 1 15
+dead3 15 14 2 1
+dead3 15 14 2 15
+dead3 15 14 15 1
+dead3 15 14 15 2
+dead3 15 15 2 1
+dead3 15 15 7 8
+summary N=15 dead1=0 T2=112 dead2=0 T3=726 dead3=20
+dead2 16 1 16
+dead2 16 16 1
+dead3 16 1 9 8
+dead3 16 5 1 4
+dead3 16 7 1 6
+dead3 16 8 16 9
+dead3 16 9 1 8
+dead3 16 10 16 11
+dead3 16 12 16 13
+dead3 16 16 8 9
+summary N=16 dead1=0 T2=128 dead2=2 T3=876 dead3=8
+dead3 17 1 16 17
+dead3 17 2 1 16
+dead3 17 2 1 17
+dead3 17 2 16 1
+dead3 17 2 16 17
+dead3 17 2 17 1
+dead3 17 5 1 4
+dead3 17 7 1 6
+dead3 17 9 1 8
+dead3 17 9 17 10
+dead3 17 11 17 12
+dead3 17 13 17 14
+dead3 17 16 1 17
+dead3 17 16 2 1
+dead3 17 16 2 17
+dead3 17 16 17 1
+dead3 17 16 17 2
+dead3 17 17 2 1
+summary N=17 dead1=0 T2=144 dead2=0 T3=1062 dead3=18
+dead2 18 1 18
+dead2 18 18 1
+dead3 18 5 1 4
+dead3 18 7 1 6
+dead3 18 9 1 8
+dead3 18 10 18 11
+dead3 18 12 18 13
+dead3 18 14 18 15
+summary N=18 dead1=0 T2=162 dead2=2 T3=1254 dead3=6
+dead3 19 1 11 10
+dead3 19 1 18 19
+dead3 19 2 1 18
+dead3 19 2 1 19
+dead3 19 2 18 1
+dead3 19 2 18 19
+dead3 19 2 19 1
+dead3 19 5 1 4
+dead3 19 7 1 6
+dead3 19 9 1 8
+dead3 19 9 19 10
+dead3 19 11 1 10
+dead3 19 11 19 12
+dead3 19 13 19 14
+dead3 19 15 19 16
+dead3 19 18 1 19
+dead3 19 18 2 1
+dead3 19 18 2 19
+dead3 19 18 19 1
+dead3 19 18 19 2
+dead3 19 19 2 1
+dead3 19 19 9 10
+summary N=19 dead1=0 T2=180 dead2=0 T3=1488 dead3=22
+dead2 20 1 20
+dead2 20 20 1
+dead3 20 1 11 10
+dead3 20 5 1 4
+dead3 20 7 1 6
+dead3 20 9 1 8
+dead3 20 10 20 11
+dead3 20 11 1 10
+dead3 20 12 20 13
+dead3 20 14 20 15
+dead3 20 16 20 17
+dead3 20 20 10 11
+summary N=20 dead1=0 T2=200 dead2=2 T3=1728 dead3=10
+dead3 21 1 20 21
+dead3 21 2 1 20
+dead3 21 2 1 21
+dead3 21 2 20 1
+dead3 21 2 20 21
+dead3 21 2 21 1
+dead3 21 5 1 4
+dead3 21 7 1 6
+dead3 21 9 1 8
+dead3 21 11 1 10
+dead3 21 11 21 12
+dead3 21 13 21 14
+dead3 21 15 21 16
+dead3 21 17 21 18
+dead3 21 20 1 21
+dead3 21 20 2 1
+dead3 21 20 2 21
+dead3 21 20 21 1
+dead3 21 20 21 2
+dead3 21 21 2 1
+summary N=21 dead1=0 T2=220 dead2=0 T3=2014 dead3=20
+dead2 22 1 22
+dead2 22 22 1
+dead3 22 5 1 4
+dead3 22 7 1 6
+dead3 22 9 1 8
+dead3 22 11 1 10
+dead3 22 12 22 13
+dead3 22 14 22 15
+dead3 22 16 22 17
+dead3 22 18 22 19
+summary N=22 dead1=0 T2=242 dead2=2 T3=2308 dead3=8
+dead3 23 1 13 12
+dead3 23 1 22 23
+dead3 23 2 1 22
+dead3 23 2 1 23
+dead3 23 2 22 1
+dead3 23 2 22 23
+dead3 23 2 23 1
+dead3 23 5 1 4
+dead3 23 7 1 6
+dead3 23 9 1 8
+dead3 23 11 1 10
+dead3 23 11 23 12
+dead3 23 13 1 12
+dead3 23 13 23 14
+dead3 23 15 23 16
+dead3 23 17 23 18
+dead3 23 19 23 20
+dead3 23 22 1 23
+dead3 23 22 2 1
+dead3 23 22 2 23
+dead3 23 22 23 1
+dead3 23 22 23 2
+dead3 23 23 2 1
+dead3 23 23 11 12
+summary N=23 dead1=0 T2=264 dead2=0 T3=2652 dead3=24
+dead2 24 1 24
+dead2 24 24 1
+dead3 24 1 13 12
+dead3 24 5 1 4
+dead3 24 7 1 6
+dead3 24 9 1 8
+dead3 24 11 1 10
+dead3 24 12 24 13
+dead3 24 13 1 12
+dead3 24 14 24 15
+dead3 24 16 24 17
+dead3 24 18 24 19
+dead3 24 20 24 21
+dead3 24 24 12 13
+summary N=24 dead1=0 T2=288 dead2=2 T3=3004 dead3=12
+dead3 25 1 24 25
+dead3 25 2 1 24
+dead3 25 2 1 25
+dead3 25 2 24 1
+dead3 25 2 24 25
+dead3 25 2 25 1
+dead3 25 5 1 4
+dead3 25 7 1 6
+dead3 25 9 1 8
+dead3 25 11 1 10
+dead3 25 13 1 12
+dead3 25 13 25 14
+dead3 25 15 25 16
+dead3 25 17 25 18
+dead3 25 19 25 20
+dead3 25 21 25 22
+dead3 25 24 1 25
+dead3 25 24 2 1
+dead3 25 24 2 25
+dead3 25 24 25 1
+dead3 25 24 25 2
+dead3 25 25 2 1
+summary N=25 dead1=0 T2=312 dead2=0 T3=3412 dead3=22
+dead2 26 1 26
+dead2 26 26 1
+dead3 26 5 1 4
+dead3 26 7 1 6
+dead3 26 9 1 8
+dead3 26 11 1 10
+dead3 26 13 1 12
+dead3 26 14 26 15
+dead3 26 16 26 17
+dead3 26 18 26 19
+dead3 26 20 26 21
+dead3 26 22 26 23
+summary N=26 dead1=0 T2=338 dead2=2 T3=3828 dead3=10
+dead3 27 1 15 14
+dead3 27 1 26 27
+dead3 27 2 1 26
+dead3 27 2 1 27
+dead3 27 2 26 1
+dead3 27 2 26 27
+dead3 27 2 27 1
+dead3 27 5 1 4
+dead3 27 7 1 6
+dead3 27 9 1 8
+dead3 27 11 1 10
+dead3 27 13 1 12
+dead3 27 13 27 14
+dead3 27 15 1 14
+dead3 27 15 27 16
+dead3 27 17 27 18
+dead3 27 19 27 20
+dead3 27 21 27 22
+dead3 27 23 27 24
+dead3 27 26 1 27
+dead3 27 26 2 1
+dead3 27 26 2 27
+dead3 27 26 27 1
+dead3 27 26 27 2
+dead3 27 27 2 1
+dead3 27 27 13 14
+summary N=27 dead1=0 T2=364 dead2=0 T3=4304 dead3=26
+dead2 28 1 28
+dead2 28 28 1
+dead3 28 1 15 14
+dead3 28 5 1 4
+dead3 28 7 1 6
+dead3 28 9 1 8
+dead3 28 11 1 10
+dead3 28 13 1 12
+dead3 28 14 28 15
+dead3 28 15 1 14
+dead3 28 16 28 17
+dead3 28 18 28 19
+dead3 28 20 28 21
+dead3 28 22 28 23
+dead3 28 24 28 25
+dead3 28 28 14 15
+summary N=28 dead1=0 T2=392 dead2=2 T3=4790 dead3=14
