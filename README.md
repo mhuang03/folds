@@ -34,13 +34,20 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
 outside Lean (see `experiments/` and the Rust crate), not with `native_decide`.
 
-## Data (`experiments/semi_counts.txt`, computed by `experiments/semi.c`)
+## Data (`experiments/semi_counts.txt`; N ≤ 27 from `experiments/semi.c`, N = 28..35 from the Rust crate `rust/`)
 
-Semi-symmetric counts for `N = 1..27`:
+Semi-symmetric counts for `N = 1..35`:
 1, 2, 4, 10, 28, 96, 256, 1120, 4256, 17878, 70960, 383476, 1620328, 9167908,
 47821296, 276182312, 1481994716, 10084180418, 55082188120, 398874108930,
 2505681033958, 18168130281086, 119006527671252, 979730153850974,
-6564449510287388, 55581983250573500, 413109755332919448.
+6564449510287388, 55581983250573500, 413109755332919448, 3603074636066234798,
+27545080998591561856, 262878496654501774250, 2037247307316034896720,
+20222490725552617395966, 171668579369815966705184, 1711977358970374039688092,
+14916356465581456801127844.
+
+`rust/` uses a mirror-orbit, meet-in-the-middle layered DP: a(33) takes 74 s, and a(34)
+and a(35) used residue/CRT runs. N = 36 needs more than 16 GB of RAM (see
+`rust/README.md`).
 
 The symmetric counts are OEIS A003407 (permutations with no 3-term AP), as expected.
 The semi-symmetric sequence is **not in the OEIS**.
