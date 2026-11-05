@@ -540,4 +540,98 @@ theorem freeCount_map {N p : Nat} {f : Nat → Nat} : ∀ (l P : List Nat),
     · have h' : ¬ FreeStep N (P.map f) (f x) := fun h' => h (hfree.1 h')
       simp [h, h']
 
+/-! ### Shifted parity blocks -/
+
+/-- `X`-panels: evens up to `2j`, then odds from `2j + 3`. -/
+def shX (j y : Nat) : Nat := 2 * y + if j < y then 1 else 0
+
+/-- `Y`-panels: odds up to `2j + 1`, then evens from `2j + 2`. -/
+def shY (j y : Nat) : Nat := 2 * y - 1 - if j + 1 < y then 1 else 0
+
+theorem winPres_shX {n y : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (hy : y ≤ n - 1) :
+    WinPres (2 * n) (n - 1) (shX (n / 2)) y := by
+  constructor <;> intro z hz1 hz <;> unfold shX reach <;> split_ifs <;> omega
+
+theorem winPres_shY {n y : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (_hy : y ≤ n + 1)
+    (hmid : ¬ (n % 2 = 0 ∧ y = n / 2 + 1)) :
+    WinPres (2 * n) (n + 1) (shY (n / 2)) y := by
+  constructor <;> intro z hz1 hz <;> unfold shY reach <;> split_ifs <;> omega
+
+/-- The twisted middle step (`n` even): the window of `n + 1` misses `Y`-panel `1`. -/
+theorem twist_shY_left {n z : Nat} (hn : 2 ≤ n) (he : n % 2 = 0) (hz1 : 1 ≤ z) (hz : z ≤ n + 1) :
+    (shY (n / 2) (n / 2 + 1) - reach (2 * n) (shY (n / 2) (n / 2 + 1)) ≤ shY (n / 2) z ∧
+        shY (n / 2) z < shY (n / 2) (n / 2 + 1)) ↔ 2 ≤ z ∧ z < n / 2 + 1 := by
+  unfold shY reach; split_ifs <;> omega
+
+theorem twist_shY_right {n z : Nat} (hn : 2 ≤ n) (he : n % 2 = 0) (hz1 : 1 ≤ z) (hz : z ≤ n + 1) :
+    (shY (n / 2) (n / 2 + 1) < shY (n / 2) z ∧
+        shY (n / 2) z ≤ shY (n / 2) (n / 2 + 1) + reach (2 * n) (shY (n / 2) (n / 2 + 1))) ↔
+      n / 2 + 1 < z ∧ z ≤ n / 2 + 1 + reach (n + 1) (n / 2 + 1) := by
+  unfold shY reach; split_ifs <;> omega
+
+theorem countP_range'_interval_from (A B s : Nat) (hs : 1 ≤ s) :
+    ∀ n, (List.range' s n).countP (fun y => decide (A ≤ y ∧ y ≤ B)) =
+      min B (s + n - 1) + 1 - max A s
+  | 0 => by simp; omega
+  | n + 1 => by
+    rw [List.range'_concat, List.countP_append, countP_range'_interval_from A B s hs n]
+    simp only [List.countP_cons, List.countP_nil]
+    by_cases h : A ≤ s + n ∧ s + n ≤ B
+    · simp [h]; omega
+    · simp [h]; omega
+
+/-- The canonical `X` list for `N = 2n`. -/
+def Xl (n : Nat) : List Nat := (List.range' 1 (n - 1)).map (shX (n / 2))
+
+theorem countP_eq_interval {n : Nat} {p : Nat → Bool} {A B : Nat}
+    (h : ∀ z, 1 ≤ z → z ≤ n → (p z = true ↔ A ≤ z ∧ z ≤ B)) :
+    (List.range' 1 n).countP p = min B n + 1 - max A 1 := by
+  rw [← countP_range'_interval A B n]
+  apply List.countP_congr; intro z hz; rw [List.mem_range'_1] at hz
+  rw [h z (by omega) (by omega)]; simp
+
+/-- **Balance of `X`** around every `Y`-panel, except the twisted middle one (`n` even),
+which sees one more `X`-panel on its left. -/
+theorem X_balance {n y m : Nat} (hn : 2 ≤ n) (hy1 : 1 ≤ y) (hy : y ≤ n + 1)
+    (hm : m = shY (n / 2) y) :
+    (Xl n).countP (fun x => decide (m - reach (2 * n) m ≤ x ∧ x < m)) =
+      (Xl n).countP (fun x => decide (m < x ∧ x ≤ m + reach (2 * n) m)) +
+        (if n % 2 = 0 ∧ y = n / 2 + 1 then 1 else 0) := by
+  unfold Xl
+  rw [List.countP_map, List.countP_map]
+  subst hm
+  obtain ⟨j, hj⟩ : ∃ j, j = n / 2 := ⟨_, rfl⟩
+  rw [← hj]
+  have hn2 : n = 2 * j ∨ n = 2 * j + 1 := by omega
+  rcases Nat.lt_or_ge (j + 1) y with h | h
+  · have hm' : shY j y = 2 * y - 2 := by unfold shY; rw [if_pos h]; omega
+    have hr : reach (2 * n) (2 * y - 2) = 2 * n - (2 * y - 2) := by unfold reach; omega
+    rw [hm', hr, if_neg (by omega), countP_eq_interval (A := 2 * y - 2 - n) (B := y - 2),
+      countP_eq_interval (A := y - 1) (B := n - 1)]
+    · omega
+    all_goals
+      intro z hz1 hz
+      simp only [Function.comp_apply, decide_eq_true_eq]
+      unfold shX; split_ifs <;> omega
+  · have hm' : shY j y = 2 * y - 1 := by unfold shY; rw [if_neg (by omega)]; omega
+    rw [hm']
+    by_cases ht : n % 2 = 0 ∧ y = j + 1
+    · rw [if_pos ht]
+      obtain ⟨rfl, rfl⟩ : n = 2 * j ∧ y = j + 1 := ⟨by omega, ht.2⟩
+      have hr : reach (2 * (2 * j)) (2 * (j + 1) - 1) = 2 * j - 1 := by unfold reach; omega
+      rw [hr, countP_eq_interval (A := 1) (B := j), countP_eq_interval (A := j + 1) (B := 2 * j - 1)]
+      · omega
+      all_goals
+        intro z hz1 hz
+        simp only [Function.comp_apply, decide_eq_true_eq]
+        unfold shX; split_ifs <;> omega
+    · rw [if_neg ht]
+      have hr : reach (2 * n) (2 * y - 1) = 2 * y - 2 := by unfold reach; omega
+      rw [hr, countP_eq_interval (A := 1) (B := y - 1), countP_eq_interval (A := y) (B := 2 * y - 2)]
+      · omega
+      all_goals
+        intro z hz1 hz
+        simp only [Function.comp_apply, decide_eq_true_eq]
+        unfold shX; split_ifs <;> omega
+
 end Folds
