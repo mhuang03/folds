@@ -28,6 +28,7 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `Prefix.lean` (Mathlib) | `card_prefixTwo`: there are ⌊N²/2⌋ valid 2-step prefixes; `card_reachTwo`: ⌊N²/3⌋ reachable 2-sets |
 | `Wallis.lean` (Mathlib) | `card_wallisSeqs`: exactly N!·4^r·r!²/(2r+1)! permutations satisfy a single panel's constraint |
 | `SelfDual.lean` (Mathlib) | `card_revMirrorFixed`: c(N) = number of valid half sequences; flip lemmas and a mod-4 reduction of c(N) for even N |
+| `Extremal.lean` (Mathlib) | exact extremal laws. Left-to-right maxima: at most ⌊log₂N⌋+1, attained (`lrmax_le`, `exists_lrmax`). Free steps (window empty): at most ⌊log₂(N+1)⌋+⌊log₂((N+1)/3)⌋+1, attained (`numFree_le`, `max_free`). Shifted parity blocks (`shifted_blocks`) |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
@@ -114,3 +115,6 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
   - The asymptotic fit log a ≈ c·N log N − 0.82N + …, with c ≈ 0.66 and still rising.
   - The mechanism of the mod-3 effect: the period-2 doubling orbit {N/3, 2N/3}, whose
     two constraints read the same two prefix sets and force P(N/3) ≈ s/3.
+- `experiments/extremal/PROOFS.txt`. Proofs of the extremal laws. Shifted parity blocks
+  give a(2n) ≥ 2a(n)² + a(n−1)a(n+1) for odd n (on paper). Open: the minimum number of
+  descents is ⌊log₂(N+1)⌋−1 (checked for N ≤ 22).
