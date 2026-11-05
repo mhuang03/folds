@@ -31,9 +31,8 @@ Theorem 3 (super-exponential lower bounds).
    (a) [Lean: pow_le_semiCount_pow_four]   N^N <= a(N)^8  for N = 4^j,  i.e.
             a(N) >= N^{N/8}                (N = 4^j);
        and a(2N) >= 2 a(N)^2 gives a(N) >= 2 (N/2)^{N/8} for N = 2 * 4^j.
-   (b) [paper, section 4, from Theorem 2 and a(2n+1) >= 2a(n)a(n+1)]  for every N >= 1
-            log2 a(N)  >=  (1/32) N log2 N - N/4 + 1/12,
-       i.e.  a(N) >= 2^{1/12} N^{N/32} 2^{-N/4}.
+   (b) [Lean: self_pow_le_semiCount]  for every N >= 1
+            N^N <= 2^{3N} a(N)^{32},     i.e.   a(N) >= (N/8)^{N/32}.
 So  ln a(N) >= c N ln N - O(N)  with  c = 1/8 along N = 4^j (and 2*4^j) and c = 1/32 for all
 N.  Previously only exponential lower bounds were known (a(N) >= 1/2 e^{1.28 N}).
 Upper bound: a(N) <= N! e^{-Theta(N)}, so  1/32 <= liminf ln a(N)/(N ln N) <= 1  and
@@ -124,29 +123,33 @@ Theorem 3(a): a(4^{j+1}) >= 2^{4^j} a(4^j)^4, and by induction a(4^j)^8 >= (4^j)
 
 
 =========================================================================================
-4. PROOF OF THEOREM 3(b) (ALL N)
+4. PROOF OF THEOREM 3(b) (ALL N)                                  [Lean, as written here]
 =========================================================================================
-f(N) = log2 a(N), phi(x) = x log2 x (convex).  Proven recursions:
-   (R1) f(2n+1) >= 1 + f(n) + f(n+1)                 (n >= 1)    [Lean semiCount_odd]
-   (R2) f(4m)   >= m + 4 f(m)                        (m >= 1)    [Lean semiCount_four_mul]
-   (R3) f(4m+2) >= floor((m+1)/2) + 2 f(m) + 2 f(m+1)            [Lean ..._four_mul_add_two]
-Claim: f(N) >= g(N) := c phi(N) - K N + M with c = 1/32, K = 1/4, M = 1/12, all N >= 1.
-Base N <= 5: g(N) <= N (c log2 5 - K) + M < 0 <= f(N)  (c log2 5 = 0.0726).
-N = 4m >= 8: f >= m + 4 g(m) = c (phi(N) - 2N) - KN + 4M + m
-              = g(N) + [N/4 - N/16 + 3M] >= g(N).          (4 phi(N/4) = phi(N) - 2N)
-N = 4m+2 >= 6: by convexity phi(m) + phi(m+1) >= 2 phi(N/4), and floor((m+1)/2) >= (N-2)/8:
-   f >= (N-2)/8 + c (phi(N) - 2N) - KN + 4M = g(N) + [N/16 - 1/4 + 3M] = g(N) + N/16.
-N = 2n+1 >= 7: let B be the even one of n, n+1 (B >= 4, B >= n = (N-1)/2) and A the
-   other; expand B by (R2)/(R3): f(B) >= gamma_B + sum of four f(x_i), x_i >= 1,
-   sum x_i = B, gamma_B >= (B-2)/8.  With sum phi(x_i) >= 4 phi(B/4) = phi(B) - 2B and
-   phi(A) + phi(B) >= 2 phi(N/2) = phi(N) - N:
-   f(N) >= 1 + g(A) + gamma_B + sum g(x_i)
-        >= c (phi(N) - N - 2B) - KN + 5M + 1 + (B - 2)/8
-        = g(N) + [1 + 4M - 1/4 - cN + B (1/8 - 2c)]
-        >= g(N) + [13/12 - N/32 + (N-1)/32] > g(N).                         QED
-[bound2.py: iterating (R1)-(R3) and a(2n) >= 2a(n)^2 numerically, the bound stays >= g(N)
-for all N <= 1.1 * 10^6 (min margin 0.167); its effective exponent log2 B/(N log2 N) is
-0.135 at N = 10^4, 0.116 at 10^6, i.e. far above the proven 1/32 in this range.]
+Recursions:  (R1) a(2n+1) >= 2 a(n) a(n+1)  [Lean semiCount_odd];  (R2) a(4m) >= 2^m a(m)^4;
+(R3) a(4m+2) >= 2^{t} a(m)^2 a(m+1)^2, t = floor((m+1)/2) >= m/2.
+Elementary bounds [Lean succ_pow_mul_sub_le, odd_pow_le, odd_self_pow_le, four_two_pow_le]:
+   (k+1)^n (k-n) <= k^{n+1} (n <= k; induction), hence (2n+1)^n <= 2 (2n)^n, and
+   (2n+1)^{2n+1} <= 2^{2n+2} n^n (n+1)^{n+1},
+   (4m+2)^{4m+2} <= 2^{8m+6} m^{2m} (m+1)^{2m+2}.
+Claim (strong induction on N >= 1):
+   Q(N):   N^N <= 2^{3N} a(N)^{32},
+   Q'(N):  N^N 2^{2N} <= 2^{3N+12} a(N)^{32}   for even N >= 4  (a surplus of 2N bits).
+N <= 5: N^N <= 8^N = 2^{3N} (and Q'(4): 4^4 2^8 = 2^16 <= 2^24).
+N = 4m >= 8: N^N = 2^{8m} (m^m)^4 <= 2^{8m} (2^{3m} a(m)^32)^4, so
+   N^N 2^{12m} <= (2^m a(m)^4)^{32} <= a(N)^{32}: both Q(N) and Q'(N) (2N = 8m <= 12m).
+N = 4m+2 >= 6: with Q(m), Q(m+1) and 32 t >= 16m:
+   N^N 2^{16m} <= 2^{8m+6} 2^{6m} 2^{6m+6} a(m)^64 a(m+1)^64 2^{16m} <= 2^{20m+12} a(N)^{32};
+   Q(N) needs 20m + 12 <= 28m + 6 (m >= 1), Q'(N) needs 28m + 16 <= 28m + 18.
+N = 2n+1 >= 7 (n >= 3): let B be the even one of n, n+1 (B >= 4), A the other.  Q'(B) and
+   Q(A) give  n^n (n+1)^{n+1} 2^{2n} <= 2^{6n+15} (a(n) a(n+1))^{32}  (2B >= 2n), so
+   N^N 2^{2n} 2^{32} <= 2^{2n+2} 2^{6n+15} (2 a(n) a(n+1))^{32} <= 2^{8n+17} a(N)^{32}
+   <= 2^{3N + 2n + 32} a(N)^{32}.   QED
+The odd step is where the surplus is needed: (R1) alone loses about N bits of
+N^N / (n^n (n+1)^{n+1}) ~ 2^N and gains only 32 bits; the even child's 2B bits pay for it.
+[bound2.py: iterating (R1)-(R3) and a(2n) >= 2a(n)^2 numerically gives an effective exponent
+log2 B(N)/(N log2 N) = 0.135 at N = 10^4 and 0.116 at 10^6, far above 1/32 in this range;
+it tends to 1/8 along powers of 4.  An alternative real-variable proof with convexity gives
+log2 a(N) >= N log2 N/32 - N/4 + 1/12, slightly weaker in the linear term.]
 
 
 =========================================================================================
@@ -166,8 +169,9 @@ bound.py, bound2.py   numerical values of the bounds.
 copies.c, halfsplit.c, topsets.c, slips.c, defect*.py   exploration (section 1, 6.3).
 Lean           Folds/SuperExp.lean: Theorem 1 (slipF_semiSymmetric, slipS_steps,
                slip_mem_semiSeqs, semiCount_slip), Theorem 2 (semiCount_paritySlip,
-               semiCount_four_mul, semiCount_four_mul_add_two) and Theorem 3(a)
-               (pow_le_semiCount_pow_four).  Theorem 3(b) is on paper (section 4).
+               semiCount_four_mul, semiCount_four_mul_add_two), Theorem 3(a)
+               (pow_le_semiCount_pow_four) and Theorem 3(b) (self_pow_le_semiCount).
+               Only section 6.2 (the recursive variant with kills) is paper-only.
 
 
 =========================================================================================
