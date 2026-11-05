@@ -1,0 +1,384 @@
+THE PERIOD LAW FOR T(N,k): UPPER BOUND (PROOF), EXACTNESS, AND THE GROWTH OF c_k
+================================================================================
+(experiments/periods/.  Notation as in ../prefix/FINDINGS.txt and ../prefix5/FINDINGS.txt.)
+
+T(N,k) = number of valid k-step prefixes on N panels.  For m >= 0 let
+     B(m) = lcm( 2^(m-1), 2^a (2^s - 1) : a + s = m - 1, s >= 1 )   (B(0) = B(1) = 1),
+     B = 1, 1, 2, 12, 168, 1680, 104160, 624960, 158739840 (m = 0..8).
+The period law (observed exactly for k <= 7): writing T(N,k) = sum_j c_j(N) N^j with periodic
+c_j, the coefficient c_{k-m} has exact period B(m), independent of k, except k = 3, m = 3.
+
+Status
+  * UPPER BOUND: PROVED (section 1-3) for every k and m: the period of c_{k-m} divides B(m).
+    In fact a stronger structural statement is proved: c_{k-m}(N) is a finite sum of functions
+    of N mod D, where each D divides  lcm_C 2^{a_C}(2^{s_C} - 1)  over the components C of a
+    tight system with sum_C (a_C + s_C + 1) <= m.  For m <= 7 every such D divides a SINGLE
+    2^a (2^s - 1) with a + s <= m - 1, which is exactly the observed structure of the
+    exact-order Fourier components (../prefix5/FINDINGS.txt section 5).
+  * EXACTNESS (lower bound): certified for k <= 7 (../prefix5); not proved in general.
+    Cancellation between polytopes really happens (section 4: it causes the k = 3
+    exception, and nearly kills the 16-part for k = 5); section 4 explains which faces carry
+    each component, and why there is no cancellation for the odd parts at k = m.
+  * c_8 exact, c_9 (section 5); continuum acceptance (section 6).
+
+
+1. Each class is a dilate of a half-open rational polytope
+----------------------------------------------------------
+Lemma 1 (arm criterion; ../prefix/FINDINGS.txt section 3, README "Window rule").  Let S be the
+set of earlier panels.  An earlier panel x lies in the window of the new panel c iff its
+reflection 2c - x lies in [1, N].  For x < c this means 2c <= N + x ("c lies in the right arm
+of x", sign +1); for x > c it means 2c > x, i.e. 2c >= x + 1 ("c lies in the left arm of x",
+sign -1).  The step is semi-symmetric iff the signs of the earlier panels sum to 0.
+
+For a sequence x_1..x_k of distinct panels define pi (order type: pi_i = rank of x_i) and
+sigma_ij in {+1, -1, 0} (i < j: the sign of x_j relative to x_i).  Call (pi, sigma) its class.
+The sequence is valid iff every column of sigma sums to 0, and this depends on the class only.
+So the valid sequences are partitioned into finitely many classes (by the window rule there
+is one class per admissible order type, but this is not needed below).
+
+Lemma 2.  For a class c = (pi, sigma) let P_c be the set of y in R^k with
+     y_i > 0,  y_i <= 1,  y_u < y_v for pi-consecutive u, v (pi_u + 1 = pi_v),
+     sigma_ij = +1:  2y_j <= 1 + y_i          sigma_ij = -1:  2y_j > y_i
+     sigma_ij =  0, pi_j > pi_i:  2y_j > 1 + y_i      sigma_ij = 0, pi_j < pi_i:  2y_j <= y_i.
+Then the sequences of class c on N panels are exactly the integer points of N.P_c.
+Proof.  Multiply by N, x = N y.  For integers, x_i >= 1 <=> x_i > 0, x_v >= x_u + 1 <=> x_v > x_u,
+2x_j >= x_i + 1 <=> 2x_j > x_i, 2x_j >= N + x_i + 1 <=> 2x_j > N + x_i.  The listed conditions
+are then exactly "panels in [1, N], order type pi, signs sigma" (the sign conditions for sigma
+= +1/-1 also need x_i < x_j resp. x_j < x_i, implied by pi).  []
+
+So   T(N,k) = sum_c #(Z^k cap N P_c)   for every N >= 1,
+with every inequality HOMOGENEOUS in (y, 1) after scaling: no parametric polytope is needed;
+P_c is a partially open rational polytope and N P_c is its N-th dilate.
+
+Lemma 3 (half-open to closed).  Let Pbar_c be P_c with all inequalities made non-strict, and
+for each strict inequality h let G_h = Pbar_c cap {its equation}, a face of Pbar_c.  Then
+     1_{P_c} = sum_{J subset of strict} (-1)^|J| 1_{G_J},   G_J = cap_{h in J} G_h (G_empty = Pbar_c),
+by inclusion-exclusion, each G_J is a face of Pbar_c (or empty), and dilation commutes with
+all of it.  Hence
+     T(N,k) = sum_c sum_J (-1)^|J| L_{G_J}(N),     L_G(N) = #(Z^k cap N G),
+a signed sum of Ehrhart functions of closed rational polytopes, all of which are faces of the
+polytopes Pbar_c; the faces of G_J are faces of Pbar_c.  []
+
+
+2. The face index and the local Euler-Maclaurin formula
+--------------------------------------------------------
+For a nonempty face F of a rational polytope in R^k let
+     D_F = least D >= 1 such that aff(D.F) = D.aff(F) contains a point of Z^k.
+The set of good D is the set of multiples of D_F (if p, q in aff F with D1 p, D2 q integral and
+g = gcd(D1, D2) = u D1 + v D2, then r = (u D1 p + v D2 q)/g is an affine combination of p, q,
+so r in aff F, and g r is integral).
+Computation: if aff F = {A y = beta} with A an r x k integer matrix of rank r, then
+     D_F = g_A / gcd(g_A, g_beta),
+g_A = gcd of the r x r minors of A, g_beta = gcd of the r x r minors of [A | beta] that use the
+beta column.  (Smith form A = U [diag(s) 0] V: A z = D beta is solvable over Z iff s_i | D gamma_i
+for gamma = U^{-1} beta, iff the gcd of the maximal minors of [A | D beta] equals that of A.)
+faces.py uses this.
+
+Theorem (McMullen 1978; refined form from the local Euler-Maclaurin formula of
+Berline-Vergne 2007).  For a rational polytope G in R^k and all integers N >= 1,
+     L_G(N) = sum_{F face of G} mu_F(N) . relvol(F) . N^{dim F},
+where relvol is the volume in aff F normalised by the lattice Z^k cap lin(F), and mu_F(N) =
+mu(transverse cone of N.G along N.F).  This cone is N p_F + C_F in V/lin F, with C_F fixed and
+p_F the image of aff F; mu is invariant under translation by the image lattice, so mu_F(N)
+depends only on N mod ord(p_F) = D_F.  Consequently
+     the coefficient of N^i in L_G is  sum_{F: dim F = i} relvol(F) mu_F(N),
+a sum of functions of period D_F, one for each i-dimensional face F; in particular its period
+divides lcm{D_F : dim F = i} (McMullen's theorem: the "i-index" bounds the period of c_i;
+see also Beck-Sam-Woods, "Maximal periods of (Ehrhart) quasi-polynomials", JCTA 2008, Thm 1.1).
+
+Combining with Lemma 3 (faces of faces of Pbar_c are faces of Pbar_c):
+
+Corollary 4.  c_{k-m}(N), the coefficient of N^{k-m} in T(N,k), is a finite sum, over the faces F
+of codimension m of the polytopes Pbar_c, of functions of N mod D_F.  Its period divides
+lcm{D_F : F a codimension-m face of some Pbar_c}.
+
+
+3. The face lemma: every codimension-m face has D_F | B(m)
+----------------------------------------------------------
+The constraints of Pbar_c, written as equations (they are the candidates for tight
+constraints), are of three kinds:
+     (B) box:       y_i = 0  or  y_i = 1
+     (Q) equality:  y_v - y_u = 0
+     (H) halving:   2 y_j - y_i = c,  c in {0, 1},  with i < j  (i EARLIER than j).
+The structural fact used below ("halving structure"): in every (H) row the coefficient 2
+sits on the LATER point of the sequence.  This holds because the sign condition for a pair
+i < j always constrains 2x_j against x_i (the new point is reflected, Lemma 1).
+
+Let F be a nonempty face of Pbar_c of codimension m.  Its affine hull is the solution set of
+the constraints tight on all of F (e.g. Schrijver, Theory of Linear and Integer Programming,
+sect. 8.2-8.3); choose a maximal linearly independent subset E of them: |E| = m and
+aff F = {y : E}.  Build a multigraph Gamma on the vertex set {1..k}: each (Q) or (H) row of E is
+an edge between its two variables, each (B) row is a MARK on its variable.  Let C be a
+connected component, n_C its number of vertices, e_C the number of rows of E supported on C.
+The rows of different components involve disjoint variables, so each component's rows are
+independent: e_C <= n_C.  The edges connect C, so e_C >= n_C - 1 + (#marks).  Hence C is
+     (T) a tree, no mark          (e_C = n_C - 1),
+     (R) a tree plus one mark     (e_C = n_C),
+     (U) unicyclic, no mark       (e_C = n_C; one cycle, possibly two parallel edges).
+
+Peeling lemma.  Let M be a square matrix whose rows are the edges of a tree on V plus one mark
+at r (a row with one entry, in column r), each edge row {u, v} having nonzero entries only in
+columns u, v.  Then det M = +- (mark entry) . prod_e M[e, far(e)], far(e) = the endpoint of e
+farther from r.  Proof: a leaf l != r has exactly one nonzero entry in its column (in its
+pendant edge e, and l = far(e)); expand along that column and induct; the base is the mark
+row alone.  []
+
+Lemma 5 (component denominators).  Each component C has a solution y_C of its rows (with
+arbitrary values on (T)-components) such that D_C . y_C is integral, where
+     (T), (R):  D_C = 2^a with a <= max(e_C - 1, 0);
+     (U):       D_C = 2^a (2^s - 1) with s >= 1 and a + s <= e_C - 1.
+Proof.  All right-hand sides are integers (0, 1).  By Cramer's rule it suffices to bound
+|det| of a nonsingular square system for C.
+(R) Peeling lemma with the given mark (entry 1): |det| = 2^t, t = number of (H) edges whose
+    later endpoint (the coefficient 2) is the far one, t <= n_C - 1 = e_C - 1.
+(T) Add the artificial mark y_r = 0.  If C has an (H) edge, choose r = the later endpoint j of
+    one (H) edge e0; then e0 contributes |M[e0, far]| = 1, so t <= (#edges) - 1 = e_C - 1.
+    Without (H) edges, t = 0.  Any solution of the extended system solves C's rows.
+(U) Peel the pendant trees (each peeled edge contributes 1 or 2; t of them contribute 2)
+    down to the cycle v_1 .. v_l (l >= 2), edge e_i = {v_i, v_{i+1}} (indices mod l) with
+    entries a_i at v_i and b_i at v_{i+1}.  Every row has its two entries of OPPOSITE sign
+    (2y_j - y_i, y_v - y_u), with {|a_i|, |b_i|} = {1, 2} for (H) and {1, 1} for (Q).  Then
+       det(cycle) = prod a_i + (-1)^(l+1) prod b_i = prod a_i . (1 - lambda),
+       lambda = prod |b_i|/|a_i| = 2^(q-p) > 0,
+    p = #{i : |a_i| = 2}, q = #{i : |b_i| = 2}.  So |det(cycle)| = |2^p - 2^q|, and
+    nonsingularity forces p != q.  With s = |p - q| >= 1:
+       |det M_C| = 2^t . 2^min(p,q) . (2^s - 1),   a := t + min(p,q),   a + s = t + max(p,q).
+    If min(p,q) >= 1:  a + s <= t + p + q - 1 <= e_C - 1.
+    If min(p,q) = 0, say q = 0 < p: walking around the cycle v_1 -> v_2 -> ..., every (H) edge
+    is traversed from its LATER to its EARLIER endpoint (|a_i| = 2 at v_i).  So the (H) edges
+    alone cannot close the cycle (time would strictly decrease around it): the cycle contains
+    a (Q) edge, and e_C >= t + p + 1 = a + s + 1.  []
+(The sign argument is why only 2^s - 1 and never 2^s + 1 occurs; the time-order argument is
+the "halving structure" and is what saves one equation, a + s <= e - 1 instead of e.)
+
+Face lemma.  For every nonempty face F of codimension m of any Pbar_c,
+     D_F  divides  lcm_C D_C  (Lemma 5),  sum_C e_C = m,
+and therefore D_F | B(m).
+Proof.  Put the component solutions together (free variables 0): a point of aff F with all
+coordinates having denominators dividing lcm_C D_C.  Each D_C divides B(m): 2^a with
+a <= m - 1 divides 2^(m-1); and 2^a (2^s - 1) with a + s <= m - 1 divides
+2^(m-1-s) (2^s - 1), one of the terms of B(m).  For m = 0, aff F = R^k and D_F = 1 = B(0).  []
+
+THEOREM A (upper half of the period law).  For all k >= 1 and 0 <= m <= k the coefficient of
+N^(k-m) in T(N,k) is periodic with period dividing B(m).  In particular the period of T(N,k)
+divides B(k) (B(m) | B(m+1)), and the quasi-polynomial is valid for every N >= 1.
+Proof.  Corollary 4 and the face lemma.  []
+
+THEOREM B (single moduli).  For m <= 7, c_{k-m}(N) = sum over (a, s) with a + s <= m - 1 of
+functions of N mod 2^a (2^s - 1) (with s = 0 meaning 2^a).
+Proof.  By Corollary 4 it suffices that every lcm_C D_C as in the face lemma divides a single
+2^a (2^s - 1), a + s <= m - 1.  Let the cycle components with s_C >= 2 be C_1, C_2, ...
+(s_C = 1 contributes the factor 1).  If there is at most one, take s = s_{C_1} and
+a = max_C a_C: if the maximum is attained at C_1, a + s <= e_{C_1} - 1; otherwise at a
+component C' != C_1 and a + s <= (e_{C'} - 1) + (e_{C_1} - 1) <= m - 1.  Two cycle components
+with s >= 2 need e >= s + 1 >= 3 each, so m >= 6; for m <= 7 the only possibilities are
+{s1, s2} = {2, 2} (lcm 3, all a_C = 0 when m = 6; for m = 7 one extra equation, a <= 0 still
+on the cycles and a <= 0 on a single-equation component) and {2, 3} with m = 7 (lcm 21, which
+divides 2^6 - 1 = 63, a + s = 6).  []
+Remark (prediction).  At m = 8 a face with two disjoint halving cycles of lengths 2 and 4
+(3 + 5 equations) would have D_F = lcm(3, 15) = 45, which divides B(8) but no single
+2^a(2^s - 1) with a + s <= 7.  So Theorem B may fail from m = 8 on (an order-45 Fourier
+component in the constant term of T(N,8)) without affecting the period law.  See section 4.5.
+
+Checks (faces.py, all faces of all class polytopes, exact; faces6.log):
+   k = 3: 106 faces, k = 4: 1112, k = 5: 14456, k = 6: 221852 faces of the 660 polytopes:
+   0 violations of D_F | B(m); the lcm of D_F over codimension-m faces equals B(m) for every
+   m <= k <= 6 (so the face-level bound is attained), and the D_F values at codimension m are
+   exactly the divisors of the numbers 2^{m-1}, 2^a(2^s-1) (a + s = m-1):
+      m = 3: {1,2,3,4};  m = 4: {1,2,3,4,6,7,8};  m = 5: {1,2,3,4,5,6,7,8,12,14,15,16};
+      m = 6: {1,...,8,10,12,14,15,16,24,28,30,31,32}
+   -- precisely the sets of exact-order Fourier components observed in ../prefix5 (section 5
+   there).  So, via Corollary 4, the observed component structure is the face structure.
+   Vertices (verts.py, codimension k): k = 7, all 4260 polytopes, and k = 8, all 30812
+   polytopes (verts8.log): every index divides a single 2^a(2^s-1) with a + s <= k - 1; at k = 8
+   the indices are 1-10, 12, 14, 15, 16, 18, 20, 21, 24, 28, 30, 31, 32, 40, 42, 48, 56, 60, 62,
+   63, 64, 96, 112, 120, 124, 126, 127, 128 -- no 45: the two-disjoint-cycles vertex of the
+   remark above is not realised by 8 points (whether it occurs as a codimension-8 face for
+   k >= 9 is open).
+
+4. Exactness: which faces carry the components, and cancellation
+-----------------------------------------------------------------
+By Corollary 4, a Fourier component of exact order q in c_{k-m} is a sum of contributions
+relvol(F) . (q-part of mu_F) over codimension-m faces with q | D_F.  Equivalently (fourier.py),
+the generating function sum_N T(N,k) t^N has a pole of order k - m + 1 at primitive q-th roots
+of unity, whose leading Laurent coefficient A_q is the sum of the corresponding coefficients
+of the class series.  The bound is attained iff these sums do not cancel.
+
+4.1 The faces.  The proof of Lemma 5 shows what the extremal faces look like.
+  * D_F = 2^(m-1): e.g. a (R) component with m - 1 halvings, each with its 2 on the far
+    side: a halving chain hanging from the box, e.g. (0, 1/2, 3/4, 7/8, 15/16) in class 12345
+    (y_1 = 0, 2 y_{j+1} = 1 + y_j), or (0, 1/2, 1/4, 1/8, 1/16) in class 15432.
+  * D_F divisible by 2^(m-1) - 1 needs a single (U) component with m equations and a = 0
+    (a primitive prime divisor of 2^(m-1) - 1 -- Zsigmondy; for m - 1 = 6 use 9 -- divides
+    2^s - 1 only if (m-1) | s, so s = m - 1 and e_C = m): a halving chain
+    through m - 1 halvings, in increasing time, closed by ONE equality.  On the chain
+    y_j = (y_{j-1} + c_j)/2, i.e. y_{j-1} = 2 y_j mod 1: the chain read backwards is an orbit
+    of the doubling map, and the equality y_last = y_first closes it into a PERIODIC ORBIT of
+    period dividing m - 1.  So 2^s - 1 is literally the number of periodic points of x -> 2x
+    mod 1 of period dividing s.
+    k = 5 examples (faces.py 5):
+       15432: (1/15, 8/15, 4/15, 2/15, 1/15)   orbit 1/15 -> 2/15 -> 4/15 -> 8/15 -> 1/15
+       14532: (1/5, 3/5, 4/5, 2/5, 1/5)        orbit 3/15 -> 6/15 -> 12/15 -> 9/15 -> 3/15
+    and their mirrors 51234, 52134 (y -> 1 - y).  In words: x_2 sits at the edge of x_1's
+    window (2x_2 = N + x_1), each later point halves the previous one (2x_{j+1} = x_j, at the
+    edge of its window), and x_5 lands back on x_1.  The 4-cycle of the doubling map is
+    realised by the sequence itself.
+  * Mixed 2^a (2^s - 1): a cycle with pendant halvings, e.g. 13425: (3/7, 5/7, 6/7, 3/7, 1)
+    (D = 7: 3-cycle closed by y_4 = y_1, plus the mark y_5 = 1) and (3/7, 5/7, 6/7, 3/7, 13/14)
+    (D = 14: the pendant halving 2 y_5 = 1 + y_3).
+  * Indices at codimension 5 for k = 5 (faces.py), number of classes having such a vertex:
+       D = 16: 8 classes, 15: 2, 14: 26, 12: 28, 8: 76, 7: 44, 6: 86, 5: 2, 4: 116, 3: 82.
+    Only the four classes 15432, 14532, 51234, 52134 have the odd part 5 at all; together
+    they carry all of 1680 = 16.3.5.7 (prefix5: they are the only classes with period 1680).
+  Face-level attainment for every k >= m: the D = 2^(m-1) - 1 vertex of 15432-type (all
+  coordinates in (0,1)) extends to a face of codimension m of a k-point class by appending
+  k - m new minima (a new point below min(x)/2 is always valid: no arm reaches it); the chain
+  vertex (0, 1/2, ..., 1 - 2^-(m-1)) extends by appending new maxima (above (1 + max)/2).
+  So the face-level bound is attained by the terms 2^(m-1) and 2^(m-1) - 1 for every k >= m.
+
+4.2 No cancellation for the odd part at k = m.  Every class has its mirror class (y -> 1 - y,
+the panel reflection x -> N + 1 - x preserves validity), and the mirror class has the SAME
+counting function.  At k = m = 5, q in {5, 15}: the only contributing classes are the mirror
+pair(s) above, so A_q = 2 x (one class); fourier.py: A_15 = 2(0.0333 - 0.1568 i) != 0 and
+A_5 = 2[(-0.06 + 0.1246 i) + (-0.0067 + 0.0092 i)] != 0.  Generally, for q = 2^(m-1) - 1 only
+the periodic-orbit vertices contribute, and these sit in very few classes.
+
+4.3 The T(N,3) exception (period 6 instead of B(3) = 12).  For k = 3 the only vertices with
+D_F = 4 are the chains (0, 1/2, 3/4) in class 123, (0, 1/2, 1/4) in class 132, and their mirrors
+(1, 1/2, 1/4) in 321, (1, 1/2, 3/4) in 312.  Exactly (fourier.py 3, and brute-force counts with
+exact interpolation):
+     c_0(P_123) = s(N)/8,   c_0(P_132) = -s(N)/8 + (a function of period 6),
+     s(N) = 0, 1, 0, -1 for N = 0, 1, 2, 3 mod 4;
+so the order-4 parts cancel in T = 2(P_123 + P_213 + P_132) (P_213 has period 2), and T(N,3)
+has period 6.  Elementary form of the 123 part: P_123(N) = sum_{v=0}^{N-1} floor(ceil(v/2)^2 / 4)
+(v = N - x_1, u = N - x_2: sum_{u < v/2} ceil(u/2)); floor(w^2/4) = (w^2 - [w odd])/4 and
+[ceil(v/2) odd] = [v = 1, 2 mod 4] gives the s(N)/8.  The two vertices are the two chains
+2 y_3 = 1 + y_2 and 2 y_3 = y_2 from the same (y_1, y_2) = (0, 1/2): the two preimages of y_2
+under the doubling map (the deck transformation c -> c - N/2).
+  The same pairing at other k (fourier.py, coefficient A_q of the constant term, q = 2^(k-1)):
+     k = 4, q = 8:  1234 and 1432 (and mirrors) contribute -0.0754 EACH: same sign, no cancellation;
+     k = 5, q = 16: 12345 and 15432 contribute -0.1896 i and +0.1896 i: they cancel EXACTLY again;
+                    the 16 survives only through 53142/13524 (+0.00969 i) and 52134/14532
+                    (-0.00432 i): total A_16 = 2(0.00969 - 0.00432) i = 0.0107 i != 0.
+  So the pure chain and its "other preimage" partner cancel for odd k (k = 3, 5) and add for
+  even k (k = 4).  For k = 3 nothing else carries a 4, hence the exception; for k = 5 the 16
+  survives by a 6% margin.  For k >= 4 and m = 3 the codimension-3 faces with D = 4 have
+  dimension >= 1, and their relative volumes differ (they are not paired by a volume-
+  preserving map), which is why the order-4 part of c_{k-3} survives (A_4 != 0 for k = 4, 5).
+  Since exact cancellations do occur, a general proof of exactness would need a sign or
+  dominance argument for the Laurent coefficients; we do not have one.
+
+4.4 Evidence for exactness: every coefficient of T(N,k), k <= 6, exactly (prefix5, all
+exact-order components), and k = 7 by the certified difference test (prefix5/k7.py).
+fourier.py reproduces this at the level of Laurent coefficients for k = 4, 5: for q = 2,3,4,7,8
+(k = 4) and q = 2,3,4,5,7,8,15,16 (k = 5) the total A_q at the expected pole order is nonzero,
+while for q = 6, 12 (pole order k - 2) and q = 14 (pole order k - 3) it is 0, as Theorem B
+predicts: 6 = 2.3 is first of the form 2^a(2^s - 1) at a + s = 3 (m = 4), 12 = 4.3 and
+14 = 2.7 at a + s = 4 (m = 5).  So the period B(3) = 12 of c_{k-3} is the lcm of an order-4
+and an order-3 component, never an order-12 one.
+
+4.5 m = 8 prediction check: no vertex of index 45 at k = 8 (section 3, verts8.log).
+
+
+5. Exact c_8 and c_9
+--------------------
+classes.py K: admissible order types by LP (sigma forced by the window rule):
+   k = 2..9:  2, 6, 24, 116, 660, 4260, 30812, 244802     (types_K.txt; types_9.txt, 4 MB, is not
+   committed: `python3 classes.py 9`, about 25 min).  Ratios 3, 4, 4.83, 5.69, 6.45, 7.23, 7.95.
+vol.py K: c_K = sum of exact volumes (Normaliz multiplicity of the cone over Pbar_pi / K!, one
+representative per mirror pair).  Reproduces c_4..c_7 of ../prefix exactly.
+   c_8 = 5766402363187232751941221 / 5807018243102153166028800000
+       = 9.930057254490e-4,      8! c_8 = 40.03799085
+       denominator 2^34 3^5 5^5 7^6 31^3 127,   numerator 109 . 503 . 105174500942733192623
+   c_9 = 711571496885945219267863028707401619 / 2538651374251719934973912775917568000000
+       = 2.802950826975e-4,      9! c_9 = 101.71347961
+       denominator 2^42 3^11 5^6 7^7 17 31^4 127^2,
+       numerator 661 . 466717 . 2306553135166264942439398387
+   (vol8_0of1.txt, vol9_0of2.txt + vol9_1of2.txt: per-class volumes; c_9 = sum of the two TOTALs.)
+Independent check: the continuum SMC (cont.c, section 6) gives p_8 = 0.30639 (exact 0.306381)
+and p_9 = 0.28208 (exact 0.282269) at M = 200000.
+The primes in the denominators are those of 2^s - 1, s <= k - 1: 127 = 2^7 - 1 appears at k = 8,
+and 17 at k = 9 as a factor of 255 = 2^8 - 1.  The leading coefficient sees the same
+doubling-orbit faces (through the volumes of the pieces they cut off).
+
+
+6. Growth of c_k and the continuum acceptance
+---------------------------------------------
+c_k = lim T(N,k)/N^k is the probability that k i.i.d. uniform points of (0,1), taken in order,
+form a valid sequence.  So p_k := c_k / c_{k-1} is the probability that a uniform new point is
+valid given k - 1 valid points (averaged over the uniform measure on valid configurations), and
+k! c_k = expected number of valid orderings of a uniform random k-set = prod_{j <= k} (j p_j).
+(So the acceptance probability is c_k/c_{k-1}; k c_k/c_{k-1} is the ratio of consecutive k! c_k.)
+   k        2      3      4      5      6      7      8      9
+   p_k   .5000  .4444  .3983  .3455  .3413  .3106  .3064  .2823        (exact)
+   k p_k  1.000  1.333  1.593  1.727  2.048  2.174  2.451  2.540
+   k!c_k  1      1.333  2.125  3.670  7.514  16.34  40.04  101.7
+(parity alternation: a big drop at odd k, a small one at even k, as in a(N) and the Wallis model;
+the SMC continues it: p_10 = 0.2845 > p_9.)
+
+k! c_k is NOT ~ C rho^k: k p_k keeps growing (p_k decays much more slowly than 1/k), so k! c_k
+grows super-exponentially, k! c_k = k! prod_j p_j.  The question is how p_k decays.
+
+Continuum SMC (cont.c).  Given points x_1..x_{k-1} the valid set is {c : F(c) = 0},
+F = sum_i phi_{x_i}, phi_x = -1 on (x/2, x), +1 on (x, (1+x)/2) (Lemma 1 with N -> infinity),
+so p_k = E[|{F = 0}|].  Particles are resampled by |{F = 0}| and extended by a uniform valid
+point: the standard unbiased Feynman-Kac estimator of c_k.  It reproduces p_2..p_9 (above).
+Population bias: at large k the population lags behind the selection and p_k is biased LOW
+(biastab.py): octave [512, 1024): M = 1000: 0.1005, 4000: 0.1032, 16000: 0.1072, 32000: 0.1066.
+A first run with M = 4000 to k = 2600 looked like a clean power law p ~ 0.45 k^-0.225 -- that
+was largely this bias.  Bias-corrected octave means (two largest M, 1/M extrapolation; the last
+octave is uncertain, 0.106-0.108):
+   octave centre k   11.3   22.6   45.3   90.5   181    362    724
+   p                .2702  .2209  .1856  .1598  .1412  .1247  ~.107
+   1/p              3.70   4.53   5.39   6.26   7.08   8.02   ~9.4
+   increment of 1/p   -    0.83   0.86   0.87   0.82   0.94   ~1.2-1.4
+   local exponent     -    0.29   0.25   0.22   0.18   0.18   ~0.2
+   s = (int F^2)^1/2 1.64   2.03   2.42   2.77   3.09   3.48   4.07
+   G = sqrt(2 pi) s p 1.11  1.13   1.13   1.11   1.09   1.09   1.08
+Reading:
+  * Local CLT: p ~ G/(sqrt(2 pi) s) with G = 1.08-1.13, as in the discrete process
+    (../asymptotics: G = 1.02-1.05).  So the decay of p is the growth of the imbalance s.
+  * Through k ~ 500, 1/p grows by an almost constant 0.82-0.94 per octave and s by a constant
+    0.32-0.39 per octave, while the local power exponent FALLS (0.29 -> 0.18): this is the
+    logarithmic law, s ~ 0.56 ln k, p ~ 0.75/(ln k + 0.25) (fit on all octaves, rms 0.024; the
+    power fit p = 0.44 k^-0.218 has rms 0.025).  It is the continuum analogue of the per-octave
+    mechanism of ../asymptotics/NOTES.txt section 2 (each octave of the doubling chains adds
+    the same amount to s; in the continuum the octaves are cut off by the point spacing ~1/k
+    instead of 1/N).
+  * The last octave (512-1024) has a larger increment; it is also where the SMC bias is
+    largest (4% between M = 4000 and 16000), so it is not conclusive.  Fitted on k >= 45 the
+    power law is better (rms 0.010 vs 0.021) because of that octave.  VERDICT: the data favour
+    p_k ~ A/ln k (constant increments of 1/p and of s over 5 octaves, falling local exponent),
+    but a slowly decaying power k^-0.2 cannot be excluded with k <= 1024; an unbiased answer
+    needs M >> 32000 beyond k = 512 (memory: 2 x 16 bytes x 3k per particle).
+Comparison with a(N).  T(N,k+1)/T(N,k) = (N - k) p_{k+1}^(N), with p^(N) -> p (continuum) for
+fixed k, so a(N) = N! prod_{k <= N} p_k^(N), and the deficit d(N) = (ln N! - ln a(N))/N is the
+mean of ln(1/p_k^(N)).  Replacing p^(N) by the continuum p_k (M = 64000 to k = 512, 32000 above):
+   N                       64     128    256    512    1024
+   continuum  mean ln 1/p  1.525  1.681  1.824  1.956  2.098
+   discrete   d(N)         1.166  1.366  1.542  1.699  1.852     (../asymptotics, SMC)
+   continuum  e^d / ln N   1.105  1.107  1.117  1.133  1.176
+   discrete   e^d / ln N   0.772  0.808  0.843  0.877  0.919
+The continuum product has the conjectured form N!/(kappa ln N)^N with an almost constant
+kappa_cont ~ 1.1-1.18 (for p_k = A/(ln k + b) one gets e^{mean ln 1/p} ~ ln N / A).  The discrete
+deficit is smaller (finite N helps: late steps choose among few panels and the octaves are cut
+at 1/N), with a gap 0.36, 0.32, 0.28, 0.26, 0.25 that SHRINKS with N, and the discrete kappa_N
+(0.77 -> 0.92 here, 1.01 at N = 4096) rises towards the continuum value.  So the exact polytope
+picture (c_k, k <= 9) and the continuum acceptance support a(N) = N!/(kappa ln N)^{N(1+o(1))}:
+as far as the data go the acceptance decays like 1/log k, not like a power.  (A power law
+k^-alpha would give ln a(N) ~ (1 - alpha) N ln N, contradicting c = 1 of ../asymptotics; the
+same 1/log-vs-power ambiguity exists there, and the continuum data, free of the finite-N end
+effects, are somewhat cleaner but not decisive.)
+
+
+7. Files
+--------
+  poly.py         class polytopes (window rule, inequalities with strictness)
+  classes.py K    admissible order types -> types_K.txt
+  vol.py K [i/n]  exact c_K (Normaliz) -> volK_iofn.txt
+  faces.py K      all faces, indices D_F, check of the face lemma (faces6.log)
+  verts.py K      vertex indices only (verts8.log)
+  fourier.py K q  Laurent coefficients at roots of unity per class (uses ../prefix5/classes_K.json)
+  component.py K q PI..   the same from fresh Normaliz Hilbert series of chosen classes
+  cont.c          continuum SMC for p_k (gcc -O2 -o cont cont.c -lm; ./cont K M seed > runs/...)
+  biastab.py      population-bias table, octave means and fits (runs/*.txt)
