@@ -33,6 +33,7 @@ macro_rules! word {
         }
     };
 }
+word!(u8);
 word!(u16);
 word!(u32);
 word!(u64);
@@ -127,7 +128,7 @@ pub fn step_into<W: Word>(
 /// single row of length `≤ C(h, h/2)` read at random (`p ∈ R`), which stays in cache.
 #[allow(clippy::too_many_arguments)]
 #[inline(never)]
-fn offdiag_row<W: Word>(
+pub(crate) fn offdiag_row<W: Word>(
     lay: &Layout,
     chk: &Checker,
     ring: Ring,
@@ -200,7 +201,7 @@ fn offdiag_row<W: Word>(
 
 #[allow(clippy::too_many_arguments)]
 #[inline(never)]
-fn generic_row<W: Word>(
+pub(crate) fn generic_row<W: Word>(
     lay: &Layout,
     chk: &Checker,
     ring: Ring,
