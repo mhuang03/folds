@@ -425,5 +425,91 @@ theorem CountEmb.winEmb_iff_lastStep {N p : Nat} {φ c : Nat → Nat} (h : Count
       (List.perm_append_comm.trans (List.perm_cons_erase hmem).symm)
     exact ((semiStep_iff_balanced (hndX.erase _)).1 (hs _ e)).perm e
 
+/-! ## Beatty copies
+
+For `1 ≤ p`, `0 ≤ h` and `h + 2p ≤ N + 1` (i.e. `g = -h` with `2p - 1 - N ≤ g ≤ 0`), the
+Beatty set `X(N, p, -h) = {⌊(rN - h)/p⌋ : r = 1..p}` is a window copy of the `p`-strip
+(`winEmb_beatty`).  Its counting function is `c(t) = ⌊(pt + p + h - 1)/N⌋`, which also
+gives the extension `c~(t + N) = c~(t) + p` (`beattyCnt_add`), and the copy condition reads
+`c(2x_r - 1) = 2r - 1`. -/
+
+/-- The `r`-th element of the Beatty set `X(N, p, -h)`. -/
+def beatty (N p h r : Nat) : Nat := (r * N - h) / p
+
+/-- Counting function of `beatty N p h`. -/
+def beattyCnt (N p h t : Nat) : Nat := (p * t + p + h - 1) / N
+
+theorem beattyCnt_add {N p h : Nat} (hN : 0 < N) (hp : 1 ≤ p) (t : Nat) :
+    beattyCnt N p h (t + N) = beattyCnt N p h t + p := by
+  unfold beattyCnt
+  rw [show p * (t + N) + p + h - 1 = (p * t + p + h - 1) + p * N by
+    rw [Nat.mul_add]; omega, Nat.add_mul_div_right _ _ hN]
+
+theorem countEmb_beatty {N p h : Nat} (hp : 1 ≤ p) (hh : h + 2 * p ≤ N + 1) :
+    CountEmb N p (beatty N p h) (beattyCnt N p h) := by
+  have hN : 0 < N := by omega
+  refine ⟨fun y t hy => ?_, fun y hy => ?_, ?_, ?_⟩
+  · unfold beatty beattyCnt
+    have hyN : N ≤ y * N := Nat.le_mul_of_pos_left N hy
+    rw [← Nat.lt_succ_iff, Nat.div_lt_iff_lt_mul (by omega), Nat.le_div_iff_mul_le hN]
+    have : (t.succ) * p = p * t + p := by rw [Nat.succ_mul, Nat.mul_comm]
+    rw [this]; omega
+  · unfold beatty
+    have hyN : N ≤ y * N := Nat.le_mul_of_pos_left N hy
+    have e : (y + 1) * N - h = (y * N - h + p) + (N - p) := by rw [Nat.succ_mul]; omega
+    rw [e]
+    calc (y * N - h) / p < (y * N - h) / p + 1 := Nat.lt_succ_self _
+      _ = (y * N - h + p) / p := (Nat.add_div_right _ (by omega)).symm
+      _ ≤ (y * N - h + p + (N - p)) / p := Nat.div_le_div_right (by omega)
+  · unfold beattyCnt; rw [Nat.div_eq_of_lt (by omega)]
+  · unfold beattyCnt
+    rw [show p * N + p + h - 1 = (p + h - 1) + p * N by omega, Nat.add_mul_div_right _ _ hN,
+      Nat.div_eq_of_lt (by omega)]
+    simp
+
+/-- The copy condition for Beatty sets: `c(2 x_r - 1) = 2r - 1`. -/
+theorem beattyCnt_double {N p h r : Nat} (hp : 1 ≤ p) (hh : h + 2 * p ≤ N + 1) (hr : 1 ≤ r) :
+    beattyCnt N p h (2 * beatty N p h r - 1) = 2 * r - 1 := by
+  have hN : 0 < N := by omega
+  have hrN : N ≤ r * N := Nat.le_mul_of_pos_left N hr
+  unfold beattyCnt beatty
+  generalize hm : (r * N - h) / p = m
+  have d := Nat.div_add_mod (r * N - h) p
+  have md := Nat.mod_lt (r * N - h) (show 0 < p by omega)
+  rw [hm] at d
+  have hm1 : 1 ≤ m := by
+    refine Nat.pos_of_ne_zero fun h0 => ?_
+    rw [h0] at d; omega
+  have e1 : p * (2 * m - 1) = 2 * (p * m) - p := by
+    rw [Nat.mul_sub_one]; ring_nf
+  have e2 : (2 * r - 1) * N = 2 * (r * N) - N := by
+    rw [Nat.sub_mul, one_mul, Nat.mul_assoc]
+  have e3 : (2 * r - 1 + 1) * N = 2 * (r * N) := by
+    rw [Nat.sub_add_cancel (by omega), Nat.mul_assoc]
+  have hpm : p ≤ p * m := Nat.le_mul_of_pos_right p hm1
+  apply Nat.div_eq_of_lt_le
+  · rw [e2, e1]; omega
+  · rw [e3, e1]; omega
+
+/-- **Beatty copies.**  For `1 ≤ p` and `h + 2p ≤ N + 1`, the Beatty set
+`{⌊(rN - h)/p⌋ : r = 1..p}` is a window copy of the `p`-strip. -/
+theorem winEmb_beatty {N p h : Nat} (hp : 1 ≤ p) (hh : h + 2 * p ≤ N + 1) :
+    WinEmb N p (beatty N p h) := by
+  have hN : 0 < N := by omega
+  refine (countEmb_beatty hp hh).winEmb fun j hj1 _ => ⟨fun _ => beattyCnt_double hp hh hj1,
+    fun h2 => ?_⟩
+  have := beattyCnt_add (p := p) (h := h) hN hp (2 * beatty N p h j - N - 1)
+  rw [show 2 * beatty N p h j - N - 1 + N = 2 * beatty N p h j - 1 by omega,
+    beattyCnt_double hp hh hj1] at this
+  omega
+
+/-- **Weak split through a Beatty copy.**  If the complement of a Beatty copy can be
+ordered semi-symmetrically from scratch, live prefixes of the `p`-strip stay live. -/
+theorem extends_beatty {N p h : Nat} (hp : 1 ≤ p) (hh : h + 2 * p ≤ N + 1) {r : List Nat}
+    (hr : Extends p r)
+    (hY : 0 < g N (Finset.Icc 1 N \ (Finset.Icc 1 p).image (beatty N p h))) :
+    Extends N (r.map (beatty N p h)) :=
+  extends_winEmb (winEmb_beatty hp hh) hr hY
+
 end Folds
 
