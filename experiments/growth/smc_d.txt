@@ -1,0 +1,2 @@
+N=768 P=1500 loga_est=2942.8324 logN!=4338.6715 ratio=0.6783  loga/(NlogN)=0.5768
+N=1024 P=2000 loga_est=4153.5198 logN!=6078.2119 ratio=0.6833  loga/(NlogN)=0.5852

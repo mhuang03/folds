@@ -654,4 +654,87 @@ theorem semiCount_le_step_one (N : Nat) :
     | [x], _ => exact card_moves_singleton_le (hb x (by simp))
   · exact card_moves_le hnd hb
 
+/-! ## The parity bound for even `N`
+
+For `N = 2h` and `1 ≤ m ≤ h` the windows of `m` and `m + h` are `[1, 2m-1]` and
+`[2m, N]`: they partition the strip.  A valid step at `m ∉ S` needs `|S ∩ W_m|` even, so
+if `|S|` is odd at most one panel of each pair `{m, m + h}` is valid: `V(S) ≤ N/2`. -/
+
+/-- A valid step at `m ∉ S` sees an even number of bisected panels in its window. -/
+theorem window_count_even {N m : Nat} {S : List Nat} (hnd : S.Nodup) (hmS : m ∉ S)
+    (h : SemiStep N S m) :
+    S.countP (fun x => decide (m - reach N m ≤ x ∧ x ≤ m + reach N m)) % 2 = 0 := by
+  unfold SemiStep at h
+  rw [leftCount_eq hnd, rightCount_eq hnd] at h
+  have hsplit := countP_split S (fun x => decide (m - reach N m ≤ x ∧ x ≤ m + reach N m))
+    (fun x => decide (x < m))
+  have e1 : S.countP (fun x => decide (m - reach N m ≤ x ∧ x ≤ m + reach N m) &&
+      decide (x < m)) = S.countP (fun x => decide (m - reach N m ≤ x ∧ x < m)) := by
+    apply List.countP_congr; intro x _; simp; omega
+  have e2 : S.countP (fun x => decide (m - reach N m ≤ x ∧ x ≤ m + reach N m) &&
+      !decide (x < m)) = S.countP (fun x => decide (m < x ∧ x ≤ m + reach N m)) := by
+    apply List.countP_congr; intro x hx
+    have : x ≠ m := fun e => hmS (e ▸ hx)
+    simp; omega
+  omega
+
+/-- For `N = 2h` and `|S|` odd, `m` and `m + h` are not both valid. -/
+theorem not_both_valid {h m : Nat} {S : List Nat} (hnd : S.Nodup)
+    (hb : ∀ x ∈ S, 1 ≤ x ∧ x ≤ 2 * h) (hodd : S.length % 2 = 1) (hm1 : 1 ≤ m) (hmh : m ≤ h)
+    (h1 : m ∉ S ∧ SemiStep (2 * h) S m) (h2 : m + h ∉ S ∧ SemiStep (2 * h) S (m + h)) :
+    False := by
+  have c1 := window_count_even hnd h1.1 h1.2
+  have c2 := window_count_even hnd h2.1 h2.2
+  have r1 : reach (2 * h) m = m - 1 := by unfold reach; omega
+  have r2 : reach (2 * h) (m + h) = h - m := by unfold reach; omega
+  rw [r1] at c1; rw [r2] at c2
+  have hsplit := countP_split S (fun _ => true) (fun x => decide (x ≤ 2 * m - 1))
+  rw [List.countP_true] at hsplit
+  have e1 : S.countP (fun x => true && decide (x ≤ 2 * m - 1)) =
+      S.countP (fun x => decide (m - (m - 1) ≤ x ∧ x ≤ m + (m - 1))) := by
+    apply List.countP_congr; intro x hx; have := hb x hx; simp; omega
+  have e2 : S.countP (fun x => true && !decide (x ≤ 2 * m - 1)) =
+      S.countP (fun x => decide (m + h - (h - m) ≤ x ∧ x ≤ m + h + (h - m))) := by
+    apply List.countP_congr; intro x hx; have := hb x hx; simp; omega
+  omega
+
+/-- **Parity bound.**  For `N = 2h` and a prefix of odd length, at most `h` panels are
+valid. -/
+theorem card_moves_odd_le {h : Nat} {S : List Nat} (hnd : S.Nodup)
+    (hb : ∀ x ∈ S, 1 ≤ x ∧ x ≤ 2 * h) (hodd : S.length % 2 = 1) :
+    (moves (2 * h) S).card ≤ h := by
+  have := Finset.card_le_card_of_injOn (s := moves (2 * h) S) (t := Finset.Icc 1 h)
+    (fun m => if m ≤ h then m else m - h) ?_ ?_
+  · simpa using this
+  · intro m hm
+    simp only [moves, Finset.coe_filter, Finset.mem_Icc, Set.mem_ofPred_eq] at hm
+    simp only [Finset.coe_Icc, Set.mem_Icc]
+    split <;> omega
+  · intro m hm m' hm' e
+    simp only [moves, Finset.coe_filter, Finset.mem_Icc, Set.mem_ofPred_eq] at hm hm'
+    simp only at e
+    split at e <;> split at e
+    · exact e
+    · exfalso
+      obtain rfl : m' = m + h := by omega
+      exact not_both_valid hnd hb hodd (by omega) (by omega) hm.2 hm'.2
+    · exfalso
+      obtain rfl : m = m' + h := by omega
+      exact not_both_valid hnd hb hodd (by omega) (by omega) hm'.2 hm.2
+    · omega
+
+/-- **Parity upper bound for even `N`.**  At an odd level `i` of the tree at most
+`min(2h - i, h)` panels are valid, so
+`a(2h) ≤ ∏_{i < 2h} (if i odd then min(2h - i, h) else 2h - i)`, which is
+`(2h)! · exp(-(0.0966… + o(1)) · 2h)`. -/
+theorem semiCount_even_le_prod (h : Nat) :
+    semiCount (2 * h) ≤
+      ∏ i ∈ Finset.range (2 * h), (if i % 2 = 1 then min (2 * h - i) h else 2 * h - i) := by
+  apply semiCount_le_prod
+  intro p hl hnd hb _
+  have c1 := card_moves_le hnd hb
+  split
+  · next hodd => exact le_min c1 (card_moves_odd_le hnd hb hodd)
+  · exact c1
+
 end Folds
