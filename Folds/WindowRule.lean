@@ -1,5 +1,9 @@
 import Folds.Prefix
 import Folds.Cyclic
+import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
+import Mathlib.Algebra.BigOperators.Intervals
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.IntervalCases
 
 /-!
 # The window rule, suffixes, and dead 2-prefixes
@@ -337,5 +341,195 @@ theorem not_extends_one_N {N : Nat} (hN : N % 2 = 0) (h3 : 3 ≤ N) :
     exact not_semiSymmetric_one_N hN h3 hf (List.prefix_iff_eq_take.1 hpre).symm ha
   · rintro ⟨a, hf, ha, hpre⟩
     exact not_semiSymmetric_N_one hN h3 hf (List.prefix_iff_eq_take.1 hpre).symm ha
+
+/-! ## `T(N, 3)`: valid 3-prefixes
+
+Reduction of `T(N, 3) = #validPrefixes N 3` to an explicit double sum. -/
+
+/-- Mirroring a single step: `m ↦ N + 1 - m`. -/
+theorem semiStep_mirror_iff {N m : Nat} {S : List Nat} (hS : ∀ x ∈ S, x ≤ N)
+    (hm1 : 1 ≤ m) (hmN : m ≤ N) :
+    SemiStep N (S.map (N + 1 - ·)) (N + 1 - m) ↔ SemiStep N S m := by
+  have hr : reach N (N + 1 - m) = reach N m := by unfold reach; omega
+  unfold SemiStep leftCount rightCount
+  rw [hr]
+  have L : (List.range' 1 (reach N m)).countP
+      (fun d => decide (N + 1 - m - d ∈ S.map (N + 1 - ·))) =
+      (List.range' 1 (reach N m)).countP (fun d => decide (m + d ∈ S)) := by
+    apply List.countP_congr; intro d hd; rw [List.mem_range'_1] at hd
+    have e : N + 1 - m - d = N + 1 - (m + d) := by omega
+    rw [e]; simp only [decide_eq_true_eq]
+    exact mem_map_mirror hS (by unfold reach at hd; omega)
+  have R : (List.range' 1 (reach N m)).countP
+      (fun d => decide (N + 1 - m + d ∈ S.map (N + 1 - ·))) =
+      (List.range' 1 (reach N m)).countP (fun d => decide (m - d ∈ S)) := by
+    apply List.countP_congr; intro d hd; rw [List.mem_range'_1] at hd
+    have e : N + 1 - m + d = N + 1 - (m - d) := by unfold reach at hd; omega
+    rw [e]; simp only [decide_eq_true_eq]
+    exact mem_map_mirror hS (by omega)
+  rw [L, R]; exact eq_comm
+
+/-- The step `({a, b}, c)` in arithmetic form. -/
+theorem semiStep_two_iff {N a b c : Nat} (hab : a ≠ b) :
+    SemiStep N [a, b] c ↔
+      (if c - reach N c ≤ a ∧ a < c then 1 else 0) + (if c - reach N c ≤ b ∧ b < c then 1 else 0) =
+      (if c < a ∧ a ≤ c + reach N c then 1 else 0) + (if c < b ∧ b ≤ c + reach N c then 1 else 0) := by
+  have hnd : [a, b].Nodup := by simp [hab]
+  unfold SemiStep
+  rw [leftCount_eq hnd, rightCount_eq hnd]
+  simp only [List.countP_cons, List.countP_nil, decide_eq_true_eq]
+  split_ifs <;> simp
+
+/-- The valid 3-prefixes as triples `(a, b, c)`. -/
+def triples3 (N : Nat) : Finset (Nat × Nat × Nat) :=
+  (Finset.Icc 1 N ×ˢ Finset.Icc 1 N ×ˢ Finset.Icc 1 N).filter fun t =>
+    t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 ∧ SemiStep N [t.1] t.2.1 ∧
+      SemiStep N [t.1, t.2.1] t.2.2
+
+theorem semiSymmetric_three_iff {N a b c : Nat} :
+    SemiSymmetric N [a, b, c] ↔ SemiStep N [a] b ∧ SemiStep N [a, b] c := by
+  have : [a, b, c] = [a, b] ++ [c] := rfl
+  rw [this, semiSymmetric_concat_iff, semiSymmetric_pair_iff]
+
+theorem card_validPrefixes_three (N : Nat) :
+    (validPrefixes N 3).card = (triples3 N).card := by
+  apply Finset.card_nbij' (fun l => (l.getD 0 0, l.getD 1 0, l.getD 2 0))
+    (fun t => [t.1, t.2.1, t.2.2])
+  · intro l hl
+    simp only [validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq, mem_kLists] at hl
+    obtain ⟨⟨hnd, hk, hx⟩, hv⟩ := hl
+    match l, hk with
+    | [a, b, c], _ =>
+      simp only [triples3, Finset.coe_filter, Finset.mem_product, Finset.mem_Icc,
+        Set.mem_ofPred_eq, List.getD_cons_zero, List.getD_cons_succ]
+      simp only [List.nodup_cons, List.mem_cons, List.not_mem_nil,
+        or_false, not_or] at hnd
+      rw [semiSymmetric_three_iff] at hv
+      have ha := hx a (by simp); have hb := hx b (by simp); have hc := hx c (by simp)
+      exact ⟨⟨ha, hb, hc⟩, hnd.1.1, hnd.1.2, hnd.2.1, hv⟩
+  · rintro ⟨a, b, c⟩ ht
+    simp only [triples3, Finset.coe_filter, Finset.mem_product, Finset.mem_Icc,
+      Set.mem_ofPred_eq] at ht
+    simp only [validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq, mem_kLists]
+    obtain ⟨⟨ha, hb, hc⟩, h1, h2, h3, hv⟩ := ht
+    refine ⟨⟨by simp [h1, h2, h3], rfl, ?_⟩, semiSymmetric_three_iff.2 hv⟩
+    intro x hx; simp at hx; rcases hx with rfl | rfl | rfl <;> assumption
+  · intro l hl
+    simp only [validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq, mem_kLists] at hl
+    match l, hl.1.2.1 with
+    | [a, b, c], _ => rfl
+  · intro t _; rfl
+
+/-- Number of valid third panels `c` after a valid pair `(a, b)` with `2b ≤ a`:
+`c` is a new maximum (`2c > N + a`), a new minimum (`2c ≤ b`), or lies between
+(`a + 1 ≤ 2c ≤ N + b`, `c < a`). -/
+def Zf (N a b : Nat) : Nat :=
+  (N - (N + a) / 2) + b / 2 + (min (a - 1) ((N + b) / 2) + 1 - (a + 2) / 2)
+
+theorem card_third {N a b : Nat} (hb : 1 ≤ b) (hab : 2 * b ≤ a) (haN : a ≤ N) :
+    ((Finset.Icc 1 N).filter fun c => a ≠ c ∧ b ≠ c ∧ SemiStep N [a, b] c).card = Zf N a b := by
+  have e : (Finset.Icc 1 N).filter (fun c => a ≠ c ∧ b ≠ c ∧ SemiStep N [a, b] c) =
+      (Finset.Icc 1 (b / 2) ∪ Finset.Icc ((a + 2) / 2) (min (a - 1) ((N + b) / 2))) ∪
+        Finset.Icc ((N + a) / 2 + 1) N := by
+    ext c
+    simp only [Finset.mem_filter, Finset.mem_Icc, Finset.mem_union,
+      semiStep_two_iff (show a ≠ b by omega)]
+    unfold reach
+    constructor
+    · rintro ⟨⟨h1, h2⟩, h3, h4, h5⟩
+      split_ifs at h5 <;> omega
+    · intro h
+      refine ⟨by omega, by omega, by omega, ?_⟩
+      split_ifs <;> omega
+  rw [e, Finset.card_union_of_disjoint, Finset.card_union_of_disjoint, Nat.card_Icc,
+    Nat.card_Icc, Nat.card_Icc]
+  · unfold Zf; omega
+  · rw [Finset.disjoint_left]; intro x h1 h2; simp only [Finset.mem_Icc] at h1 h2; omega
+  · rw [Finset.disjoint_left]; intro x h1 h2
+    simp only [Finset.mem_Icc, Finset.mem_union] at h1 h2; omega
+
+/-- The double sum `W(N) = Σ_{a ≤ N} Σ_{1 ≤ b ≤ a/2} Z(N, a, b)`, half of `T(N, 3)`. -/
+def Wf (N : Nat) : Nat := ∑ a ∈ Finset.Icc 1 N, ∑ b ∈ Finset.Icc 1 (a / 2), Zf N a b
+
+/-- Triples whose pair `(a, b)` has `2b ≤ a`. -/
+def triplesLow (N : Nat) : Finset (Nat × Nat × Nat) := (triples3 N).filter fun t => 2 * t.2.1 ≤ t.1
+
+theorem card_triplesLow (N : Nat) : (triplesLow N).card = Wf N := by
+  rw [triplesLow, triples3, Finset.filter_filter, Finset.card_eq_sum_ones, Finset.sum_filter,
+    Finset.sum_product, Wf]
+  apply Finset.sum_congr rfl
+  intro a ha
+  rw [Finset.mem_Icc] at ha
+  rw [Finset.sum_product]
+  rw [← Finset.sum_subset (s₁ := Finset.Icc 1 (a / 2)) (s₂ := Finset.Icc 1 N)]
+  · apply Finset.sum_congr rfl
+    intro b hb
+    rw [Finset.mem_Icc] at hb
+    rw [← card_third hb.1 (by omega) ha.2, Finset.card_eq_sum_ones, Finset.sum_filter]
+    apply Finset.sum_congr rfl
+    intro c _
+    have h1 : SemiStep N [a] b := by
+      rw [semiStep_pair_iff (by omega) hb.1 ha.2 (by omega) (by omega)]; omega
+    dsimp only
+    split_ifs with hx hy hy
+    · rfl
+    · exact absurd ⟨hx.1.2.1, hx.1.2.2.1, hx.1.2.2.2.2⟩ hy
+    · exact absurd ⟨⟨by omega, hy.1, hy.2.1, h1, hy.2.2⟩, by omega⟩ hx
+    · rfl
+  · intro b hb; simp only [Finset.mem_Icc] at hb ⊢; omega
+  · intro b hb0 hb
+    simp only [Finset.mem_Icc, not_and, not_le] at hb hb0
+    apply Finset.sum_eq_zero
+    intro c _
+    dsimp only
+    split_ifs with hx
+    · obtain ⟨-, h2⟩ := hx
+      omega
+    · rfl
+
+/-- **`T(N, 3) = 2 W(N)`**, by mirror symmetry of valid pairs. -/
+theorem card_triples3 (N : Nat) : (triples3 N).card = 2 * Wf N := by
+  have hsplit := Finset.card_filter_add_card_filter_not (s := triples3 N)
+    (fun t : Nat × Nat × Nat => 2 * t.2.1 ≤ t.1)
+  rw [← card_triplesLow]
+  suffices h : ((triples3 N).filter (fun t : Nat × Nat × Nat => ¬ 2 * t.2.1 ≤ t.1)).card =
+      (triplesLow N).card by
+    rw [triplesLow] at h ⊢; omega
+  apply Finset.card_nbij' (fun t => (N + 1 - t.1, N + 1 - t.2.1, N + 1 - t.2.2))
+    (fun t => (N + 1 - t.1, N + 1 - t.2.1, N + 1 - t.2.2))
+  · rintro ⟨a, b, c⟩ h
+    simp only [triplesLow, triples3, Finset.coe_filter, Finset.mem_filter, Finset.mem_product,
+      Finset.mem_Icc, Set.mem_ofPred_eq] at h ⊢
+    obtain ⟨⟨⟨ha, hb, hc⟩, h1, h2, h3, hs1, hs2⟩, hlow⟩ := h
+    refine ⟨⟨⟨by omega, by omega, by omega⟩, by omega, by omega, by omega, ?_, ?_⟩, ?_⟩
+    · rw [semiStep_pair_iff (by omega) (by omega) (by omega) (by omega) (by omega)]
+      rw [semiStep_pair_iff (by omega) (by omega) (by omega) (by omega) (by omega)] at hs1
+      omega
+    · have := (semiStep_mirror_iff (S := [a, b]) (N := N) (m := c)
+        (by intro x hx; simp at hx; omega) hc.1 hc.2).2 hs2
+      simpa using this
+    · rw [semiStep_pair_iff (by omega) (by omega) (by omega) (by omega) (by omega)] at hs1
+      omega
+  · rintro ⟨a, b, c⟩ h
+    simp only [triplesLow, triples3, Finset.coe_filter, Finset.mem_filter, Finset.mem_product,
+      Finset.mem_Icc, Set.mem_ofPred_eq] at h ⊢
+    obtain ⟨⟨⟨ha, hb, hc⟩, h1, h2, h3, hs1, hs2⟩, hlow⟩ := h
+    refine ⟨⟨⟨by omega, by omega, by omega⟩, by omega, by omega, by omega, ?_, ?_⟩, ?_⟩
+    · rw [semiStep_pair_iff (by omega) (by omega) (by omega) (by omega) (by omega)]
+      rw [semiStep_pair_iff (by omega) (by omega) (by omega) (by omega) (by omega)] at hs1
+      omega
+    · have := (semiStep_mirror_iff (S := [a, b]) (N := N) (m := c)
+        (by intro x hx; simp at hx; omega) hc.1 hc.2).2 hs2
+      simpa using this
+    · rw [semiStep_pair_iff (by omega) (by omega) (by omega) (by omega) (by omega)] at hs1
+      omega
+  · rintro ⟨a, b, c⟩ h
+    simp only [triples3, Finset.coe_filter, Finset.mem_filter, Finset.mem_product,
+      Finset.mem_Icc, Set.mem_ofPred_eq] at h
+    dsimp only; simp only [Prod.mk.injEq]; omega
+  · rintro ⟨a, b, c⟩ h
+    simp only [triplesLow, triples3, Finset.coe_filter, Finset.mem_filter, Finset.mem_product,
+      Finset.mem_Icc, Set.mem_ofPred_eq] at h
+    dsimp only; simp only [Prod.mk.injEq]; omega
 
 end Folds
