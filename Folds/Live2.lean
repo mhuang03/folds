@@ -605,7 +605,7 @@ theorem extends_res {q N s : Nat} (hq : 0 < q) (hqN : q ≤ N) (hs1 : 1 ≤ s) (
     intro e; exact hab (hφ.inj a b ha.1 ha.2 hb.1 hb.2 e)
   rw [extends_iff_coReach hnd2 (by
     intro x hx
-    simp only [List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false] at hx
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
     rcases hx with rfl | rfl
     · exact hφ.bound a ha.1 ha.2
     · exact hφ.bound b hb.1 hb.2) hv]
@@ -657,6 +657,122 @@ theorem coReach_mod {q N s : Nat} (hq2 : 2 ≤ q) (hq8 : q ≤ 8) (hqN : q ≤ N
     simp only [bne_iff_ne, ne_eq]
     omega
   · exact hperm.nodup_iff.2 ((List.nodup_range' ..).filter _)
+
+/-! ## Mirror, small strips, and the closure -/
+
+theorem coReach_mirror {N : Nat} {D : Finset Nat} (hD : CoReach N D) :
+    CoReach N (D.image (N + 1 - ·)) := by
+  unfold CoReach g at *
+  rw [Finset.card_pos] at hD ⊢
+  obtain ⟨l, hl⟩ := hD
+  rw [mem_semiOrders] at hl
+  obtain ⟨⟨hnd, hs⟩, hv⟩ := hl
+  have m : ∀ x, x ∈ l ↔ (1 ≤ x ∧ x ≤ N) ∧ x ∉ D := by
+    intro x; rw [← List.mem_toFinset, hs]; simp
+  refine ⟨l.map (N + 1 - ·), mem_semiOrders.2 ⟨⟨?_, ?_⟩, ?_⟩⟩
+  · exact nodup_map_of_injOn hnd fun a ha b hb e => by
+      have := ((m a).1 ha).1; have := ((m b).1 hb).1; omega
+  · ext x
+    simp only [List.mem_toFinset, List.mem_map, Finset.mem_sdiff, Finset.mem_Icc,
+      Finset.mem_image]
+    constructor
+    · rintro ⟨y, hy, rfl⟩
+      obtain ⟨hy1, hyD⟩ := (m y).1 hy
+      refine ⟨by omega, fun ⟨d, hd, e⟩ => hyD ?_⟩
+      by_cases hdN : d ≤ N
+      · rwa [show y = d by omega]
+      · omega
+    · rintro ⟨hx, hxD⟩
+      refine ⟨N + 1 - x, (m _).2 ⟨by omega, fun h => hxD ⟨N + 1 - x, h, by omega⟩⟩, by omega⟩
+  · intro k hk
+    simp only [List.length_map] at hk
+    rw [List.getElem_map, ← List.map_take]
+    have hb := ((m _).1 (List.getElem_mem hk)).1
+    exact (semiStep_mirror_iff (fun x hx => ((m x).1 (List.mem_of_mem_take hx)).1.2)
+      hb.1 hb.2).2 (hv k hk)
+
+/-- At most one panel left: trivially co-reachable. -/
+theorem coReach_small {N : Nat} {D : Finset Nat} (h : (Finset.Icc 1 N \ D).card ≤ 1) :
+    CoReach N D := by
+  unfold CoReach g
+  rw [Finset.card_pos]
+  refine ⟨(Finset.Icc 1 N \ D).toList, mem_semiOrders.2 ⟨⟨Finset.nodup_toList _, by simp⟩, ?_⟩⟩
+  intro k hk
+  have hl : (Finset.Icc 1 N \ D).toList.length ≤ 1 := by rwa [Finset.length_toList]
+  obtain rfl : k = 0 := by omega
+  simp [SemiStep, leftCount, rightCount]
+
+/-- Witnesses for every non-dead 2-set of the strips `N ≤ 10`
+(`experiments/live2/orderset.py`): `(u, v, ordering of [N] \ {u, v})`. -/
+def witTbl : List (List (Nat × Nat × List Nat)) :=
+  [[],
+  [],
+  [(1,2,[])],
+  [(1,2,[3]),(1,3,[2]),(2,3,[1])],
+  [(1,2,[3,4]),(1,3,[2,4]),(2,3,[1,4]),(2,4,[1,3]),(3,4,[2,1])],
+  [(1,2,[3,5,4]),(1,3,[2,4,5]),(1,4,[2,5,3]),(1,5,[2,4,3]),(2,3,[1,4,5]),(2,4,[3,1,5]),(2,5,[1,4,3]),(3,4,[2,1,5]),(3,5,[2,1,4]),(4,5,[3,1,2])],
+  [(1,2,[3,5,4,6]),(1,3,[2,5,4,6]),(1,4,[2,5,3,6]),(1,5,[4,2,3,6]),(2,3,[1,4,6,5]),(2,4,[3,1,5,6]),(2,5,[1,4,3,6]),(2,6,[3,1,5,4]),(3,4,[2,1,5,6]),(3,5,[4,2,1,6]),(3,6,[2,1,5,4]),(4,5,[3,1,2,6]),(4,6,[3,1,2,5]),(5,6,[1,4,3,2])],
+  [(1,2,[3,6,4,7,5]),(1,3,[4,2,6,5,7]),(1,4,[2,5,3,7,6]),(1,5,[4,2,3,6,7]),(1,6,[2,5,3,7,4]),(2,3,[4,1,6,5,7]),(2,4,[3,1,6,5,7]),(2,5,[4,1,3,6,7]),(2,6,[1,5,3,7,4]),(2,7,[3,1,6,5,4]),(3,4,[2,1,5,7,6]),(3,5,[4,2,1,6,7]),(3,6,[2,5,4,1,7]),(3,7,[4,2,1,6,5]),(4,5,[3,1,2,6,7]),(4,6,[1,5,3,2,7]),(4,7,[3,1,2,6,5]),(5,6,[4,1,3,2,7]),(5,7,[4,1,3,2,6]),(6,7,[2,5,4,1,3])],
+  [(1,2,[3,7,4,6,5,8]),(1,3,[4,2,7,6,5,8]),(1,4,[5,2,3,7,6,8]),(1,5,[4,2,3,7,6,8]),(1,6,[5,2,3,7,4,8]),(1,7,[2,6,5,3,4,8]),(2,3,[1,6,4,5,8,7]),(2,4,[1,5,3,7,6,8]),(2,5,[4,1,3,7,6,8]),(2,6,[1,5,3,7,4,8]),(2,7,[3,1,6,5,4,8]),(2,8,[4,1,3,7,6,5]),(3,4,[5,2,1,7,6,8]),(3,5,[4,2,1,7,6,8]),(3,6,[5,2,4,1,7,8]),(3,7,[2,1,6,5,4,8]),(3,8,[4,2,1,7,6,5]),(4,5,[3,1,2,6,8,7]),(4,6,[1,5,3,2,7,8]),(4,7,[3,1,6,5,2,8]),(4,8,[1,5,3,2,7,6]),(5,6,[4,1,3,2,7,8]),(5,7,[1,6,4,3,2,8]),(5,8,[4,1,3,2,7,6]),(6,7,[5,2,4,1,3,8]),(6,8,[5,2,4,1,3,7]),(7,8,[2,1,6,5,4,3])],
+  [(1,2,[6,3,4,8,5,9,7]),(1,3,[5,2,4,8,7,6,9]),(1,4,[5,2,3,8,7,6,9]),(1,5,[2,6,4,3,8,7,9]),(1,6,[5,2,3,8,7,4,9]),(1,7,[2,6,5,3,4,8,9]),(1,8,[4,2,7,6,3,9,5]),(1,9,[2,6,4,3,8,7,5]),(2,3,[5,1,4,8,7,6,9]),(2,4,[5,1,3,8,7,6,9]),(2,5,[1,6,4,3,8,7,9]),(2,6,[3,8,5,4,1,7,9]),(2,7,[1,6,5,3,4,8,9]),(2,8,[3,1,7,6,4,9,5]),(2,9,[1,6,4,3,8,7,5]),(3,4,[2,7,5,1,6,9,8]),(3,5,[2,6,4,1,8,7,9]),(3,6,[5,2,4,1,8,7,9]),(3,7,[2,6,5,1,4,8,9]),(3,8,[4,2,7,6,5,1,9]),(3,9,[5,2,4,1,8,7,6]),(4,5,[6,3,1,2,8,7,9]),(4,6,[5,1,3,2,8,7,9]),(4,7,[1,6,5,3,2,8,9]),(4,8,[3,1,7,6,5,2,9]),(4,9,[5,1,3,2,8,7,6]),(5,6,[4,1,3,2,7,9,8]),(5,7,[1,6,4,3,2,8,9]),(5,8,[3,1,7,6,4,2,9]),(5,9,[1,6,4,3,2,8,7]),(6,7,[5,2,4,1,3,8,9]),(6,8,[2,7,5,1,4,3,9]),(6,9,[5,2,4,1,3,8,7]),(7,8,[2,6,5,1,4,3,9]),(7,9,[2,6,5,1,4,3,8]),(8,9,[3,1,7,6,5,2,4])],
+  [(1,2,[3,7,4,9,5,8,6,10]),(1,3,[2,7,4,9,5,8,6,10]),(1,4,[6,2,5,3,9,8,7,10]),(1,5,[6,2,4,3,9,8,7,10]),(1,6,[2,7,5,3,4,9,8,10]),(1,7,[6,2,5,3,4,9,8,10]),(1,8,[2,7,4,9,6,3,5,10]),(1,9,[4,2,8,7,6,3,5,10]),(2,3,[4,1,8,7,5,6,10,9]),(2,4,[1,6,5,3,9,8,7,10]),(2,5,[1,6,4,3,9,8,7,10]),(2,6,[1,7,5,3,4,9,8,10]),(2,7,[1,6,5,3,4,9,8,10]),(2,8,[3,1,7,6,4,9,5,10]),(2,9,[4,1,3,8,7,6,5,10]),(2,10,[1,7,5,3,4,9,8,6]),(3,4,[6,2,5,1,9,8,7,10]),(3,5,[6,2,4,1,9,8,7,10]),(3,6,[2,7,5,1,4,9,8,10]),(3,7,[6,2,5,1,4,9,8,10]),(3,8,[2,1,7,6,4,9,5,10]),(3,9,[4,2,1,8,7,6,5,10]),(3,10,[2,7,5,1,4,9,8,6]),(4,5,[3,1,8,6,2,7,10,9]),(4,6,[1,7,5,3,2,9,8,10]),(4,7,[1,6,5,3,2,9,8,10]),(4,8,[3,1,7,6,5,2,9,10]),(4,9,[3,1,8,6,2,7,5,10]),(4,10,[1,6,5,3,2,9,8,7]),(5,6,[1,7,4,3,2,9,8,10]),(5,7,[1,6,4,3,2,9,8,10]),(5,8,[3,1,7,6,4,2,9,10]),(5,9,[4,1,3,8,7,6,2,10]),(5,10,[1,6,4,3,2,9,8,7]),(6,7,[5,2,4,1,3,8,10,9]),(6,8,[2,7,5,1,4,3,9,10]),(6,9,[5,2,1,8,7,4,3,10]),(6,10,[2,7,5,1,4,3,9,8]),(7,8,[6,2,5,1,4,3,9,10]),(7,9,[2,1,8,6,5,4,3,10]),(7,10,[6,2,5,1,4,3,9,8]),(8,9,[3,1,7,6,5,2,4,10]),(8,10,[3,1,7,6,5,2,4,9]),(9,10,[3,1,8,6,2,7,5,4])]]
+
+def deadB (N u v : Nat) : Bool := u == 1 && v == N && ((N % 2 == 0 && 4 ≤ N) || N == 7)
+
+def witOK (N : Nat) (e : Nat × Nat × List Nat) : Bool :=
+  decide e.2.2.Nodup && decide (e.2.2.toFinset = Finset.Icc 1 N \ {e.1, e.2.1}) &&
+    decide (SemiSymmetric N e.2.2)
+
+theorem witTbl_ok : ∀ N, N < 11 → ∀ e ∈ witTbl.getD N [], witOK N e = true := by decide
+
+theorem witTbl_complete : ∀ N, N < 11 → ∀ u, u < N + 1 → ∀ v, v < N + 1 →
+    (1 ≤ u ∧ u < v ∧ deadB N u v = false) →
+      ((witTbl.getD N []).any fun e => e.1 == u && e.2.1 == v) = true := by decide
+
+/-- **Conjecture C for `N ≤ 10`**: every 2-set except `{1, N}` (`N` even `≥ 4`) and
+`{1, 7}` (`N = 7`) is co-reachable. -/
+theorem coReach_le_ten {N u v : Nat} (hN : N ≤ 10) (hu : 1 ≤ u) (huv : u < v) (hv : v ≤ N)
+    (hd : deadB N u v = false) : CoReach N {u, v} := by
+  have := witTbl_complete N (by omega) u (by omega) v (by omega) ⟨hu, huv, hd⟩
+  rw [List.any_eq_true] at this
+  obtain ⟨e, he, hb⟩ := this
+  simp only [Bool.and_eq_true, beq_iff_eq] at hb
+  have hok := witTbl_ok N (by omega) e he
+  unfold witOK at hok
+  simp only [Bool.and_eq_true, decide_eq_true_eq] at hok
+  obtain ⟨⟨hnd, hs⟩, hv'⟩ := hok
+  unfold CoReach g
+  rw [Finset.card_pos]
+  refine ⟨e.2.2, mem_semiOrders.2 ⟨⟨hnd, ?_⟩, hv'⟩⟩
+  rw [hs, hb.1, hb.2]
+
+/-- **The proven family.**  The closure of the base cases under residue transfers mod
+`q ≤ 8` (non-exceptional classes) and the mirror. -/
+inductive Cov : Nat → Finset Nat → Prop
+  | small {N : Nat} {D : Finset Nat} : (Finset.Icc 1 N \ D).card ≤ 1 → Cov N D
+  | table {N u v : Nat} : N ≤ 10 → 1 ≤ u → u < v → v ≤ N → deadB N u v = false →
+      Cov N {u, v}
+  | res {q N s : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ 8 → q ≤ N → 1 ≤ s → s ≤ q →
+      excB q (N % q) s = false → D ⊆ Finset.Icc 1 (ccount q s N) →
+      Cov (ccount q s N) D → Cov N (D.image (cls q s))
+  | mirror {N : Nat} {D : Finset Nat} : Cov N D → Cov N (D.image (N + 1 - ·))
+
+theorem Cov.coReach {N : Nat} {D : Finset Nat} (h : Cov N D) : CoReach N D := by
+  induction h with
+  | small h => exact coReach_small h
+  | table hN hu huv hv hd => exact coReach_le_ten hN hu huv hv hd
+  | res hq2 hq8 hqN hs1 hsq hexc hDs _ ih => exact coReach_mod hq2 hq8 hqN hs1 hsq hexc hDs ih
+  | mirror _ ih => exact coReach_mirror ih
+
+/-- Every valid 2-prefix whose set is in the family is live. -/
+theorem Cov.extends {N u v : Nat} (h : Cov N {u, v}) (hu : 1 ≤ u ∧ u ≤ N)
+    (hv : 1 ≤ v ∧ v ≤ N) (huv : u ≠ v) (hval : SemiSymmetric N [u, v]) :
+    Extends N [u, v] := by
+  rw [extends_iff_coReach (by simp [huv]) (by
+    intro x hx; simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
+    rcases hx with rfl | rfl <;> assumption) hval]
+  convert h.coReach using 2
+  ext x; simp
 
 end Live2
 end Folds
