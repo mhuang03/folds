@@ -1,0 +1,25 @@
+mode=3 K=0 N=1 minruns=1  lg(N+1)=1
+mode=3 K=0 N=2 minruns=1  lg(N+1)=1
+mode=3 K=0 N=3 minruns=2  lg(N+1)=2
+mode=3 K=0 N=4 minruns=2  lg(N+1)=2
+mode=3 K=0 N=5 minruns=2  lg(N+1)=2
+mode=3 K=0 N=6 minruns=2  lg(N+1)=2
+mode=3 K=0 N=7 minruns=2  lg(N+1)=3  <-- FAILS
+mode=3 K=0 N=8 minruns=2  lg(N+1)=3  <-- FAILS
+mode=3 K=0 N=9 minruns=3  lg(N+1)=3
+mode=3 K=0 N=10 minruns=3  lg(N+1)=3
+mode=3 K=0 N=11 minruns=3  lg(N+1)=3
+mode=3 K=0 N=12 minruns=3  lg(N+1)=3
+mode=3 K=0 N=13 minruns=3  lg(N+1)=3
+mode=3 K=0 N=14 minruns=3  lg(N+1)=3
+mode=3 K=0 N=15 minruns=3  lg(N+1)=4  <-- FAILS
+mode=3 K=0 N=16 minruns=3  lg(N+1)=4  <-- FAILS
+mode=3 K=0 N=17 minruns=3  lg(N+1)=4  <-- FAILS
+mode=3 K=0 N=18 minruns=3  lg(N+1)=4  <-- FAILS
+mode=3 K=0 N=19 minruns=3  lg(N+1)=4  <-- FAILS
+mode=3 K=0 N=20 minruns=3  lg(N+1)=4  <-- FAILS
+mode=3 K=0 N=21 minruns=4  lg(N+1)=4
+mode=3 K=0 N=22 minruns=4  lg(N+1)=4
+mode=3 K=0 N=23 minruns=4  lg(N+1)=4
+mode=3 K=0 N=24 minruns=4  lg(N+1)=4
+mode=3 K=0 N=25 minruns=4  lg(N+1)=4
