@@ -4,6 +4,7 @@ mod dp;
 mod layout;
 mod rule;
 mod stats;
+mod sub;
 
 use rule::{Checker, Rule};
 use std::time::Instant;
@@ -41,8 +42,22 @@ fn moduli(w: usize) -> &'static [u64] {
 }
 
 /// One residue (or the exact value for `w = 64`) with the chosen code path.
+/// `--sub T`: use the sub-block path (`sub.rs`) with `T` high bits (stored as `T+1`).
+static SUB: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 fn one(n: usize, chk: &Checker, w: usize, m: u64, blocks: bool, verbose: bool) -> u128 {
     let ring = dp::Ring::new(m);
+    let st = SUB.load(std::sync::atomic::Ordering::Relaxed);
+    if st > 0 {
+        let t = st - 1;
+        return match w {
+            64 => sub::count::<u64>(n, t, chk, ring, verbose),
+            32 => sub::count::<u32>(n, t, chk, ring, verbose),
+            16 => sub::count::<u16>(n, t, chk, ring, verbose),
+            8 => sub::count::<u8>(n, t, chk, ring, verbose),
+            _ => panic!("bad width"),
+        };
+    }
     match (w, blocks) {
         (64, false) => dp::count::<u64>(n, chk, ring, verbose),
         (64, true) => block::count::<u64>(n, chk, ring, verbose),
@@ -180,6 +195,12 @@ fn main() {
                 mode = Mode::M8(args[i + 1].parse().unwrap());
                 args.drain(i..i + 2);
             }
+            "--sub" => {
+                let t: usize = args[i + 1].parse().unwrap();
+                SUB.store(t + 1, std::sync::atomic::Ordering::Relaxed);
+                args.drain(i..i + 2);
+                continue;
+            }
             "--blocks" => {
                 blocks = true;
                 args.remove(i);
@@ -233,6 +254,21 @@ fn main() {
                 let n: usize = a.parse().unwrap();
                 let w = block::predicted_peak(n);
                 println!("N={} peak {} words = {:.2} GB (u8) {:.2} GB (u16) {:.2} GB (u32)", n, w, w as f64 / 1e9, 2.0 * w as f64 / 1e9, 4.0 * w as f64 / 1e9);
+            }
+        }
+        "subpeak" => {
+            // folds subpeak N T [global]
+            let n: usize = args[1].parse().unwrap();
+            let t: usize = args[2].parse().unwrap();
+            let global = args.get(3).is_some_and(|s| s == "global");
+            let ts = Instant::now();
+            let sl = sub::SubLayout::new(n, t);
+            let p = sub::plan(&sl, global);
+            let nsb: usize = sl.shapes.iter().map(|s| s.sbs.len()).sum();
+            println!("N={} t={} {} sub-blocks, {} jobs, peak {} words = {:.2} GB (u8) [{:.1}s]", n, t, nsb, p.jobs.len(), p.peak, p.peak as f64 / 1e9, ts.elapsed().as_secs_f64());
+            for cap in args[4..].iter().map(|s| (s.parse::<f64>().unwrap() * 1e9) as usize) {
+                let (_, ap, fp) = sub::assign(&sl, &p, cap);
+                println!("  anon cap {:.2}e9: anon peak {:.2}e9, file peak {:.2}e9", cap as f64 / 1e9, ap as f64 / 1e9, fp as f64 / 1e9);
             }
         }
         "stats" => {

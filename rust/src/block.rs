@@ -38,6 +38,7 @@ unsafe extern "C" {
     fn madvise(addr: *mut std::ffi::c_void, len: usize, advice: i32) -> i32;
     fn mprotect(addr: *mut std::ffi::c_void, len: usize, prot: i32) -> i32;
     fn fallocate(fd: i32, mode: i32, off: i64, len: i64) -> i32;
+    fn sync_file_range(fd: i32, off: i64, len: i64, flags: u32) -> i32;
 }
 const MAP_SHARED: i32 = 0x01;
 const FALLOC_FL_KEEP_SIZE: i32 = 0x01;
@@ -49,6 +50,7 @@ const MAP_ANONYMOUS: i32 = 0x20;
 const MAP_NORESERVE: i32 = 0x4000;
 const MADV_DONTNEED: i32 = 4;
 const MADV_HUGEPAGE: i32 = 14;
+const MADV_WILLNEED: i32 = 3;
 const PAGE: usize = 4096;
 
 /// A lazily backed array of `len` words, zero on first touch.  Anonymous `mmap` by
@@ -66,7 +68,7 @@ pub struct Region<W: Word> {
 unsafe impl<W: Word> Send for Region<W> {}
 unsafe impl<W: Word> Sync for Region<W> {}
 
-fn spill_dir(bytes: usize) -> Option<std::path::PathBuf> {
+pub fn spill_dir(bytes: usize) -> Option<std::path::PathBuf> {
     let dir = std::env::var_os("FOLDS_SPILL")?;
     let min: usize = std::env::var("FOLDS_SPILL_MIN").ok().and_then(|v| v.parse().ok()).unwrap_or(1_000_000_000);
     (bytes >= min).then(|| std::path::PathBuf::from(dir))
@@ -74,10 +76,17 @@ fn spill_dir(bytes: usize) -> Option<std::path::PathBuf> {
 
 impl<W: Word> Region<W> {
     pub fn new(len: usize) -> Self {
+        let bytes = (len.max(1) * W::BYTES + PAGE - 1) / PAGE * PAGE;
+        let dir = spill_dir(bytes);
+        Self::with(len, dir.as_deref(), true)
+    }
+    /// A region backed by a sparse file in `dir` (`Some`) or anonymous memory
+    /// (`None`; with `huge`, transparent huge pages are requested).
+    pub fn with(len: usize, dir: Option<&std::path::Path>, huge: bool) -> Self {
         use std::os::unix::io::AsRawFd;
         static SEQ: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let bytes = (len.max(1) * W::BYTES + PAGE - 1) / PAGE * PAGE;
-        if let Some(dir) = spill_dir(bytes) {
+        if let Some(dir) = dir {
             let path = dir.join(format!(
                 "folds-{}-{}.bin",
                 std::process::id(),
@@ -93,10 +102,33 @@ impl<W: Word> Region<W> {
             mmap(std::ptr::null_mut(), bytes, PROT_RW, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0)
         };
         assert!(p as isize != -1, "mmap of {bytes} bytes failed");
-        if bytes >= 1 << 22 {
+        if huge && bytes >= 1 << 22 {
             unsafe { madvise(p, bytes, MADV_HUGEPAGE) };
         }
         Region { ptr: p as *mut W, len, bytes, file: None }
+    }
+    pub fn ptr(&self) -> *mut W {
+        self.ptr
+    }
+    pub fn is_file(&self) -> bool {
+        self.file.is_some()
+    }
+    /// File-backed only: start writeback of `[start, start+len)` (asynchronously).
+    pub fn flush_async(&self, start: usize, len: usize) {
+        use std::os::unix::io::AsRawFd;
+        if let Some((f, _)) = &self.file {
+            unsafe { sync_file_range(f.as_raw_fd(), (start * W::BYTES) as i64, (len * W::BYTES) as i64, 2) };
+        }
+    }
+    /// File-backed only: ask the kernel to read `[start, start+len)` ahead.
+    pub fn prefetch(&self, start: usize, len: usize) {
+        if self.file.is_some() {
+            let a = (self.ptr as usize + start * W::BYTES) / PAGE * PAGE;
+            let b = self.ptr as usize + (start + len) * W::BYTES;
+            if b > a {
+                unsafe { madvise(a as *mut _, b - a, MADV_WILLNEED) };
+            }
+        }
     }
     #[inline(always)]
     pub fn data(&self) -> &[W] {
@@ -105,7 +137,7 @@ impl<W: Word> Region<W> {
     /// Mutable view of `[start, start+len)`.  Callers hand out disjoint ranges only.
     #[allow(clippy::mut_from_ref)]
     #[inline(always)]
-    unsafe fn part(&self, start: usize, len: usize) -> &mut [W] {
+    pub unsafe fn part(&self, start: usize, len: usize) -> &mut [W] {
         debug_assert!(start + len <= self.len);
         unsafe { std::slice::from_raw_parts_mut(self.ptr.add(start), len) }
     }
