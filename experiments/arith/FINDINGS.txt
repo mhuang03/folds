@@ -1,0 +1,174 @@
+ARITHMETIC AND SYMMETRY PATTERNS OF THE SEMI-SYMMETRIC FOLD COUNT a(N)
+=========================================================================
+Notation: a(N) = number of valid (semi-symmetric) sequences; M = mirror (m -> N+1-m),
+R = reversal; V4 = {1, M, R, RM}; c(N) = #{sequences fixed by RM}, "self-dual" sequences:
+a_{N+1-k} = N+1-a_k.  sigma(m) = N+1-m.  W(m) = window of m, radius r_m = min(m-1, N-m).
+All runs used at most 2 cores.
+
+Files
+  selfdual.c / selfdual2.c   half-size DP for c(N) (3^n states; layered + mirror-halved)
+  selfdual_out.txt           c(N), N = 1..41 (+ selfdual2_out.txt, the layered runs)
+  burnside.py (+_out)        V4 orbit counts, mod-4 identity, OEIS lookups
+  modular.py (+_out)         valuations, residues, gcds, ratios of a(N)
+  trend.py (+_out)           residuals of log a(N) vs smooth fit, by N mod q
+  stats.c, stats_out.txt     explicit enumeration N <= 15 with statistic histograms
+  polydp.c, polydp_out.txt   subset DP for statistic polynomials (des N<=18, free N<=23,
+                             lrmax N<=22); polys.py / polydp_analyse.py analyse them
+  mindes.py (+_out)          sequences with minimum number of descents
+  popcount_seq.py            popcount-ordered sequences (minimum-descent family)
+  selfdual_flip.py (+_out)   check of the last-half-step flip lemma
+
+-------------------------------------------------------------------------
+1. BURNSIDE / ORBIT STRUCTURE                                        [PROVEN]
+-------------------------------------------------------------------------
+* Fix(M) = Fix(R) = 0 for N >= 2.  Trivial: M-fixed needs a_k = N+1-a_k for every k
+  (only possible for N = 1); R-fixed needs a_k = a_{N+1-k}, impossible in a permutation
+  with N >= 2.  So M and R act freely on all of S_N, in particular on valid sequences.
+* Hence #V4-orbits = (a(N) + c(N)) / 4 for N >= 2:
+    1, 1, 1, 4, 8, 27, 64, 299, 1068, 4538, 17740, 96141, 405259, 2293401, 11955324,
+    69055449, 370502505, 2521089189, 13770547030, 99718913826, 626420386801, ...
+  (full list N=1..33 in burnside_out.txt).  Not in OEIS.
+* c(N) is even for N >= 2: M commutes with RM, so M acts freely on Fix(RM).
+* CONGRUENCE  a(N) == c(N) (mod 4)  for N >= 2  (equivalently a/2 == c/2 mod 2).
+  Proof: Burnside, a + c == 0 mod 4 and c even => a == -c == c mod 4.
+  NOTE: the statement "a(N) == 2*c(N) mod 4" given in the task/earlier notes is not right
+  as written (e.g. N=2: a=2, c=2, 2c=4==0); the correct form is a == c == 2*(c/2) mod 4.
+  Checked for all 2 <= N <= 33.
+* c(N) = 0 for N == 3 (mod 4)  [proof]: for odd N = 2n+1 an RM-fixed sequence has
+  a_{n+1} = sigma(a_{n+1}), i.e. the middle panel sits at step n+1.  The middle panel's
+  window is the whole strip minus itself, so balance needs |S| even, i.e. the middle panel
+  is always placed at an ODD step (for every valid sequence).  n+1 odd <=> N == 1 mod 4.
+  Consequently 4 | a(N) for every N == 3 (mod 4).
+
+Self-dual sequences as a half-size problem (twisted condition)        [PROVEN]
+* Step k of a sequence is valid iff step N+1-k of R(a) is (complement lemma) iff step
+  N+1-k of RM(a) is.  So for a self-dual sequence only steps 1..n (n = floor(N/2)) and,
+  for odd N, the middle step n+1 need checking.
+* The first n steps pick exactly one panel from each pair {j, N+1-j} (a transversal).
+  Fold the strip at its centre: position j in {1..n} has state 0 / L (panel j) / R (panel
+  N+1-j).  c(2n) = number of valid ways to fill the n folded positions (each step chooses
+  an empty position and a side, window balance measured in the unfolded strip);
+  c(4n+1) = those whose final transversal has exactly n L's (middle-panel balance).
+  State space 3^n instead of 2^N, i.e. ~ 1.73^N instead of 2^N.
+* Also c(2n) = sum over transversals T of g(T) (g = #valid orderings of a set), whereas
+  a(2n) = sum_{|S|=n} g(S) g(S^c) (meet in the middle); for transversals S^c = sigma(S) and
+  g(S^c) = g(S).
+* COMPUTED c(N) for N = 1..41 (selfdual.c up to 37, selfdual2.c 36..41, agree on overlap;
+  plain DP also matches the given values for N <= 15):
+    N : c(N)
+    1 1 | 2 2 | 4 6 | 5 4 | 6 12 | 8 76 | 9 16 | 10 274 | 12 1088 | 13 708 | 14 5696
+    16 39484 | 17 15304 | 18 176338 | 20 1546374 | 21 513246 | 22 9565494
+    24 65590610 | 25 24614452 | 26 528642788 | 28 4816541630 | 29 1743100292
+    30 32805810402 | 32 352981345474 | 33 102863657584 | 34 3107650434004
+    36 29231919216916 | 37 11114209181230 | 38 301305621655490
+    40 3433739638181768 | 41 1058827496724146   (N == 3 mod 4 all zero)
+  Timings (1 core): N=36 17 s, N=38 73 s; N=40/41 ~270 s, ~5 GB RAM.  So c is known 8 terms beyond a.
+* PREDICTIONS for a(N) mod 4 (from a == c mod 4):
+    a(34) == 0, a(35) == 0, a(36) == 0, a(37) == 2, a(38) == 2, a(39) == 0 (mod 4)
+    a(40) == 0, a(41) == 2 (mod 4).   So v2(a(N)) = 1 exactly for N = 37, 38, 41 in 34..41.
+* OEIS: no match for c(N), c(N)/2, c(2n), c(2n)/2, c(4n+1), orbit counts, (a-c)/4, a/2.
+* No formula found.  c(2n)^2 / a(2n) stays in [1.5, 6.5] for 2n <= 32 (so c(2n) ~ sqrt(a)
+  up to a bounded factor), c(4n+1)^2/a(4n+1) in [0.06, 0.6].  log c is much less smooth
+  than log a (residuals +-0.2 vs +-0.03).
+* Flip lemma (even N, [proof]): let b_n be the last first-half step, with pair {m, sigma m},
+  m <= n.  Validity of sigma m w.r.t. S equals validity of m w.r.t. sigma(S), and
+  sigma(S) ∩ W(m) = (W(m) \ S) \ {sigma m}.  If sigma m not in W(m) (i.e. 3m <= N+1,
+  "outer pair") this is the window complement, so b_n and its partner are valid together:
+  a free involution commuting with M.  If 3m > N+1 ("inner pair") at most one of the two is
+  valid.  Hence c(2n) == #{self-dual seqs whose step-n pair is inner} (mod 4).
+  Checked N <= 18.  Does not work for odd N (it breaks the middle-panel balance).
+
+-------------------------------------------------------------------------
+2. p-ADIC AND MODULAR PATTERNS (a(N), N = 1..33)
+-------------------------------------------------------------------------
+* v2(a(N)) = 0,1,2,1,2,5,8,5,5,1,4,2,3,2,4,3,2,1,3,1,1,1,2,1,2,2,3,1,7,1,4,1,5.
+  Fully explained mod 4 by section 1 (v2 >= 1 always; v2 = 1 iff c == 2 mod 4; v2 >= 2
+  for N == 3 mod 4).  No pattern beyond that: a mod 8 is not determined by c mod 8
+  (table in burnside_out.txt).  Even N >= 18 mostly v2 = 1 (exception N = 26).
+* a(N) mod 3, 5, 7, 8, 9, 11, 13, 16, 32, 64: no periodicity (modular_out.txt).
+* a(p) mod p for primes p <= 31: 0,1,3,4,10,8,13,12,19,1,0 - no Fermat/Lucas pattern.
+  a(31) == 0 mod 31 looks accidental (a(31) = 2^4*3*5*11*31*24893051164663183).
+* Large prime factors everywhere (e.g. a(24) = 2*489865076925487, a(32) = 2*3^2*191*p).
+* No other free group action found: cyclic shifts do not preserve validity, and for
+  N <= 8 V4 is the full group of value relabelings preserving the set (earlier notes).
+
+-------------------------------------------------------------------------
+3. DIVISIBILITY BETWEEN TERMS AND RATIOS
+-------------------------------------------------------------------------
+* gcd(a(N), a(N-1)) is tiny (mostly 2 or 4; max 224 at N=9).  gcd(a(2n), a(n)) is 2 or
+  4 for n >= 9; a(n) does not divide a(2n) for n >= 5.  No divisibility structure.
+* MOD-3 EFFECT IN THE GROWTH [confirmed, statistically]: a(N)/a(N-1) jumps when 3 | N in
+  both parity classes, e.g. odd N: 5.37 (17), 5.46 (19), 6.28 (21), 6.55, 6.70, 7.43 (27),
+  7.64, 7.75, 8.49 (33); even N: 5.78 (16), 6.80 (18), 7.24, 7.25, 8.23 (24), 8.47, 8.72,
+  9.54 (30), 9.93.  Fitting log a = A + BN + C N log N + D log N per parity class on
+  N = 8..33 plus an indicator [3|N]:
+      even N: +0.032 +- 0.005   (resid sd 0.007)
+      odd  N: +0.046 +- 0.009   (resid sd 0.012)
+  Indicators for N mod 4 and 5 | N are not significant (+0.008 +- 0.018, +0.024 +- 0.024).
+  This confirms the earlier "prediction to test": a(30) (+0.013) and a(33) (+0.021) sit
+  above trend.  (Candidate mechanism, not proved: N/3 and 2N/3 are the period-2 orbit
+  of the doubling map x -> 2x mod N in the cyclic form E(2c) = 2E(c).)
+  The self-dual counts c(N) show the OPPOSITE sign (residual mean -0.08 for 3 | N), but
+  their residuals are noisy (+-0.2).
+
+-------------------------------------------------------------------------
+4. STATISTICS AND THEIR GENERATING POLYNOMIALS
+-------------------------------------------------------------------------
+(stats.c enumerates N <= 15; polydp.c gives des N <= 18, free N <= 23, lrmax N <= 22.)
+
+(a) Descents des(a).  [palindromic: proven; rest empirical]
+    Palindromic (R and M both send des -> N-1-des), gamma-positive and REAL-ROOTED for
+    every N <= 18.  E.g. N=7: 16 t^2 (t+3)(3t+1); N=13: t^2(3, 2380, 66536, 392456,
+    697578, 392456, 66536, 2380, 3).
+    MINIMUM number of descents = floor(log2(N+1)) - 1 for N <= 18
+      (0 for N<=2, 1 for N=3..6, 2 for N=7..14, 3 for N=15..18).
+    Number of minimisers: 48,57,31,31,8,6,3,1 for N = 7..14; 2576, 3830, 1896, 3569 for
+    N = 15..18.  For N = 2^k - 2 (N = 6, 14) the minimiser is UNIQUE and is the
+    POPCOUNT ORDER: panels sorted by binary digit sum, decreasing, increasing within a
+    class:  N=14:  7 11 13 14 | 3 5 6 9 10 12 | 1 2 4 8   (self-dual).
+    The popcount order (and also popcount increasing, values decreasing) is a valid sequence exactly for
+    N in {1..8, 11} ∪ {2^k-2, 2^k-1, 2^k : k >= 4} among N <= 300, and it has
+    floor(log2(N+1)) - 1 descents, so the conjectured minimum is attained there.
+    (Lower-bound proof missing; the first ascending run is bounded by the lrmax bound
+    below, which only gives a weak bound.)
+
+(b) Left-to-right maxima lrmax.  [bound proven; real-rootedness empirical]
+    max lrmax = floor(log2 N) + 1 (attained for all N <= 22).
+    Proof of the bound: if m > max(S) is placed with S nonempty, the right side of W(m) is
+    empty, so its left side must be empty.  For m in the left half W(m) = [1, 2m-1]
+    contains all of S, so S = {}: only step 1.  Otherwise, with x = N-m = r_m, all of S is
+    < m - x.  For consecutive records m_i < m_{i+1}: x_i > 2 x_{i+1}.  With x_1 <= N-1
+    the chain has at most floor(log2 N) + 1 terms.
+    lrmax polynomial is real-rooted for N <= 22; #(lrmax = 1) = #(a_1 = N).
+
+(c) Free steps (window contains no earlier panel; r = 0 steps included) and full steps.
+    free and full have the SAME distribution [proof: under R, step k with earlier set S
+    becomes step N+1-k with earlier set complementary inside W(m)].
+    Polynomial is real-rooted for every N <= 23 (not palindromic).
+    min free = 3 (N even), 2 (N odd >= 3).
+    max free, N = 1..23: 1,2,3,3,4,4,5,5,5,5,6,6,6,6,7,7,7,7,7,7,7,7,8; it increases
+    exactly at N = 2,3,5,7,11,15,23 = {2^k - 1, 3*2^k - 1}, i.e. empirically
+        max free(N) = floor(log2(N+1)) + floor(log2((N+1)/3)) + 1   (N <= 23;
+    N = 23 was a successful prediction).  Proven upper bound: free panels in the left
+    half must be placed in decreasing order with f_{i+1} >= 2 f_i (a later smaller panel f
+    needs [1, 2f-1] empty), likewise on the right, so max free <= 2 floor(log2((N+1)/2))+2.
+    "Trivially balanced" steps (empty or full window) - real-rooted except N = 10.
+
+(d) Step at which panel 1 is placed (pos1), first value a_1: palindromic (by R resp. M),
+    not real-rooted, no factorization beyond the forced (1+t) for odd degree.
+    Middle panel (odd N): only odd steps; polynomial in t^2, no nice structure (N=7 is
+    uniform 64,64,64,64 as known).
+
+(e) Middle crossings (a_k, a_{k+1} on opposite sides of (N+1)/2): not palindromic, not
+    real-rooted, no structure.  Inversions: palindromic (by R), not real-rooted.
+
+-------------------------------------------------------------------------
+SUMMARY OF NEW SOLID FACTS
+  - Burnside: orbits = (a+c)/4, c even, a == c mod 4; c(4k+3) = 0 (proof).
+  - c(N) via a 3^{N/2}-state twisted half problem, computed to N = 41 (a only to 33),
+    giving a(34..41) mod 4.
+  - Mod-3 growth effect confirmed at ~5-6 sigma through N = 33.
+  - des polynomial real-rooted/gamma-positive (N <= 18); min des = floor(log2(N+1)) - 1
+    (N <= 18), attained by the popcount order at N = 2^k-2, 2^k-1, 2^k.
+  - lrmax <= floor(log2 N) + 1 (proof, sharp N <= 22); max free steps formula (N <= 23).
+  - No congruences mod odd primes, no OEIS hits, no closed forms.
