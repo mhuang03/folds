@@ -390,4 +390,154 @@ theorem numFree_le {N : Nat} {a : List Nat} (hf : IsFoldSeq N a) :
     simp only [List.nil_append] at key ⊢
     omega
 
+/-! ## Free steps: the construction
+
+`exists_free`: for every `N ≥ 2` some semi-symmetric fold sequence has exactly
+`⌊log₂(N+1)⌋ + ⌊log₂((N+1)/3)⌋ + 1` free steps.  Odd `N`: parity blocks.  Even `N = 2n`:
+*shifted* parity blocks, first `X = {2y + [y > n/2]}` (a copy of the `(n-1)`-world), then
+`Y = {2y - 1 - [y > n/2 + 1]}` (a copy of the `(n+1)`-world, with one twisted middle step
+when `n` is even). -/
+
+theorem freeStep_iff_counts {N m : Nat} {S : List Nat} :
+    FreeStep N S m ↔ leftCount N S m = 0 ∧ rightCount N S m = 0 := by
+  unfold FreeStep leftCount rightCount
+  simp only [List.countP_eq_zero, decide_eq_true_eq]
+  constructor
+  · intro h; exact ⟨fun d hd => (h d hd).1, fun d hd => (h d hd).2⟩
+  · intro h d hd; exact ⟨h.1 d hd, h.2 d hd⟩
+
+theorem freeStep_of_reach_zero {N m : Nat} {S : List Nat} (h : reach N m = 0) :
+    FreeStep N S m := by
+  intro d hd; rw [h] at hd; simp at hd
+
+theorem freeCount_append {N : Nat} : ∀ (A S B : List Nat),
+    freeCount N S (A ++ B) = freeCount N S A + freeCount N (S ++ A) B
+  | [], S, B => by simp [freeCount]
+  | x :: t, S, B => by
+    simp only [List.cons_append, freeCount]
+    rw [freeCount_append t (S ++ [x]) B]
+    simp only [List.append_assoc, List.singleton_append]
+    omega
+
+theorem freeCount_ge_countP {N : Nat} : ∀ (l S : List Nat),
+    l.countP (fun m => decide (reach N m = 0)) ≤ freeCount N S l
+  | [], _ => by simp [freeCount]
+  | x :: t, S => by
+    simp only [List.countP_cons, freeCount]
+    have ih := freeCount_ge_countP (N := N) t (S ++ [x])
+    by_cases h : reach N x = 0
+    · simp only [h, freeStep_of_reach_zero h, decide_true, ite_true]; omega
+    · simp only [h, decide_false, Bool.false_eq_true, ite_false]; split <;> omega
+
+theorem two_le_countP {l : List Nat} {p : Nat → Bool} {a b : Nat} (ha : a ∈ l) (hb : b ∈ l)
+    (hab : a ≠ b) (hpa : p a) (hpb : p b) : 2 ≤ l.countP p := by
+  rw [List.countP_eq_length_filter]
+  have hsub : [a, b] ⊆ l.filter p := by
+    intro x hx
+    simp only [List.mem_cons, List.mem_nil_iff, or_false] at hx
+    rcases hx with rfl | rfl <;> simp [*]
+  have := List.Nodup.length_le_of_subset (by simp [hab]) hsub
+  simpa using this
+
+/-- Panels `1` and `N` have reach `0`, so they are free whenever they are placed. -/
+theorem two_le_freeCount {N : Nat} (hN : 2 ≤ N) {l S : List Nat} (h1 : 1 ∈ l) (hN' : N ∈ l) :
+    2 ≤ freeCount N S l := by
+  have := two_le_countP (p := fun m => decide (reach N m = 0)) h1 hN' (by omega)
+    (by simp [reach]) (by simp [reach])
+  exact Nat.le_trans this (freeCount_ge_countP l S)
+
+/-! ### Transfer along window-preserving maps -/
+
+theorem countP_map_congr {f : Nat → Nat} {T : List Nat} {p : Nat}
+    {P : Nat → Prop} [DecidablePred P] {Q : Nat → Prop} [DecidablePred Q]
+    (hT : ∀ z ∈ T, 1 ≤ z ∧ z ≤ p) (h : ∀ z, 1 ≤ z → z ≤ p → (P (f z) ↔ Q z)) :
+    (T.map f).countP (fun x => decide (P x)) = T.countP (fun z => decide (Q z)) := by
+  rw [List.countP_map]; apply List.countP_congr; intro z hz
+  have := hT z hz
+  simp only [Function.comp_apply, decide_eq_true_eq]; exact h z this.1 this.2
+
+theorem nodup_of_map_right {f : Nat → Nat} {U T : List Nat} (hnd : (U ++ T.map f).Nodup) :
+    T.Nodup :=
+  List.Pairwise.of_map f (fun a b h e => h (by rw [e])) (List.nodup_append.1 hnd).2.1
+
+/-- Left count after `U ++ T.map f`, when `f` maps the window of `y` (in the `p`-world)
+onto the window of `f y` (in the `N`-world). -/
+theorem leftCount_append_map {N p : Nat} {f : Nat → Nat} {U T : List Nat} {y : Nat}
+    (hnd : (U ++ T.map f).Nodup) (hT : ∀ z ∈ T, 1 ≤ z ∧ z ≤ p)
+    (hL : ∀ z, 1 ≤ z → z ≤ p →
+      (f y - reach N (f y) ≤ f z ∧ f z < f y ↔ y - reach p y ≤ z ∧ z < y)) :
+    leftCount N (U ++ T.map f) (f y) =
+      U.countP (fun x => decide (f y - reach N (f y) ≤ x ∧ x < f y)) + leftCount p T y := by
+  rw [leftCount_eq hnd, leftCount_eq (nodup_of_map_right hnd), List.countP_append,
+    countP_map_congr hT hL]
+
+theorem rightCount_append_map {N p : Nat} {f : Nat → Nat} {U T : List Nat} {y : Nat}
+    (hnd : (U ++ T.map f).Nodup) (hT : ∀ z ∈ T, 1 ≤ z ∧ z ≤ p)
+    (hR : ∀ z, 1 ≤ z → z ≤ p →
+      (f y < f z ∧ f z ≤ f y + reach N (f y) ↔ y < z ∧ z ≤ y + reach p y)) :
+    rightCount N (U ++ T.map f) (f y) =
+      U.countP (fun x => decide (f y < x ∧ x ≤ f y + reach N (f y))) + rightCount p T y := by
+  rw [rightCount_eq hnd, rightCount_eq (nodup_of_map_right hnd), List.countP_append,
+    countP_map_congr hT hR]
+
+/-- Window preservation of `f` at `y` (`p`-world into `N`-world). -/
+def WinPres (N p : Nat) (f : Nat → Nat) (y : Nat) : Prop :=
+  (∀ z, 1 ≤ z → z ≤ p →
+      (f y - reach N (f y) ≤ f z ∧ f z < f y ↔ y - reach p y ≤ z ∧ z < y)) ∧
+  (∀ z, 1 ≤ z → z ≤ p →
+      (f y < f z ∧ f z ≤ f y + reach N (f y) ↔ y < z ∧ z ≤ y + reach p y))
+
+theorem semiStep_map_iff {N p : Nat} {f : Nat → Nat} {T : List Nat} {y : Nat}
+    (hnd : (T.map f).Nodup) (hT : ∀ z ∈ T, 1 ≤ z ∧ z ≤ p) (hw : WinPres N p f y) :
+    SemiStep N (T.map f) (f y) ↔ SemiStep p T y := by
+  have hnd' : ([] ++ T.map f).Nodup := by simpa using hnd
+  have hl := leftCount_append_map hnd' hT hw.1
+  have hr := rightCount_append_map hnd' hT hw.2
+  simp only [List.nil_append, List.countP_nil, Nat.zero_add] at hl hr
+  unfold SemiStep; rw [hl, hr]
+
+theorem freeStep_map_iff {N p : Nat} {f : Nat → Nat} {T : List Nat} {y : Nat}
+    (hnd : (T.map f).Nodup) (hT : ∀ z ∈ T, 1 ≤ z ∧ z ≤ p) (hw : WinPres N p f y) :
+    FreeStep N (T.map f) (f y) ↔ FreeStep p T y := by
+  have hnd' : ([] ++ T.map f).Nodup := by simpa using hnd
+  have hl := leftCount_append_map hnd' hT hw.1
+  have hr := rightCount_append_map hnd' hT hw.2
+  simp only [List.nil_append, List.countP_nil, Nat.zero_add] at hl hr
+  rw [freeStep_iff_counts, freeStep_iff_counts, hl, hr]
+
+/-- A whole block placed on an empty strip through a window-preserving injective map. -/
+theorem semiSymmetric_map_iff {N p : Nat} {f : Nat → Nat} {σ : List Nat}
+    (hnd : (σ.map f).Nodup) (hσ : ∀ z ∈ σ, 1 ≤ z ∧ z ≤ p) (hw : ∀ y ∈ σ, WinPres N p f y) :
+    SemiSymmetric N (σ.map f) ↔ SemiSymmetric p σ := by
+  constructor
+  · intro h k hk
+    have := h k (by simpa using hk)
+    rw [List.getElem_map, ← List.map_take] at this
+    exact (semiStep_map_iff (by rw [List.map_take]; exact hnd.sublist (List.take_sublist _ _))
+      (fun z hz => hσ z (List.mem_of_mem_take hz)) (hw _ (List.getElem_mem hk))).1 this
+  · intro h k hk
+    simp only [List.length_map] at hk
+    rw [List.getElem_map, ← List.map_take]
+    exact (semiStep_map_iff (by rw [List.map_take]; exact hnd.sublist (List.take_sublist _ _))
+      (fun z hz => hσ z (List.mem_of_mem_take hz)) (hw _ (List.getElem_mem hk))).2 (h k hk)
+
+theorem freeCount_map {N p : Nat} {f : Nat → Nat} : ∀ (l P : List Nat),
+    ((P ++ l).map f).Nodup → (∀ z ∈ P ++ l, 1 ≤ z ∧ z ≤ p) → (∀ y ∈ l, WinPres N p f y) →
+    freeCount N (P.map f) (l.map f) = freeCount p P l
+  | [], _, _, _, _ => by simp [freeCount]
+  | x :: t, P, hnd, hb, hw => by
+    simp only [List.map_cons, freeCount]
+    have hndP : (P.map f).Nodup := by
+      rw [List.map_append] at hnd; exact (List.nodup_append.1 hnd).1
+    have hfree := freeStep_map_iff (T := P) hndP (fun z hz => hb z (by simp [hz]))
+      (hw x (by simp))
+    have ih := freeCount_map t (P ++ [x]) (by simpa using hnd)
+      (fun z hz => hb z (by simpa using hz)) (fun y hy => hw y (by simp [hy]))
+    rw [List.map_append, List.map_singleton] at ih
+    rw [ih]
+    by_cases h : FreeStep p P x
+    · simp [h, hfree.2 h]
+    · have h' : ¬ FreeStep N (P.map f) (f x) := fun h' => h (hfree.1 h')
+      simp [h, h']
+
 end Folds
