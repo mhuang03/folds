@@ -5,7 +5,7 @@ import sys, os, subprocess, math
 from wallis_exact import log_aW, A
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-Nmax = int(sys.argv[1])
+
 os.makedirs(os.path.join(HERE, "kdata"), exist_ok=True)
 
 
@@ -28,6 +28,7 @@ def side(N, m):
 
 
 if __name__ == "__main__":
+    Nmax = int(sys.argv[1])
     print("N    y        S1        S2      S2_LL     S2_LR    S2_M   y-S2")
     for N in range(3, Nmax + 1):
         S1 = S2 = 0.0
