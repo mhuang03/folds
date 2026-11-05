@@ -1,0 +1,5 @@
+N=200 P=4000 loga_est=567.5167 logN!=863.2320 ratio=0.6574  loga/(NlogN)=0.5356
+N=256 P=4000 loga_est=771.8540 logN!=1167.2573 ratio=0.6613  loga/(NlogN)=0.5437
+N=320 P=4000 loga_est=1019.4488 logN!=1529.6661 ratio=0.6665  loga/(NlogN)=0.5523
+N=400 P=2000 loga_est=1336.5286 logN!=2000.5007 ratio=0.6681  loga/(NlogN)=0.5577
+N=512 P=2000 loga_est=1810.2987 logN!=2686.0605 ratio=0.6740  loga/(NlogN)=0.5668

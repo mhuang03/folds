@@ -29,6 +29,7 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `Wallis.lean` (Mathlib) | `card_wallisSeqs`: exactly N!·4^r·r!²/(2r+1)! permutations satisfy a single panel's constraint |
 | `SelfDual.lean` (Mathlib) | `card_revMirrorFixed`: c(N) = number of valid half sequences; flip lemmas and a mod-4 reduction of c(N) for even N |
 | `Extremal.lean` (Mathlib) | exact extremal laws. Left-to-right maxima: at most ⌊log₂N⌋+1, attained (`lrmax_le`, `exists_lrmax`). Free steps (window empty): at most ⌊log₂(N+1)⌋+⌊log₂((N+1)/3)⌋+1, attained (`numFree_le`, `max_free`). Shifted parity blocks (`shifted_blocks`) |
+| `Growth.lean` (Mathlib) | composition `semiCount_comp`: a(qn) ≥ a(q)·a(n)^q; doubling splits a(3n) ≥ 2a(n)a(2n) (also for 5n, 7n); branching upper bound `semiCount_le_prod`; parity upper bound `semiCount_even_le_prod`: a(2h) ≤ (2h)!·(√e/2)^{h(1+o(1))} |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
@@ -138,3 +139,9 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
   (Ehrhart theory). The leading coefficients are known exactly for k ≤ 7. The
   denominators involve 2^m − 1 (doubling-map periods). The valid suffixes of length k are
   counted by the same T(N,k).
+- `experiments/growth/PROOFS.txt`. Rigorous growth bounds.
+  - Lower bounds are only exponential (a(N) ≥ ½e^{1.28N} for N ≥ 17).
+  - Upper bounds are N!·e^{−Θ(N)}.
+  - So 0 ≤ c ≤ 1 is all that is rigorously known for log a(N) ~ c·N log N.
+  - Sequential Monte Carlo estimates to N = 1024 give a local c of about 0.78, still
+    rising, which is consistent with a(N) = N!/(O(log N))^N.

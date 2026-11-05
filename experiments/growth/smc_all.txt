@@ -1,0 +1,15 @@
+N=40 P=10000 loga_est=69.6748 logN!=110.3206 ratio=0.6316  loga/(NlogN)=0.4722
+N=50 P=10000 loga_est=93.8618 logN!=148.4778 ratio=0.6322  loga/(NlogN)=0.4799
+N=64 P=10000 loga_est=130.4341 logN!=205.1682 ratio=0.6357  loga/(NlogN)=0.4900
+N=80 P=10000 loga_est=174.8075 logN!=273.6731 ratio=0.6387  loga/(NlogN)=0.4986
+N=100 P=10000 loga_est=233.9970 logN!=363.7394 ratio=0.6433  loga/(NlogN)=0.5081
+N=128 P=10000 loga_est=321.5564 logN!=496.4055 ratio=0.6478  loga/(NlogN)=0.5178
+N=160 P=10000 loga_est=427.8668 logN!=655.4849 ratio=0.6527  loga/(NlogN)=0.5269
+N=200 P=4000 loga_est=567.5167 logN!=863.2320 ratio=0.6574  loga/(NlogN)=0.5356
+N=256 P=4000 loga_est=771.8540 logN!=1167.2573 ratio=0.6613  loga/(NlogN)=0.5437
+N=320 P=4000 loga_est=1019.4488 logN!=1529.6661 ratio=0.6665  loga/(NlogN)=0.5523
+N=400 P=2000 loga_est=1336.5286 logN!=2000.5007 ratio=0.6681  loga/(NlogN)=0.5577
+N=512 P=2000 loga_est=1810.2987 logN!=2686.0605 ratio=0.6740  loga/(NlogN)=0.5668
+N=512 P=2000 loga_est=1808.1750 logN!=2686.0605 ratio=0.6732  loga/(NlogN)=0.5661
+N=768 P=1500 loga_est=2942.8324 logN!=4338.6715 ratio=0.6783  loga/(NlogN)=0.5768
+N=1024 P=2000 loga_est=4153.5198 logN!=6078.2119 ratio=0.6833  loga/(NlogN)=0.5852

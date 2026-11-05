@@ -1,0 +1,312 @@
+GROWTH OF a(N): RIGOROUS BOUNDS, PROOFS AND DATA          (experiments/growth/)
+=================================================================================
+
+Notation. Panels 1..N. W_m = [m-r, m+r] with r = r_m = min(m-1, N-m); arms L_m, R_m.
+S = set of panels bisected before the current step. A step (S, m), m not in S, is valid
+iff |S ∩ L_m| = |S ∩ R_m|. V(S) = number of valid m. a(N) = number of valid sequences.
+h = floor(N/2). "[Lean]" marks results proven in Folds/Growth.lean (no sorry, no
+native_decide). "[paper]" marks results proven here only. "[data]" marks computations.
+
+SUMMARY
+-------
+Rigorous, for all N:
+   (1/2) e^{1.2829 N}  <=  a(N)        (N >= 17; with a(1..33) and the parity recursion)
+   a(N)  <=  N! * exp( -(floor((N+1)/2) - 1)/16 )        (all N)         [paper]
+   a(2h) <=  prod_{i<2h} (i odd ? min(2h-i, h) : 2h-i)
+          =  (2h)! * exp( -(ln 2 - 1/2) h (1 + o(1)) )  =  (2h)! (sqrt(e)/2)^{h(1+o(1))}
+                                                                          [Lean]
+   new exact lower-bound recursions:
+     a(qn) >= a(q) a(n)^q                     (composition, all q, n)    [Lean]
+     a((2j+1)n) >= 2 a(jn) a((j+1)n)          (doubling splits, all j)   [paper;
+                                               Lean for 2j+1 = 3, 5, 7]
+So, rigorously,   0 <= liminf log a(N)/(N log N) <= limsup log a(N)/(N log N) <= 1.
+The exponent c is NOT pinned down by any rigorous argument here: the lower bound is still
+only exponential, and the upper bound beats N! only by an exponential factor.
+
+Empirically (exact to N = 33, SMC estimates to N = 1024, section 4):
+   local exponent c(N) = d(log a / N)/d(log N):  0.63 (N~33), 0.65 (50-64), 0.69 (100),
+   0.73 (160-200), 0.74-0.78 (512-1024), still rising;  log a(1024)/log 1024! = 0.683.
+   The data are consistent with c = 1 in the form a(N) = N!/(kappa log N)^{N(1+o(1))}
+   (kappa drifts 0.75 -> 0.95 over N = 33..1024), and also with c ~ 0.8.
+   Best guess: c in [0.78, 1]; I lean to c = 1 (section 4.4).
+
+
+=================================================================================
+1. LOWER BOUNDS
+=================================================================================
+
+1.1 Composition theorem  a(qn) >= a(q) a(n)^q          [Lean: semiCount_comp]
+-------------------------------------------------------
+Let N = qn. Class s (1 <= s <= q) = {s, s+q, ..., s+(n-1)q}, embedded by
+phi_s(y) = (y-1)q + s.
+
+Claim A (each class is a scaled strip). For x = phi_s(j):
+floor(r_x / q) = min(j-1, n-j) = reach of j in [1..n], because
+floor(((j-1)q + s - 1)/q) = j-1 and floor((q(n-j+1) - s)/q) = n-j for 1 <= s <= q. So
+phi_s(y) lies in the left (right) arm of x iff y lies in the left (right) arm of j.
+Hence, if every other panel already placed is balanced around x, the step at x is valid
+iff the corresponding step of the n-strip is valid.
+
+Claim B (class balance = skeleton validity). Let t be a class and x = (j-1)q + s. Write
+C_t(z) = #{y in [1,n] : (y-1)q + t <= z} = min(n, floor((z + q - t)/q)). Then
+   (#class t in L_x) - (#class t in R_x) = [s - r' <= t < s] - [s < t <= s + r'],
+where r' = min(s-1, q-s) is the reach of s in the q-strip.  Proof for x in the left half
+(r_x = x-1): #in L_x = C_t(x-1) = j-1 + [t < s]; #in R_x = C_t(2x-1) - C_t(x) =
+2(j-1) + floor((2s-1+q-t)/q) - (j-1) - [t <= s], and
+floor((2s-1+q-t)/q) = [t <= 2s-1] + [t <= 2s-1-q]. If 2s-1 <= q the difference is
+[t<s] - [s<t<=2s-1]; if 2s-1 > q it is [2s-q <= t < s] - [s < t <= q]; both are the
+right-hand side.  The right half follows by the mirror m -> N+1-m (which maps class s to
+class q+1-s and the q-strip panel s to q+1-s).  (Checked numerically for all q <= 11,
+n <= 8, all s, j, t.)
+Summing over the classes t in a set R of complete classes: R is balanced around every
+point of class s iff the step (R, s) of the q-STRIP is valid.
+
+Construction. For a valid sequence pi of the q-strip and valid sequences sigma_1..sigma_q
+of the n-strip, place the classes in the order pi, class s in the order phi_s(sigma_s).
+When class s starts, the complete classes R = {pi_1..pi_{k-1}} are balanced around every
+point of class s (Claim B, since (R, s) is valid in the q-strip); incomplete classes are
+empty; by Claim A the steps inside class s are exactly the steps of sigma_s. The map
+(pi, sigma_1..sigma_q) -> sequence is injective (blocks have length n, and the first panel
+of a block determines its class). Hence  a(qn) >= a(q) a(n)^q.
+Lean: winEmb_cls (Claim A), class_identity (Claim B, both halves; the right half via the
+count mirror identity C_t(z) + C_{q+1-t}(nq - z) = n), classUnion_balanced,
+semiSymmetric_blocks, compMap_injOn, semiCount_comp.
+[data] classorder.c: for N = qn the number of valid ORDERS OF WHOLE CLASSES equals a(q)
+exactly, for q <= 20 (n = 2) and q in {5, 9, 12}, n in {3, 4, 5, 7}.
+q = 2 is the parity-block theorem a(2n) >= 2 a(n)^2.
+Iterating: a(q^k) >= a(q)^{(q^k-1)/(q-1)}; with q = 33: a(33^k) >= e^{1.672 (33^k - 1)}.
+Why it does not give N log N growth: log a(q) + q log a(n) ~ c q log q + c qn log n,
+short of c qn log(qn) by c q(n-1) log q. Starting from exponential growth it only
+reproduces exponential growth.
+
+1.2 Doubling splits                                    [paper; Lean: Split, DoublingSet]
+-------------------
+Definition. A <= [1..N] with counting function f(x) = |A ∩ [1,x]| is a doubling set if
+   (D) f(2x+1) = f(x) + f(x+1) for all x >= 0,   (M) f(x) + f(N-x) = |A| for x <= N.
+Theorem (DoublingSet.winEmb, DoublingSet.balanced, split_of_doubling).
+ (i) If A is a doubling set, the increasing enumeration of A is a window embedding of the
+     |A|-strip: for a in A with index i = f(a), the left/right arms of a meet A exactly
+     in the images of the arms of i.  Proof: if 2a-1 <= N, A ∩ [1,a-1] has f(a-1) = i-1
+     elements and A ∩ [a+1,2a-1] has f(2a-1) - f(a) = f(a-1) = i-1 elements by (D), so
+     the index window is [1, 2i-1] (and 2i-1 = f(2a-1) <= |A|).  If 2a-1 >= N the right
+     arm is [a+1, N] with |A| - i elements and, using (M) twice and (D) once,
+     f(2a-N-1) = 2i-1-|A|, so the left arm has |A| - i elements too.
+ (ii) A complete doubling set is balanced around EVERY panel m: the left arm count is
+     f(m-1) - f(m-r-1), the right one f(m+r) - f(m), and these agree by (D) (left half,
+     f(2m-1) = f(m-1) + f(m)) or by (D)+(M) (right half).
+ (iii) If A and its complement B are both doubling sets, then "A first, then B" and "B
+     first, then A" give 2 a(|A|) a(|B|) distinct valid sequences:
+        a(N) >= 2 a(|A|) a(N - |A|)         (Split.card_le).
+Instances. q = 2j+1, N = qn, A = panels with residue in {2, 4, ..., 2j} mod q:
+f(x) = j floor(x/q) + floor((x mod q)/2); B has g(x) = (j+1)floor(x/q) +
+floor((x mod q + 1)/2). (D) is a direct check of the residue cases: with
+x = aq + r, 0 <= r <= 2j, both sides of (D) equal 2ja + r if r < 2j and 2ja + 2j if
+r = 2j (split 2r+1 < q, 2r+1 >= q). (M): x -> N - x maps residue r to q - r, and
+floor(r/2) + floor((q-r)/2) = j for 1 <= r <= 2j.
+Hence
+        a((2j+1)n) >= 2 a(jn) a((j+1)n)    for all j, n >= 1.
+Lean: semiCount_three  2 a(n) a(2n) <= a(3n),  semiCount_five  2 a(2n) a(3n) <= a(5n),
+      semiCount_seven  2 a(3n) a(4n) <= a(7n).
+[data] splits.c: for N <= 21 every pair (A, complement) with both sides balanced around the
+other's points is one of these (or a parity class), and for every such split the number
+of orderings that build A first is exactly a(|A|), with exactly a(N-|A|) completions.
+
+1.3 Explicit exponential constant                       [paper, using a(1..33)]
+---------------------------------
+lambda := min_{17 <= n <= 33} (ln a(n) + ln 2)/n = 1.28293 (at n = 17). Claim:
+a(N) >= (1/2) e^{lambda N} for all N >= 17. For 17 <= N <= 33 this is the definition of
+lambda; for N >= 34, a(N) >= 2 a(floor(N/2)) a(ceil(N/2)) (semiCount_blocks, Lean) with
+both halves >= 17 gives 2 (1/2)^2 e^{lambda N}. (Combining parity, composition and splits
+numerically, lowerbound.py: min over N in [2^k*17, 2^{k+1}*17) of log B(N)/N rises
+1.24 -> 1.49 for N up to 8700, and 1.672 along N = 33^k.)
+
+1.4 Why the obvious routes to N log N growth fail
+-------------------------------------------------
+* Free blocks are impossible. For K! orders of a block T of panels to be valid, every
+  x, y in T must be "non-conflicting": x not in W_y and y not in W_x (else placing y
+  before or after x changes x's balance by one).  Two left-half panels always conflict
+  (W_y = [1, 2y-1] contains every x < y), so |T| <= 2 up to the edge panels.
+  Commuting lemma [paper]: x (distance u from the left edge) and y (distance v from the
+  right edge) do not conflict iff 2u + v < N+2 and u + 2v < N+2; e.g. the outer thirds
+  commute with each other.  This only gives binomial (exponential) factors.
+* Splits are few: O(N) per N (1.2), so sum-over-splits is still exponential.
+* Even/odd interleavings (interleave.c): over all pairs (sigma, tau) of half sequences the
+  average number of valid interleavings is 3.4, 3.8, 4.1, 4.2, 4.3 for N = 8..16 (max
+  159 at N = 16, attained by "twin" pairs tau = sigma - 1). Sequences whose even and odd
+  subsequences are both valid are a vanishing share (split.c: 340/1120 at N=8,
+  37980/383476 at N=12, 92536/1620328 at N=13).
+* Typical valid sequences look random (sample.py); the growth is "statistical", not
+  structural. Section 4.4 gives the mechanism (low discrepancy of valid prefixes).
+No super-exponential lower bound was found. Proving one probably requires controlling the
+discrepancy of prefixes along a large family of valid sequences.
+
+
+=================================================================================
+2. UPPER BOUNDS
+=================================================================================
+
+2.1 Branching bound                                     [Lean: semiCount_le_prod]
+-------------------
+a(N) is the number of leaves at depth N of the tree of valid prefixes, so if every valid
+prefix of length i has at most B(i) valid next panels, a(N) <= prod_{i<N} B(i).
+(Also: leaves <= max over root-leaf paths of the product of pruned degrees.)
+Lean corollaries:
+  card_moves_singleton_le: after one panel x, at most ceil(N/2) panels are valid (m is
+     valid iff x is outside W_m, i.e. m <= x/2 or m > (N+x)/2), hence
+  semiCount_le_step_one:  a(N) <= N * ceil(N/2) * (N-2)!.
+
+2.2 Parity bound                                         [Lean: card_moves_odd_le,
+-----------------                                          semiCount_even_le_prod]
+Lemma (even N = 2h). If |S| is odd then V(S) <= h.
+Proof. A valid m not in S has |S ∩ W_m| = 2|S ∩ L_m| even (window_count_even). For
+1 <= m <= h, W_m = [1, 2m-1] and W_{m+h} = [2m, N] partition [1, N]; if |S| is odd,
+|S ∩ W_m| and |S ∩ W_{m+h}| cannot both be even, so at most one panel of each pair
+{m, m+h} is valid (not_both_valid). The h pairs cover [1, N].
+Theorem. a(2h) <= prod_{i<2h} (i odd ? min(2h-i, h) : 2h-i)
+               = (2h)! * prod_{i odd, i < h} h/(2h-i)
+               = (2h)! * exp(-(ln 2 - 1/2) h + O(log h)),  (ln 2 - 1/2)/2 = 0.0966 per panel.
+(N = 24: factor e^{-2.32}; N = 100: e^{-9.66}.)
+[data] oddmax.c: over ALL sets S (N <= 22) the maximum of V(S) for |S| odd is exactly
+N/2 for even N, so the lemma is sharp. For odd N it fails (N = 9, |S| = 3: V = 6 > 5).
+Odd N = 2h+1 [paper]: the middle panel is invalid when |S| is odd; pairing m with m+h+1
+(m <= h; windows [1,2m-1], [2m+1,N] miss only 2m) shows both valid needs 2m in S;
+pairing m with m+h (2 <= m <= h+1; windows overlap only in 2m-1) shows both valid needs
+2m-1 in S. Since the two counts add up to at most |S|:
+        |S| odd  =>  V(S) <= h + 1 + floor(|S|/2)      (sharp: N = 9, 21 in oddmax.c),
+giving a(2h+1) <= (2h+1)! e^{-0.0589 N (1+o(1))}.
+
+2.3 Insertion-order bound (all N)                         [paper; insertion.c checks it]
+---------------------------------
+Let n1 = floor((N+1)/2) and L(N) = number of permutations satisfying only the
+constraints C_m of the left-half panels 2 <= m <= n1 (window [1, 2m-1]). a(N) <= L(N).
+Build the relative time order by inserting panels 1, 2, ..., N one at a time (panel j
+into one of j gaps). C_m is decided when panel 2m-1 is inserted. Let t be a final order
+satisfying all C_m, e_m (f_m) = number of panels of W_m \ {m} before (after) m in t;
+e_m + f_m = 2m-2 and e_m = 2|L_m before m| is even. At the insertion of 2m-1, the
+valid gaps all lie on one side of m (the side is forced by the current imbalance), and
+that side has e_m gaps (if 2m-1 goes before m) or f_m gaps (after). By the tree bound,
+   L(N) <= N! * max_t prod_{m=2}^{n1} max(e_m, f_m)/(2m-1).
+Block lemma. For n <= n1 let B = [floor(n/2)+1, n], s = |B| = ceil(n/2). Every m' in B
+lies in W_m for every m in B (m' <= n <= 2m-1). If m is the k-th element of B in time
+order, then e_m >= k-1 and f_m >= s-k, so
+   max(e_m,f_m)/(2m-1) <= 1 - (1 + min(k-1, s-k))/(2n-1),
+and sum_k (1 + min(k-1, s-k)) >= s(s+2)/4, 2n-1 < 4s, so the product over B is
+<= exp(-(s+2)/16). The blocks for n = n1, floor(n1/2), floor(n1/4), ... partition
+[2, n1]. Hence
+        a(N) <= L(N) <= N! * exp(-(n1 - 1)/16 - (#blocks)/8)   <=  N! e^{-(n1-1)/16}.
+[data] max_t prod (exact enumeration): log = -0.63, -0.78, -1.19, -1.19, -1.28 for
+N = 6, 8, 9, 10, 11 (bound: -0.125 ... -0.3125); log(L(N)/N!) = -4.79, -6.99, -9.35,
+-11.83 for N = 14, 18, 22, 26, and log L/log N! = 0.807 (N = 18..26).
+Limits of the method: a single insertion always keeps at least half of the gaps on the
+forced side for some arrangement (max(e,f) >= m-1), so it cannot beat 2^{-N/2}.
+
+2.4 Remarks on stronger upper bounds
+------------------------------------
+* Independent constraints. If W_a lies inside one arm of b, C_b is invariant under
+  permuting the times inside W_a, so C_a and C_b are independent; this extends to
+  families in which every pair is disjoint or nested-in-an-arm (mutual independence by
+  conditioning on the multisets of times in each arm). But every left-half window
+  contains panel 1 and every right-half window contains N, so such families are chains
+  m, 2m, 4m, ... of length O(log N): the saving is only N^{-O(log N)}. Disjoint-window
+  families have size <= 2.
+* The per-step maximum cannot give c' < 1: max V(S) = N - |S| for every |S| >= N/2
+  (e.g. S = odds makes every even panel valid), and for even |S| < N/2 the maximum is
+  still large (N = 22: 14 valid of 20, 18, 16 remaining at |S| = 2, 4, 6; oddmax.c).
+* Path products. M(N) = max over valid sequences of prod_k D(S_k) (pruned degrees)
+  bounds a(N) (tree bound) but log M / log N! = 0.868, 0.870, 0.877, 0.870, 0.872, 0.872
+  for N = 12, 14, 18, 20, 22, 24 (choices.c). Bounding path products would need a
+  global argument that valid prefixes cannot stay "very symmetric" (many valid moves)
+  for long; no such argument is known.
+
+
+=================================================================================
+3. MAX AND TYPICAL NUMBER OF VALID NEXT PANELS  [data: choices.c, oddmax.c]
+=================================================================================
+choices.c: subset DP over all 2^N sets, N <= 24 (1 core). D(S) = valid next panels that
+are still completable; averages are along a uniformly random valid sequence.
+
+N = 24, reachable sets: k : maxV/(N-k)   (all-S maximum from oddmax.c in brackets, N=22)
+   0:24/24 1:12/23 2:16/22 3:12/21 4:16/20 5:12/19 6:15/18 7:12/17 8:16/16 9:12/15
+   10:13/14 11:12/13 12..23: N-k/N-k  (all remaining panels valid).
+   Odd k: exactly N/2 (the parity lemma 2.2 is sharp).
+N = 24, average pruned degree / (N-k):
+   k=1 .52, 2 .54, 3 .48, 4 .49, 5 .45, 6 .46, 7 .44, 8..11 .45, 12 .47, 14 .48, 16 .50,
+   18 .53, 20 .61, 22 .81.   The tree is close to uniform: sum_k E log D = 36.4 vs
+   log a(24) = 34.5 (entropy).
+Max path product M(N): log M / log N! ~ 0.87 for N = 12..24 (vs log a/log N! = 0.63).
+All-S maxima (oddmax.c), N = 22: k=0:22 1:11 2:14 3:11 4:14 5:11 6:14 7:11 8:13 9:11
+   10:12 11:11 12..21: N-k.
+Odd N (N = 21): k=1:11 2:13 3:12 4:13 5:12 6:12 7:14 8:12 9:12 10:11, then N-k.
+
+
+=================================================================================
+4. LARGE-N ESTIMATES AND THE EXPONENT  [data: smc.c, fit.py]
+=================================================================================
+4.1 Method. smc.c is a sequential Monte Carlo ("go with the winners") estimator: P
+particles (valid prefixes); at each step every particle counts its valid moves V_i, the
+estimate is prod_k mean_i V_i (unbiased for the number of leaves of the prefix tree),
+then particles are resampled proportionally to V_i and move to a uniform valid child.
+Checks against exact values: N = 20: 26.726 (exact 26.712); N = 27: 40.509 (40.562);
+N = 33: 53.468 (53.500).  Repeat at N = 512: 1810.30 and 1808.18.
+
+4.2 Estimates of ln a(N)
+   N     ln a(N)    ln a / ln N!    two-point c (from y/N = c ln N + b)
+   33     53.50       0.629
+   40     69.67       0.632          0.63 (33-40)
+   50     93.86       0.632          0.61
+   64    130.43       0.636          0.65
+   80    174.81       0.639          0.66
+  100    234.00       0.643          0.69
+  128    321.56       0.648          0.70
+  160    427.87       0.653          0.73
+  200    567.52       0.657          0.73
+  256    771.85       0.661          0.72
+  320   1019.45       0.666          0.77
+  400   1336.53       0.668          0.70
+  512   1809.24       0.674          0.78
+  768   2942.83       0.678          0.74
+ 1024   4153.52       0.683          0.78
+Deficit d(N) = (ln N! - ln a(N))/N: 0.956 (33), 1.168 (64), 1.366 (128), 1.545 (256),
+1.713 (512), 1.880 (1024); d/ln N = 0.274, 0.281, 0.282, 0.279, 0.275, 0.271
+(slowly decreasing).
+
+4.3 Fits (N >= 16, exact + SMC): c N ln N + b N + d ln N + e gives c = 0.777,
+b = -1.34; ln N! - N(alpha ln ln N + beta) + ... gives alpha = 1.60 with the same rms.
+The data cannot separate c ~ 0.8 from c = 1 with a ln ln N correction:
+exp(d(N))/ln N = 0.74, 0.77, 0.81, 0.85, 0.89, 0.95 for N = 33..1024 (drifting up).
+
+4.4 Mechanism. Along the SMC paths the prefix sets have small discrepancy
+D = max_x |P(x) - |S| x/N|: about 4.3 (N = 512) and 5.0 (N = 1024), growing roughly like
+ln N, and the fraction of remaining panels that are valid is about 0.16 (N = 512) and
+0.13-0.14 (N = 768, 1024), with fraction x D ~ 0.65. This matches the cyclic form of the
+condition, E(2c) = 2E(c) for the discrepancy E: if |E| <= D the integer
+I = E(2c) - 2E(c) takes O(D) values, so a fraction ~ 1/D of panels is valid. If valid
+prefixes keep discrepancy O(log N), then a(N) = N!/(O(log N))^N and c = 1; the slowly
+rising local exponent and the near-constant fraction x discrepancy support this.
+
+4.5 Best interval for c = lim log a(N)/(N log N) (if it exists)
+   rigorous:   0 <= liminf <= limsup <= 1
+               (½e^{1.2829N} <= a(N) <= N! e^{-(floor((N+1)/2)-1)/16};
+                a(2h) <= (2h)! (sqrt(e)/2)^{h(1+o(1))})
+   empirical:  c >= 0.78 (local exponent at N ~ 10^3, increasing); c = 1 is consistent.
+
+
+=================================================================================
+5. FILES
+=================================================================================
+choices.c      subset DP: max/average valid moves, entropy, max path product (N <= 24)
+oddmax.c       max V(S) over all sets S by |S| (parity lemma check)
+classes.c      g(S), h(S) for unions of residue classes
+splits.c       enumerates splits, checks g(A) = a(|A|), h(A) = a(N - |A|)
+split.c        even/odd subsequence statistics of valid sequences
+interleave.c   valid interleavings of even and odd half-sequences
+classorder.c   valid orders of whole residue classes mod q (composition theorem check)
+insertion.c    L(N) and the insertion-order product (section 2.3)
+smc.c          SMC estimates of a(N) for N up to 1024; smc_*.txt outputs and traces
+fit.py         growth-model fits;  lowerbound.py  best exponential constants
+sample.py      sample valid sequences (exploration)
+Lean: Folds/Growth.lean (WinEmb, Split, DoublingSet, split_of_doubling, semiCount_three,
+semiCount_five, semiCount_seven, class_identity, classUnion_balanced, winEmb_cls,
+semiSymmetric_blocks, semiCount_comp, moves/prefixes, semiCount_le_prod,
+card_moves_singleton_le, semiCount_le_step_one, card_moves_odd_le,
+semiCount_even_le_prod).

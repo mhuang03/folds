@@ -1,0 +1,7 @@
+N=40 P=10000 loga_est=69.6748 logN!=110.3206 ratio=0.6316  loga/(NlogN)=0.4722
+N=50 P=10000 loga_est=93.8618 logN!=148.4778 ratio=0.6322  loga/(NlogN)=0.4799
+N=64 P=10000 loga_est=130.4341 logN!=205.1682 ratio=0.6357  loga/(NlogN)=0.4900
+N=80 P=10000 loga_est=174.8075 logN!=273.6731 ratio=0.6387  loga/(NlogN)=0.4986
+N=100 P=10000 loga_est=233.9970 logN!=363.7394 ratio=0.6433  loga/(NlogN)=0.5081
+N=128 P=10000 loga_est=321.5564 logN!=496.4055 ratio=0.6478  loga/(NlogN)=0.5178
+N=160 P=10000 loga_est=427.8668 logN!=655.4849 ratio=0.6527  loga/(NlogN)=0.5269
