@@ -86,7 +86,7 @@ fn count(n: usize, rule: Rule, mode: Mode, verbose: bool) -> (u128, f64) {
                 }
             }
             let x = crt(&res, mods);
-            if res.len() >= 2 {
+            if res.len() >= 2 && verbose {
                 // one redundant modulus: if the value is below the product of all but the
                 // last modulus, dropping the last residue must give the same answer.
                 let y = crt(&res[..res.len() - 1], &mods[..res.len() - 1]);
@@ -218,6 +218,9 @@ fn check() {
                 vals.push(("subset", g[(1usize << n) - 1]));
             }
             vals.push(("mitm64", dp::count::<u64>(n, &chk, dp::Ring { modulus: 0 }, false)));
+            if n % 2 == 1 {
+                vals.push(("direct", dp::count_direct::<u64>(n, &chk, dp::Ring { modulus: 0 })));
+            }
             if n <= 18 {
                 vals.push(("crt32", count(n, rule, Mode::M32(3), false).0));
                 vals.push(("crt16", count(n, rule, Mode::M16(6), false).0));

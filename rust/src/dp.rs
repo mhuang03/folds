@@ -296,8 +296,56 @@ pub fn combine<W: Word>(lay: &Layout, chk: &Checker, ring: Ring, layer: &Layer<W
         .reduce(|| 0u128, |a, b| if m != 0 { (a + b) % m } else { a + b })
 }
 
+/// Odd `N = 2k+1`, fused form: `a = Σ_{|U|=k+1} g(U) g(U^c)` with `U^c` in layer `k`.
+/// Layer `k+1` is computed row by row into a small scratch buffer and consumed at
+/// once, so it is never stored.  Per entry this needs one random lookup (`g(U^c)`)
+/// instead of the `≈ k/2` random lookups of the direct odd formula, and the pulls
+/// into layer `k` use the cache-friendly row kernels.
+pub fn combine_odd_fused<W: Word>(lay: &Layout, chk: &Checker, ring: Ring, layer: &Layer<W>) -> u128 {
+    let n = lay.n;
+    assert!(n % 2 == 1 && layer.shape.k == n / 2);
+    let full = lay.full();
+    let shape = Shape::new(lay, layer.shape.k + 1);
+    let rows = shape.rows(lay);
+    let m = ring.modulus as u128;
+    let (ps, pd) = (&layer.shape, &layer.data[..]);
+    rows.par_iter()
+        .with_min_len(4)
+        .map_init(Vec::<W>::new, |tmp, &(bl, row, _start, len)| {
+            tmp.clear();
+            tmp.resize(len, W::default());
+            if bl.i < bl.j {
+                offdiag_row(lay, chk, ring, ps, pd, &bl, row, tmp);
+            } else {
+                generic_row(lay, chk, ring, ps, pd, &bl, row, tmp);
+            }
+            let mut t = 0u128;
+            for col in 0..len {
+                let gu = tmp[col].get();
+                if gu == 0 {
+                    continue;
+                }
+                let (l, r) = entry(lay, &bl, row, col);
+                let u = lay.compose(l, bl.c, r);
+                let term = weight(&bl, row, col) as u128 * gu * layer.at(lay, full ^ u);
+                t = if m != 0 { (t + term) % m } else { t + term };
+            }
+            t
+        })
+        .reduce(|| 0u128, |a, b| if m != 0 { (a + b) % m } else { a + b })
+}
+
 /// Full meet-in-the-middle count.  Returns `a(N)` (exact, or mod `ring.modulus`).
 pub fn count<W: Word>(n: usize, chk: &Checker, ring: Ring, verbose: bool) -> u128 {
+    count_impl::<W>(n, chk, ring, verbose, true)
+}
+
+/// As [`count`] but with the direct (unfused) odd-`N` combination; for cross-checks.
+pub fn count_direct<W: Word>(n: usize, chk: &Checker, ring: Ring) -> u128 {
+    count_impl::<W>(n, chk, ring, false, false)
+}
+
+fn count_impl<W: Word>(n: usize, chk: &Checker, ring: Ring, verbose: bool, fused: bool) -> u128 {
     let lay = Layout::new(n);
     let mut cur: Layer<W> = layer0(&lay);
     let t0 = std::time::Instant::now();
@@ -324,7 +372,16 @@ pub fn count<W: Word>(n: usize, chk: &Checker, ring: Ring, verbose: bool) -> u12
             );
         }
     }
-    combine(&lay, chk, ring, &cur)
+    let t1 = std::time::Instant::now();
+    let a = if fused && n % 2 == 1 {
+        combine_odd_fused(&lay, chk, ring, &cur)
+    } else {
+        combine(&lay, chk, ring, &cur)
+    };
+    if verbose {
+        eprintln!("  combine: {:.1}s", t1.elapsed().as_secs_f64());
+    }
+    a
 }
 
 unsafe extern "C" {
