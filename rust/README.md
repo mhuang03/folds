@@ -13,6 +13,7 @@ cargo run --release -- semi 34 --blocks -v     # block-streamed layers (see belo
 cargo run --release -- residue semi 36 8 3 --blocks   # one u8 residue (index 3 in the moduli table)
 cargo run --release -- crt 8 r0 r1 ... r12     # CRT of u8 residues (checks the redundant one)
 cargo run --release -- peak 36 37              # simulated peak memory of --blocks
+FOLDS_SPILL=/scratch/dir folds residue semi 37 8 0 --blocks   # layers >= 1 GB file-backed
 cargo run --release -- stats semi 26          # refined statistics (see below)
 cargo run --release -- check                  # validation (brute force + known terms)
 cargo test --release                          # unit tests (rule & indexing bijection)
@@ -164,7 +165,9 @@ the sequence with 74904, 212728, 368016, 659296, … up to N=24). The stats code
 prefix counts) is checked against the dense DP for N ≤ 12. `cargo test` checks the
 fast validity test against the literal definition and checks that `index()` is a
 bijection onto mirror orbits (N ≤ 13). a(28) was also reproduced independently with
-`experiments/semi.c`. a(30), a(31) were reproduced by the u32 and u16 CRT paths.
+`experiments/semi.c`. a(30), a(31) were reproduced by the u32 and u16 CRT paths. The block path reproduces
+a(33) exactly (u64), a(33) mod 241, a(34) mod 251 and mod 65521, and a(29..32)
+residues.
 
 ## Statistics (`folds stats semi N`)
 
@@ -203,8 +206,11 @@ These are fitted to data, not proven.
 | 34 | 1711977358970374039688092 | 4 × ~125 s | u32 CRT, 9.4 GB |
 | 35 | 14916356465581456801127844 | 7 × 313–755 s | u16 CRT, 9.1 GB, machine under load |
 | 36 | 162918548122441960881265188 | 13 × 438–2137 s | u8 CRT, `--blocks`, 6.23 GB |
+| 37 | 1435459602925600924848243286 | 13 × 1055–1511 s | u8 CRT, `--blocks`, 11.2 GB, `FOLDS_SPILL` |
 
-**Largest N reached: 36** (N=37 in progress, see `results/semi.txt`).
+**Largest N reached: 37.** Both new terms have a redundant CRT modulus that agrees
+(N=36 also a second one, mod 181), and both satisfy the mod-4 law a ≡ c (mod 4):
+a(36) ≡ 0 and a(37) ≡ 2.
 
 The stats files `results/stats/semi_N.txt` (N = 2..24) also contain `alive_sets` /
 `doomed_sets` (`g>0` and `f=0`; the `doomed_total` column reproduces the "dead ends"
@@ -226,7 +232,9 @@ for every word size, because memory latency dominates it.
   (`FOLDS_SPILL=<dir>`). The kernel can then write back and evict those pages
   instead of killing a process. Freed blocks are hole-punched, so disk use follows
   the live set (≤ 11.2 GB). Spilling was no slower here: each run took 18–25 min,
-  with the I/O overlapped. 13 runs took about 4.5 h.
+  with the I/O overlapped. 13 runs took about 4.5 h. During one run, another job's
+  process grew to 13 GB. The spilled pages were evicted and re-read from disk, and
+  the run finished normally.
 * **N=38**: the peak is 24.2e9 words (24 GB in u8). This needs a machine with
   ≥ 32 GB, or the spill mode with ≥ 25 GB of free disk and a disk fast enough for
   ~50 GB of writes per run. At 128 MB/s that is ≥ 7 min of pure I/O per run, for each
