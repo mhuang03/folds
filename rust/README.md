@@ -92,8 +92,9 @@ The plain layered DP holds two full layers (`k-1` and `k`) at the same time.
 1. **Locality in `i`.** Output block `(i, j, c)` of layer `k` reads only the blocks
    `(i-1, j, c)`, `(i, j-1, c)` (for `j = i` this is the mirror of `(i-1, i, c)`) and
    `(i, j, 0)` of layer `k-1`. All of these have `L`-size `i-1` or `i`. The output
-   blocks are computed one at a time in order of `i` (increasing or decreasing,
-   whichever gives the smaller simulated peak). A block of layer `k-1` is released
+   blocks are computed one at a time. Any order is correct; the order is
+   increasing or decreasing `i`, improved by a deterministic local search
+   (100k insertion moves) on the simulated peak. A block of layer `k-1` is released
    right after the last output block that reads it. Each layer is one
    `mmap(MAP_NORESERVE)` region, so only written pages count. A released block gets
    `MADV_DONTNEED` + `PROT_NONE`, so a stray read faults instead of returning a
@@ -115,19 +116,21 @@ words (multiply by the bytes per residue):
 
 | N | old: layers h-1 and h | `--blocks` |
 |---|---|---|
-| 33 | 1.10e9 | 0.81e9 |
+| 33 | 1.10e9 | 0.74e9 |
 | 34 | 2.27e9 | 1.58e9 |
-| 35 | 4.30e9 | 3.09e9 |
+| 35 | 4.30e9 | 2.88e9 |
 | 36 | 8.84e9 | 6.22e9 |
-| 37 | 16.8e9 | 12.2e9 |
+| 37 | 16.8e9 | 11.2e9 |
 | 38 | 34.5e9 | 24.2e9 |
 
 The peak is about one full layer plus the two or three largest blocks next to the
 diagonal. For N=36, the binding step is 16 → 17, and block `(8,9)` alone is half of
-layer 17. The measured `VmHWM` matches the simulation: for N=33 with u64, both are
-6.52 GB, against 9.3 GB before. A global schedule over the (layer, block) DAG
-(interleaving blocks of different layers, found by a greedy search) reaches only
-6.0e9 for N=36 and 10.6e9 for N=37, so it was not implemented. No block order can go
+layer 17. The measured `VmHWM` matches the simulation: for N=33 with u64, both were
+6.52 GB before the local search, against 9.3 GB for the old code. For N=36 with u8,
+both are 6.22 GB. The local search mostly helps odd N (N=37: 12.2e9 with plain
+decreasing `i`). A global schedule over the (layer, block) DAG (interleaving blocks of
+different layers, found by a greedy search) reaches 6.0e9 for N=36 and 10.6e9 for
+N=37, so it was not implemented. No block order can go
 below max over blocks of (block + the blocks it reads), which is 5.4e9 for N=36.
 
 **Kernels.** The block path also has kernels that are kinder to the cache. They are
