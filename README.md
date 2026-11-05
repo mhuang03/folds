@@ -111,11 +111,16 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 3. **T(N,k)** is a quasi-polynomial for every fixed k (proven via an Ehrhart
    decomposition, one polytope per order type).
    - Exact formulas exist for k ≤ 6; see `experiments/prefix5/FINDINGS.txt`.
-   - **Period law (conjectured, exact for k ≤ 7):** the coefficient of N^(k−m) has period
+   - **Period law** (upper bound **proven on paper for all k**, via McMullen /
+     Berline–Vergne and a face lemma; exactness certified for k ≤ 7): the coefficient of N^(k−m) has period
      B(m) = lcm(2^(m−1), 2^a(2^s−1) : a+s = m−1), i.e. 1, 1, 2, 12, 168, 1680, 104160,
      624960.
    - The denominators are the periodic points of the doubling map: halving chains give
      2^a, and halving cycles give 2^s − 1.
+   - Leading coefficients c_k are exact for k ≤ 9, e.g. 9!·c_9 ≈ 101.7. The continuum
+     acceptance p_k = c_k/c_{k−1} decays like ≈ 0.75/(ln k + 0.25) (continuum SMC to
+     k ≈ 1000), matching the a(N) = N!/(κ ln N)^N conjecture.
+     See `experiments/periods/PROOFS.txt`.
 4. **Minimum LDS = minimum LIS = ⌊log₂(N+1)⌋**, attained. Minimum descents are
    ⌊log₂(N+1)⌋−1, except ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59. This would follow from the
    labelling conjecture (equivalently: every *right-heavy* permutation of [N] has a
@@ -135,6 +140,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/cluster/FINDINGS.txt` | pair correlations, mod-3 mechanism, Wallis asymptotics |
 | `experiments/prefix/FINDINGS.txt` | T(N,k) quasi-polynomials, Ehrhart mechanism, window rule |
 | `experiments/prefix5/FINDINGS.txt` | exact T(N,5), T(N,6) via Normaliz; period law for the coefficients |
+| `experiments/periods/PROOFS.txt` | proof of the period-law upper bound; c_8, c_9; continuum acceptance |
 | `experiments/extremal/PROOFS.txt` | left-to-right maxima and free-step laws |
 | `experiments/growth/PROOFS.txt` | composition, splits, upper bounds, SMC |
 | `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
