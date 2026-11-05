@@ -13,3 +13,4 @@ import Folds.Prefix
 import Folds.Wallis
 import Folds.SelfDual
 import Folds.Extremal
+import Folds.WindowRule
