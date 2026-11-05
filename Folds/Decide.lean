@@ -52,24 +52,7 @@ instance (N : Nat) (a : List Nat) : Decidable (Symmetric N a) :=
   decidable_of_iff (allSteps (SymStep N) [] a = true) (by
     rw [allSteps_iff]; simp [Symmetric])
 
-/-! ## The cyclic ("doubling") reformulation of a semi-symmetric step
-
-Write `P(j) = #{x ∈ S | x ≤ j}` and `s = |S|`, and extend `P` quasi-periodically:
-`P̃(j) = P(j mod N) + ⌊j / N⌋ · s` (wrap the strip into a circle of length `N`,
-counting one extra `s` per full turn).  Then for `m ∉ S` the step is semi-symmetric
-iff `P̃(2m - 1) = 2 · P(m - 1)`: a single formula covering both the left half
-(where `2m - 1 ≤ N` is the reference crease measured from the left edge) and the
-right half (where it wraps around).  (Statement only; proof is TODO.) -/
-
-def below (S : List Nat) (j : Nat) : Nat := S.countP (· ≤ j)
-
-def cycBelow (N : Nat) (S : List Nat) (j : Nat) : Nat :=
-  below S (j % N) + (j / N) * S.length
-
-def CyclicStep (N : Nat) (S : List Nat) (m : Nat) : Prop :=
-  cycBelow N S (2 * m - 1) = 2 * below S (m - 1)
-
-instance (N : Nat) (S : List Nat) (m : Nat) : Decidable (CyclicStep N S m) :=
-  inferInstanceAs (Decidable (_ = _))
+/-! The cyclic reformulation `CyclicStep` (with its `Decidable` instance) and its proof
+`semiStep_iff_cyclicStep` live in `Folds/Cyclic.lean`. -/
 
 end Folds
