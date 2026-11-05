@@ -103,6 +103,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `SuperExp3` (M) | general slip lemma (`blocks_mem_semiSeqs_iff`): "X in order f_τ, then Xᶜ in order g_σ" is valid iff τ, σ satisfy induced cyclic-interval conditions, for any split X; parity blocks, residue compositions and slips are special cases |
 | `Live2` (M) | co-reachability; every residue class mod q is a window copy (any N); **residue chain theorem** (`res_chain`); a recursively defined proven family of live 2-sets (e.g. 523 of 779 at N = 40) |
 | `Live3` (M) | Theorem E (`no_chain_exc`): no residue chain starts with class 1 at N ≡ 1 (mod q) when q is not a power of 2; Theorem H (`palindromic_chain`): explicit chains for every odd q, giving residue transfers for all odd q; near-class copies `winEmb_near` |
+| `Live4` (M) | good classes ⇔ complete residue chains; block-chain composition `good_comp` (every class good for q = 2^a); palindromic chains; 378 kernel-checked certificates for q ≤ 27; family `Cov2` proving 3373 of 4949 non-dead 2-sets co-reachable at N = 100 |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -170,6 +171,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live/FINDINGS.txt` | dead and live prefixes, Beatty copies |
 | `experiments/live2/PROOFS.txt` | residue chain theorem, reduction of liveness to RS + Adjacent Lemma |
 | `experiments/live3/PROOFS.txt` | RS for primes (partial), the Adjacent Lemma obstruction, near classes |
+| `experiments/live4/PROOFS.txt` | enlarged proven live family, uniform transfers, exceptional-class attempts |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Practical note for folders
