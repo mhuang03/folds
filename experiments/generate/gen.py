@@ -20,6 +20,11 @@ comp    iterated composition along a factorisation N = q1 q2 ... qt (--radix, de
         order of a valid q1-sequence, each class recursively.  Each node picks its block
         order from a pool of valid q-sequences (all of them for q <= 9, otherwise members of
         the tree family).  Semi-symmetric; symmetric only if every block order is.
+slip    parity-slip recursion (superexp/PROOFS.txt Theorems 1-2): a node of size 2n
+        exchanges 2k <-> 2k+1 between the parity classes for a seed-chosen set of odd k,
+        its two blocks are odds-first parity blocks, whose halves recurse.  Family size
+        2^slip_bits(N) = N^((1/8 + o(1)) N): super-exponential (e.g. 2^3145728 for N = 2^20,
+        versus 2^(N-1) for tree).  Semi-symmetric, usually not symmetric.
 
 Examples
 --------
@@ -29,6 +34,7 @@ Examples
   python3 gen.py 1000000 --seed 1 --verify --quiet
   python3 gen.py 1000000 --index 123456 # O(log N) random access (tree mode)
   python3 gen.py 360 --mode comp --radix 3,5,3,2,2,2 --seed 5 --verify
+  python3 gen.py 1000000 --mode slip --seed 9 --verify --quiet
   python3 gen.py --selftest
 """
 import argparse
@@ -207,6 +213,97 @@ def gen_comp(N, radix=None, seed=None):
     return np.argsort(key, kind="stable") + 1
 
 
+# ---------------------------------------------------------------- slip recursion
+def C_size(n):
+    """|C_n| of the parity-slip recursion (superexp/PROOFS.txt Theorem 2)."""
+    return n // 2 if n % 2 == 0 else (n + 1) // 4
+
+
+_SB = {}
+
+
+def slip_bits(n, forced=False):
+    """log2 of the size of the slip family on a node of size n (exact: Theorem 1 says
+    different choices give different sequences).  Returns (bits, use_slip)."""
+    key = (n, forced)
+    if key in _SB:
+        return _SB[key]
+    if n <= 1:
+        res = (0, False)
+    elif forced:
+        res = (slip_bits((n + 1) // 2)[0] + slip_bits(n // 2)[0], False)
+    else:
+        par = 1 + slip_bits((n + 1) // 2)[0] + slip_bits(n // 2)[0]
+        slp = -1
+        if n % 2 == 0 and n >= 4:
+            slp = C_size(n // 2) + 2 * slip_bits(n // 2, True)[0]
+        res = (slp, True) if slp > par else (par, False)
+    _SB[key] = res
+    return res
+
+
+def C_mask(n, i):
+    """i in C_n (vectorised over i and n)."""
+    odd = (i % 2) == 1
+    return odd & (i >= 1) & np.where(n % 2 == 0, i <= n - 1, 2 * i + 1 <= n)
+
+
+def gen_slip(N, seed=None):
+    """Parity-slip recursion, vectorised level by level.  A node of size 2n (when the
+    rule slip_bits says so) is split by Theorem 1 with a slip set D within C_n into the
+    f-block (first) and the s-block, both ordered by ODDS-FIRST parity blocks (forced
+    nodes), whose halves are again free nodes.  Other nodes: parity blocks with a free
+    flip.  Family size 2^slip_bits(N) ~ N^(N/8) for N = 4^j."""
+    s = 0 if seed is None else seed
+    loc = np.arange(1, N + 1, dtype=np.int64)
+    size = np.full(N, N, dtype=np.int64)
+    nid = np.zeros(N, dtype=np.int64)
+    forced = np.zeros(N, dtype=bool)
+    key = np.zeros(N, dtype=np.int64)
+    level = 0
+    while (size > 1).any():
+        done = size <= 1
+        sizes = np.unique(size[~done])
+        rule = {int(v): slip_bits(int(v))[1] for v in sizes}
+        slip_size = np.isin(size, [v for v, u in rule.items() if u])
+        slip = ~done & ~forced & slip_size
+        par = ~done & ~slip
+        bit = np.zeros(N, dtype=np.int64)
+        nloc, nsize, nforced = loc.copy(), size.copy(), np.zeros(N, dtype=bool)
+        # parity nodes
+        if par.any():
+            p = np.nonzero(par)[0]
+            x, sz = loc[p], size[p]
+            if seed is None:
+                odd_first = np.ones(len(p), dtype=bool)
+            else:
+                odd_first = forced[p] | ((hbits(s, level, nid[p]) & np.uint64(1)) == 0)
+            is_odd = (x % 2) == 1
+            bit[p] = np.where(is_odd == odd_first, 0, 1)
+            nloc[p] = np.where(is_odd, (x + 1) // 2, x // 2)
+            nsize[p] = np.where(is_odd, (sz + 1) // 2, sz // 2)
+        # slip nodes
+        if slip.any():
+            q = np.nonzero(slip)[0]
+            x, n = loc[q], size[q] // 2
+            i = x // 2
+            if seed is None:
+                di = np.zeros(len(q), dtype=bool)
+            else:
+                h = hbits(s, level + 1000, nid[q] * (1 << 21) + i)
+                di = C_mask(n, i) & ((h & np.uint64(1)) == 1)
+            inF = di == (x % 2 == 1)
+            bit[q] = np.where(inF, 0, 1)
+            nloc[q] = np.where(inF, i, i + 1)
+            nsize[q] = n
+            nforced[q] = True
+        key = key * 2 + bit
+        nid = nid * 2 + bit
+        loc, size, forced = nloc, nsize, nforced
+        level += 1
+    return np.argsort(key, kind="stable") + 1
+
+
 # ---------------------------------------------------------------- verification
 def check_perm(seq, N):
     return len(seq) == N and np.array_equal(np.sort(seq), np.arange(1, N + 1))
@@ -322,6 +419,10 @@ def selftest():
             assert verify_semi(np.array(s), N) == is_valid(s, N), (N, s)
             assert verify_sym(np.array(s), N) == is_valid(s, N, True), (N, s)
     print("comp members valid N < 200; verifiers agree with brute force")
+    for N in range(1, 300):
+        for s in (None, 1, 2, 3):
+            assert verify_semi(gen_slip(N, s), N), (N, s)
+    print("slip members valid N < 300")
     print("selftest ok (%.1fs)" % (time.time() - t0))
 
 
@@ -329,7 +430,7 @@ def selftest():
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("N", type=int, nargs="?")
-    ap.add_argument("--mode", choices=["tree", "ladder", "comp"], default="tree")
+    ap.add_argument("--mode", choices=["tree", "ladder", "comp", "slip"], default="tree")
     ap.add_argument("--seed", type=int)
     ap.add_argument("--choices", help="tree mode: bit string, one bit per node (N-1 bits)")
     ap.add_argument("--radix", help="comp mode: comma-separated factors of N")
@@ -355,6 +456,9 @@ def main():
     elif a.mode == "ladder":
         seq = gen_ladder(N, ladder_choose(a.seed))
         fam = "ladder"
+    elif a.mode == "slip":
+        seq = gen_slip(N, a.seed)
+        fam = "2^%d" % slip_bits(N)[0]
     else:
         radix = [int(v) for v in a.radix.split(",")] if a.radix else None
         seq = gen_comp(N, radix, a.seed)
