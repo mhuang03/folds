@@ -1,0 +1,4 @@
+kappa
+kdata/
+__pycache__/
+*.bin

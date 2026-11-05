@@ -62,6 +62,24 @@ def kappa(N, m, mp):
     return pair_prob(N, m, mp) / (w(radius(N, m)) * w(radius(N, mp))) - 1
 
 
+def roles_r(m, r):
+    d = {}
+    for k in range(1, r + 1):
+        d[m - k] = 1
+        d[m + k] = -1
+    return d
+
+
+def pair_prob_g(m, r, mp, rp):
+    """P(C and C') for abstract windows (centre m radius r, centre mp radius rp) on Z."""
+    rm, rmp = roles_r(m, r), roles_r(mp, rp)
+    return _ordered(m, mp, rm, rmp) + _ordered(mp, m, rmp, rm)
+
+
+def kappa_g(m, r, mp, rp):
+    return pair_prob_g(m, r, mp, rp) / (w(r) * w(rp)) - 1
+
+
 if __name__ == "__main__":
     from itertools import permutations
     for N in range(3, 8):
