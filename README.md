@@ -105,6 +105,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live3` (M) | Theorem E (`no_chain_exc`): no residue chain starts with class 1 at N ≡ 1 (mod q) when q is not a power of 2; Theorem H (`palindromic_chain`): explicit chains for every odd q, giving residue transfers for all odd q; near-class copies `winEmb_near` |
 | `Live4` (M) | good classes ⇔ complete residue chains; block-chain composition `good_comp` (every class good for q = 2^a); palindromic chains; 378 kernel-checked certificates for q ≤ 27; family `Cov2` proving 3373 of 4949 non-dead 2-sets co-reachable at N = 100 |
 | `Labelling` (M) | finite reduction for each label count t (`bound_of_checks`, via left-half monotonicity); t ≤ 2 settled for all N, so des + 1 ≥ min(⌊log₂(N+1)⌋, 3) |
+| `Adjacent` (M) | **Theorem G** (inward-sign criterion ⇒ co-reachable, via a greedy-then-reverse construction); **every interval is co-reachable** (`coReach_interval`), hence the **Adjacent Lemma**; multiples of q are co-reachable when q ∣ N+1; family `Cov3` (4409 of 4949 non-dead 2-sets at N = 100) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -146,8 +147,9 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    see `experiments/labelling/PROOFS.txt`.
 5. **Liveness (Conjecture C).** Every 2-set is co-reachable (its complement can be
    ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
-   valid prefixes for N ≤ 31). It reduces to: RS for primes, near residue classes, and
-   the Adjacent Lemma ({r, r+1} is always co-reachable). See
+   valid prefixes for N ≤ 31). The Adjacent Lemma, and co-reachability of every
+   interval, are now **proven** (Lean, Theorem G). Still open: {1,N} for odd N, and
+   some wide pairs (v − u odd and large) from N = 31 on. See
    `experiments/live2/PROOFS.txt`.
 
 ## Where things are
@@ -175,6 +177,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live2/PROOFS.txt` | residue chain theorem, reduction of liveness to RS + Adjacent Lemma |
 | `experiments/live3/PROOFS.txt` | RS for primes (partial), the Adjacent Lemma obstruction, near classes |
 | `experiments/live4/PROOFS.txt` | enlarged proven live family, uniform transfers, exceptional-class attempts |
+| `experiments/adjacent/PROOFS.txt` | Theorem G and the interval / Adjacent Lemma proof |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Practical note for folders
