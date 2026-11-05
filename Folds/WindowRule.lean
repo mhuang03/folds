@@ -221,4 +221,61 @@ theorem card_validPrefixes_two (N : Nat) : (validPrefixes N 2).card = N * N / 2 
     | [a, b], _ => rfl
   · intro p _; rfl
 
+/-! ## Dead 2-prefixes: `(1, N)` and `(N, 1)` for even `N` -/
+
+/-- For even `N`, after bisecting panels `1` and `N` no panel can be bisected: every window
+contains exactly one of `1` and `N` (only the middle panel of an odd strip sees both). -/
+theorem not_semiStep_one_N {N m : Nat} (hN : N % 2 = 0) (hm1 : 2 ≤ m) (hmN : m < N) :
+    ¬ SemiStep N [1, N] m := by
+  intro h
+  unfold SemiStep at h
+  rw [leftCount_eq (by simp; omega), rightCount_eq (by simp; omega)] at h
+  simp only [List.countP_cons, List.countP_nil] at h
+  unfold reach at h
+  split_ifs at h <;> simp_all <;> omega
+
+theorem not_semiStep_N_one {N m : Nat} (hN : N % 2 = 0) (hm1 : 2 ≤ m) (hmN : m < N) :
+    ¬ SemiStep N [N, 1] m := by
+  rw [semiStep_congr (T := [1, N]) (fun x => by simp; tauto)]
+  exact not_semiStep_one_N hN hm1 hmN
+
+/-- **Dead 2-prefix.**  For even `N ≥ 3`, no semi-symmetric fold sequence starts with
+`[1, N]`. -/
+theorem not_semiSymmetric_one_N {N : Nat} {a : List Nat} (hN : N % 2 = 0) (h3 : 3 ≤ N)
+    (hf : IsFoldSeq N a) (ha : a.take 2 = [1, N]) : ¬ SemiSymmetric N a := by
+  intro h
+  have hlen : a.length = N := by rw [hf.length_eq]; simp
+  have hs := h 2 (by omega)
+  have h2 : 2 < a.length := by omega
+  have hm := (mem_range'_of_perm hf).1 (List.getElem_mem h2)
+  have hnt : a[2] ∉ a.take 2 := by
+    rw [getElem_mem_take_iff (nodup_of_foldSeq hf) h2]; omega
+  rw [ha] at hs hnt
+  simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at hnt
+  exact not_semiStep_one_N hN (by omega) (by omega) hs
+
+/-- **Dead 2-prefix.**  For even `N ≥ 3`, no semi-symmetric fold sequence starts with
+`[N, 1]`. -/
+theorem not_semiSymmetric_N_one {N : Nat} {a : List Nat} (hN : N % 2 = 0) (h3 : 3 ≤ N)
+    (hf : IsFoldSeq N a) (ha : a.take 2 = [N, 1]) : ¬ SemiSymmetric N a := by
+  intro h
+  have hlen : a.length = N := by rw [hf.length_eq]; simp
+  have hs := h 2 (by omega)
+  have h2 : 2 < a.length := by omega
+  have hm := (mem_range'_of_perm hf).1 (List.getElem_mem h2)
+  have hnt : a[2] ∉ a.take 2 := by
+    rw [getElem_mem_take_iff (nodup_of_foldSeq hf) h2]; omega
+  rw [ha] at hs hnt
+  simp only [List.mem_cons, List.not_mem_nil, or_false, not_or] at hnt
+  exact not_semiStep_N_one hN (by omega) (by omega) hs
+
+/-- `[1, N]` and `[N, 1]` are valid 2-prefixes for every `N ≥ 2`, so they really are dead
+ends, not invalid prefixes. -/
+theorem semiSymmetric_one_N {N : Nat} (hN : 2 ≤ N) :
+    SemiSymmetric N [1, N] ∧ SemiSymmetric N [N, 1] := by
+  rw [semiSymmetric_pair_iff, semiSymmetric_pair_iff,
+    semiStep_pair_iff le_rfl (by omega) (by omega) le_rfl (by omega),
+    semiStep_pair_iff (by omega) le_rfl le_rfl (by omega) (by omega)]
+  omega
+
 end Folds
