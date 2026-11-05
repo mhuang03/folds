@@ -20,6 +20,14 @@ ones.
   `t ++ mid N` is semi-symmetric** (`validHalf N`).  This is the `3^{N/2}`-state reformulation
   used by `experiments/arith/selfdual*.c`: a half sequence fills the folded positions
   `1..⌊N/2⌋`, each with "left" (`j`) or "right" (`N + 1 - j`).
+* `flip_outer`, `flip_inner` (the flip lemma, step level): if `S` holds one panel of every
+  pair other than `{x, N + 1 - x}`, then for an outer pair (`3 · min(x, N+1-x) ≤ N + 1`)
+  placing `x` and placing `N + 1 - x` after `S` are valid together, and for an inner pair at
+  most one of them is valid.
+* `flipLast_mem_validHalf`, `flipLast_not_mem_validHalf`: the same for the last panel of a
+  valid half sequence (even `N`).
+* `revMirrorFixed_mod_four_inner`: for even `N ≥ 4`,
+  `c(N) ≡ #{valid half sequences whose last pair is inner} (mod 4)`.
 -/
 
 namespace Folds
@@ -405,5 +413,241 @@ theorem flip_inner (hS : ∀ y ∈ S, 1 ≤ y ∧ y ≤ N) (hx1 : 1 ≤ x) (hxN 
     omega
 
 end Flip
+
+/-! ## The flip on half sequences, and `c(2n) mod 4`
+
+For even `N`, flip the last panel `x` of a half sequence to its partner `N + 1 - x`
+(`flipLast`).  On valid half sequences whose last pair is outer this is a fixed-point-free
+involution commuting with the mirror `t ↦ t.map (N + 1 - ·)`; with `card_mod_four` this gives
+`c(N) ≡ #{valid half sequences whose last pair is inner} (mod 4)` for even `N ≥ 4`. -/
+
+/-- Replace the last entry `x` by `N + 1 - x`. -/
+def flipLast (N : ℕ) (t : List ℕ) : List ℕ := (t.reverse.modifyHead (N + 1 - ·)).reverse
+
+@[simp] theorem flipLast_concat (N : ℕ) (t : List ℕ) (x : ℕ) :
+    flipLast N (t ++ [x]) = t ++ [N + 1 - x] := by
+  simp [flipLast]
+
+/-- The last panel `x` of `t` belongs to an outer pair: `3 · min(x, N + 1 - x) ≤ N + 1`. -/
+def LastOuter (N : ℕ) (t : List ℕ) : Prop :=
+  3 * min (t.getLastD 0) (N + 1 - t.getLastD 0) ≤ N + 1
+
+instance (N : ℕ) : DecidablePred (LastOuter N) := fun _ => inferInstanceAs (Decidable (_ ≤ _))
+
+theorem lastOuter_concat {N x : ℕ} {t : List ℕ} :
+    LastOuter N (t ++ [x]) ↔ 3 * min x (N + 1 - x) ≤ N + 1 := by
+  simp [LastOuter]
+
+theorem exists_concat_of_mem_halfSeqs {N : ℕ} {t : List ℕ} (hN : 2 ≤ N) (ht : t ∈ halfSeqs N) :
+    ∃ t' x, t = t' ++ [x] := by
+  rcases List.eq_nil_or_concat t with rfl | ⟨L, b, rfl⟩
+  · have := (mem_halfSeqs.1 ht).2.1; simp at this; omega
+  · exact ⟨L, b, by simp⟩
+
+/-- For even `N`, a half sequence meets every pair `{y, N + 1 - y}`. -/
+theorem halfSeqs_cover {N : ℕ} {t : List ℕ} (hN : N % 2 = 0) (ht : t ∈ halfSeqs N) {y : ℕ}
+    (hy1 : 1 ≤ y) (hyN : y ≤ N) : y ∈ t ∨ N + 1 - y ∈ t := by
+  obtain ⟨hnd, hl, hb, htr⟩ := mem_halfSeqs.1 ht
+  have hinj : Set.InjOn (fun z => min z (N + 1 - z)) (t.toFinset : Set ℕ) := by
+    intro a ha b hb' e
+    rw [mem_coe, List.mem_toFinset] at ha hb'
+    have := hb a ha; have := hb b hb'
+    simp only at e
+    by_contra hne
+    have hab : b = N + 1 - a := by omega
+    exact htr a ha (hab ▸ hb')
+  have himg : t.toFinset.image (fun z => min z (N + 1 - z)) = Icc 1 (N / 2) := by
+    apply eq_of_subset_of_card_le
+    · intro z hz
+      rw [mem_image] at hz
+      obtain ⟨a, ha, rfl⟩ := hz
+      have := hb a (List.mem_toFinset.1 ha)
+      rw [mem_Icc]; omega
+    · rw [card_image_of_injOn hinj, List.toFinset_card_of_nodup hnd, hl, Nat.card_Icc]; omega
+  have hy : min y (N + 1 - y) ∈ t.toFinset.image (fun z => min z (N + 1 - z)) := by
+    rw [himg, mem_Icc]; omega
+  obtain ⟨z, hz, e⟩ := mem_image.1 hy
+  rw [List.mem_toFinset] at hz
+  have := hb z hz
+  by_cases h : z = y
+  · left; exact h ▸ hz
+  · right
+    have : z = N + 1 - y := by omega
+    exact this ▸ hz
+
+/-- The hypotheses of the flip lemma hold for the prefix `t'` of a half sequence `t' ++ [x]`. -/
+theorem flip_setup {N x : ℕ} {t : List ℕ} (hN : N % 2 = 0) (ht : t ++ [x] ∈ halfSeqs N) :
+    (∀ y ∈ t, 1 ≤ y ∧ y ≤ N) ∧ 1 ≤ x ∧ x ≤ N ∧
+      (∀ y, 1 ≤ y → y ≤ N → y ≠ x → y ≠ N + 1 - x → (y ∈ t ↔ N + 1 - y ∉ t)) ∧
+      x ∉ t ∧ N + 1 - x ∉ t ∧ 2 * x ≠ N + 1 ∧ t ++ [N + 1 - x] ∈ halfSeqs N := by
+  obtain ⟨hnd, hl, hb, htr⟩ := mem_halfSeqs.1 ht
+  have hx := hb x (by simp)
+  have hxt : x ∉ t := by
+    intro h; rw [List.nodup_append] at hnd; exact hnd.2.2 x h x (by simp) rfl
+  have hσt : N + 1 - x ∉ t := fun h => htr x (by simp) (List.mem_append_left _ h)
+  refine ⟨fun y hy => hb y (List.mem_append_left _ hy), hx.1, hx.2, ?_, hxt, hσt, by omega, ?_⟩
+  · intro y hy1 hyN hyx hyσ
+    constructor
+    · intro hy hσ; exact htr y (List.mem_append_left _ hy) (List.mem_append_left _ hσ)
+    · intro hσ
+      rcases halfSeqs_cover hN ht hy1 hyN with h | h
+      · rcases List.mem_append.1 h with h | h
+        · exact h
+        · simp at h; exact absurd h hyx
+      · rcases List.mem_append.1 h with h | h
+        · exact absurd h hσ
+        · simp at h; omega
+  · rw [mem_halfSeqs]
+    refine ⟨?_, by simpa using hl, ?_, ?_⟩
+    · rw [List.nodup_append] at hnd ⊢
+      refine ⟨hnd.1, by simp, ?_⟩
+      intro a ha b hb' e; simp at hb'; subst e; subst hb'; exact hσt ha
+    · intro y hy
+      rcases List.mem_append.1 hy with h | h
+      · exact hb y (List.mem_append_left _ h)
+      · simp at h; omega
+    · intro y hy hσ
+      rcases List.mem_append.1 hy with h | h
+      · rcases List.mem_append.1 hσ with h' | h'
+        · exact htr y (List.mem_append_left _ h) (List.mem_append_left _ h')
+        · simp at h'
+          have hyb := hb y (List.mem_append_left _ h)
+          exact hxt (by rw [show x = y by omega]; exact h)
+      · simp at h; subst h
+        rcases List.mem_append.1 hσ with h' | h'
+        · exact hxt (by rw [show N + 1 - (N + 1 - x) = x by omega] at h'; exact h')
+        · simp at h'; omega
+
+theorem mid_of_even {N : ℕ} (hN : N % 2 = 0) : mid N = [] := by
+  unfold mid; split
+  · omega
+  · rfl
+
+/-- **Flip on half sequences, outer pair.** -/
+theorem flipLast_mem_validHalf {N : ℕ} {t : List ℕ} (hN : N % 2 = 0) (h2 : 2 ≤ N)
+    (ht : t ∈ validHalf N) (hout : LastOuter N t) : flipLast N t ∈ validHalf N := by
+  rw [validHalf, mem_filter] at ht ⊢
+  obtain ⟨t', x, rfl⟩ := exists_concat_of_mem_halfSeqs h2 ht.1
+  obtain ⟨hS, hx1, hxN, htr, hxS, hσS, -, hmem⟩ := flip_setup hN ht.1
+  rw [lastOuter_concat] at hout
+  rw [flipLast_concat]
+  refine ⟨hmem, ?_⟩
+  have hs := ht.2
+  rw [mid_of_even hN, List.append_nil, semiSymmetric_concat_iff] at hs ⊢
+  exact ⟨hs.1, (flip_outer hS hx1 hxN htr hxS hσS hout).1 hs.2⟩
+
+/-- **Flip on half sequences, inner pair.** -/
+theorem flipLast_not_mem_validHalf {N : ℕ} {t : List ℕ} (hN : N % 2 = 0) (h2 : 2 ≤ N)
+    (ht : t ∈ validHalf N) (hin : ¬ LastOuter N t) : flipLast N t ∉ validHalf N := by
+  rw [validHalf, mem_filter] at ht ⊢
+  obtain ⟨t', x, rfl⟩ := exists_concat_of_mem_halfSeqs h2 ht.1
+  obtain ⟨hS, hx1, hxN, htr, hxS, hσS, hne, -⟩ := flip_setup hN ht.1
+  rw [lastOuter_concat] at hin
+  rw [flipLast_concat]
+  rintro ⟨-, hs'⟩
+  have hs := ht.2
+  rw [mid_of_even hN, List.append_nil, semiSymmetric_concat_iff] at hs hs'
+  exact flip_inner hS hx1 hxN htr hxS hσS hne (by omega) ⟨hs.2, hs'.2⟩
+
+theorem semiSymmetric_map_mirror_iff {N : ℕ} {t : List ℕ} (hb : ∀ x ∈ t, 1 ≤ x ∧ x ≤ N) :
+    SemiSymmetric N (t.map (N + 1 - ·)) ↔ SemiSymmetric N t := by
+  have key : ∀ k (hk : k < t.length),
+      SemiStep N ((t.map (N + 1 - ·)).take k) ((t.map (N + 1 - ·))[k]'(by simpa using hk)) ↔
+        SemiStep N (t.take k) t[k] := by
+    intro k hk
+    rw [List.getElem_map, ← List.map_take]
+    have hm := hb _ (List.getElem_mem hk)
+    exact semiStep_mirror_iff (fun z hz => (hb z (List.mem_of_mem_take hz)).2) hm.1 hm.2
+  constructor
+  · intro h k hk; exact (key k hk).1 (h k (by simpa using hk))
+  · intro h k hk
+    simp only [List.length_map] at hk
+    exact (key k hk).2 (h k hk)
+
+theorem map_mirror_mem_validHalf {N : ℕ} {t : List ℕ} (hN : N % 2 = 0)
+    (ht : t ∈ validHalf N) : t.map (N + 1 - ·) ∈ validHalf N := by
+  rw [validHalf, mem_filter] at ht ⊢
+  obtain ⟨hnd, hl, hb, htr⟩ := mem_halfSeqs.1 ht.1
+  refine ⟨mem_halfSeqs.2 ⟨?_, by simpa using hl, ?_, ?_⟩, ?_⟩
+  · exact nodup_map_of_injOn hnd fun x hx y hy e => by
+      have := hb x hx; have := hb y hy; omega
+  · intro y hy; obtain ⟨z, hz, rfl⟩ := List.mem_map.1 hy; have := hb z hz; omega
+  · intro y hy hσ
+    obtain ⟨z, hz, rfl⟩ := List.mem_map.1 hy
+    obtain ⟨w, hw, e⟩ := List.mem_map.1 hσ
+    have := hb z hz; have := hb w hw
+    exact htr z hz (by rw [show N + 1 - z = w by omega]; exact hw)
+  · rw [mid_of_even hN, List.append_nil] at ht ⊢
+    exact (semiSymmetric_map_mirror_iff hb).2 ht.2
+
+/-- **`c(N) mod 4` from the inner pairs.**  For even `N ≥ 4`, the number `c(N)` of
+semi-symmetric fold sequences fixed by reversal ∘ mirror is congruent mod 4 to the number of
+valid half sequences whose last panel belongs to an inner pair. -/
+theorem revMirrorFixed_mod_four_inner {N : ℕ} (hN : N % 2 = 0) (h4 : 4 ≤ N) :
+    (revMirrorFixed N).card % 4 =
+      ((validHalf N).filter fun t => ¬ LastOuter N t).card % 4 := by
+  rw [card_revMirrorFixed, ← card_filter_add_card_filter_not (s := validHalf N) (LastOuter N)]
+  set X := (validHalf N).filter (LastOuter N) with hX
+  have memX : ∀ t ∈ X, t ∈ validHalf N ∧ LastOuter N t := fun t ht => mem_filter.1 ht
+  have bnd : ∀ t ∈ X, ∀ y ∈ t, 1 ≤ y ∧ y ≤ N := fun t ht =>
+    (mem_halfSeqs.1 (mem_filter.1 (memX t ht).1).1).2.2.1
+  have split : ∀ t ∈ X, ∃ t' x, t = t' ++ [x] := fun t ht =>
+    exists_concat_of_mem_halfSeqs (by omega) (mem_filter.1 (memX t ht).1).1
+  have mirror_mirror' : ∀ t ∈ X, (t.map (N + 1 - ·)).map (N + 1 - ·) = t := by
+    intro t ht
+    rw [List.map_map]
+    conv => rhs; rw [← List.map_id t]
+    apply List.map_congr_left
+    intro y hy; have := bnd t ht y hy; simp; omega
+  have h := card_mod_four (flipLast N) (List.map (N + 1 - ·)) _ X rfl
+    (fun t ht => by
+      obtain ⟨hv, ho⟩ := memX t ht
+      refine mem_filter.2 ⟨flipLast_mem_validHalf hN (by omega) hv ho, ?_⟩
+      obtain ⟨t', x, rfl⟩ := split t ht
+      rw [flipLast_concat, lastOuter_concat]; rw [lastOuter_concat] at ho
+      have := bnd _ ht x (by simp); omega)
+    (fun t ht => by
+      obtain ⟨hv, ho⟩ := memX t ht
+      refine mem_filter.2 ⟨map_mirror_mem_validHalf hN hv, ?_⟩
+      obtain ⟨t', x, rfl⟩ := split t ht
+      rw [List.map_append, List.map_singleton, lastOuter_concat]; rw [lastOuter_concat] at ho
+      have := bnd _ ht x (by simp); omega)
+    (fun t ht => by
+      obtain ⟨t', x, rfl⟩ := split t ht
+      have := bnd _ ht x (by simp)
+      rw [flipLast_concat, flipLast_concat, show N + 1 - (N + 1 - x) = x by omega])
+    mirror_mirror'
+    (fun t ht => by
+      obtain ⟨t', x, rfl⟩ := split t ht
+      simp only [List.map_append, List.map_singleton, flipLast_concat])
+    (fun t ht => by
+      obtain ⟨t', x, rfl⟩ := split t ht
+      have := bnd _ ht x (by simp)
+      rw [flipLast_concat]; intro e
+      have := List.append_inj_right' e rfl
+      simp at this; omega)
+    (fun t ht => by
+      obtain ⟨t', x, rfl⟩ := split t ht
+      have := bnd _ ht x (by simp)
+      intro e
+      have := congrArg List.getLast? e
+      simp at this; omega)
+  have hempty : (X.filter fun t => flipLast N (t.map (N + 1 - ·)) = t) = ∅ := by
+    apply filter_false_of_mem
+    intro t ht e
+    obtain ⟨t', x, rfl⟩ := split t ht
+    have hl := (mem_halfSeqs.1 (mem_filter.1 (memX _ ht).1).1).2.1
+    simp only [List.length_append, List.length_singleton] at hl
+    rw [List.map_append, List.map_singleton, flipLast_concat] at e
+    have e' := List.append_inj_left' e rfl
+    obtain ⟨y, ys, rfl⟩ : ∃ y ys, t' = y :: ys := by
+      cases t' with
+      | nil => simp at hl; omega
+      | cons y ys => exact ⟨y, ys, rfl⟩
+    simp only [List.map_cons, List.cons.injEq] at e'
+    have := bnd _ ht y (by simp)
+    omega
+  rw [hempty, card_empty] at h
+  omega
 
 end Folds
