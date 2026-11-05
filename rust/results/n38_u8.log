@@ -8,3 +8,9 @@ semi N=38 mod 251 = 62 1550.6s peak_rss 3.97 GB
 semi N=38 mod 241 = 117 1658.1s peak_rss 3.97 GB
 # exit idx 2 code 0 2026-11-05T18:26:22Z load 6.18 6.23 5.73
 # start idx 3 2026-11-05T18:26:22Z load 6.18 6.23 5.73 avail 14849880 kB disk_avail 17874 MB anon_cap 3.5 spill /home/user/spill38
+semi N=38 mod 239 = 138 2002.5s peak_rss 3.97 GB
+# exit idx 3 code 0 2026-11-05T18:59:44Z load 4.94 5.49 6.06
+# start idx 4 2026-11-05T18:59:44Z load 4.94 5.49 6.06 avail 14978832 kB disk_avail 17843 MB anon_cap 3.5 spill /home/user/spill38
+semi N=38 mod 233 = 68 1186.3s peak_rss 3.98 GB
+# exit idx 4 code 0 2026-11-05T19:19:31Z load 4.43 4.42 4.79
+# start idx 5 2026-11-05T19:19:31Z load 4.43 4.42 4.79 avail 15550264 kB disk_avail 17647 MB anon_cap 3.5 spill /home/user/spill38
