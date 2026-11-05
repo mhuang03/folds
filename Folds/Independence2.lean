@@ -448,4 +448,102 @@ theorem card_pair_one_outside' {n a : ℕ}
     simp only [mem_insert, leftArm, rightArm, mem_Ico, mem_Ioc, hr]; omega
   · simp only [leftArm, rightArm, hr, Nat.card_Ico, Nat.card_Ioc]; omega
 
+/-! ## Chains ending in a pair with one outside element -/
+
+/-- **Compatible chains over a base.**  If the product formula holds for a list `t`, then it
+holds for `ms ++ t` whenever `ms` is a compatible chain and every window of `ms` is compatible
+with every panel of `t`.  (`card_constrSeqs_chain` is the case `t = []`.) -/
+theorem card_constrSeqs_chain_append {N : ℕ} (t : List ℕ)
+    (ht : (constrSeqs N t.toFinset).card * (t.map fun m => (2 * reach N m + 1)!).prod =
+      N ! * (t.map fun m => 4 ^ reach N m * (reach N m)! ^ 2).prod) :
+    ∀ (ms : List ℕ), (∀ m ∈ ms, 1 ≤ m ∧ m ≤ N) →
+      ms.Pairwise (fun a b => Compat N (window N a) b) →
+      (∀ a ∈ ms, ∀ b ∈ t, Compat N (window N a) b) →
+      (constrSeqs N (ms ++ t).toFinset).card *
+          ((ms ++ t).map fun m => (2 * reach N m + 1)!).prod =
+        N ! * ((ms ++ t).map fun m => 4 ^ reach N m * (reach N m)! ^ 2).prod
+  | [], _, _, _ => by simpa using ht
+  | a :: ms, hb, hp, hc => by
+    rw [List.pairwise_cons] at hp
+    have ha := hb a List.mem_cons_self
+    have ih := card_constrSeqs_chain_append t ht ms
+      (fun m hm => hb m (List.mem_cons_of_mem _ hm)) hp.2
+      (fun x hx y hy => hc x (List.mem_cons_of_mem _ hx) y hy)
+    rw [constrSeqs_eq] at ih ⊢
+    have hQ : ∀ u ∈ orderings (window N a), ∀ u' ∈ orderings (window N a),
+        ∀ l ∈ orderings (Icc 1 N),
+        (∀ m ∈ (ms ++ t).toFinset, Cstep N m (l.map (relab u u'))) ↔
+          (∀ m ∈ (ms ++ t).toFinset, Cstep N m l) := by
+      intro u hu u' hu' l _
+      apply forall₂_congr
+      intro m hm
+      rw [List.mem_toFinset, List.mem_append] at hm
+      rcases hm with hm | hm
+      · exact cstep_relab (hp.1 m hm) hu hu' l
+      · exact cstep_relab (hc a List.mem_cons_self m hm) hu hu' l
+    have h := card_indep (window_subset ha.1 ha.2) (Cstep N a)
+      (fun l => ∀ m ∈ (ms ++ t).toFinset, Cstep N m l) hQ
+    simp only [cstep_restrict (subset_refl _), card_window,
+      card_window_orderings ha.1 ha.2] at h
+    have e : (orderings (Icc 1 N)).filter
+        (fun l => ∀ m ∈ (a :: ms ++ t).toFinset, Cstep N m l) =
+        (orderings (Icc 1 N)).filter
+          (fun l => Cstep N a l ∧ ∀ m ∈ (ms ++ t).toFinset, Cstep N m l) := by
+      apply filter_congr
+      intro l _
+      simp [List.toFinset_cons]
+    rw [e, List.cons_append, List.map_cons, List.map_cons, List.prod_cons, List.prod_cons,
+      ← mul_assoc, h, mul_assoc, ih]
+    ring
+
+/-- **Chains ending in a one-outside pair.**  For `N = 2n+2`, a compatible chain `ms`
+followed by `a, n+2` with `W_a ⊆ {1} ∪ L_{n+2}`, where every window of `ms` is compatible with
+`a` and with `n+2`: the constraints are jointly independent. -/
+theorem card_constrSeqs_chain_one_outside {n a : ℕ}
+    (h : window (2 * n + 2) a ⊆ insert 1 (leftArm (2 * n + 2) (n + 2))) (ms : List ℕ)
+    (hb : ∀ m ∈ ms, 1 ≤ m ∧ m ≤ 2 * n + 2)
+    (hp : ms.Pairwise (fun x y => Compat (2 * n + 2) (window (2 * n + 2) x) y))
+    (hc : ∀ m ∈ ms, Compat (2 * n + 2) (window (2 * n + 2) m) a ∧
+      Compat (2 * n + 2) (window (2 * n + 2) m) (n + 2)) :
+    (constrSeqs (2 * n + 2) (ms ++ [a, n + 2]).toFinset).card *
+        ((ms ++ [a, n + 2]).map fun m => (2 * reach (2 * n + 2) m + 1)!).prod =
+      (2 * n + 2)! *
+        ((ms ++ [a, n + 2]).map fun m =>
+          4 ^ reach (2 * n + 2) m * (reach (2 * n + 2) m)! ^ 2).prod := by
+  apply card_constrSeqs_chain_append [a, n + 2] _ ms hb hp
+  · intro x hx y hy
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at hy
+    rcases hy with rfl | rfl
+    · exact (hc x hx).1
+    · exact (hc x hx).2
+  · have e : [a, n + 2].toFinset = {a, n + 2} := by ext; simp
+    rw [e]
+    simp only [List.map_cons, List.map_nil, List.prod_cons, List.prod_nil, mul_one]
+    have := card_pair_one_outside h
+    rw [← mul_assoc, this]; ring
+
+/-- Mirror image of `card_constrSeqs_chain_one_outside`. -/
+theorem card_constrSeqs_chain_one_outside' {n a : ℕ}
+    (h : window (2 * n + 2) a ⊆ insert (2 * n + 2) (rightArm (2 * n + 2) (n + 1)))
+    (ms : List ℕ) (hb : ∀ m ∈ ms, 1 ≤ m ∧ m ≤ 2 * n + 2)
+    (hp : ms.Pairwise (fun x y => Compat (2 * n + 2) (window (2 * n + 2) x) y))
+    (hc : ∀ m ∈ ms, Compat (2 * n + 2) (window (2 * n + 2) m) a ∧
+      Compat (2 * n + 2) (window (2 * n + 2) m) (n + 1)) :
+    (constrSeqs (2 * n + 2) (ms ++ [a, n + 1]).toFinset).card *
+        ((ms ++ [a, n + 1]).map fun m => (2 * reach (2 * n + 2) m + 1)!).prod =
+      (2 * n + 2)! *
+        ((ms ++ [a, n + 1]).map fun m =>
+          4 ^ reach (2 * n + 2) m * (reach (2 * n + 2) m)! ^ 2).prod := by
+  apply card_constrSeqs_chain_append [a, n + 1] _ ms hb hp
+  · intro x hx y hy
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at hy
+    rcases hy with rfl | rfl
+    · exact (hc x hx).1
+    · exact (hc x hx).2
+  · have e : [a, n + 1].toFinset = {a, n + 1} := by ext; simp
+    rw [e]
+    simp only [List.map_cons, List.map_nil, List.prod_cons, List.prod_nil, mul_one]
+    have := card_pair_one_outside' h
+    rw [← mul_assoc, this]; ring
+
 end Folds
