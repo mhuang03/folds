@@ -10,6 +10,8 @@ Files
   sets.c      V(N,1..K) and sum_{|S|=k} g(S) (= T, used as a cross-check)
   levels.c    full subset DP, N <= 22: T, V, completable prefixes, live sets per level
   pieces.c    order-type decomposition (one polytope per order type, see section 4)
+  contpatterns.py  all full-dimensional order-type classes in the continuum (LP), k <= 7
+  rule.py     the window rule (section 4) checked against the definition for all (S,c), N <= 14
   volumes.py  exact c_k as a sum of exact polytope volumes (scipy vertices snapped to Q, checked)
   derive3.py  the hand derivations of T(N,2), T(N,3) (continuous and discrete), checked
   fit.py, qfit.py, msearch.py, period.py   exact quasi-polynomial fitting / period screening
@@ -17,7 +19,7 @@ Files
   neighbor.c, suffix.py, deadpref.py, verts.py, oeis.py   side checks
   data: T4.txt (k<=4, N<=400), T5.txt+T5b.txt (k<=5, N<=~200), T6.txt (k<=6, N<=90),
         T7.txt (k<=7, small N), V4.txt+V4b.txt (V, k<=4, N<=~260), levels.txt (N<=22),
-        p3..p6.txt (pattern classes)
+        p3..p6.txt, cp6.txt, cp7.txt (order-type classes), vol7_half.txt
 
 
 1. Exact formulas
