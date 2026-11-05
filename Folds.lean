@@ -17,6 +17,7 @@ import Folds.Growth
 import Folds.WindowRule
 import Folds.Asymptotics
 import Folds.Descents
+import Folds.Labelling
 import Folds.Live
 import Folds.Independence
 import Folds.Independence2

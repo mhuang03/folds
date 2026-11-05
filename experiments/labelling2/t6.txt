@@ -1,0 +1,1 @@
+N=127 t=6: no answer after ~54 min CPU (CaDiCaL 1.5.3, --norm, 1 core, killed 17:18)

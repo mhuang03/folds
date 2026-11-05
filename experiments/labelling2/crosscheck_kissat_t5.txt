@@ -1,0 +1,4 @@
+N=67 t=5: UNSAT (96.2s, 34368 vars, 182609 clauses, solver=kissat404, norm)
+N=100 t=5: UNSAT (22.2s, 85828 vars, 580832 clauses, solver=kissat404, norm)
+N=126 t=5: UNSAT (29.7s, 144406 vars, 1136660 clauses, solver=kissat404, norm)
+N=156 t=5: UNSAT (43.7s, 232828 vars, 2118872 clauses, solver=kissat404, norm)
