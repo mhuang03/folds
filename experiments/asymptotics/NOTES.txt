@@ -116,7 +116,7 @@ N = 2048, so frac x Dmax = G (Dmax/sigma_J)/sqrt(2pi) = 0.58-0.72: this is the g
 2.1 Low discrepancy is selection, not dynamics                  [data: desc.c]
 -----------------------------------------------
 The uniform random greedy process (each step a uniformly random valid panel) does NOT keep
-the discrepancy small: sigma_J grows like sqrt(k) (sigma_J ~ 20-70 at N = 4096, k ~ N/4),
+the discrepancy small: sigma_J grows fast (sigma_J ~ 10-70 already at k ~ N/4 for N = 4096),
 frac drops to 0.002-0.02, and the process dies: 0 of 20 runs complete for each of
 N = 64, 256, 1024, 4096, 16384 (median death at k/N = 0.35-0.6).  The uniform measure on
 valid sequences is the greedy process reweighted by prod_k V(S_k):
@@ -147,7 +147,8 @@ With S^(n) = sum_{x in S} e(-n x/N) and E^(n) = S^(n)/(2 pi i n),
 Every frequency n >= 1 carries one "spring" Delta_n linking n to n/2 along its doubling chain
 n0, 2n0, 4n0, ... (n0 odd, pinned to 0 at the bottom).  J is small iff the Fourier transform of S
 is nearly constant along doubling chains and small at odd n, with weight 1/n^2.
-A random k-set has |S^(n)|^2 ~ k(1 - k/N) for all n (white), so var J ~ k/3: the Wallis model.
+A random k-set has E|S^(n)|^2 = k(1 - k/N) for all n (white), so var J = (5/12) k (1 - k/N)
+(sum over odd n of 1/n^2 plus twice the even ones): the Wallis model, acceptance ~ k^{-1/2}.
 
 2.3 Gaussian Feynman-Kac model                                  [heur; fkmodel.py]
 -------------------------------
@@ -177,7 +178,7 @@ Checks (dyadic.py on SMC snapshots, t = 1/2):
  * sigma_J grows like ln N, not like sqrt(ln N) (each octave would then contribute an
    N-independent amount; it does not, see below) - but faster than the model at the
    available N (local slope d sigma/d lnN = 0.45-0.5 for N <= 512, 0.55-0.6 for N = 1024-2048,
-   fitted A(lnN - ln sigma) + B: A = 0.64, B = -0.74; section 3.3).
+   fitted A(lnN - ln sigma) + B: A = 0.66-0.68; section 3.3).
  * The low-frequency structure factor is linear in n, as predicted (|S^(n)|^2 ~ E|Delta|^2
    summed along the chain ~ n s): |S^(n)|^2 ~ 8 n for 1 <= n <= N/16 at N = 256..1024
    (|S^(1)|^2 = 7.7, 8.1, 8.4, 10.8 at N = 256, 512, 1024, 2048), against N/4 for a random set:
@@ -236,7 +237,6 @@ P = 48000), so for the deficit d(N) = (ln N! - ln a)/N the error is ~ 1/sqrt(P) 
 Exact checks: N = 20: 26.72 (exact 26.712), N = 33: 53.48 (exact 53.500), P = 20000.
 
 3.2 Estimates (largest P; sd = replicate spread; d = (ln N! - ln a)/N)
-   N      ln a(N)     sd     d(N)    e^d/lnN   sigma_J(1/2)  sigma_bar  frac*sigma*sqrt(2pi)
       N    ln a(N)     sd     d(N)  e^d/lnN  sigma(1/2) sigma_bar   G_bar     (P, runs)
      48       89.0    0.0   1.0764   0.7579                                  (32000, 2)
      64      130.5    0.1   1.1660   0.7717     1.644     1.363    1.024     (32000, 2)
