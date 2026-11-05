@@ -36,3 +36,7 @@
 # N=35 took 17s
 # N=36 took 41s
 # N=37 took 39s
+# N=36 took 17s
+# N=37 took 16s
+# N=38 took 73s
+# N=39 took 77s
