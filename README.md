@@ -111,7 +111,10 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    period of T(N,5) is unknown (likely 1680).
 4. **Minimum LDS = minimum LIS = ⌊log₂(N+1)⌋**, attained. Minimum descents are
    ⌊log₂(N+1)⌋−1, except ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59. This would follow from the
-   labelling conjecture in `experiments/descents/PROOFS.txt` §5.
+   labelling conjecture (equivalently: every *right-heavy* permutation of [N] has a
+   decreasing subsequence of length ⌊log₂(N+1)⌋). The SAT check has reached t = 5
+   (N = 63..66). There is no proof yet: the extremal labellings are not unique for t ≥ 4;
+   see `experiments/labelling/PROOFS.txt`.
 5. **Liveness.** Every valid 2-prefix is live except (1,N) and (N,1) for even N and
    (1,7), (7,1) at N = 7. Checked for N ≤ 31.
 
@@ -129,6 +132,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
 | `experiments/descents/PROOFS.txt` | descent and LDS bounds, SAT data |
 | `experiments/independence/PROOFS.txt` | pair independence, including the one-outside-element case (paper) |
+| `experiments/labelling/PROOFS.txt` | labelling / right-heavy reformulation of the descent bound, failed and surviving lemma candidates |
 | `experiments/live/FINDINGS.txt` | dead and live prefixes, Beatty copies |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
