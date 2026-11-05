@@ -368,4 +368,185 @@ theorem card_window_orderings {N m : ℕ} (h1 : 1 ≤ m) (h2 : m ≤ N) :
   apply Nat.eq_of_mul_eq_mul_right hpos
   rw [← h]; ring
 
+/-! ## Chains of compatible constraints -/
+
+/-- **Product formula for compatible chains.**  Let `m₁, …, m_k` be panels such that the
+window of every earlier panel is compatible with every later panel.  Then the constraints are
+jointly independent: the number of fold sequences satisfying all of them is
+`N! · ∏ 4^{rᵢ} (rᵢ!)² / (2rᵢ+1)!`. -/
+theorem card_constrSeqs_chain {N : ℕ} : ∀ (ms : List ℕ), (∀ m ∈ ms, 1 ≤ m ∧ m ≤ N) →
+    ms.Pairwise (fun a b => Compat N (window N a) b) →
+    (constrSeqs N ms.toFinset).card * (ms.map fun m => (2 * reach N m + 1)!).prod =
+      N ! * (ms.map fun m => 4 ^ reach N m * (reach N m)! ^ 2).prod
+  | [], _, _ => by
+    rw [constrSeqs_eq]
+    simp [card_orderings]
+  | a :: ms, hb, hp => by
+    rw [List.pairwise_cons] at hp
+    have ha := hb a List.mem_cons_self
+    have ih := card_constrSeqs_chain ms (fun m hm => hb m (List.mem_cons_of_mem _ hm)) hp.2
+    rw [constrSeqs_eq] at ih ⊢
+    have hQ : ∀ u ∈ orderings (window N a), ∀ u' ∈ orderings (window N a),
+        ∀ l ∈ orderings (Icc 1 N),
+        (∀ m ∈ ms.toFinset, Cstep N m (l.map (relab u u'))) ↔
+          (∀ m ∈ ms.toFinset, Cstep N m l) := by
+      intro u hu u' hu' l _
+      apply forall₂_congr
+      intro m hm
+      exact cstep_relab (hp.1 m (List.mem_toFinset.1 hm)) hu hu' l
+    have h := card_indep (window_subset ha.1 ha.2) (Cstep N a)
+      (fun l => ∀ m ∈ ms.toFinset, Cstep N m l) hQ
+    simp only [cstep_restrict (subset_refl _), card_window,
+      card_window_orderings ha.1 ha.2] at h
+    have e : (orderings (Icc 1 N)).filter (fun l => ∀ m ∈ (a :: ms).toFinset, Cstep N m l) =
+        (orderings (Icc 1 N)).filter
+          (fun l => Cstep N a l ∧ ∀ m ∈ ms.toFinset, Cstep N m l) := by
+      apply filter_congr
+      intro l _
+      simp [List.toFinset_cons]
+    rw [e, List.map_cons, List.map_cons, List.prod_cons, List.prod_cons, ← mul_assoc, h,
+      mul_assoc, ih]
+    ring
+
+theorem compat_of_disjoint {N a b : ℕ} (h : Disjoint (window N a) (window N b)) :
+    Compat N (window N a) b := by
+  have hL : leftArm N b ⊆ window N b := by
+    intro x; simp only [leftArm, window, mem_Ico, mem_Icc]; omega
+  have hR : rightArm N b ⊆ window N b := by
+    intro x; simp only [rightArm, window, mem_Ioc, mem_Icc]; omega
+  refine ⟨fun hb => disjoint_left.1 h hb (by simp [window]),
+    Or.inr (h.mono_right hL), Or.inr (h.mono_right hR)⟩
+
+theorem compat_of_subset_arm {N a b : ℕ}
+    (h : window N a ⊆ leftArm N b ∨ window N a ⊆ rightArm N b) :
+    Compat N (window N a) b := by
+  have hLR : Disjoint (leftArm N b) (rightArm N b) := by
+    rw [disjoint_left]; intro x; simp only [leftArm, rightArm, mem_Ico, mem_Ioc]; omega
+  rcases h with h | h
+  · exact ⟨fun hb => by have := h hb; simp [leftArm] at this, Or.inl h,
+      Or.inr (hLR.mono_left h)⟩
+  · exact ⟨fun hb => by have := h hb; simp [rightArm] at this, Or.inr (hLR.symm.mono_left h),
+      Or.inl h⟩
+
+/-- **Pair independence**, in the compatible case (covers (a) and (b) without outside
+elements). -/
+theorem card_pair_of_compat {N a b : ℕ} (ha1 : 1 ≤ a) (ha2 : a ≤ N) (hb1 : 1 ≤ b)
+    (hb2 : b ≤ N) (hc : Compat N (window N a) b) :
+    (constrSeqs N {a, b}).card * (2 * reach N a + 1)! * (2 * reach N b + 1)! =
+      N ! * (4 ^ reach N a * (reach N a)! ^ 2) * (4 ^ reach N b * (reach N b)! ^ 2) := by
+  have h := card_constrSeqs_chain (N := N) [a, b] (by simp; omega) (by simp [hc])
+  have e : [a, b].toFinset = {a, b} := by ext; simp
+  rw [e] at h
+  simp only [List.map_cons, List.map_nil, List.prod_cons, List.prod_nil, mul_one] at h
+  rw [mul_assoc, h]; ring
+
+/-- **Goal 1: disjoint windows give independent constraints.** -/
+theorem card_pair_of_disjoint {N a b : ℕ} (ha1 : 1 ≤ a) (ha2 : a ≤ N) (hb1 : 1 ≤ b)
+    (hb2 : b ≤ N) (h : Disjoint (window N a) (window N b)) :
+    (constrSeqs N {a, b}).card * (2 * reach N a + 1)! * (2 * reach N b + 1)! =
+      N ! * (4 ^ reach N a * (reach N a)! ^ 2) * (4 ^ reach N b * (reach N b)! ^ 2) :=
+  card_pair_of_compat ha1 ha2 hb1 hb2 (compat_of_disjoint h)
+
+/-- **Goal 2: a window inside one arm of another panel's window.** -/
+theorem card_pair_of_subset_arm {N a b : ℕ} (ha1 : 1 ≤ a) (ha2 : a ≤ N) (hb1 : 1 ≤ b)
+    (hb2 : b ≤ N) (h : window N a ⊆ leftArm N b ∨ window N a ⊆ rightArm N b) :
+    (constrSeqs N {a, b}).card * (2 * reach N a + 1)! * (2 * reach N b + 1)! =
+      N ! * (4 ^ reach N a * (reach N a)! ^ 2) * (4 ^ reach N b * (reach N b)! ^ 2) :=
+  card_pair_of_compat ha1 ha2 hb1 hb2 (compat_of_subset_arm h)
+
+/-- **Families with pairwise disjoint windows** are jointly independent. -/
+theorem card_constrSeqs_disjoint {N : ℕ} (ms : List ℕ) (hb : ∀ m ∈ ms, 1 ≤ m ∧ m ≤ N)
+    (hp : ms.Pairwise (fun a b => Disjoint (window N a) (window N b))) :
+    (constrSeqs N ms.toFinset).card * (ms.map fun m => (2 * reach N m + 1)!).prod =
+      N ! * (ms.map fun m => 4 ^ reach N m * (reach N m)! ^ 2).prod :=
+  card_constrSeqs_chain ms hb (hp.imp compat_of_disjoint)
+
+/-! ## Doubling chains near the left edge and an upper bound for `a(N)` -/
+
+theorem reach_of_left {N m : ℕ} (h : 2 * m ≤ N + 1) : reach N m = m - 1 := by
+  unfold reach; omega
+
+theorem compat_doubling {N a b : ℕ} (ha : 1 ≤ a) (hab : 2 * a ≤ b) (hb : 2 * b ≤ N + 1) :
+    Compat N (window N a) b := by
+  apply compat_of_subset_arm
+  left
+  intro x
+  simp only [window, leftArm, mem_Icc, mem_Ico, reach_of_left hb,
+    reach_of_left (show 2 * a ≤ N + 1 by omega)]
+  omega
+
+/-- Left-half panels `m₁ < m₂ < …` with `2 mᵢ ≤ mⱼ` for `i < j` are jointly independent. -/
+theorem card_constrSeqs_doubling {N : ℕ} (ms : List ℕ)
+    (hb : ∀ m ∈ ms, 1 ≤ m ∧ 2 * m ≤ N + 1) (hp : ms.Pairwise (fun a b => 2 * a ≤ b)) :
+    (constrSeqs N ms.toFinset).card * (ms.map fun m => (2 * reach N m + 1)!).prod =
+      N ! * (ms.map fun m => 4 ^ reach N m * (reach N m)! ^ 2).prod := by
+  apply card_constrSeqs_chain ms (fun m hm => ⟨(hb m hm).1, by have := hb m hm; omega⟩)
+  apply hp.imp_of_mem
+  intro a b ha hb' hab
+  exact compat_doubling (hb a ha).1 hab (hb b hb').2
+
+theorem semiSeqs_subset_constrSeqs {N : ℕ} {F : Finset ℕ} (hF : ∀ m ∈ F, 1 ≤ m ∧ m ≤ N) :
+    semiSeqs N ⊆ constrSeqs N F := by
+  intro a ha
+  rw [mem_semiSeqs] at ha
+  rw [constrSeqs, mem_filter, List.mem_toFinset, List.mem_permutations]
+  refine ⟨ha.1, fun m hm => ?_⟩
+  have hma : m ∈ a := (List.Perm.mem_iff ha.1).2
+    (List.mem_range'_1.2 ⟨(hF m hm).1, by have := hF m hm; omega⟩)
+  have hi := List.idxOf_lt_length_of_mem hma
+  have := ha.2 _ hi
+  rwa [List.getElem_idxOf hi] at this
+
+/-- **Upper bound.**  For any family of panels whose windows are pairwise disjoint (or, more
+generally, a compatible chain), `a(N) · ∏ (2rᵢ+1)! ≤ N! · ∏ 4^{rᵢ} (rᵢ!)²`. -/
+theorem semiCount_mul_le_chain {N : ℕ} (ms : List ℕ) (hb : ∀ m ∈ ms, 1 ≤ m ∧ m ≤ N)
+    (hp : ms.Pairwise (fun a b => Compat N (window N a) b)) :
+    semiCount N * (ms.map fun m => (2 * reach N m + 1)!).prod ≤
+      N ! * (ms.map fun m => 4 ^ reach N m * (reach N m)! ^ 2).prod := by
+  rw [← card_constrSeqs_chain ms hb hp]
+  apply Nat.mul_le_mul_right
+  exact card_le_card (semiSeqs_subset_constrSeqs (fun m hm => hb m (List.mem_toFinset.1 hm)))
+
+/-- **Dyadic upper bound.**  With the panels `1, 2, 4, …, 2^{k-1}` (all in the left half when
+`2^k ≤ N + 1`), `a(N) · ∏_{i<k} (2^{i+1}-1)! ≤ N! · ∏_{i<k} 4^{2^i-1} ((2^i-1)!)²`. -/
+theorem semiCount_mul_le_dyadic (N k : ℕ) (hk : 2 ^ k ≤ N + 1) :
+    semiCount N * ((List.range k).map fun i => (2 ^ (i + 1) - 1)!).prod ≤
+      N ! * ((List.range k).map fun i => 4 ^ (2 ^ i - 1) * (2 ^ i - 1)! ^ 2).prod := by
+  have hmem : ∀ i ∈ List.range k, 2 * 2 ^ i ≤ N + 1 := by
+    intro i hi
+    rw [List.mem_range] at hi
+    calc 2 * 2 ^ i = 2 ^ (i + 1) := by ring
+      _ ≤ 2 ^ k := Nat.pow_le_pow_right (by norm_num) hi
+      _ ≤ N + 1 := hk
+  have hb : ∀ m ∈ (List.range k).map (2 ^ ·), 1 ≤ m ∧ 2 * m ≤ N + 1 := by
+    intro m hm
+    obtain ⟨i, hi, rfl⟩ := List.mem_map.1 hm
+    exact ⟨Nat.one_le_two_pow, hmem i hi⟩
+  have hp : ((List.range k).map (2 ^ ·)).Pairwise (fun a b => 2 * a ≤ b) := by
+    rw [List.pairwise_map]
+    apply (List.pairwise_lt_range (n := k)).imp
+    intro i j hij
+    calc 2 * 2 ^ i = 2 ^ (i + 1) := by ring
+      _ ≤ 2 ^ j := Nat.pow_le_pow_right (by norm_num) hij
+  have h := semiCount_mul_le_chain ((List.range k).map (2 ^ ·))
+    (fun m hm => ⟨(hb m hm).1, by have := hb m hm; omega⟩)
+    (hp.imp_of_mem fun ha hb' hab => compat_doubling (hb _ ha).1 hab (hb _ hb').2)
+  simp only [List.map_map] at h
+  have e1 : ((List.range k).map ((fun m => (2 * reach N m + 1)!) ∘ (2 ^ ·))) =
+      (List.range k).map fun i => (2 ^ (i + 1) - 1)! := by
+    apply List.map_congr_left
+    intro i hi
+    have := hmem i hi
+    simp only [Function.comp, reach_of_left this]
+    congr 1
+    have : 1 ≤ 2 ^ i := Nat.one_le_two_pow
+    rw [pow_succ]; omega
+  have e2 : ((List.range k).map ((fun m => 4 ^ reach N m * (reach N m)! ^ 2) ∘ (2 ^ ·))) =
+      (List.range k).map fun i => 4 ^ (2 ^ i - 1) * (2 ^ i - 1)! ^ 2 := by
+    apply List.map_congr_left
+    intro i hi
+    simp only [Function.comp, reach_of_left (hmem i hi)]
+  rw [e1, e2] at h
+  exact h
+
 end Folds
