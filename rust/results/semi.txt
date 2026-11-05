@@ -25,3 +25,8 @@
 # Residues for N=36 (mod 256 251 241 239 233 229 227 223 211 199 197 193 191): 36 102 176 44 197 222 180 100 187 154 180 162 126
 # N=36 checks: the CRT of the first 12 residues equals the CRT of all 13; a(36) mod 4 = 0, as predicted by a = c (mod 4).
 # Re-verification of the block path: a(33) exact (u64, --blocks) = 171668579369815966705184; a(34) mod 251 = 91 and mod 65521 = 19914 (--blocks) agree with the stored a(34).
+37 1435459602925600924848243286 16431s 4 u8-CRT(13 moduli, stable; --blocks, peak RSS 11.19 GB, idx 0-2 anonymous memory, idx 3-12 FOLDS_SPILL file-backed layers; runs of 1055-1511s each)
+# Residues for N=37 (mod 256 251 241 239 233 229 227 223 211 199 197 193 191): 86 148 240 195 174 185 224 192 37 114 99 52 89
+# N=37 checks: the CRT of the first 12 residues equals the CRT of all 13 (the mod-191 residue 89 is redundant and agrees); a(37) mod 4 = 2, as predicted by a = c (mod 4).
+# N=37 note: one anonymous-memory attempt at idx 3 was OOM-killed by the 14.3 GB tool cgroup (another job's lean used 13 GB at times) and was rerun with FOLDS_SPILL.
+# Per-run logs: results/n36_u8.log, results/n37_u8.log (stdout), *.log.err (per-layer progress and memory).

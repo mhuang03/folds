@@ -13,6 +13,7 @@ cargo run --release -- semi 34 --blocks -v     # block-streamed layers (see belo
 cargo run --release -- residue semi 36 8 3 --blocks   # one u8 residue (index 3 in the moduli table)
 cargo run --release -- crt 8 r0 r1 ... r12     # CRT of u8 residues (checks the redundant one)
 cargo run --release -- peak 36 37              # simulated peak memory of --blocks
+FOLDS_SPILL=/scratch/dir folds residue semi 37 8 0 --blocks   # layers >= 1 GB file-backed
 cargo run --release -- stats semi 26          # refined statistics (see below)
 cargo run --release -- check                  # validation (brute force + known terms)
 cargo test --release                          # unit tests (rule & indexing bijection)
@@ -68,7 +69,8 @@ Memory is `≈ C(N,⌊N/2⌋)` words (two layers, each halved by the mirror). Ea
 `N` costs ≈ ×2.2 in time.
 
 Peak memory: N=32 4.8 GB (u64), N=33 9.3 GB (u64), N=34 9.4 GB (u32),
-N=35 9.1 GB (u16).
+N=35 9.1 GB (u16). With `--blocks` (below): N=33 6.5 GB (u64), N=36 6.23 GB (u8),
+N=37 11.2 GB (u8).
 
 ### Speedups measured (N=30 unless noted, this machine)
 
@@ -163,7 +165,9 @@ the sequence with 74904, 212728, 368016, 659296, … up to N=24). The stats code
 prefix counts) is checked against the dense DP for N ≤ 12. `cargo test` checks the
 fast validity test against the literal definition and checks that `index()` is a
 bijection onto mirror orbits (N ≤ 13). a(28) was also reproduced independently with
-`experiments/semi.c`. a(30), a(31) were reproduced by the u32 and u16 CRT paths.
+`experiments/semi.c`. a(30), a(31) were reproduced by the u32 and u16 CRT paths. The block path reproduces
+a(33) exactly (u64), a(33) mod 241, a(34) mod 251 and mod 65521, and a(29..32)
+residues.
 
 ## Statistics (`folds stats semi N`)
 
@@ -201,8 +205,12 @@ These are fitted to data, not proven.
 | 33 | 171668579369815966705184 | 74 s | u64, 9.3 GB |
 | 34 | 1711977358970374039688092 | 4 × ~125 s | u32 CRT, 9.4 GB |
 | 35 | 14916356465581456801127844 | 7 × 313–755 s | u16 CRT, 9.1 GB, machine under load |
+| 36 | 162918548122441960881265188 | 13 × 438–2137 s | u8 CRT, `--blocks`, 6.23 GB |
+| 37 | 1435459602925600924848243286 | 13 × 1055–1511 s | u8 CRT, `--blocks`, 11.2 GB, `FOLDS_SPILL` |
 
-**Largest N reached: 35.**
+**Largest N reached: 37.** Both new terms have a redundant CRT modulus that agrees
+(N=36 also a second one, mod 181), and both satisfy the mod-4 law a ≡ c (mod 4):
+a(36) ≡ 0 and a(37) ≡ 2.
 
 The stats files `results/stats/semi_N.txt` (N = 2..24) also contain `alive_sets` /
 `doomed_sets` (`g>0` and `f=0`; the `doomed_total` column reproduces the "dead ends"
@@ -210,16 +218,30 @@ The stats files `results/stats/semi_N.txt` (N = 2..24) also contain `alive_sets`
 
 ## Wall
 
-Memory is the limit. The middle layer has `C(N, N/2)/2` orbits.
-* N=35 already needs u16 residues: 7 runs, about 1 hour total on a shared machine.
-* N=36 has 4.5e9 orbits in the middle layer plus 4.3e9 in the previous one. Even u16
-  gives 17.5 GB. To go further, one of these is needed:
-  (a) u8 residues: ~13 runs of ~15–25 min each.
-  (b) block-wise freeing of the previous layer while the next is built, together with
-      streaming the even-N combination. For even N, complementing maps every block
-      `(i, j)` of the middle layer to itself, so the middle layer never has to exist
-      whole. Peak would be ≈ |layer 17| + two blocks of layer 16 (~13 GB in u16).
-  (c) a machine with ≥ 32 GB RAM, which runs u16 directly. Time per residue is
-      ≈ 2.2× the N=35 time.
-  Each N costs ×2.2 in time and ×2 in memory, so N=37–38 needs a bigger machine
-  whatever the approach.
+Memory is the limit. Memory × number of CRT runs is roughly constant: a(N) has about
+2.9N bits, and one run gives `log2(modulus)` of them. Time per run is about the same
+for every word size, because memory latency dominates it.
+
+* **N=36** (`--blocks`, u8): the peak is 6.2e9 words. u16 would need 12.4 GB, which
+  does not fit next to the other jobs. This took 13 u8 runs of 7–35 min each
+  (depending on load), about 2.6 h in total.
+* **N=37** (`--blocks`, u8, `FOLDS_SPILL`): the peak is 11.2e9 words. On this VM all
+  tool processes share one memory cgroup with a 14.3 GB limit. One run on anonymous
+  memory was OOM-killed, and the OOM also killed another job's process. The other
+  runs map every layer of 1 GB or more from a sparse file in a scratch directory
+  (`FOLDS_SPILL=<dir>`). The kernel can then write back and evict those pages
+  instead of killing a process. Freed blocks are hole-punched, so disk use follows
+  the live set (≤ 11.2 GB). Spilling was no slower here: each run took 18–25 min,
+  with the I/O overlapped. 13 runs took about 4.5 h. During one run, another job's
+  process grew to 13 GB. The spilled pages were evicted and re-read from disk, and
+  the run finished normally.
+* **N=38**: the peak is 24.2e9 words (24 GB in u8). This needs a machine with
+  ≥ 32 GB, or the spill mode with ≥ 25 GB of free disk and a disk fast enough for
+  ~50 GB of writes per run. At 128 MB/s that is ≥ 7 min of pure I/O per run, for each
+  of 13 runs. Time per run is ≈ 2.2× N=37 (~45 min unloaded), so the u8 runs take
+  about 10 h in total.
+* Going lower in memory needs a finer granularity than blocks. No block order can go
+  below max over blocks of (block + the blocks it reads), about 0.6 × the middle
+  layer. Freeing sub-blocks (rows of the predecessor blocks that are read in
+  lock-step, see `block.rs`) would only take N=37 from 11.2e9 to ≈ 11.0e9 words. The
+  large blocks next to the diagonal dominate.

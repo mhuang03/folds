@@ -1,1 +1,38 @@
 # start idx 0 2026-11-05T09:50:54Z load 4.97 5.59 5.58 avail 13735832 kB
+semi N=37 mod 256 = 86 1388.6s peak_rss 11.19 GB (blocks)
+# start idx 1 2026-11-05T10:14:03Z load 5.12 4.95 5.08 avail 13764048 kB
+semi N=37 mod 251 = 148 1055.3s peak_rss 11.19 GB (blocks)
+# start idx 2 2026-11-05T10:31:52Z load 3.32 4.06 4.54 avail 15607520 kB
+semi N=37 mod 241 = 240 1505.4s peak_rss 11.19 GB (blocks)
+# start idx 3 2026-11-05T10:56:57Z load 6.19 6.40 5.83 avail 13887472 kB
+# start idx 4 2026-11-05T11:14:55Z load 6.04 6.01 5.93 avail 12097156 kB
+# start idx 3 2026-11-05T11:25:46Z load 3.51 4.12 4.97 avail 13540572 kB spill
+semi N=37 mod 239 = 195 1282.3s peak_rss 11.19 GB (blocks)
+# exit 0 idx 3 2026-11-05T11:47:09Z
+# start idx 4 2026-11-05T11:47:09Z load 4.19 4.55 4.74 avail 15590496 kB spill
+semi N=37 mod 233 = 174 1177.9s peak_rss 11.19 GB (blocks)
+# exit 0 idx 4 2026-11-05T12:06:46Z
+# start idx 5 2026-11-05T12:06:46Z load 3.63 3.95 4.26 avail 15605184 kB spill
+semi N=37 mod 229 = 185 1279.9s peak_rss 11.19 GB (blocks)
+# exit 0 idx 5 2026-11-05T12:28:06Z
+# start idx 6 2026-11-05T12:28:12Z load 5.81 6.31 5.21 avail 15579880 kB spill
+semi N=37 mod 227 = 224 1250.6s peak_rss 11.19 GB (blocks)
+# exit 0 idx 6 2026-11-05T12:49:03Z
+# start idx 7 2026-11-05T12:49:03Z load 4.12 4.20 4.55 avail 15600172 kB spill
+semi N=37 mod 223 = 192 1215.4s peak_rss 11.19 GB (blocks)
+# exit 0 idx 7 2026-11-05T13:09:18Z
+# start idx 8 2026-11-05T13:09:18Z load 3.86 4.14 4.34 avail 15586188 kB spill
+semi N=37 mod 211 = 37 1317.6s peak_rss 10.95 GB (blocks)
+# exit 0 idx 8 2026-11-05T13:31:16Z
+# start idx 9 2026-11-05T13:31:16Z load 4.83 4.86 4.67 avail 10530380 kB spill
+semi N=37 mod 199 = 114 1511.0s peak_rss 7.63 GB (blocks)
+# exit 0 idx 9 2026-11-05T13:56:27Z
+# start idx 10 2026-11-05T13:56:38Z load 4.60 5.15 5.08 avail 12395772 kB spill
+semi N=37 mod 197 = 99 1140.5s peak_rss 11.19 GB (blocks)
+# exit 0 idx 10 2026-11-05T14:15:39Z
+# start idx 11 2026-11-05T14:15:39Z load 3.85 4.16 4.62 avail 15463420 kB spill
+semi N=37 mod 193 = 52 1079.2s peak_rss 11.19 GB (blocks)
+# exit 0 idx 11 2026-11-05T14:33:38Z
+# start idx 12 2026-11-05T14:33:38Z load 4.24 4.14 4.31 avail 15563356 kB spill
+semi N=37 mod 191 = 89 1227.1s peak_rss 10.91 GB (blocks)
+# exit 0 idx 12 2026-11-05T14:54:05Z
