@@ -102,3 +102,10 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
   half-size 3^{N/2}-state reformulation. a(N) ≡ c(N) (mod 4), and 4 | a(N) when
   N ≡ 3 (mod 4). The mod-3 growth effect is statistically significant. Empirical
   log-size laws: minimum descents ⌊log2(N+1)⌋−1, and maximum number of free steps.
+- `experiments/cluster/FINDINGS.txt`.
+  - Exact pair correlations of the panel constraints, including the rule for when they
+    vanish and a large-window limit law K(γ).
+  - Exact Stirling asymptotics for the Wallis model.
+  - The asymptotic fit log a ≈ c·N log N − 0.82N + …, with c ≈ 0.66 and still rising.
+  - The mechanism of the mod-3 effect: the period-2 doubling orbit {N/3, 2N/3}, whose
+    two constraints read the same two prefix sets and force P(N/3) ≈ s/3.
