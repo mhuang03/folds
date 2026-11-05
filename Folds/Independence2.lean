@@ -276,4 +276,67 @@ theorem card_phi_eq {X L R : Finset ℕ} {b e n : ℕ} (hb : b ∈ X)
         show 2 * n + 2 - 1 - (2 * k - 1) = 2 * n + 1 - (2 * k - 1) by omega]
       exact this
 
+/-! ## Independence from the relative order on `M` -/
+
+/-- Counting by the restriction to `A` when all fibres have the same size `c`. -/
+theorem card_indep_of_fiber {X A : Finset ℕ} (hAX : A ⊆ X) (P Q : List ℕ → Prop)
+    [DecidablePred P] [DecidablePred Q] (c : ℕ)
+    (hc : ∀ u ∈ orderings A,
+      ((orderings X).filter (fun l => restrict A l = u ∧ Q l)).card = c) :
+    ((orderings X).filter (fun l => P (restrict A l) ∧ Q l)).card =
+      ((orderings A).filter P).card * c := by
+  rw [card_eq_sum_card_fiberwise (f := restrict A) (t := (orderings A).filter P)]
+  · apply sum_const_nat
+    intro u hu
+    rw [mem_filter] at hu
+    rw [← hc u hu.1, filter_filter]
+    congr 1
+    apply filter_congr
+    intro l _
+    constructor
+    · rintro ⟨⟨_, hq⟩, hr⟩; exact ⟨hr, hq⟩
+    · rintro ⟨hr, hq⟩; exact ⟨⟨hr ▸ hu.2, hq⟩, hr⟩
+  · intro l hl
+    simp only [coe_filter, Set.mem_ofPred_eq] at hl ⊢
+    exact ⟨restrict_mem_orderings hAX hl.1, hl.2.1⟩
+
+/-- **Independence with one outside element (abstract form).**  Let `X \ {b} = M ∪ R` with
+`M = {e} ∪ L`, `e ∉ L`, `M ∩ R = ∅` and `|L| = |R|`.  Then the balance condition at `b`
+between `L` and `R` is independent of every event of the relative order on `M`, although
+it is not invariant under relabelling `M`. -/
+theorem card_indep_qb {X L R : Finset ℕ} {b e : ℕ} (hb : b ∈ X)
+    (hX : X.erase b = insert e L ∪ R) (heL : e ∉ L) (hMR : Disjoint (insert e L) R)
+    (hLR : L.card = R.card) (P : List ℕ → Prop) [DecidablePred P] :
+    ((orderings X).filter (fun l => P (restrict (insert e L) l) ∧ QB L R b l)).card *
+        (insert e L).card ! =
+      ((orderings (insert e L)).filter P).card * ((orderings X).filter (QB L R b)).card := by
+  obtain ⟨hMX, -, -⟩ := setup_props hX
+  set M := insert e L with hMdef
+  set c := ((orderings X).filter
+    (fun l => restrict M l = M.sort (· ≤ ·) ∧ QB L R b l)).card with hcdef
+  have hfib : ∀ ρ ∈ orderings M,
+      ((orderings X).filter (fun l => restrict M l = ρ ∧ QB L R b l)).card * M.card ! =
+        ((orderings X).filter (fun l => PhiBal M R 0 (before l b))).card := by
+    intro ρ hρ
+    rw [card_fiber_qb hX heL hMR hρ]
+    apply card_phi_eq hb hX heL hMR rfl hLR.symm
+    have hsub : before ρ e ⊆ M.erase e := by
+      intro x hx
+      rw [mem_erase]
+      refine ⟨fun h => not_mem_before_self ρ e (h ▸ hx), ?_⟩
+      have := before_subset_toFinset ρ e hx
+      rwa [(mem_orderings.1 hρ).2] at this
+    have := card_le_card hsub
+    rw [card_erase_of_mem (mem_insert_self _ _), card_insert_of_notMem heL] at this
+    simpa using this
+  have hc : ∀ ρ ∈ orderings M,
+      ((orderings X).filter (fun l => restrict M l = ρ ∧ QB L R b l)).card = c := by
+    intro ρ hρ
+    apply Nat.eq_of_mul_eq_mul_right (Nat.factorial_pos M.card)
+    rw [hfib ρ hρ, hfib _ (sort_mem_orderings M)]
+  have h1 := card_indep_of_fiber hMX P (QB L R b) c hc
+  have h2 := card_indep_of_fiber hMX (fun _ => True) (QB L R b) c hc
+  simp only [true_and, filter_true, card_orderings] at h2
+  rw [h1, h2]; ring
+
 end Folds
