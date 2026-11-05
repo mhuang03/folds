@@ -1,38 +1,48 @@
 import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Data.Fintype.BigOperators
 import Folds.Counting
 
 /-!
-# Growth of `a(N)`: splits and the branching (tree) bound
+# Growth of `a(N)`: block constructions and branching bounds
 
-## Splits (lower bounds)
+## Lower bounds (block constructions)
 
 A *window embedding* `φ : [1..p] → [1..N]` (`WinEmb`) maps the window arms of every
 `j` in the `p`-strip exactly onto the window arms of `φ j` in the `N`-strip, restricted
-to the image of `φ`.  A *split* (`Split`) of `[1..N]` is a pair of window embeddings
-`φ : [1..p] → [1..N]`, `ψ : [1..q] → [1..N]` with complementary images such that each
-image, once complete, is balanced around every point of the other image.
+to the image of `φ` (`WinEmb.semiStep_iff`: steps transfer when the rest is balanced).
 
-* `Split.semiSymmetric_iff`: `σ.map φ ++ τ.map ψ` is semi-symmetric iff `σ` and `τ` are.
-* `Split.card_le`: `2 · a(p) · a(q) ≤ a(N)` (both block orders).
+* **Splits** (`Split`): two window embeddings with complementary images, each image
+  (complete) balanced around every point of the other.  `Split.semiSymmetric_iff`,
+  `Split.card_le : 2 · a(p) · a(q) ≤ a(N)`.
+* **Doubling sets** (`DoublingSet`): the counting function `c` satisfies
+  `c(2x+1) = c(x) + c(x+1)` and `c(x) + c(N-x) = p`.  Such a set is window-embedded
+  (`DoublingSet.winEmb`) and balanced around every panel (`DoublingSet.balanced`); two
+  complementary ones form a split (`split_of_doubling`).  Instances: residues
+  `{2, …, 2j}` mod `2j+1`, giving
+  `semiCount_three : 2 a(n) a(2n) ≤ a(3n)`, `semiCount_five : 2 a(2n) a(3n) ≤ a(5n)`,
+  `semiCount_seven : 2 a(3n) a(4n) ≤ a(7n)`.
+* **Composition** `semiCount_comp : a(q) · a(n)^q ≤ a(nq)`.  The residue classes mod `q`
+  are copies of the `n`-strip (`winEmb_cls`), and a set `R` of complete classes is
+  balanced around every panel of class `s` iff the step `(R, s)` is valid in the
+  `q`-strip (`class_identity`, `classUnion_balanced`).  So the classes can be placed as
+  blocks in the order of any valid sequence of the `q`-strip (`semiSymmetric_blocks`).
+  `q = 2` is the parity-block theorem.
 
-The parity blocks of `Blocks.lean` are the split `p = ⌊N/2⌋`, `q = ⌈N/2⌉`.  New
-instances:
+## Upper bounds (branching)
 
-* `threeSplit`: `N = 3n`, `φ y = 3y - 1` (panels `≡ 2 mod 3`, an `n`-strip) and
-  `ψ y = y + ⌊y/2⌋` (panels `≡ 0, 1 mod 3`, a `2n`-strip).  Hence
-  `semiCount_three : 2 · a(n) · a(2n) ≤ a(3n)`.
-* `fiveSplit`: `N = 5n`, panels `≡ 2, 4 mod 5` (a `2n`-strip) and `≡ 0, 1, 3 mod 5`
-  (a `3n`-strip).  Hence `semiCount_five : 2 · a(2n) · a(3n) ≤ a(5n)`.
+`prefixes N k` is the `Finset` of valid prefixes of length `k` and `moves N p` the
+valid next panels.
 
-(In general the panels with residue in `{2, 4, …, 2j}` mod `2j+1` form a split of
-`[1..(2j+1)n]`; see `experiments/growth/PROOFS.txt`.)
+* `semiCount_le_prod`: if every valid prefix of length `i < N` has at most `B i`
+  valid next panels, then `a(N) ≤ ∏_{i<N} B i`.
+* `card_moves_singleton_le`, `semiCount_le_step_one`: `a(N) ≤ N · ⌈N/2⌉ · (N-2)!`.
+* `card_moves_odd_le` (`N = 2h`, `|S|` odd `⇒` at most `h` valid panels: the windows
+  of `m` and `m + h` partition the strip) and
+  `semiCount_even_le_prod : a(2h) ≤ ∏_{i<2h} (i odd ? min(2h-i, h) : 2h-i)`,
+  i.e. `a(2h) ≤ (2h)! · (√e/2)^{h(1+o(1))}`.
 
-## The branching bound (upper bounds)
-
-`prefixes N k` is the `Finset` of valid prefixes of length `k` (built step by step).
-`semiCount_le_prod`: if every valid prefix of length `i < N` has at most `B i` valid
-next panels, then `a(N) ≤ ∏_{i<N} B i`.
+See `experiments/growth/PROOFS.txt` for the paper proofs and the data.
 -/
 
 namespace Folds
@@ -736,5 +746,470 @@ theorem semiCount_even_le_prod (h : Nat) :
   split
   · next hodd => exact le_min c1 (card_moves_odd_le hnd hb hodd)
   · exact c1
+
+/-! ## Composition: residue classes as blocks -/
+
+/-- Panel `y` (`1 ≤ y ≤ n`) of residue class `s` (`1 ≤ s ≤ q`): `(y - 1) q + s`. -/
+def cls (q s y : Nat) : Nat := (y - 1) * q + s
+
+/-- `#{y ≥ 1 : cls q t y ≤ z}` (valid while it is at most `n`). -/
+def ccount (q t z : Nat) : Nat := (z + q - t) / q
+
+theorem cls_le_iff {q t y z : Nat} (hq : 0 < q) (ht : t ≤ q) (hy : 1 ≤ y) :
+    cls q t y ≤ z ↔ y ≤ ccount q t z := by
+  unfold cls ccount
+  rw [Nat.le_div_iff_mul_le hq]
+  obtain ⟨y', rfl⟩ : ∃ y', y = y' + 1 := ⟨y - 1, by omega⟩
+  rw [Nat.succ_mul, Nat.add_sub_cancel]
+  omega
+
+theorem div_small {b q k : Nat} (lo : k * q ≤ b) (hi : b < k * q + q) :
+    b / q = k :=
+  Nat.div_eq_of_lt_le lo (by rw [Nat.succ_mul]; exact hi)
+
+/-- The class counts at the points `x - 1`, `x`, `2x - 1` for `x = cls q s j`. -/
+theorem ccount_vals {q s t j : Nat} (hq : 0 < q) (hs1 : 1 ≤ s) (hsq : s ≤ q)
+    (ht1 : 1 ≤ t) (htq : t ≤ q) :
+    ccount q t (cls q s j - 1) = j - 1 + (if t < s then 1 else 0) ∧
+    ccount q t (cls q s j) = j - 1 + (if t ≤ s then 1 else 0) ∧
+    ccount q t (2 * cls q s j - 1) =
+      2 * (j - 1) + (if t ≤ 2 * s - 1 then 1 else 0) + (if t + q ≤ 2 * s - 1 then 1 else 0) := by
+  unfold ccount cls
+  have m2 : 2 * (j - 1) * q = 2 * ((j - 1) * q) := Nat.mul_assoc ..
+  refine ⟨?_, ?_, ?_⟩
+  · rw [show (j - 1) * q + s - 1 + q - t = (s - 1 + q - t) + (j - 1) * q by omega,
+      Nat.add_mul_div_right _ _ hq]
+    split
+    · rw [div_small (k := 1) (by omega) (by omega)]; omega
+    · rw [div_small (k := 0) (by omega) (by omega)]; omega
+  · rw [show (j - 1) * q + s + q - t = (s + q - t) + (j - 1) * q by omega,
+      Nat.add_mul_div_right _ _ hq]
+    split
+    · rw [div_small (k := 1) (by omega) (by omega)]; omega
+    · rw [div_small (k := 0) (by omega) (by omega)]; omega
+  · rw [show 2 * ((j - 1) * q + s) - 1 + q - t = (2 * s - 1 + q - t) + 2 * (j - 1) * q by omega,
+      Nat.add_mul_div_right _ _ hq]
+    split <;> split
+    · rw [div_small (k := 2) (by omega) (by omega)]; omega
+    · rw [div_small (k := 1) (by omega) (by omega)]; omega
+    · omega
+    · rw [div_small (k := 0) (by omega) (by omega)]; omega
+
+/-- Mirror identity for the class counts. -/
+theorem ccount_mirror {q n t z : Nat} (hq : 0 < q) (ht1 : 1 ≤ t) (htq : t ≤ q)
+    (hz : z ≤ n * q) : ccount q t z + ccount q (q + 1 - t) (n * q - z) = n := by
+  unfold ccount
+  set w := z + q - t with hw
+  have hdm := Nat.div_add_mod w q
+  have hb : w % q < q := Nat.mod_lt _ hq
+  set a := w / q
+  set b := w % q
+  have ha : a ≤ n := by
+    refine Decidable.byContradiction fun h => ?_
+    have : (n + 1) * q ≤ a * q := Nat.mul_le_mul_right _ (by omega)
+    rw [Nat.succ_mul] at this
+    rw [Nat.mul_comm] at hdm
+    omega
+  have hsub : (n - a) * q + a * q = n * q := by rw [← Nat.add_mul, Nat.sub_add_cancel ha]
+  rw [Nat.mul_comm] at hdm
+  rw [show n * q - z + q - (q + 1 - t) = (q - 1 - b) + (n - a) * q by omega,
+    Nat.add_mul_div_right _ _ hq, Nat.div_eq_of_lt (by omega)]
+  omega
+
+/-- The panels of class `t`, in increasing order. -/
+def classPanels (q n t : Nat) : List Nat := (List.range' 1 n).map (cls q t)
+
+theorem ccount_top {q n t : Nat} (hq : 0 < q) (ht1 : 1 ≤ t) (htq : t ≤ q) :
+    ccount q t (n * q) = n := by
+  unfold ccount
+  rw [show n * q + q - t = (q - t) + n * q by omega, Nat.add_mul_div_right _ _ hq,
+    Nat.div_eq_of_lt (by omega)]; omega
+
+theorem ccount_zero {q t : Nat} (ht1 : 1 ≤ t) (htq : t ≤ q) : ccount q t 0 = 0 := by
+  unfold ccount; exact Nat.div_eq_of_lt (by omega)
+
+theorem countP_le_classPanels {q n t z : Nat} (hq : 0 < q) (ht1 : 1 ≤ t) (htq : t ≤ q)
+    (hz : z ≤ n * q) :
+    (classPanels q n t).countP (fun u => decide (u ≤ z)) = ccount q t z := by
+  unfold classPanels
+  rw [List.countP_map]
+  have e : (List.range' 1 n).countP ((fun u => decide (u ≤ z)) ∘ cls q t) =
+      (List.range' 1 n).countP (fun y => decide (1 ≤ y ∧ y ≤ ccount q t z)) := by
+    apply List.countP_congr; intro y hy; rw [List.mem_range'_1] at hy
+    simp only [Function.comp_apply, decide_eq_true_eq]
+    rw [cls_le_iff hq htq hy.1]; omega
+  rw [e, countP_range'_interval]
+  have : ccount q t z ≤ n := by
+    unfold ccount
+    have := (Nat.div_lt_iff_lt_mul hq).2
+      (show z + q - t < (n + 1) * q by rw [Nat.succ_mul]; omega)
+    omega
+  omega
+
+theorem countP_interval_add (U : List Nat) {lo hi : Nat} (h : lo ≤ hi + 1) :
+    U.countP (fun u => decide (lo ≤ u ∧ u ≤ hi)) + U.countP (fun u => decide (u + 1 ≤ lo)) =
+      U.countP (fun u => decide (u ≤ hi)) := by
+  have hs := countP_split U (fun u => decide (u ≤ hi)) (fun u => decide (u + 1 ≤ lo))
+  have e1 : U.countP (fun u => decide (u ≤ hi) && decide (u + 1 ≤ lo)) =
+      U.countP (fun u => decide (u + 1 ≤ lo)) := by
+    apply List.countP_congr; intro u _; simp; omega
+  have e2 : U.countP (fun u => decide (u ≤ hi) && !decide (u + 1 ≤ lo)) =
+      U.countP (fun u => decide (lo ≤ u ∧ u ≤ hi)) := by
+    apply List.countP_congr; intro u _; simp; omega
+  omega
+
+theorem countP_succ_le {U : List Nat} {lo : Nat} (h : 1 ≤ lo) :
+    U.countP (fun u => decide (u + 1 ≤ lo)) = U.countP (fun u => decide (u ≤ lo - 1)) := by
+  apply List.countP_congr; intro u _; simp; omega
+
+theorem cls_mirror {q n s j : Nat} (_hs1 : 1 ≤ s) (hsq : s ≤ q) (hj1 : 1 ≤ j)
+    (hjn : j ≤ n) : cls q (q + 1 - s) (n + 1 - j) + cls q s j = n * q + 1 := by
+  unfold cls
+  have h := congrArg (· * q) (show n + 1 - j - 1 + (j - 1) + 1 = n by omega)
+  simp only [Nat.add_mul, Nat.one_mul] at h
+  omega
+
+theorem cls_bounds {q n s j : Nat} (hq : 0 < q) (hs1 : 1 ≤ s) (hsq : s ≤ q) (hj1 : 1 ≤ j)
+    (hjn : j ≤ n) : 1 ≤ cls q s j ∧ cls q s j ≤ n * q := by
+  refine ⟨by unfold cls; omega, ?_⟩
+  rw [cls_le_iff hq hsq hj1, ccount_top hq hs1 hsq]; exact hjn
+
+/-- **Per-class balance identity.**  The imbalance of class `t` in the window of
+`x = cls q s j` equals the indicator imbalance of `t` in the window of `s` in the
+`q`-strip. -/
+theorem class_identity {q n s t j : Nat} (hq : 0 < q) (hs1 : 1 ≤ s) (hsq : s ≤ q)
+    (ht1 : 1 ≤ t) (htq : t ≤ q) (hj1 : 1 ≤ j) (hjn : j ≤ n) :
+    (classPanels q n t).countP (fun u => decide (cls q s j - reach (n * q) (cls q s j) ≤ u ∧
+        u < cls q s j)) + (if s < t ∧ t ≤ s + reach q s then 1 else 0) =
+    (classPanels q n t).countP (fun u => decide (cls q s j < u ∧
+        u ≤ cls q s j + reach (n * q) (cls q s j))) +
+      (if s - reach q s ≤ t ∧ t < s then 1 else 0) := by
+  obtain ⟨hx1, hxN⟩ := cls_bounds hq hs1 hsq hj1 hjn
+  obtain ⟨v1, v2, v3⟩ := ccount_vals (j := j) hq hs1 hsq ht1 htq
+  have hmir := cls_mirror (q := q) hs1 hsq hj1 hjn
+  obtain ⟨w1, w2, w3⟩ := ccount_vals (j := n + 1 - j) (s := q + 1 - s) (t := q + 1 - t) hq
+    (by omega) (by omega) (by omega) (by omega)
+  generalize cls q s j = x at *
+  generalize cls q (q + 1 - s) (n + 1 - j) = x' at *
+  have hr : reach (n * q) x ≤ x - 1 ∧ reach (n * q) x ≤ n * q - x := by
+    unfold reach; omega
+  have i1 := countP_interval_add (classPanels q n t) (lo := x - reach (n * q) x) (hi := x - 1)
+    (by omega)
+  rw [countP_succ_le (by omega), countP_le_classPanels hq ht1 htq (by omega),
+    countP_le_classPanels hq ht1 htq (by omega)] at i1
+  have i2 := countP_interval_add (classPanels q n t) (lo := x + 1) (hi := x + reach (n * q) x)
+    (by omega)
+  rw [countP_succ_le (by omega), countP_le_classPanels hq ht1 htq (by omega),
+    countP_le_classPanels hq ht1 htq (by omega)] at i2
+  have e1 : (classPanels q n t).countP (fun u => decide (x - reach (n * q) x ≤ u ∧ u < x)) =
+      (classPanels q n t).countP (fun u => decide (x - reach (n * q) x ≤ u ∧ u ≤ x - 1)) := by
+    apply List.countP_congr; intro u _; simp; omega
+  have e2 : (classPanels q n t).countP (fun u => decide (x < u ∧ u ≤ x + reach (n * q) x)) =
+      (classPanels q n t).countP (fun u => decide (x + 1 ≤ u ∧ u ≤ x + reach (n * q) x)) := by
+    apply List.countP_congr; intro u _; simp; omega
+  rw [e1, e2]
+  have rq : reach q s = min (s - 1) (q - s) := rfl
+  rcases Nat.le_total (x - 1) (n * q - x) with hle | hle
+  · have hr' : reach (n * q) x = x - 1 := by unfold reach; omega
+    rw [hr'] at i1 i2 ⊢
+    rw [show x - (x - 1) - 1 = 0 by omega, ccount_zero ht1 htq] at i1
+    rw [show x + 1 - 1 = x by omega] at i2
+    rw [show x + (x - 1) = 2 * x - 1 by omega] at i2 ⊢
+    rw [rq]; split_ifs at v1 v2 v3 ⊢ <;> omega
+  · have hr' : reach (n * q) x = n * q - x := by unfold reach; omega
+    rw [hr'] at i1 i2 ⊢
+    rw [show x + 1 - 1 = x by omega] at i2
+    rw [show x + (n * q - x) = n * q by omega] at i2 ⊢
+    rw [ccount_top hq ht1 htq] at i2
+    rw [show x - (n * q - x) - 1 = 2 * x - n * q - 1 by omega] at i1
+    have m1 := ccount_mirror (n := n) (z := x - 1) hq ht1 htq (by omega)
+    have m2 := ccount_mirror (n := n) (z := 2 * x - n * q - 1) hq ht1 htq (by omega)
+    have m3 := ccount_mirror (n := n) (z := x) hq ht1 htq (by omega)
+    rw [show n * q - (x - 1) = x' by omega] at m1
+    rw [show n * q - (2 * x - n * q - 1) = 2 * x' - 1 by omega] at m2
+    rw [show n * q - x = x' - 1 by omega] at m3
+    rw [rq]; split_ifs at w1 w2 w3 ⊢ <;> omega
+
+/-- The union of the classes in `R`, class by class. -/
+def classUnion (q n : Nat) (R : List Nat) : List Nat := (R.map (classPanels q n)).flatten
+
+theorem classUnion_identity {q n s j : Nat} (hq : 0 < q) (hs1 : 1 ≤ s) (hsq : s ≤ q)
+    (hj1 : 1 ≤ j) (hjn : j ≤ n) : ∀ R : List Nat, (∀ t ∈ R, 1 ≤ t ∧ t ≤ q) →
+    (classUnion q n R).countP (fun u => decide (cls q s j - reach (n * q) (cls q s j) ≤ u ∧
+        u < cls q s j)) + R.countP (fun t => decide (s < t ∧ t ≤ s + reach q s)) =
+    (classUnion q n R).countP (fun u => decide (cls q s j < u ∧
+        u ≤ cls q s j + reach (n * q) (cls q s j))) +
+      R.countP (fun t => decide (s - reach q s ≤ t ∧ t < s))
+  | [], _ => by simp [classUnion]
+  | t :: R, hR => by
+    have ih := classUnion_identity hq hs1 hsq hj1 hjn R (fun t ht => hR t (by simp [ht]))
+    have ht := hR t (by simp)
+    have ci := class_identity (t := t) hq hs1 hsq ht.1 ht.2 hj1 hjn
+    simp only [classUnion, List.map_cons, List.flatten_cons, List.countP_append,
+      List.countP_cons] at ih ⊢
+    split_ifs at ci ⊢ <;> simp_all <;> omega
+
+/-- **Class balance.**  If the step `(R, s)` is valid in the `q`-strip, the complete
+classes `R` are balanced around every panel of class `s`. -/
+theorem classUnion_balanced {q n s j : Nat} {R : List Nat} (hq : 0 < q) (hs1 : 1 ≤ s)
+    (hsq : s ≤ q) (hj1 : 1 ≤ j) (hjn : j ≤ n) (hR : ∀ t ∈ R, 1 ≤ t ∧ t ≤ q)
+    (hnd : R.Nodup) (hstep : SemiStep q R s) :
+    Balanced (n * q) (classUnion q n R) (cls q s j) := by
+  have := classUnion_identity hq hs1 hsq hj1 hjn R hR
+  unfold SemiStep at hstep
+  rw [leftCount_eq hnd, rightCount_eq hnd] at hstep
+  unfold Balanced
+  omega
+
+theorem ccount_mono {q t z z' : Nat} (h : z ≤ z') : ccount q t z ≤ ccount q t z' := by
+  unfold ccount; exact Nat.div_le_div_right (by omega)
+
+/-- Each residue class is a window-embedded copy of the `n`-strip. -/
+theorem winEmb_cls {q n s : Nat} (hq : 0 < q) (hs1 : 1 ≤ s) (hsq : s ≤ q) :
+    WinEmb (n * q) n (cls q s) := by
+  have self : ∀ j, 1 ≤ j → ccount q s (cls q s j) = j := fun j _ => by
+    have := (ccount_vals (j := j) hq hs1 hsq hs1 hsq).2.1; simp at this; omega
+  refine ⟨fun y h1 h2 => cls_bounds hq hs1 hsq h1 h2, fun x y hx1 _ hy1 _ e => ?_, ?_, ?_⟩
+  · have a := self x hx1; have b := self y hy1; rw [e] at a; omega
+  all_goals
+    intro j y hj1 hjn hy1 hyn
+    obtain ⟨hx1, hxN⟩ := cls_bounds hq hs1 hsq hj1 hjn
+    obtain ⟨v1, v2, v3⟩ := ccount_vals (j := j) hq hs1 hsq hs1 hsq
+    have hmir := cls_mirror (q := q) hs1 hsq hj1 hjn
+    obtain ⟨w1, w2, w3⟩ := ccount_vals (j := n + 1 - j) (s := q + 1 - s) (t := q + 1 - s) hq
+      (by omega) (by omega) (by omega) (by omega)
+    simp only [lt_self_iff_false, ite_false, le_refl, ite_true] at v1 v2 w1 w2
+    have hv3 : ccount q s (2 * cls q s j - 1) = 2 * j - 1 := by
+      rw [v3]; split_ifs <;> omega
+    have hw3 : ccount q (q + 1 - s) (2 * cls q (q + 1 - s) (n + 1 - j) - 1) =
+        2 * (n + 1 - j) - 1 := by
+      rw [w3]; split_ifs <;> omega
+    have c1 := cls_le_iff (z := cls q s j - 1) hq hsq hy1
+    have c2 := cls_le_iff (z := cls q s j) hq hsq hy1
+    have top := ccount_top (n := n) hq hs1 hsq
+    have mn : ∀ z, z ≤ n * q → ccount q s z ≤ n := fun z hz => top ▸ ccount_mono hz
+    generalize cls q s j = x at *
+    generalize cls q (q + 1 - s) (n + 1 - j) = x' at *
+    rcases Nat.le_total (x - 1) (n * q - x) with hle | hle
+    · have hr : reach (n * q) x = x - 1 := by unfold reach; omega
+      have := mn (2 * x - 1) (by omega)
+      have hrn : reach n j = j - 1 := by unfold reach; omega
+      rw [hr, hrn]
+      first
+      | (have c3 := cls_le_iff (z := x - (x - 1) - 1) hq hsq hy1
+         rw [show x - (x - 1) - 1 = 0 by omega, ccount_zero hs1 hsq] at c3
+         omega)
+      | (have c3 := cls_le_iff (z := x + (x - 1)) hq hsq hy1
+         rw [show x + (x - 1) = 2 * x - 1 by omega, hv3] at c3
+         omega)
+    · have hr : reach (n * q) x = n * q - x := by unfold reach; omega
+      have m2 := ccount_mirror (n := n) (z := 2 * x - n * q - 1) hq hs1 hsq (by omega)
+      rw [show n * q - (2 * x - n * q - 1) = 2 * x' - 1 by omega, hw3] at m2
+      have hrn : reach n j = n - j := by unfold reach; omega
+      rw [hr, hrn]
+      first
+      | (have c3 := cls_le_iff (z := x - (n * q - x) - 1) hq hsq hy1
+         rw [show x - (n * q - x) - 1 = 2 * x - n * q - 1 by omega] at c3
+         omega)
+      | (have c3 := cls_le_iff (z := x + (n * q - x)) hq hsq hy1
+         rw [show x + (n * q - x) = n * q by omega, top] at c3
+         omega)
+
+/-- The composed sequence: the classes in the skeleton order `π`, class `s` in the
+order `σ s`. -/
+def blocks (q : Nat) (π : List Nat) (σ : Nat → List Nat) : List Nat :=
+  (π.map fun s => (σ s).map (cls q s)).flatten
+
+theorem blocks_perm {q n : Nat} {σ : Nat → List Nat} : ∀ π : List Nat,
+    (∀ s ∈ π, IsFoldSeq n (σ s)) → (blocks q π σ).Perm (classUnion q n π)
+  | [], _ => by simp [blocks, classUnion]
+  | s :: π, h => by
+    simp only [blocks, classUnion, List.map_cons, List.flatten_cons] at *
+    exact ((h s (by simp)).map _).append (blocks_perm π fun t ht => h t (by simp [ht]))
+
+theorem length_classUnion {q n : Nat} : ∀ R : List Nat, (classUnion q n R).length = R.length * n
+  | [] => by simp [classUnion]
+  | t :: R => by
+    have := length_classUnion (q := q) (n := n) R
+    simp only [classUnion, List.map_cons, List.flatten_cons, List.length_append,
+      List.length_cons] at *
+    rw [this]; simp [classPanels, Nat.succ_mul]; omega
+
+theorem classUnion_cover {q n : Nat} (hq : 0 < q) :
+    (classUnion q n (List.range' 1 q)).Perm (List.range' 1 (n * q)) := by
+  have sub : List.range' 1 (n * q) ⊆ classUnion q n (List.range' 1 q) := by
+    intro u hu
+    rw [List.mem_range'_1] at hu
+    simp only [classUnion, List.mem_flatten, List.mem_map]
+    refine ⟨classPanels q n ((u - 1) % q + 1), ⟨(u - 1) % q + 1, List.mem_range'_1.2
+      ⟨by omega, by have := Nat.mod_lt (u - 1) hq; omega⟩, rfl⟩, ?_⟩
+    simp only [classPanels, List.mem_map, List.mem_range'_1]
+    have hd := Nat.div_add_mod' (u - 1) q
+    have hlt := (Nat.div_lt_iff_lt_mul hq).2 (show u - 1 < n * q by omega)
+    generalize (u - 1) / q = d at hd hlt
+    generalize (u - 1) % q = r at hd ⊢
+    exact ⟨d + 1, by omega, by unfold cls; rw [Nat.add_sub_cancel]; omega⟩
+  refine ((List.subperm_of_subset (List.nodup_range' ..) sub).perm_of_length_le ?_).symm
+  rw [length_classUnion]; simp [Nat.mul_comm]
+
+theorem isFoldSeq_blocks {q n : Nat} (hq : 0 < q) {π : List Nat} {σ : Nat → List Nat}
+    (hπ : IsFoldSeq q π) (hσ : ∀ s, 1 ≤ s → s ≤ q → IsFoldSeq n (σ s)) :
+    IsFoldSeq (n * q) (blocks q π σ) :=
+  (blocks_perm π fun s hs => hσ s ((mem_range'_of_perm hπ).1 hs).1
+    ((mem_range'_of_perm hπ).1 hs).2).trans
+    ((List.Perm.flatten (hπ.map _)).trans (classUnion_cover hq))
+
+theorem blocks_append {q : Nat} {σ : Nat → List Nat} (π π' : List Nat) :
+    blocks q (π ++ π') σ = blocks q π σ ++ blocks q π' σ := by
+  simp [blocks]
+
+/-- **Composition.**  If `π` is valid for `q` and every `σ s` is valid for `n`, the
+composed sequence is valid for `n q`. -/
+theorem semiSymmetric_blocks {q n : Nat} (hq : 0 < q) {π : List Nat} {σ : Nat → List Nat}
+    (hπ : IsFoldSeq q π) (hπs : SemiSymmetric q π)
+    (hσ : ∀ s, 1 ≤ s → s ≤ q → IsFoldSeq n (σ s) ∧ SemiSymmetric n (σ s)) :
+    SemiSymmetric (n * q) (blocks q π σ) := by
+  have hall := nodup_of_foldSeq (isFoldSeq_blocks hq hπ fun s h1 h2 => (hσ s h1 h2).1)
+  have bπ : ∀ s ∈ π, 1 ≤ s ∧ s ≤ q := fun s hs => (mem_range'_of_perm hπ).1 hs
+  have hndπ := nodup_of_foldSeq hπ
+  suffices H : ∀ k, k ≤ π.length → SemiSymmetric (n * q) (blocks q (π.take k) σ) by
+    simpa using H π.length le_rfl
+  intro k
+  induction k with
+  | zero => intro _ i hi; simp [blocks] at hi
+  | succ k ih =>
+    intro hk
+    have hkl : k < π.length := by omega
+    rw [List.take_succ_eq_append_getElem hkl, blocks_append, semiSymmetric_append_iff]
+    refine ⟨ih (by omega), ?_⟩
+    have hs := bπ _ (List.getElem_mem hkl)
+    obtain ⟨hσf, hσs⟩ := hσ π[k] hs.1 hs.2
+    have bσ : ∀ y ∈ σ π[k], 1 ≤ y ∧ y ≤ n := fun y hy => (mem_range'_of_perm hσf).1 hy
+    have hpre : (blocks q (π.take (k + 1)) σ).Nodup := by
+      have e : blocks q π σ = blocks q (π.take (k + 1)) σ ++ blocks q (π.drop (k + 1)) σ := by
+        rw [← blocks_append, List.take_append_drop]
+      rw [e] at hall; exact (List.nodup_append.1 hall).1
+    rw [List.take_succ_eq_append_getElem hkl, blocks_append] at hpre
+    intro i hi
+    simp only [blocks, List.map_cons, List.map_nil, List.flatten_cons, List.flatten_nil,
+      List.append_nil, List.length_map] at hi ⊢
+    rw [List.getElem_map, ← List.map_take]
+    have hj := bσ _ (List.getElem_mem hi)
+    refine ((winEmb_cls (n := n) hq hs.1 hs.2).semiStep_iff ?_
+      (fun y hy => bσ y (List.mem_of_mem_take hy)) hj.1 hj.2 ?_).2 (hσs i hi)
+    · simp only [blocks, List.map_cons, List.map_nil, List.flatten_cons, List.flatten_nil,
+        List.append_nil] at hpre
+      exact hpre.sublist (List.Sublist.append_left (List.map_take ▸
+        (List.take_sublist _ _)) _)
+    · refine (classUnion_balanced (R := π.take k) hq hs.1 hs.2 hj.1 hj.2
+        (fun t ht => bπ t (List.mem_of_mem_take ht)) (take_nodup hndπ k) (hπs k hkl)).perm ?_
+      exact (blocks_perm _ fun t ht => (hσ t (bπ t (List.mem_of_mem_take ht)).1
+        (bπ t (List.mem_of_mem_take ht)).2).1).symm
+
+theorem cls_class {q s y : Nat} (hs1 : 1 ≤ s) (hsq : s ≤ q) :
+    (cls q s y - 1) % q = s - 1 := by
+  unfold cls
+  rw [show (y - 1) * q + s - 1 = (s - 1) + (y - 1) * q by omega, Nat.add_mul_mod_self_right,
+    Nat.mod_eq_of_lt (by omega)]
+
+theorem flatten_inj_of_length {n : Nat} : ∀ {L L' : List (List Nat)},
+    (∀ l ∈ L, l.length = n) → (∀ l ∈ L', l.length = n) → L.length = L'.length →
+      L.flatten = L'.flatten → L = L'
+  | [], [], _, _, _, _ => rfl
+  | [], _ :: _, _, _, h, _ => by simp at h
+  | _ :: _, [], _, _, h, _ => by simp at h
+  | a :: L, a' :: L', h, h', hl, e => by
+    simp only [List.flatten_cons] at e
+    obtain ⟨e1, e2⟩ := List.append_inj e (by rw [h a (by simp), h' a' (by simp)])
+    rw [e1, flatten_inj_of_length (fun l hl => h l (by simp [hl]))
+      (fun l hl => h' l (by simp [hl])) (by simpa using hl) e2]
+
+/-- Extend `σ : Fin q → List ℕ` to the class labels `1..q`. -/
+def extFam {q : Nat} (σ : Fin q → List Nat) (s : Nat) : List Nat :=
+  if h : s - 1 < q then σ ⟨s - 1, h⟩ else []
+
+/-- The composition map. -/
+def compMap (q : Nat) (x : List Nat × (Fin q → List Nat)) : List Nat :=
+  blocks q x.1 (extFam x.2)
+
+theorem compMap_mem {q n : Nat} (hq : 0 < q) {x : List Nat × (Fin q → List Nat)}
+    (hx : x ∈ semiSeqs q ×ˢ Fintype.piFinset (fun _ : Fin q => semiSeqs n)) :
+    compMap q x ∈ semiSeqs (n * q) := by
+  rw [Finset.mem_product, mem_semiSeqs, Fintype.mem_piFinset] at hx
+  have hσ : ∀ s, 1 ≤ s → s ≤ q → IsFoldSeq n (extFam x.2 s) ∧ SemiSymmetric n (extFam x.2 s) :=
+    fun s h1 h2 => by
+      unfold extFam; rw [dite_eq_left_of_eq_true (eq_true (by omega))]; exact mem_semiSeqs.1 (hx.2 _)
+  rw [mem_semiSeqs]
+  exact ⟨isFoldSeq_blocks hq hx.1.1 fun s h1 h2 => (hσ s h1 h2).1,
+    semiSymmetric_blocks hq hx.1.1 hx.1.2 hσ⟩
+
+theorem compMap_injOn {q n : Nat} (hq : 0 < q) (hn : 1 ≤ n) :
+    Set.InjOn (compMap q)
+      (semiSeqs q ×ˢ Fintype.piFinset (fun _ : Fin q => semiSeqs n) : Finset _) := by
+  rintro ⟨π, σ⟩ hx ⟨π', σ'⟩ hx' e
+  simp only [Finset.coe_product, Set.mem_prod, Finset.mem_coe, mem_semiSeqs,
+    Fintype.mem_piFinset] at hx hx'
+  have fam : ∀ (τ : Fin q → List Nat), (∀ i, IsFoldSeq n (τ i) ∧ SemiSymmetric n (τ i)) → ∀ s, 1 ≤ s → s ≤ q →
+      IsFoldSeq n (extFam τ s) := fun τ hτ s h1 h2 => by
+    unfold extFam; rw [dite_eq_left_of_eq_true (eq_true (by omega))]; exact (hτ _).1
+  have lens : ∀ (τ : Fin q → List Nat) (ρ : List Nat), (∀ i, IsFoldSeq n (τ i) ∧ SemiSymmetric n (τ i)) →
+      IsFoldSeq q ρ → ∀ l ∈ ρ.map (fun s => (extFam τ s).map (cls q s)), l.length = n := by
+    intro τ ρ hτ hρ l hl
+    obtain ⟨s, hs, rfl⟩ := List.mem_map.1 hl
+    have := (mem_range'_of_perm hρ).1 hs
+    rw [List.length_map, (fam τ hτ s this.1 this.2).length_eq]; simp
+  have lπ : π.length = q := by rw [hx.1.1.length_eq]; simp
+  have lπ' : π'.length = q := by rw [hx'.1.1.length_eq]; simp
+  have hL := flatten_inj_of_length (lens σ π hx.2 hx.1.1) (lens σ' π' hx'.2 hx'.1.1)
+    (by simp [lπ, lπ']) e
+  have pt : ∀ k (hk : k < q), π[k]'(by omega) = π'[k]'(by omega) ∧
+      extFam σ (π[k]'(by omega)) = extFam σ' (π[k]'(by omega)) := by
+    intro k hk
+    have ek := congrArg (fun L => L[k]?) hL
+    simp only [List.getElem?_map, List.getElem?_eq_getElem (show k < π.length by omega),
+      List.getElem?_eq_getElem (show k < π'.length by omega), Option.map_some,
+      Option.some.injEq] at ek
+    have bs := (mem_range'_of_perm hx.1.1).1 (List.getElem_mem (show k < π.length by omega))
+    have bs' := (mem_range'_of_perm hx'.1.1).1 (List.getElem_mem (show k < π'.length by omega))
+    have f1 := fam σ hx.2 _ bs.1 bs.2
+    have f2 := fam σ' hx'.2 _ bs'.1 bs'.2
+    have l1 : (extFam σ (π[k]'(by omega))).length = n := by rw [f1.length_eq]; simp
+    have l2 : (extFam σ' (π'[k]'(by omega))).length = n := by rw [f2.length_eq]; simp
+    have hss : π[k]'(by omega) = π'[k]'(by omega) := by
+      have h0 := List.getElem_of_eq ek (i := 0) (by simp; omega)
+      simp only [List.getElem_map] at h0
+      have c1 := cls_class (y := (extFam σ (π[k]'(by omega)))[0]'(by omega)) bs.1 bs.2
+      have c2 := cls_class (y := (extFam σ' (π'[k]'(by omega)))[0]'(by omega)) bs'.1 bs'.2
+      rw [h0] at c1
+      omega
+    refine ⟨hss, ?_⟩
+    rw [← hss] at ek
+    exact (winEmb_cls (n := n) hq bs.1 bs.2).map_inj (fun y hy => (mem_range'_of_perm f1).1 hy)
+      (fun y hy => (mem_range'_of_perm (hss ▸ f2)).1 hy) ek
+  have hππ : π = π' := List.ext_getElem (by omega) fun k h1 h2 => (pt k (by omega)).1
+  subst hππ
+  refine Prod.ext rfl (funext fun i => ?_)
+  obtain ⟨k, hk, hki⟩ := List.mem_iff_getElem.1
+    ((mem_range'_of_perm hx.1.1).2 (show 1 ≤ i.val + 1 ∧ i.val + 1 ≤ q by omega))
+  have := (pt k (by omega)).2
+  rw [hki] at this
+  unfold extFam at this
+  rw [dite_eq_left_of_eq_true (eq_true (by omega)), dite_eq_left_of_eq_true (eq_true (by omega))] at this
+  simpa using this
+
+/-- **Composition lower bound.**  `a(q) · a(n)^q ≤ a(n q)`: place the residue classes
+mod `q` (each a copy of the `n`-strip) as blocks, in the order of a valid sequence of the
+`q`-strip. -/
+theorem semiCount_comp {q n : Nat} (hq : 1 ≤ q) (hn : 1 ≤ n) :
+    semiCount q * semiCount n ^ q ≤ semiCount (n * q) := by
+  have hsub : (semiSeqs q ×ˢ Fintype.piFinset (fun _ : Fin q => semiSeqs n)).image (compMap q)
+      ⊆ semiSeqs (n * q) := by
+    intro x hx
+    obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hx
+    exact compMap_mem (by omega) hy
+  have := Finset.card_le_card hsub
+  rw [Finset.card_image_of_injOn (compMap_injOn (by omega) hn), Finset.card_product,
+    Fintype.card_piFinset_const] at this
+  exact this
 
 end Folds

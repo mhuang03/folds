@@ -16,7 +16,7 @@ Rigorous, for all N:
           =  (2h)! * exp( -(ln 2 - 1/2) h (1 + o(1)) )  =  (2h)! (sqrt(e)/2)^{h(1+o(1))}
                                                                           [Lean]
    new exact lower-bound recursions:
-     a(qn) >= a(q) a(n)^q                     (composition, all q, n)    [paper]
+     a(qn) >= a(q) a(n)^q                     (composition, all q, n)    [Lean]
      a((2j+1)n) >= 2 a(jn) a((j+1)n)          (doubling splits, all j)   [paper;
                                                Lean for 2j+1 = 3, 5, 7]
 So, rigorously,   0 <= liminf log a(N)/(N log N) <= limsup log a(N)/(N log N) <= 1.
@@ -35,7 +35,7 @@ Empirically (exact to N = 33, SMC estimates to N = 1024, section 4):
 1. LOWER BOUNDS
 =================================================================================
 
-1.1 Composition theorem  a(qn) >= a(q) a(n)^q          [paper; data check below]
+1.1 Composition theorem  a(qn) >= a(q) a(n)^q          [Lean: semiCount_comp]
 -------------------------------------------------------
 Let N = qn. Class s (1 <= s <= q) = {s, s+q, ..., s+(n-1)q}, embedded by
 phi_s(y) = (y-1)q + s.
@@ -66,7 +66,11 @@ of the n-strip, place the classes in the order pi, class s in the order phi_s(si
 When class s starts, the complete classes R = {pi_1..pi_{k-1}} are balanced around every
 point of class s (Claim B, since (R, s) is valid in the q-strip); incomplete classes are
 empty; by Claim A the steps inside class s are exactly the steps of sigma_s. The map
-(pi, sigma_1..sigma_q) -> sequence is injective. Hence  a(qn) >= a(q) a(n)^q.
+(pi, sigma_1..sigma_q) -> sequence is injective (blocks have length n, and the first panel
+of a block determines its class). Hence  a(qn) >= a(q) a(n)^q.
+Lean: winEmb_cls (Claim A), class_identity (Claim B, both halves; the right half via the
+count mirror identity C_t(z) + C_{q+1-t}(nq - z) = n), classUnion_balanced,
+semiSymmetric_blocks, compMap_injOn, semiCount_comp.
 [data] classorder.c: for N = qn the number of valid ORDERS OF WHOLE CLASSES equals a(q)
 exactly, for q <= 20 (n = 2) and q in {5, 9, 12}, n in {3, 4, 5, 7}.
 q = 2 is the parity-block theorem a(2n) >= 2 a(n)^2.
@@ -302,6 +306,7 @@ smc.c          SMC estimates of a(N) for N up to 1024; smc_*.txt outputs and tra
 fit.py         growth-model fits;  lowerbound.py  best exponential constants
 sample.py      sample valid sequences (exploration)
 Lean: Folds/Growth.lean (WinEmb, Split, DoublingSet, split_of_doubling, semiCount_three,
-semiCount_five, semiCount_seven, moves/prefixes, semiCount_le_prod,
+semiCount_five, semiCount_seven, class_identity, classUnion_balanced, winEmb_cls,
+semiSymmetric_blocks, semiCount_comp, moves/prefixes, semiCount_le_prod,
 card_moves_singleton_le, semiCount_le_step_one, card_moves_odd_le,
 semiCount_even_le_prod).
