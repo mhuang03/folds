@@ -232,12 +232,109 @@ live on vertices/faces with an s-cycle plus extra points; these are certified fo
 
 7. Two disjoint cycles; the order-45 prediction; m = 9
 -------------------------------------------------------
-[TEXT]
+7.1 Correction.  ../periods (remark after Theorem B, section 4.5) predicted an index-45 face at
+m = 8 from two disjoint cycles of lengths 2 and 4.  But a face's index divides lcm_C D_C, and
+lcm(2^2 - 1, 2^4 - 1) = lcm(3, 15) = 15, which divides 2^4 - 1 itself (a + s = 4 <= 7).  So
+no index 45 can arise this way, and the absence of index 45 among the k = 8 vertices
+(verts8.log) is forced, not a sign of non-existence of two-cycle faces.  In general 9 | D_C
+needs 6 | s and 5 | D_C needs 4 | s, so index 45 needs either two cycles with s = 6 and s = 4
+(7 + 5 = 12 equations, m >= 12) or one cycle with 12 | s (m >= 13).
+
+7.2 Theorem B extends to m = 8.  The two-cycle configurations with S1 + S2 + 2 <= 8 equations
+are {2,2}, {2,3}, {2,4}, {3,3}, plus at most two further equations.  In each case the lcm of
+the component indices divides a single 2^a(2^s - 1) with a + s <= 7:
+   {2,4}: 15 | 2^4 - 1;  {3,3}: 7;  {2,3} + 1 equation: lcm(3, 2.7) = 42 | 2(2^6 - 1) (a+s = 7),
+   {2,2} + 2 equations: 3.4 = 12 | 4(2^2 - 1).
+(Two cycles of the SAME period are impossible for s = 2 -- there is a single 2-cycle {1/3, 2/3},
+and two components cannot share points -- but possible for s = 3: two orbits {1,2,4}/7 and
+{3,6,5}/7.)  So for m <= 8 every face index divides a single 2^a(2^s - 1), a + s <= m - 1.
+
+7.3 Two disjoint cycles do occur (twocycle.py, all theta's, all time interleavings, F = 0):
+   (S1,S2) = (2,3), k = 7:  74 valid vertices, e.g. (1/3, 2/3, 1/7, 4/7, 2/7, 1/3, 1/7)
+   (2,4), k = 8: 108;   (3,3), k = 8: 396;   (2,5), k = 9: 140;   (3,4), k = 9: 838.
+   e.g. (2,5): (1/3, 2/3, 1/31, 16/31, 8/31, 1/3, 4/31, 2/31, 1/31): the 2-cycle 1/3 -> 2/3 ->
+   1/3 is woven into the 5-cycle 1/31 -> 16/31 -> ... -> 1/31 (all columns valid).
+   (3,4): (1/7, 4/7, 1/15, 8/15, 2/7, 4/15, 2/15, 1/7, 1/15).
+   With one free point the (2,3) faces are much more numerous (2082 valid configurations out of
+   36960, k = 8).
+
+7.4 m = 9: Theorem B fails; the period law does not.  The candidates at m = 9 for a face index
+not dividing a single 2^a(2^s - 1), a + s <= 8, are exactly the two-cycle faces (2,5), index
+93 = 3.31 (31 needs s = 5, 3 needs s even, and s = 10 > 8) and (3,4), index 105 = 3.5.7.
+Both exist (7.3).  Their Fourier contributions to the constant term of T(N,9) (twocomp.py;
+by the face lemma they are the ONLY carriers of these modes at codimension 9, and each of the
+140 resp. 838 valid vertices lies in exactly one class):
+     order 93:   coefficient of e(-N/93)  in c_0(T(N,9)) = -0.344148 + 0.288140 i
+     order 105:  coefficient of e(-N/105) in c_0(T(N,9)) =  0.474740 - 0.318358 i
+Both are nonzero.  So c_0(N) of T(N,9) contains Fourier components of exact orders 93 and
+105, and the "single modulus" description (Theorem B) is false from m = 9 on: the exact-order
+components of c_{k-m} are NOT only the divisors of 2^(m-1) and 2^a(2^s-1), a + s = m - 1.
+(For the record, 93 and 105 do divide B(9) = lcm(2^8, 2^a(2^s - 1)) = 2^8.3^2.5.7.17.31.127.)
+Validation of the two-cycle computation at k = 7, where Normaliz series are available
+(../prefix5/ehrhart.py 7, 4260 classes, 316 MB, regenerated in a scratch directory): the
+order-21 part of c_0(T(N,7)) has two kinds of carriers, the (2,3) two-cycle vertices (74,
+twocomp.py 2 3: 0.017578 - 0.070143i) and the 6-cycle orbit vertices with 21 | index (local.py
+7 21 orbit: 0.920635 - 18.286910i).  Predicted total 0.938213 - 18.357053i.  Normaliz
+(fourier2.py with EXACT=1: numerator divided exactly by Phi_21^(p-1), 3054 classes with a
+pole): 0.938213096796 - 18.3570533356i.  Exact agreement.
+(The plain epsilon-limit of ../periods/fourier.py is numerically useless at k = 7: the class
+numerators have huge coefficients and apparent multiple poles; fourier2.py's EXACT mode
+reduces them over Z first, which also re-checks the face lemma class by class.)
+A direct Normaliz Hilbert series at k = 9 was not attempted to completion (two classes did
+not finish in 10 minutes), so the 93/105 values rest on the validated local formula.
+Consequences:
+   * B(m) needs NO modification: Theorem A (period of c_{k-m} divides B(m)) is proved for all
+     m, and every multi-cycle index divides B(m) by the face lemma.
+   * Only the refined statement changes: from m = 9 on, c_{k-m} is a sum of functions of
+     N mod lcm_C D_C over the component structures of the codimension-m faces (as Theorem A's
+     proof gives), and these lcm's include 93 and 105 at m = 9 (and e.g. 217 = 7.31 from (3,5)
+     at m = 10, 45-multiples such as 315 = 9.5.7 from (6,4) at m = 12).
+   * A prediction for the next certification: T(N,9) has an order-93 and an order-105 Fourier
+     component in its constant term (and, for k > 9, presumably in c_{k-9}).
 
 
 8. Generating functions
 -----------------------
-[TEXT]
+8.1 Denominators.  F_k(t) = sum_N T(N,k) t^N is rational; each class contributes
+t^s num(t)/prod(1 - t^d) with d among the face indices.  After summing and reducing,
+     denominator(F_k) = prod_q Phi_q(t)^(e_q),   e_q = 1 + max{ j : c_j(N) has a Fourier
+                                                         component of order q },
+so the pole orders encode the staircase: e_q = k + 1 - m(q), m(q) = the least m such that q
+divides some 2^a(2^s - 1) with a + s <= m - 1 (by Theorem A, e_q <= k + 1 - m(q) always;
+equality iff the leading component of order q is nonzero).  gf.py (exact, sympy):
+   k = 2:  Phi_1^3 Phi_2                                   = (1 - t)^2 (1 - t^2)
+   k = 3:  Phi_1^4 Phi_2^2 Phi_3          (Phi_4 MISSING: the exception)  = (1 - t)(1 - t^2)^2 (1 - t^3)
+           (the generic prediction would be Phi_1^4 Phi_2^2 Phi_3 Phi_4 = (1-t)(1-t^2)(1-t^3)(1-t^4))
+   k = 4:  Phi_1^5 Phi_2^3 Phi_3^2 Phi_4^2 Phi_6 Phi_7 Phi_8 = (1-t^3)(1-t^4)(1-t^6)(1-t^7)(1-t^8)
+   k = 5:  [K5]
+all equal to the prediction k + 1 - m(q) except Phi_4 at k = 3.  For k = 6 the prediction
+is confirmed by the exact component sets of ../prefix5 (every coefficient decomposed).
+A product of (1 - t^d) "for d among the chain/cycle numbers" is exact at k = 2, 4 but not in
+general: already at k = 5 the multiplicities (Phi_3^3 Phi_4^3 Phi_6^2 Phi_7^2 Phi_8^2 together
+with Phi_5 Phi_12 Phi_14 Phi_15 Phi_16 and Phi_1^6) are not those of any product of six
+factors (1 - t^d) (the factors containing Phi_16, Phi_15, Phi_14, Phi_12 leave Phi_1^2 to carry
+Phi_3, Phi_4, Phi_6, Phi_7, Phi_8, which needs (1 - t^7)(1 - t^24) and so an extra Phi_24).  The
+natural form is the cyclotomic one above: Phi_q^(k+1-m(q)), i.e. the period-B(m) staircase read
+as pole orders.  From m = 9 on, m(93) = m(105) = 9 (section 7) although 93 and 105 divide no
+single 2^a(2^s-1) with a + s <= 8, so the rule for m(q) must use the face indices lcm_C D_C.
+
+8.2 The bivariate series is not D-finite.  Let G(t,u) = sum_{k>=0} F_k(t) u^k =
+sum_{N,k} T(N,k) t^N u^k (for each N a polynomial in u of degree N; T(N,N) = T(N,N-1) = a(N)).
+PROPOSITION.  G is not D-finite in t over Q(t,u); in particular there is no finite linear
+transfer structure in k with polynomial coefficients that produces the F_k.
+Proof.  Suppose sum_{i<=r} p_i(t,u) d^i G/dt^i = 0 with p_i in Q[t,u] not all zero; dividing by
+a power of u we may assume p_i(t,0) != 0 for some i, and let i0 be the largest such i.
+Comparing coefficients of u^n:  sum_i p_i(t,0) F_n^{(i)} = -(sum over j >= 1 of terms in
+F_{n-j}).  By induction on n, every singularity of F_n lies in Z = {zeros of p_{i0}(t,0)} or
+among the singularities of F_0, ..., F_{n-1} (a solution of a linear ODE with an inhomogeneity
+is analytic wherever the leading coefficient is nonzero and the inhomogeneity is analytic).
+Hence all F_n are analytic outside the finite set Z u {1}.  But by Theorem C, F_k has a pole at
+every primitive (2^(k-1) - 1)-th root of unity (a nonzero Fourier component of order q in c_0
+is a pole of F_k at the primitive q-th roots), for every k >= 3: infinitely many distinct
+singularities.  []
+(The same argument shows: no algebraic or rational G; and the singularities of the F_k
+accumulate on the whole unit circle, the doubling-map periodic points 2^s - 1.)
+Data (rows.py, levels.txt N <= 22): [ROWS]
 
 
 9. Files

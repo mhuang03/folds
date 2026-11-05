@@ -1,0 +1,4 @@
+K=7 q=64 pole order 1 (coefficient of N^0) [exact reduction]: 6 classes with a pole, total = (4.03334118326e-113 - 0.000692729552077j)
+K=7 q=31 pole order 2 (coefficient of N^1) [exact reduction]: 92 classes with a pole, total = (0.362440021995 + 0.0480699550536j)
+K=7 q=63 pole order 1 (coefficient of N^0) [exact reduction]: 2 classes with a pole, total = (-0.907256420729 + 18.1786042622j)
+M=6 K=7 q=31: predicted coefficient of e(-N/q) in c_1 (x (K-M)!) = (0.3624400219945669+0.04806995505357978j)
