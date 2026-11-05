@@ -33,6 +33,7 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `WindowRule.lean` (Mathlib) | `semiStep_iff_window`: the window rule (above/below counts decide the half and which panels the window holds); `card_validSuffixes`: valid suffixes = valid prefixes; dead 2-prefixes (1,N),(N,1) for even N; **`card_validPrefixes_three_formula`**: 36·T(N,3) = 8N³ − 3N² − (30 or 12)N + c(N mod 6) |
 | `Asymptotics.lean` (Mathlib) | dipole lemma `imb_cons` (how adding a panel changes the imbalance field); binary-digit decomposition of the step condition (`dyadic_defect`, `semiStep_iff_dyadic` for N = 2^L); half-circle balance `half_balance` |
 | `Descents.lean` (Mathlib) | `descents_bound`: N+1 ≤ (⌊log₂(N+1)⌋+2)^(des+1), so descents grow at least like log N/log log N; `labelling_bound`, which also covers LDS and LIS |
+| `Live.lean` (Mathlib) | `extends_single`: every panel is a live first step (so valid sequences exist for all N); transfer lemmas through parity, mod-3 and shifted copies; every dead 2- and 3-prefix proven dead |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
@@ -157,3 +158,8 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
     attained: the true minimum is ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59.
   - Better conjecture: the minimum LIS = minimum LDS = ⌊log₂(N+1)⌋, attained.
   - A paper proof gives des ≥ 0.36·log₂N − O(1).
+- `experiments/live/FINDINGS.txt`. Dead prefixes, checked for N ≤ 31.
+  - Dead 2-prefixes: (1,N) and (N,1) for even N, plus (1,7) and (7,1) at N = 7.
+  - Dead 3-prefixes: an explicit family (D_j = {1,2j,2j+1} and its mirrors, plus corner sets
+    for odd N).
+  - Open: that every other pair is live. "Beatty copies" are a promising route.

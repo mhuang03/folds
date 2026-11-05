@@ -1,0 +1,139 @@
+Live and dead short prefixes
+============================
+
+A valid prefix p (every step semi-symmetric) is LIVE if some full semi-symmetric fold sequence
+starts with p (Lean: `Extends N p`), DEAD otherwise.  Because liveness of a valid prefix only
+depends on its SET of panels (`extends_iff_g_pos`: p is live iff [N] \ p can be ordered
+semi-symmetrically from scratch; Lean `extends_congr`), we also speak of live / dead sets.
+
+Programs (1 core, all cheap)
+  live.c        full subset DP: R = sets reachable from scratch (bitset, 2^N bits); a valid
+                prefix p is live iff [N] \ p is in R.  Lists dead 1-, 2-, 3-prefixes.
+                N <= 28 in dead.txt (N = 28: 25 s), N = 29..31 in dead_29_31.txt.
+  check_dead.py checks the characterization below against dead.txt / dead_29_31.txt.
+  depth.py      levels of reachable sets after a prefix (used for the dead-set proofs).
+  splits.py, copies.py, copies2.py, nearclass.py, twopiece.py
+                search for decompositions [N] = X + Y into window copies (see PROOFS.txt).
+  beatty_copy.py, beatty_cover.py, beattyB.c, beatty.py, beatty_chain.py, beatty_B.py
+                Beatty copies X(N,p,g) and Conjecture B (section 4).
+  opt.py, opt2.py, blocktest.c, complete.py, proven_cover.py, db.py, insert.py, apseq.py,
+  balsets.py, rotclass.py, pairdouble.py
+                tests of candidate constructions (mostly negative, see section 5).
+
+
+1. Results of the computation (N <= 31)
+---------------------------------------
+(i)   Every single panel is live, N = 1..31.                      [proven: Lean extends_single]
+(ii)  The dead valid 2-prefixes are exactly
+          (1,N), (N,1)  for even N >= 4,     and     (1,7), (7,1) for N = 7.
+      N = 7 is a sporadic exception: (1,7) is dead although N is odd (after {1,7} the only
+      step is 4, then 3 or 5, then 2 or 6, then nothing).  (prefix/FINDINGS.txt says "0 if
+      N odd"; its own levels.txt has 24 - 22 = 2 dead 2-prefixes at N = 7.)
+                                                   [dead direction proven in Lean, all N]
+(iii) Dead valid 3-prefixes.  Count, N = 4..31:
+        N:     4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+        dead:  0  6  0 20  4 14  2 18  6 16  4 20  8 18  6 22 10 20  8 24 12 22 10 26 14 24 12 28
+      Characterization (exact for N = 6 and 8 <= N <= 31): the dead 3-prefixes are the valid
+      orderings of the DEAD 3-SETS
+        D_j  = {1, 2j, 2j+1}            and its mirror  {N, N+1-2j, N-2j},   2 <= j <= floor((N+1)/4),
+        and, for odd N only, the four 3-subsets of {1, 2, N-1, N}.
+      (For even N there are no valid 3-prefixes through the dead pair (1,N).)
+      Valid orderings: D_j has exactly one, (2j+1, 1, 2j), except for j = h when N = 4h-1 or
+      N = 4h, where (1, 2h+1, 2h) is valid too; each corner set has exactly three.  Hence
+        #dead 3-prefixes = 2(floor((N+1)/4) - 1) + 2[N = 0,3 mod 4] + 12[N odd]
+                         = N/2 (N = 0 mod 4),  (N-6)/2 (N = 2 mod 4),
+                           (N+19)/2 (N = 1 mod 4),  (N+25)/2 (N = 3 mod 4),
+      for N = 6 and N >= 8 (N = 4, 5, 7: 0, 6, 20).  So O(N), about N/2 + 12[N odd].
+      The small cases: N = 5: (1,4,5) (2,1,5) (2,5,1) (4,1,5) (4,5,1) (5,2,1);
+      N = 7: the 12 corner prefixes, (1,5,4) (5,1,4) (3,7,4) (7,3,4) [= D_2, h = 2] and the four
+      prefixes (1,7,4) (7,1,4) (4,1,7) (4,7,1) through the dead pair {1,7}.
+                                         [dead direction proven in Lean, all N, see below]
+
+Why they are dead (PROOFS.txt section 5, Lean `dead_block`, `not_extends_corner`):
+  D_j: the first panel m of G = [2, 2j-1] to be bisected sees exactly one bisected panel (1)
+  on its left arm [1, m-1], and none (m <= j) or at least two (2j, 2j+1; m > j) on its right
+  arm [m+1, 2m-1].  This kills every prefix containing 1, 2j, 2j+1 and nothing of G, as soon
+  as 4j <= N + 3.  Corners: {1,2,N}, {1,N-1,N} admit no step at all; {1,2,N-1} only N, then
+  only the middle panel, then nothing; {2,N-1,N} is the mirror image.
+
+
+2. What is proven (Lean, Folds/Live.lean; no sorry, no native_decide)
+--------------------------------------------------------------------
+  extends_single        : 1 <= m <= N  ->  Extends N [m]                         (claim (i))
+  exists_semiSymmetric  : every strip has a semi-symmetric fold sequence
+  extends_scale         : Extends ((N+c)/2) p -> Extends N (p.map (2y - c))      (parity)
+  extends_winEmb        : weak split (window copy + complement reachable from scratch)
+  Split.extends, extends_three, extends_shX : transfer through splits / mod-3 / shifted blocks
+  extends_congr         : liveness of a valid prefix depends only on its set
+  Extends.mirror
+  not_extends_three_block, not_extends_block(_mirror), dead_block : the dead blocks D_j
+  not_extends_corner    : the corner sets, odd N >= 7
+  not_extends_seven     : (1,7), (7,1) dead for N = 7
+  (with not_extends_one_N from WindowRule.lean: every dead 2- and 3-prefix in the lists above
+   is proven dead, for all N.)
+NOT proven: the live direction of (ii) and (iii) (that every other valid 2-/3-prefix is
+live).  See sections 3-5 and PROOFS.txt section 6.
+
+
+3. Constructions for the live direction of (ii)
+-----------------------------------------------
+Reduction: {u,v} is live iff [N] \ {u,v} has a semi-symmetric ordering from scratch, iff
+some full sequence starts (or ends) with u, v in either valid order.
+
+(a) Same parity: parity blocks.  If u = v (mod 2), class c, then [u,v] is live as soon as
+    [(u+c)/2, (v+c)/2] is live in the class world (N+c)/2 (Lean extends_scale).  The
+    reduced pair is dead only if it is {1, N'} with N' even or N' = 7; that happens for
+    {1, 2N'-1} (odds) and {2, 2N'} (evens) only, and these must be handled otherwise.
+(b) Mixed parity: one level of parity blocks with a "foreign" point,
+       A: [u,v] ++ (rest of class(v)) ++ (rest of class(u)),
+       B: [u,v] ++ (rest of class(u)) ++ (rest of class(v)),
+    the last block being automatic.  Works for most mixed pairs (opt2.py prints the table)
+    but NOT uniformly: for N = 16 every pair {odd <= 7, even >= 10} fails both; for odd N
+    families like {4, odd >= N/2+2} and {N-1, N} fail.
+(c) Shifted blocks (N = 2n): X = {2y + [y > n/2]} (evens <= n, then odds) is a window copy
+    of the (n-1)-world with reachable complement; pairs inside X reduce (Lean extends_shX).
+    Pairs inside Y = complement (odds <= n+1, then evens) reduce to the (n+1)-world through
+    the reversed shifted blocks (with the "1 before the middle" twist for even n; not
+    formalized).  For N = 16 all failures of (b) lie in X or Y except {1,2}, {1,4} and
+    their mirrors {15,16}, {13,16}.
+(d) Window copies.  Criterion (PROOFS.txt 3): an increasing X = {x_1 < ... < x_p} is a window
+    copy of the p-strip iff every x in X is a valid LAST step of X, iff
+        c~(2x - 1) = 2 c(x) - 1   for x in X,
+    c(y) = #X n [1,y], c~(y) = c(y) for y <= N, p + c(y - N) for y > N.  (Checked against the
+    definition for all subsets, N <= 12.)
+    Beatty copies (PROOFS.txt 4): X(N,p,g) = {floor((rN+g)/p) : r = 1..p} is a window copy for
+    every 2p - 1 - N <= g <= 0.  Weak split: if moreover [N] \ X is reachable from scratch,
+    every live pair of the p-world stays live in X (Lean extends_winEmb).
+    CONJECTURE B: for every Beatty copy X(N,p,g) (1 <= p < N, 2p-1-N <= g <= 0) the
+    complement [N] \ X is reachable from scratch.  True for N <= 26 (beattyB.c: all
+    (p,g) in range, 182 of them at N = 26) and for N <= 17 by an independent Python check
+    (beatty.py).
+    Coverage (beatty_cover.py, N <= 40): every live 2-set lies in some Beatty copy with a live
+    preimage pair, except {1,2}, {N-1,N} and a few sporadic sets (O(1) per N, e.g. for
+    N = 4k: {1, 2k+2}, {3, 2k+2} and mirrors; for N = 15: {1,14}, {2,13}, {2,15}, {3,14}).
+    So Conjecture B + those leftovers would give (ii).  Note that B for p = 2 is itself a
+    statement about pairs at distance about N/2, so B is not easier than (ii) in general.
+(e) Near-class copies (twisted complements), odd N: E - {2} + {1} = X(N,(N-1)/2,-2) is a
+    window copy; its complement O - {1} + {2} behaves like the odd world with panel 1
+    relabelled 2, except that 2 must come before 3 (its window is {1,3}); an odd-world
+    order starting with 1 does it, so the complement is reachable and pairs inside
+    E - {2} + {1} reduce to the even world (PROOFS.txt 4).  (E - {2} + {1} is also a copy
+    for N = 0 mod 4, nearclass.py.)
+
+
+4. Negative results (what does NOT work uniformly)
+--------------------------------------------------
+  * Strict splits (both parts copies, mutually balanced) for N <= 14: only parity, the mod-3
+    split (3 | N) and the shifted split (N = 2n, n odd) (splits.py).  Weak splits (both
+    parts copies, no balance) are just as rare (copies.py).
+  * Sets balanced around every panel of the other parity: only the empty set and the full
+    class (balsets.py), so a foreign point can never be cancelled by a partial class.
+  * Nested Beatty chains do not reach density 1/2 (beatty_chain.py), the "rotation classes"
+    of a Beatty copy are not all copies (rotclass.py), index-parity halves of the complement
+    of a Beatty copy are not a two-block decomposition (beatty_B.py).
+  * Cyclic arithmetic progressions are valid only for N <= 5 (apseq.py); inserting panel N
+    or 1 into an (N-1)-sequence fails for many sequences (insert.py); pair doubling
+    (2k, 2k-1) works only sporadically (pairdouble.py).
+  * Only the transfer lemmas proven in Lean (parity, shifted X, mod-3 split, composition)
+    cover a small fraction of the live pairs: e.g. N = 40: 95 of 532 (proven_cover.py).
+    Mixed-parity pairs essentially never reduce, which is why (ii) remains open.
