@@ -499,5 +499,121 @@ theorem coReach_nu_one {q N s v₀ : Nat} (hqodd : q % 2 = 1) (hqN : q ≤ N) (h
   · exact coReach_of_chain_last (by omega) hqN hf hc'
       (by rw [hl]; congr 1; omega) hDs hD
 
+/-! ## Rotation: `ν = 1` and `ν = q - 1` -/
+
+/-- The rotation `t ↦ t - 1` of the class labels (`1 ↦ q`). -/
+def rot (q t : Nat) : Nat := (t + q - 2) % q + 1
+
+theorem rot_eq {q t : Nat} (_hq : 2 ≤ q) (ht : 1 ≤ t ∧ t ≤ q) :
+    rot q t = if t = 1 then q else t - 1 := by
+  unfold rot
+  rw [mod_two (by omega)]
+  split_ifs <;> omega
+
+theorem rot_mem {q t : Nat} (hq : 2 ≤ q) (ht : 1 ≤ t ∧ t ≤ q) : 1 ≤ rot q t ∧ rot q t ≤ q := by
+  rw [rot_eq hq ht]; split_ifs <;> omega
+
+theorem cycBal_rot {q s ρ : Nat} {A : List Nat} (hq : 2 ≤ q)
+    (hA : ∀ t ∈ A, 1 ≤ t ∧ t ≤ q) (hs : 1 ≤ s ∧ s ≤ q) (hρ : ρ < q) :
+    CycBal q (A.map (rot q)) (rot q s) ρ ↔ CycBal q A s ρ := by
+  have hA' : ∀ t ∈ A.map (rot q), 1 ≤ t ∧ t ≤ q := by
+    intro t ht
+    obtain ⟨u, hu, rfl⟩ := List.mem_map.1 ht
+    exact rot_mem hq (hA u hu)
+  have hcc : ∀ t ∈ A, cc q (rot q s) (rot q t) = cc q s t := by
+    intro t ht
+    have := hA t ht
+    rw [cc_eq (rot_mem hq hs).2 (rot_mem hq (hA t ht)), cc_eq hs.2 (hA t ht), rot_eq hq hs,
+      rot_eq hq (hA t ht)]
+    split_ifs <;> omega
+  rw [cycBal_iff hA' (rot_mem hq hs) hρ, cycBal_iff hA hs hρ, List.countP_map, List.countP_map]
+  have e1 : A.countP ((fun t => decide (1 ≤ cc q (rot q s) t ∧ cc q (rot q s) t ≤ ρ)) ∘
+      rot q) = A.countP (fun t => decide (1 ≤ cc q s t ∧ cc q s t ≤ ρ)) :=
+    List.countP_congr fun t ht => by simp only [Function.comp, hcc t ht]
+  have e2 : A.countP ((fun t => decide (q - ρ ≤ cc q (rot q s) t)) ∘ rot q) =
+      A.countP (fun t => decide (q - ρ ≤ cc q s t)) :=
+    List.countP_congr fun t ht => by simp only [Function.comp, hcc t ht]
+  rw [e1, e2]
+
+/-- A chain for `ν = 1`, rotated by one step, is a chain for `ν = q - 1`. -/
+theorem chainOK_rot {q : Nat} (hq : 2 ≤ q) {π : List Nat} (hb : ∀ t ∈ π, 1 ≤ t ∧ t ≤ q)
+    (hc : ChainOK q 1 π) : ChainOK q (q - 1) (π.map (rot q)) := by
+  intro i hi
+  simp only [List.length_map] at hi
+  have hs := hb _ (List.getElem_mem hi)
+  have hA : ∀ t ∈ π.take i, 1 ≤ t ∧ t ≤ q := fun t ht => hb t (List.mem_of_mem_take ht)
+  obtain ⟨c1, c2⟩ := hc i hi
+  rw [List.getElem_map, ← List.map_take]
+  generalize π[i] = s at c1 c2 hs ⊢
+  have hr1 : rot q s - 1 < q := by have := rot_mem hq hs; omega
+  have hr2 : (q - 1 + q - rot q s) % q < q := Nat.mod_lt _ (by omega)
+  rw [cycBal_rot hq hA hs hr1, cycBal_rot hq hA hs hr2, rot_eq hq hs]
+  by_cases h1 : s = 1
+  · rw [if_pos h1]
+    subst h1
+    have c0 : CycBal q (π.take i) 1 (q - 1) := by
+      have := (cycBal_dual hA ⟨le_rfl, by omega⟩ (show 0 < q by omega)).1 (by simpa using c1)
+      simpa using this
+    have e : (q - 1 + q - q) % q = q - 1 := by rw [Nat.mod_eq_of_lt (by omega)]; omega
+    rw [e]; exact ⟨c0, c0⟩
+  · rw [if_neg h1]
+    have e1 : (1 + q - s) % q = q + 1 - s := by
+      rw [Nat.mod_eq_of_lt (show 1 + q - s < q by omega)]; omega
+    rw [e1] at c2
+    have e2 : (q - 1 + q - (s - 1)) % q = q - 1 - (s - 1) := by
+      rw [mod_two (by omega)]; split_ifs <;> omega
+    rw [e2, ← cycBal_dual hA hs (by omega),
+      show s - 1 - 1 = q - 1 - (q + 1 - s) by omega, ← cycBal_dual hA hs (by omega)]
+    exact ⟨c2, c1⟩
+
+theorem isFoldSeq_map_rot {q : Nat} (hq : 2 ≤ q) {L : List Nat} (hf : IsFoldSeq q L) :
+    IsFoldSeq q (L.map (rot q)) := by
+  have hb : ∀ t ∈ L, 1 ≤ t ∧ t ≤ q := fun t ht => (mem_range'_of_perm hf).1 ht
+  refine perm_range'_of_nodup_subset ?_ ?_ (by rw [List.length_map, hf.length_eq]; simp)
+  · refine nodup_map_of_injOn (nodup_of_foldSeq hf) fun x hx y hy e => ?_
+    have h1 := hb x hx; have h2 := hb y hy
+    rw [rot_eq hq h1, rot_eq hq h2] at e
+    split_ifs at e <;> omega
+  · intro y hy
+    obtain ⟨u, hu, rfl⟩ := List.mem_map.1 hy
+    exact rot_mem hq (hb u hu)
+
+/-- **Residue transfer at `ν = q - 1` for every odd `q`**: for `N ≡ -1 (mod q)` the classes
+`s = 2 v₀` and `s = q - 2 v₀` (`v₀` odd, `2 v₀ < q`), i.e. `s ≡ 2` and `s ≡ q - 2 (mod 4)`. -/
+theorem coReach_nu_neg_one {q N s v₀ : Nat} (hqodd : q % 2 = 1) (hqN : q ≤ N)
+    (hN : N % q = q - 1) (hv : v₀ % 2 = 1) (hvq : 2 * v₀ < q) (hs : s = 2 * v₀ ∨ s = q - 2 * v₀)
+    {D : Finset Nat} (hDs : D ⊆ Finset.Icc 1 (ccount q s N))
+    (hD : CoReach (ccount q s N) D) : CoReach N (D.image (cls q s)) := by
+  obtain ⟨k, rfl⟩ : ∃ k, q = 2 * k + 1 := ⟨q / 2, by omega⟩
+  have hq2 : 2 ≤ 2 * k + 1 := by omega
+  obtain ⟨π, hf, hc, hcr, hh, hl⟩ := palindromic_chain (k := k) hv (by omega)
+  have hb : ∀ t ∈ π, 1 ≤ t ∧ t ≤ 2 * k + 1 := fun t ht => (mem_range'_of_perm hf).1 ht
+  have hbr : ∀ t ∈ π.reverse, 1 ≤ t ∧ t ≤ 2 * k + 1 := fun t ht => hb t (List.mem_reverse.1 ht)
+  have hc' : ChainOK (2 * k + 1) (N % (2 * k + 1)) (π.map (rot (2 * k + 1))) := by
+    rw [hN]; exact chainOK_rot hq2 hb hc
+  have hcr' : ChainOK (2 * k + 1) (N % (2 * k + 1)) (π.reverse.map (rot (2 * k + 1))) := by
+    rw [hN]; exact chainOK_rot hq2 hbr hcr
+  rcases hs with rfl | rfl
+  · refine coReach_of_chain_last (by omega) hqN
+      (isFoldSeq_map_rot hq2 ((List.reverse_perm _).trans hf)) hcr' ?_ hDs hD
+    rw [← List.map_reverse, List.reverse_reverse]
+    cases π with
+    | nil => simp at hh
+    | cons a π' =>
+      simp only [List.head?_cons, Option.some.injEq] at hh
+      subst hh
+      simp only [List.map_cons, List.head?_cons, Option.some.injEq]
+      rw [rot_eq hq2 ⟨by omega, by omega⟩]; split_ifs <;> omega
+  · refine coReach_of_chain_last (by omega) hqN (isFoldSeq_map_rot hq2 hf) hc' ?_ hDs hD
+    rw [← List.map_reverse]
+    cases h : π.reverse with
+    | nil => rw [h] at hl; simp at hl
+    | cons a π' =>
+      rw [h] at hl
+      simp only [List.head?_cons, Option.some.injEq] at hl
+      subst hl
+      simp only [List.map_cons, List.head?_cons, Option.some.injEq]
+      rw [rot_eq hq2 ⟨by omega, by omega⟩]; split_ifs <;> omega
+
 end Live3
 end Folds
