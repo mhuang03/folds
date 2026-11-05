@@ -532,4 +532,121 @@ theorem card_triples3 (N : Nat) : (triples3 N).card = 2 * Wf N := by
       Finset.mem_Icc, Set.mem_ofPred_eq] at h
     dsimp only; simp only [Prod.mk.injEq]; omega
 
+/-! ### Evaluating `W(N)` -/
+
+theorem sum_half (N : Nat) : ∑ a ∈ Finset.Icc 1 N, a / 2 = N * N / 4 := by
+  induction N with
+  | zero => rfl
+  | succ n ih => rw [Finset.sum_Icc_succ_top (by omega), ih, sq_div_four_succ]
+
+/-- `hs e K = Σ_{1 ≤ b ≤ K} (b + e) / 2`. -/
+def hs (e K : Nat) : Nat := ∑ b ∈ Finset.Icc 1 K, (b + e) / 2
+
+theorem hs_zero (K : Nat) : hs 0 K = K * K / 4 := by
+  simp only [hs, Nat.add_zero]; exact sum_half K
+
+theorem hs_one (K : Nat) : hs 1 K = (K + 1) * (K + 1) / 4 := by
+  induction K with
+  | zero => rfl
+  | succ n ih =>
+    rw [hs, Finset.sum_Icc_succ_top (by omega)]
+    rw [hs] at ih
+    rw [ih, sq_div_four_succ (n + 1)]
+
+theorem sq_div_four_mod (x : Nat) : 4 * (x * x / 4) + x % 2 = x * x := by
+  rcases Nat.even_or_odd' x with ⟨k, rfl | rfl⟩
+  · have e : 2 * k * (2 * k) = 4 * (k * k) := by ring
+    rw [e]; omega
+  · have e : (2 * k + 1) * (2 * k + 1) = 4 * (k * k + k) + 1 := by ring
+    rw [e]; omega
+
+/-- `C(N) = Σ_{a ≤ N} min(⌊a/2⌋, 2a - 3 - N)`: pairs `(a, b)` with `2b ≤ a` whose middle
+range for `c` grows when `N` grows by `2`. -/
+def Cf (N : Nat) : Nat := ∑ a ∈ Finset.Icc 1 N, min (a / 2) (2 * a - (3 + N))
+
+theorem sum_ite_le (N a : Nat) :
+    ∑ b ∈ Finset.Icc 1 (a / 2), (if N + b + 3 ≤ 2 * a then 1 else 0) =
+      min (a / 2) (2 * a - (3 + N)) := by
+  rw [← Finset.sum_filter, ← Finset.card_eq_sum_ones]
+  have e : (Finset.Icc 1 (a / 2)).filter (fun b => N + b + 3 ≤ 2 * a) =
+      Finset.Icc 1 (min (a / 2) (2 * a - (3 + N))) := by
+    ext b; simp only [Finset.mem_filter, Finset.mem_Icc]; omega
+  rw [e, Nat.card_Icc]; omega
+
+theorem Cf_succ (N : Nat) :
+    Cf (N + 1) + (min N ((2 * N + 6) / 3) + 1 - (N + 5) / 2) =
+      Cf N + min ((N + 1) / 2) (N - 2) := by
+  have hcount : ∑ a ∈ Finset.Icc 1 N,
+      (if N + 4 ≤ 2 * a ∧ 3 * a ≤ 2 * N + 6 then 1 else 0) =
+      min N ((2 * N + 6) / 3) + 1 - (N + 5) / 2 := by
+    rw [← Finset.sum_filter, ← Finset.card_eq_sum_ones]
+    have e : (Finset.Icc 1 N).filter (fun a => N + 4 ≤ 2 * a ∧ 3 * a ≤ 2 * N + 6) =
+        Finset.Icc ((N + 5) / 2) (min N ((2 * N + 6) / 3)) := by
+      ext a; simp only [Finset.mem_filter, Finset.mem_Icc]; omega
+    rw [e, Nat.card_Icc]
+  have hpt : ∑ a ∈ Finset.Icc 1 N, min (a / 2) (2 * a - (3 + (N + 1))) +
+      ∑ a ∈ Finset.Icc 1 N, (if N + 4 ≤ 2 * a ∧ 3 * a ≤ 2 * N + 6 then 1 else 0) =
+      ∑ a ∈ Finset.Icc 1 N, min (a / 2) (2 * a - (3 + N)) := by
+    rw [← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    intro a _
+    split_ifs <;> omega
+  have hm : min ((N + 1) / 2) (2 * (N + 1) - (3 + (N + 1))) = min ((N + 1) / 2) (N - 2) := by
+    omega
+  rw [Cf, Cf, Finset.sum_Icc_succ_top (by omega)]
+  omega
+
+/-- Closed form of `C(N)` for `N ≥ 2`: `6 C(N) = N² - 2N - d(N)`. -/
+theorem Cf_closed (N : Nat) (hN : 2 ≤ N) :
+    6 * Cf N + 2 * N + 3 * (N % 2) + 2 * (N % 3 % 2) = N * N := by
+  induction N, hN using Nat.le_induction with
+  | base => decide
+  | succ n hn ih =>
+    have hs := Cf_succ n
+    have e : (n + 1) * (n + 1) = n * n + 2 * n + 1 := by ring
+    rw [e]
+    generalize n * n = X at ih ⊢
+    rw [Nat.min_def, Nat.min_def] at hs
+    obtain ⟨q, r, hr, rfl⟩ : ∃ q r, r < 6 ∧ n = 6 * q + r :=
+      ⟨n / 6, n % 6, Nat.mod_lt _ (by norm_num), by omega⟩
+    interval_cases r <;> split_ifs at hs <;> omega
+
+/-- One step `N → N + 2` of `W`. -/
+theorem Wf_step {N : Nat} (hN : 2 ≤ N) :
+    Wf (N + 2) = Wf N + N * N / 4 + Cf N +
+      ((2 - N % 2) * ((N + 1) / 2) + hs 0 ((N + 1) / 2) + hs (N % 2) ((N + 1) / 2)) +
+      (hs 0 ((N + 2) / 2) + hs (N % 2) ((N + 2) / 2)) := by
+  rw [Wf, Finset.sum_Icc_succ_top (by omega), Finset.sum_Icc_succ_top (by omega)]
+  have h1 : ∑ a ∈ Finset.Icc 1 N, ∑ b ∈ Finset.Icc 1 (a / 2), Zf (N + 2) a b =
+      Wf N + N * N / 4 + Cf N := by
+    rw [Wf, Cf, ← sum_half, ← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    intro a ha
+    rw [Finset.mem_Icc] at ha
+    have hpt : ∀ b ∈ Finset.Icc 1 (a / 2),
+        Zf (N + 2) a b = Zf N a b + 1 + (if N + b + 3 ≤ 2 * a then 1 else 0) := by
+      intro b hb
+      rw [Finset.mem_Icc] at hb
+      unfold Zf
+      split_ifs <;> omega
+    rw [Finset.sum_congr rfl hpt, Finset.sum_add_distrib, Finset.sum_add_distrib, sum_ite_le]
+    simp
+  have h2 : ∑ b ∈ Finset.Icc 1 ((N + 1) / 2), Zf (N + 2) (N + 1) b =
+      (2 - N % 2) * ((N + 1) / 2) + hs 0 ((N + 1) / 2) + hs (N % 2) ((N + 1) / 2) := by
+    have : (2 - N % 2) * ((N + 1) / 2) = ∑ b ∈ Finset.Icc 1 ((N + 1) / 2), (2 - N % 2) := by
+      simp [mul_comm]
+    rw [this, hs, hs, ← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    intro b hb
+    rw [Finset.mem_Icc] at hb
+    unfold Zf; omega
+  have h3 : ∑ b ∈ Finset.Icc 1 ((N + 2) / 2), Zf (N + 2) (N + 2) b =
+      hs 0 ((N + 2) / 2) + hs (N % 2) ((N + 2) / 2) := by
+    rw [hs, hs, ← Finset.sum_add_distrib]
+    apply Finset.sum_congr rfl
+    intro b hb
+    rw [Finset.mem_Icc] at hb
+    unfold Zf; omega
+  rw [h1, h2, h3]
+
 end Folds
