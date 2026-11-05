@@ -104,6 +104,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live2` (M) | co-reachability; every residue class mod q is a window copy (any N); **residue chain theorem** (`res_chain`); a recursively defined proven family of live 2-sets (e.g. 523 of 779 at N = 40) |
 | `Live3` (M) | Theorem E (`no_chain_exc`): no residue chain starts with class 1 at N ≡ 1 (mod q) when q is not a power of 2; Theorem H (`palindromic_chain`): explicit chains for every odd q, giving residue transfers for all odd q; near-class copies `winEmb_near` |
 | `Live4` (M) | good classes ⇔ complete residue chains; block-chain composition `good_comp` (every class good for q = 2^a); palindromic chains; 378 kernel-checked certificates for q ≤ 27; family `Cov2` proving 3373 of 4949 non-dead 2-sets co-reachable at N = 100 |
+| `Labelling` (M) | finite reduction for each label count t (`bound_of_checks`, via left-half monotonicity); t ≤ 2 settled for all N, so des + 1 ≥ min(⌊log₂(N+1)⌋, 3) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -138,8 +139,10 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 4. **Minimum LDS = minimum LIS = ⌊log₂(N+1)⌋**, attained. Minimum descents are
    ⌊log₂(N+1)⌋−1, except ⌊log₂(N+1)⌋ at N = 25, 55, 57, 59. This would follow from the
    labelling conjecture (equivalently: every *right-heavy* permutation of [N] has a
-   decreasing subsequence of length ⌊log₂(N+1)⌋). The SAT check has reached t = 5
-   (N = 63..66). There is no proof yet: the extremal labellings are not unique for t ≥ 4;
+   decreasing subsequence of length ⌊log₂(N+1)⌋). For each t this is a *finite* check (left-half
+   monotonicity). It is now settled for every N when t ≤ 5 (t ≤ 2 in Lean; t = 3, 4, 5 by
+   exhaustive search and SAT), so LDS ≥ min(⌊log₂(N+1)⌋, 6) and the descent bound holds for
+   all N ≤ 126. See `experiments/labelling2/PROOFS.txt`. There is no proof yet: the extremal labellings are not unique for t ≥ 4;
    see `experiments/labelling/PROOFS.txt`.
 5. **Liveness (Conjecture C).** Every 2-set is co-reachable (its complement can be
    ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
