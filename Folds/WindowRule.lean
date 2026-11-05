@@ -99,4 +99,126 @@ theorem semiStep_iff_window {N c : Nat} {S : List Nat} (hnd : S.Nodup)
     rw [hwin, ← hR]
     omega
 
+/-! ## Valid suffixes and valid prefixes are equinumerous -/
+
+/-- The repetition-free lists of length `k` with entries in `[1, N]`. -/
+def kLists (N k : Nat) : Finset (List Nat) :=
+  ((Finset.Icc 1 N).powersetCard k).biUnion orderings
+
+theorem mem_kLists {N k : Nat} {l : List Nat} :
+    l ∈ kLists N k ↔ l.Nodup ∧ l.length = k ∧ ∀ x ∈ l, 1 ≤ x ∧ x ≤ N := by
+  simp only [kLists, Finset.mem_biUnion, Finset.mem_powersetCard, mem_orderings]
+  constructor
+  · rintro ⟨S, ⟨hS, hk⟩, hnd, rfl⟩
+    refine ⟨hnd, by rw [← hk, List.toFinset_card_of_nodup hnd], fun x hx => ?_⟩
+    have := hS (List.mem_toFinset.2 hx)
+    simpa using this
+  · rintro ⟨hnd, hk, hx⟩
+    refine ⟨l.toFinset, ⟨fun x h => ?_, by rw [List.toFinset_card_of_nodup hnd, hk]⟩, hnd, rfl⟩
+    rw [List.mem_toFinset] at h
+    simpa using hx x h
+
+/-- The valid length-`k` prefixes: repetition-free lists of panels in which every step is
+semi-symmetric.  Their number is `T(N, k)`. -/
+def validPrefixes (N k : Nat) : Finset (List Nat) := (kLists N k).filter (SemiSymmetric N)
+
+/-- `l = [b₁, …, b_k]` is valid as the *last* `k` steps of a bisection order of `[1..N]`:
+when `bᵢ` is bisected, the panels bisected so far are exactly those not in `[bᵢ, …, b_k]`. -/
+def SuffixValid (N : Nat) (l : List Nat) : Prop :=
+  ∀ i (h : i < l.length), SemiStep N ((List.range' 1 N).filter (fun x => x ∉ l.drop i)) l[i]
+
+instance (N : Nat) (l : List Nat) : Decidable (SuffixValid N l) := by
+  unfold SuffixValid; infer_instance
+
+/-- The valid length-`k` suffixes. -/
+def validSuffixes (N k : Nat) : Finset (List Nat) := (kLists N k).filter (SuffixValid N)
+
+/-- A list is a valid suffix iff its reversal is a valid prefix. -/
+theorem suffixValid_iff {N : Nat} {l : List Nat} (hnd : l.Nodup)
+    (hl : ∀ x ∈ l, 1 ≤ x ∧ x ≤ N) : SuffixValid N l ↔ SemiSymmetric N l.reverse := by
+  have key : ∀ i (h : i < l.length),
+      SemiStep N ((List.range' 1 N).filter (fun x => x ∉ l.drop i)) l[i] ↔
+        SemiStep N (l.drop (i + 1)).reverse l[i] := by
+    intro i h
+    apply semiStep_iff_of_compl
+    intro d hd1 hd2
+    have hm := hl _ (List.getElem_mem h)
+    have hdrop : l.drop i = l[i] :: l.drop (i + 1) := List.drop_eq_getElem_cons h
+    have hnot : l[i] ∉ l.drop (i + 1) := by
+      have := hnd.sublist (List.drop_sublist i l)
+      rw [hdrop, List.nodup_cons] at this; exact this.1
+    unfold reach at hd2
+    simp only [List.mem_reverse, List.mem_filter, List.mem_range'_1, hdrop, List.mem_cons,
+      decide_eq_true_eq]
+    constructor
+    · constructor
+      · intro hx; refine fun ⟨_, hn⟩ => hn (Or.inr hx)
+      · intro hx; by_contra hc; exact hx ⟨by omega, fun h' => h'.elim (by omega) hc⟩
+    · constructor
+      · intro hx; refine fun ⟨_, hn⟩ => hn (Or.inr hx)
+      · intro hx; by_contra hc; exact hx ⟨by omega, fun h' => h'.elim (by omega) hc⟩
+  constructor
+  · intro h k hk
+    simp only [List.length_reverse] at hk
+    have e1 : l.reverse[k]'(by simpa using hk) = l[l.length - 1 - k] := by
+      rw [List.getElem_reverse]
+    have e2 : l.reverse.take k = (l.drop (l.length - 1 - k + 1)).reverse := by
+      rw [List.take_reverse]; congr 2; omega
+    rw [e1, e2]
+    exact (key _ (by omega)).1 (h _ (by omega))
+  · intro h i hi
+    have := h (l.length - 1 - i) (by simp; omega)
+    have e1 : l.reverse[l.length - 1 - i]'(by simp; omega) = l[i] := by
+      rw [List.getElem_reverse]; congr 1; omega
+    have e2 : l.reverse.take (l.length - 1 - i) = (l.drop (i + 1)).reverse := by
+      rw [List.take_reverse]; congr 2; omega
+    rw [e1, e2] at this
+    exact (key i hi).2 this
+
+/-- **Suffix count = prefix count.**  The number of valid length-`k` suffixes equals the
+number of valid length-`k` prefixes `T(N, k)`; the bijection is reversal. -/
+theorem card_validSuffixes (N k : Nat) :
+    (validSuffixes N k).card = (validPrefixes N k).card := by
+  apply Finset.card_nbij' List.reverse List.reverse
+  · intro l hl
+    simp only [validSuffixes, validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq,
+      mem_kLists] at hl ⊢
+    obtain ⟨⟨hnd, hk, hx⟩, hv⟩ := hl
+    exact ⟨⟨List.nodup_reverse.2 hnd, by simpa using hk, fun x h => hx x (List.mem_reverse.1 h)⟩,
+      (suffixValid_iff hnd hx).1 hv⟩
+  · intro l hl
+    simp only [validSuffixes, validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq,
+      mem_kLists] at hl ⊢
+    obtain ⟨⟨hnd, hk, hx⟩, hv⟩ := hl
+    have hnd' : l.reverse.Nodup := List.nodup_reverse.2 hnd
+    have hx' : ∀ x ∈ l.reverse, 1 ≤ x ∧ x ≤ N := fun x h => hx x (List.mem_reverse.1 h)
+    refine ⟨⟨hnd', by simpa using hk, hx'⟩, ?_⟩
+    rw [suffixValid_iff hnd' hx', List.reverse_reverse]; exact hv
+  · intro l _; simp
+  · intro l _; simp
+
+/-- The valid 2-prefixes counted here are those of `Folds.Prefix`: `T(N, 2) = ⌊N²/2⌋`. -/
+theorem card_validPrefixes_two (N : Nat) : (validPrefixes N 2).card = N * N / 2 := by
+  rw [← card_prefixTwo]
+  apply Finset.card_nbij' (fun l => (l.headD 0, l.getLastD 0)) (fun p => [p.1, p.2])
+  · intro l hl
+    simp only [validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq, mem_kLists] at hl
+    obtain ⟨⟨hnd, hk, hx⟩, hv⟩ := hl
+    match l, hk with
+    | [a, b], _ =>
+      simp only [Finset.mem_coe, prefixTwo_mem_iff]
+      exact ⟨hx a (by simp), hx b (by simp), hnd, hv⟩
+  · rintro ⟨a, b⟩ hp
+    simp only [Finset.mem_coe, prefixTwo_mem_iff] at hp
+    simp only [validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq, mem_kLists]
+    refine ⟨⟨hp.2.2.1, rfl, ?_⟩, hp.2.2.2⟩
+    intro x hx; simp at hx; rcases hx with rfl | rfl
+    · exact hp.1
+    · exact hp.2.1
+  · intro l hl
+    simp only [validPrefixes, Finset.coe_filter, Set.mem_ofPred_eq, mem_kLists] at hl
+    match l, hl.1.2.1 with
+    | [a, b], _ => rfl
+  · intro p _; rfl
+
 end Folds
