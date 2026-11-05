@@ -102,6 +102,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `SuperExp2` (M) | slip chains B(2m) ≥ 2^m a(m)² B(m); `pow_le_semiCount_pow_six`: N^N ≤ 2^N·a(N)^6 for N = 2^L; `self_pow_le_semiCount_pow_22`: N^N ≤ 2^{9N}·a(N)^{22} for all N ≥ 1 |
 | `SuperExp3` (M) | general slip lemma (`blocks_mem_semiSeqs_iff`): "X in order f_τ, then Xᶜ in order g_σ" is valid iff τ, σ satisfy induced cyclic-interval conditions, for any split X; parity blocks, residue compositions and slips are special cases |
 | `Live2` (M) | co-reachability; every residue class mod q is a window copy (any N); **residue chain theorem** (`res_chain`); a recursively defined proven family of live 2-sets (e.g. 523 of 779 at N = 40) |
+| `Live3` (M) | Theorem E (`no_chain_exc`): no residue chain starts with class 1 at N ≡ 1 (mod q) when q is not a power of 2; Theorem H (`palindromic_chain`): explicit chains for every odd q, giving residue transfers for all odd q; near-class copies `winEmb_near` |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -168,6 +169,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/labelling/PROOFS.txt` | labelling / right-heavy reformulation of the descent bound, failed and surviving lemma candidates |
 | `experiments/live/FINDINGS.txt` | dead and live prefixes, Beatty copies |
 | `experiments/live2/PROOFS.txt` | residue chain theorem, reduction of liveness to RS + Adjacent Lemma |
+| `experiments/live3/PROOFS.txt` | RS for primes (partial), the Adjacent Lemma obstruction, near classes |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Practical note for folders
