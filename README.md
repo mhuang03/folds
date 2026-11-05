@@ -100,6 +100,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Independence2` (M) | the one-outside-element independence case (`card_pair_one_outside` and its mirror), and chains ending in such a pair |
 | `SuperExp` (M) | **super-exponential lower bound**: slip lemma; a(4m) ≥ 2^m·a(m)⁴; `self_pow_le_semiCount`: N^N ≤ 2^{3N}·a(N)^{32}; `pow_le_semiCount_pow_four`: (4^j)^{4^j} ≤ a(4^j)^8 |
 | `SuperExp2` (M) | slip chains B(2m) ≥ 2^m a(m)² B(m); `pow_le_semiCount_pow_six`: N^N ≤ 2^N·a(N)^6 for N = 2^L; `self_pow_le_semiCount_pow_22`: N^N ≤ 2^{9N}·a(N)^{22} for all N ≥ 1 |
+| `SuperExp3` (M) | general slip lemma (`blocks_mem_semiSeqs_iff`): "X in order f_τ, then Xᶜ in order g_σ" is valid iff τ, σ satisfy induced cyclic-interval conditions, for any split X; parity blocks, residue compositions and slips are special cases |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -148,6 +149,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/extremal/PROOFS.txt` | left-to-right maxima and free-step laws |
 | `experiments/superexp/PROOFS.txt` | slip construction and the super-exponential lower bound |
 | `experiments/superexp2/PROOFS.txt` | slip chains: exponents 1/6 (powers of 2) and 1/22 (all N), and the ceiling analysis |
+| `experiments/superexp3/PROOFS.txt` | general slip lemma, and why interleavings resist certification (the regress) |
 | `experiments/growth/PROOFS.txt` | composition, splits, upper bounds, SMC |
 | `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
 | `experiments/descents/PROOFS.txt` | descent and LDS bounds, SAT data |
