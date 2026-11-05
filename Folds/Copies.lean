@@ -14,6 +14,24 @@ one of size `(j+1)n` (`doubling_oddRes`), with counting function `x - c(x)`.  He
 generalising `semiCount_three`, `semiCount_five`, `semiCount_seven`.
 
 See `experiments/growth/PROOFS.txt` §1.2.
+
+## Copy criterion (`experiments/live/PROOFS.txt` §3.1)
+
+For a strictly increasing `φ` with counting function `c` (`CountEmb`):
+`WinEmb N p φ` ⟺ the image is balanced around each of its elements ⟺ every element is a
+valid last step of the image (`CountEmb.winEmb_iff`, `CountEmb.winEmb_iff_lastStep`) ⟺
+`c~(2x - 1) = 2c(x) - 1` at every element (`CopyAt`).
+
+## Beatty copies (`experiments/live/PROOFS.txt` §4.1)
+
+`winEmb_beatty`: for `1 ≤ p`, `h + 2p ≤ N + 1`, `r ↦ ⌊(rN - h)/p⌋` is a window copy of the
+`p`-strip (the Beatty set `X(N, p, g)` with `g = -h`, `2p - 1 - N ≤ g ≤ 0`);
+`extends_beatty`: weak split through it (via `extends_winEmb`).
+
+## Near-class copy (`experiments/live/PROOFS.txt` §4.2)
+
+`extends_near`: for `N = 2n + 1`, live prefixes of the `n`-strip stay live through
+`X(N, n, -2) = {1, 4, 6, …, 2n}`, whose complement is reachable (`g_near_pos`).
 -/
 
 namespace Folds
@@ -510,6 +528,105 @@ theorem extends_beatty {N p h : Nat} (hp : 1 ≤ p) (hh : h + 2 * p ≤ N + 1) {
     (hY : 0 < g N (Finset.Icc 1 N \ (Finset.Icc 1 p).image (beatty N p h))) :
     Extends N (r.map (beatty N p h)) :=
   extends_winEmb (winEmb_beatty hp hh) hr hY
+
+/-- Window embeddings only depend on the values on `[1..p]`. -/
+theorem WinEmb.congr {N p : Nat} {φ ψ : Nat → Nat} (hφ : WinEmb N p φ)
+    (h : ∀ y, 1 ≤ y → y ≤ p → φ y = ψ y) : WinEmb N p ψ := by
+  refine ⟨fun y h1 h2 => ?_, fun x y hx1 hxp hy1 hyp e => ?_, fun j y hj1 hjp hy1 hyp => ?_,
+    fun j y hj1 hjp hy1 hyp => ?_⟩
+  · rw [← h y h1 h2]; exact hφ.bound y h1 h2
+  · rw [← h x hx1 hxp, ← h y hy1 hyp] at e; exact hφ.inj x y hx1 hxp hy1 hyp e
+  · rw [← h j hj1 hjp, ← h y hy1 hyp]; exact hφ.left j y hj1 hjp hy1 hyp
+  · rw [← h j hj1 hjp, ← h y hy1 hyp]; exact hφ.right j y hj1 hjp hy1 hyp
+
+/-! ## The near-class copy (odd `N`)
+
+For `N = 2n + 1` the Beatty set `X(N, n, -2) = {1, 4, 6, …, 2n}` (`nearPhi`) is a copy of
+the `n`-strip, and its complement `Y = {2, 3, 5, 7, …, N}` (`nearPsi`) can be ordered
+semi-symmetrically from scratch: map a sequence of the `(n+1)`-strip starting with `1`
+through `1 ↦ 2`, `y ↦ 2y - 1` (`y ≥ 2`).  Hence live prefixes of the `n`-strip stay live
+through `nearPhi` (`extends_near`). -/
+
+/-- `X = {1, 4, 6, …, 2n}`. -/
+def nearPhi (y : Nat) : Nat := if y = 1 then 1 else 2 * y
+
+/-- `Y = {2, 3, 5, 7, …, 2n + 1}`. -/
+def nearPsi (y : Nat) : Nat := if y = 1 then 2 else 2 * y - 1
+
+theorem beatty_near {n r : Nat} (hr1 : 1 ≤ r) (hrn : r ≤ n) :
+    beatty (2 * n + 1) n 2 r = nearPhi r := by
+  unfold beatty nearPhi
+  have e : r * (2 * n + 1) = 2 * (r * n) + r := by ring
+  have hrn' : n ≤ r * n := Nat.le_mul_of_pos_left n hr1
+  rw [e]
+  split_ifs with h
+  · subst h; apply Nat.div_eq_of_lt_le <;> omega
+  · have e1 : 2 * r * n = 2 * (r * n) := by ring
+    have e2 : (2 * r + 1) * n = 2 * (r * n) + n := by ring
+    apply Nat.div_eq_of_lt_le
+    · rw [e1]; omega
+    · rw [e2]; omega
+
+theorem winEmb_near {n : Nat} (hn : 1 ≤ n) : WinEmb (2 * n + 1) n nearPhi :=
+  (winEmb_beatty (h := 2) hn (by omega)).congr fun _ h1 h2 => beatty_near h1 h2
+
+theorem winPres_nearPsi {n y : Nat} (hy2 : 2 ≤ y) (hy : y ≤ n + 1) :
+    WinPres (2 * n + 1) (n + 1) nearPsi y := by
+  constructor <;> intro z hz1 hz <;> unfold nearPsi reach <;> split_ifs <;> omega
+
+/-- The complement of the near-class copy can be ordered semi-symmetrically from scratch. -/
+theorem g_near_pos {n : Nat} (hn : 1 ≤ n) :
+    0 < g (2 * n + 1) (Finset.Icc 1 (2 * n + 1) \ (Finset.Icc 1 n).image nearPhi) := by
+  obtain ⟨τ, hτf, hτs, hpre⟩ := extends_single (n + 1) 1 le_rfl (by omega)
+  obtain ⟨t, rfl⟩ := hpre
+  have bτ : ∀ z ∈ [1] ++ t, 1 ≤ z ∧ z ≤ n + 1 := fun z hz => (mem_range'_of_perm hτf).1 hz
+  have hnd := nodup_of_foldSeq hτf
+  have hndm : (([1] ++ t).map nearPsi).Nodup :=
+    nodup_map_of_injOn hnd fun a ha b hb e => by
+      have := bτ a ha; have := bτ b hb
+      unfold nearPsi at e; split_ifs at e <;> omega
+  rw [g, Finset.card_pos]
+  refine ⟨([1] ++ t).map nearPsi, mem_semiOrders.2 ⟨⟨hndm, ?_⟩, ?_⟩⟩
+  · ext x
+    simp only [List.mem_toFinset, List.mem_map, Finset.mem_sdiff, Finset.mem_Icc,
+      Finset.mem_image]
+    constructor
+    · rintro ⟨y, hy, rfl⟩
+      have := bτ y hy
+      refine ⟨by unfold nearPsi; split_ifs <;> omega, ?_⟩
+      rintro ⟨r, hr, e⟩
+      unfold nearPsi nearPhi at e; split_ifs at e <;> omega
+    · rintro ⟨hx, hnx⟩
+      have hmem : ∀ y, 1 ≤ y → y ≤ n + 1 → y ∈ [1] ++ t := fun y h1 h2 =>
+        (mem_range'_of_perm hτf).2 ⟨h1, h2⟩
+      by_cases h2 : x = 2
+      · exact ⟨1, hmem 1 le_rfl (by omega), by unfold nearPsi; simp [h2]⟩
+      by_cases hodd : x % 2 = 1
+      · by_cases h1 : x = 1
+        · exact absurd ⟨1, ⟨le_rfl, hn⟩, by simp [nearPhi, h1]⟩ hnx
+        · refine ⟨(x + 1) / 2, hmem _ (by omega) (by omega), ?_⟩
+          unfold nearPsi; split_ifs <;> omega
+      · exact absurd ⟨x / 2, ⟨by omega, by omega⟩, by unfold nearPhi; split_ifs <;> omega⟩ hnx
+  · intro k hk
+    simp only [List.length_map] at hk
+    rw [List.getElem_map, ← List.map_take]
+    have hy := bτ _ (List.getElem_mem hk)
+    by_cases h1 : ([1] ++ t)[k] = 1
+    · have hk0 : k = 0 := by
+        have : ([1] ++ t)[k] = ([1] ++ t)[0] := by rw [h1]; rfl
+        exact (List.Nodup.getElem_inj hnd).1 this
+      subst hk0
+      simp [SemiStep, leftCount, rightCount]
+    · have hndk : ((([1] ++ t).take k).map nearPsi).Nodup := by
+        rw [List.map_take]; exact hndm.sublist (List.take_sublist _ _)
+      exact (semiStep_map_iff hndk (fun z hz => bτ z (List.mem_of_mem_take hz))
+        (winPres_nearPsi (by omega) hy.2)).2 (hτs k hk)
+
+/-- **Near-class transfer (odd `N = 2n + 1`).**  Live prefixes of the `n`-strip stay live
+through `nearPhi` (`1 ↦ 1`, `y ↦ 2y` for `y ≥ 2`). -/
+theorem extends_near {n : Nat} (hn : 1 ≤ n) {r : List Nat} (hr : Extends n r) :
+    Extends (2 * n + 1) (r.map nearPhi) :=
+  extends_winEmb (winEmb_near hn) hr (g_near_pos hn)
 
 end Folds
 
