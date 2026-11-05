@@ -357,5 +357,91 @@ theorem good_comp {j m c e a y : Nat} (hj : 0 < j) (hm : 0 < m) (hc : c < m) (he
         subst hh
         simp [blocks, hl]
 
+/-! ## The closure of the good classes, and the enlarged family -/
+
+/-- The good classes proven here (`experiments/live4/covlean4.py` computes this closure). -/
+inductive Gd : Nat → Nat → Nat → Prop
+  | table {q ν s : Nat} : 2 ≤ q → q ≤ 12 → ν < q → 1 ≤ s → s ≤ q → excB q ν s = false →
+      Gd q ν s
+  | zero {q t : Nat} : 1 ≤ t → t ≤ q → Gd q 0 t
+  | nu_one {k v₀ t : Nat} : v₀ % 2 = 1 → v₀ ≤ k → (t = 2 * v₀ + 1 ∨ t = 2 * k + 2 - 2 * v₀) →
+      Gd (2 * k + 1) 1 t
+  | sig {q ν t : Nat} : ν < q → Gd q ν t → Gd q ν (sig q ν t)
+  | mirror {q ν t : Nat} : ν < q → Gd q ν t → Gd q ((q - ν) % q) (q + 1 - t)
+  | comp {j m c e a y z z' : Nat} : 0 < j → 0 < m → c < m → e < j → Gd j e a →
+      Gd m (inner m c e a) y → Gd m c z → (0 < e → Gd m ((c + 1) % m) z') →
+      Gd (m * j) (j * c + e) (cls j a y)
+
+theorem Gd.good {q ν t : Nat} (h : Gd q ν t) : Good q ν t := by
+  induction h with
+  | table h2 hq hν hs1 hsq he => exact good_table h2 hq hν hs1 hsq he
+  | zero h1 h2 => exact good_zero ⟨h1, h2⟩
+  | nu_one hv hvk ht => exact good_nu_one hv hvk ht
+  | sig hν _ ih => exact good_sig hν ih
+  | mirror hν _ ih => exact good_mirror hν ih
+  | comp hj hm hc he _ _ _ _ iha ihy ihz ihz' =>
+    exact good_comp hj hm hc he iha ihy ⟨_, ihz⟩ fun h => ⟨_, ihz' h⟩
+
+/-- For `q = 2^a` every class is good for every `ν` (parity recursion, `good_comp` with
+`j = 2`). -/
+theorem good_pow_two : ∀ a ν t, ν < 2 ^ a → 1 ≤ t → t ≤ 2 ^ a → Good (2 ^ a) ν t := by
+  intro a
+  induction a with
+  | zero =>
+    intro ν t hν h1 h2
+    simp only [pow_zero] at *
+    obtain rfl : ν = 0 := by omega
+    exact good_zero ⟨h1, h2⟩
+  | succ a ih =>
+    intro ν t hν h1 h2
+    have hp : 0 < 2 ^ a := Nat.pow_pos (by norm_num)
+    have e2 : 2 ^ (a + 1) = 2 ^ a * 2 := pow_succ 2 a
+    rw [e2] at hν h2 ⊢
+    have hb : 1 ≤ (t - 1) % 2 + 1 ∧ (t - 1) % 2 + 1 ≤ 2 := by omega
+    have ht : t = cls 2 ((t - 1) % 2 + 1) ((t - 1) / 2 + 1) := by unfold cls; simp; omega
+    have hν' : ν = 2 * (ν / 2) + ν % 2 := by omega
+    rw [ht, hν']
+    refine good_comp (by norm_num) hp (by omega) (Nat.mod_lt _ (by norm_num))
+      (good_table (by norm_num) (by norm_num) (Nat.mod_lt _ (by norm_num)) hb.1 hb.2
+        (by unfold excB; simp)) (ih _ _ (inner_lt hp (by omega)) (by omega) (by omega))
+      ⟨1, ih _ _ (by omega) le_rfl (by omega)⟩
+      fun _ => ⟨1, ih _ _ (Nat.mod_lt _ hp) le_rfl (by omega)⟩
+
+/-- **The enlarged proven family**: base cases, residue transfers through every good class
+(any modulus `q`), and the mirror. -/
+inductive Cov2 : Nat → Finset Nat → Prop
+  | small {N : Nat} {D : Finset Nat} : (Finset.Icc 1 N \ D).card ≤ 1 → Cov2 N D
+  | table {N u v : Nat} : N ≤ 12 → 1 ≤ u → u < v → v ≤ N → deadB N u v = false →
+      Cov2 N {u, v}
+  | res {q N s : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ N → Good q (N % q) s →
+      D ⊆ Finset.Icc 1 (ccount q s N) → Cov2 (ccount q s N) D → Cov2 N (D.image (cls q s))
+  | mirror {N : Nat} {D : Finset Nat} : Cov2 N D → Cov2 N (D.image (N + 1 - ·))
+
+theorem Cov2.coReach {N : Nat} {D : Finset Nat} (h : Cov2 N D) : CoReach N D := by
+  induction h with
+  | small h => exact coReach_small h
+  | table hN hu huv hv hd => exact coReach_base hN hu huv hv hd
+  | res hq2 hqN hg hDs _ ih => exact coReach_good (by omega) hqN hg hDs ih
+  | mirror _ ih => exact coReach_mirror ih
+
+/-- `Cov2` contains the family `Cov` of live2. -/
+theorem Cov.cov2 {N : Nat} {D : Finset Nat} (h : Cov N D) : Cov2 N D := by
+  induction h with
+  | small h => exact Cov2.small h
+  | table hN hu huv hv hd => exact Cov2.table hN hu huv hv hd
+  | res hq2 hq12 hqN hs1 hsq hexc hDs _ ih =>
+    exact Cov2.res hq2 hqN (good_table hq2 hq12 (Nat.mod_lt _ (by omega)) hs1 hsq hexc) hDs ih
+  | mirror _ ih => exact Cov2.mirror ih
+
+/-- Every valid 2-prefix whose set is in the family is live. -/
+theorem Cov2.extends {N u v : Nat} (h : Cov2 N {u, v}) (hu : 1 ≤ u ∧ u ≤ N)
+    (hv : 1 ≤ v ∧ v ≤ N) (huv : u ≠ v) (hval : SemiSymmetric N [u, v]) :
+    Extends N [u, v] := by
+  rw [extends_iff_coReach (by simp [huv]) (by
+    intro x hx; simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
+    rcases hx with rfl | rfl <;> assumption) hval]
+  convert h.coReach using 2
+  ext x; simp
+
 end Live4
 end Folds
