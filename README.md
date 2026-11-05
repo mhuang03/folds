@@ -17,7 +17,8 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 |---|---|
 | `Defs.lean` | `reach`, `IsFoldSeq`, `SymStep`, `SemiStep`, `Symmetric`, `SemiSymmetric`, `APFree` |
 | `Basic.lean` | `Symmetric.semiSymmetric`, `symmetric_iff_apFree`, `semiStep_iff_of_compl`, `SemiSymmetric.reverse`, `SemiSymmetric.mirror` |
-| `Decide.lean` | Bool checkers proven equal to the Props (decidability); statement of the cyclic reformulation `CyclicStep` |
+| `Decide.lean` | Bool checkers proven equal to the Props (decidability) |
+| `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
 outside Lean (see `experiments/` and the Rust crate), not with `native_decide`.
@@ -45,7 +46,7 @@ The semi-symmetric sequence is **not in the OEIS**.
    With the panel centre `c = m - ½`, the counting function `F` and the discrepancy
    `E(x) = F(x) - s·x/N` (period `N`), this becomes **`E(2c) = 2·E(c)`**: placing the
    panel at `c` is allowed iff the discrepancy doubles under the doubling map
-   `x ↦ 2x (mod N)`. (Checked by brute force for `N ≤ 10`; Lean proof in progress.)
+   `x ↦ 2x (mod N)`. (Proven in Lean: `semiStep_iff_cyclicStep`.)
 4. **Complement / reversal.** A step's validity is unchanged if `S` is replaced by its
    complement inside the window. Hence reversing a semi-symmetric sequence gives a
    semi-symmetric one (proven), and so does mirroring `m ↦ N+1-m` (proven). For
