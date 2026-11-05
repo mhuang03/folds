@@ -1,4 +1,5 @@
 import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Finset.Sigma
 import Mathlib.Order.Interval.Finset.Nat
@@ -523,6 +524,196 @@ theorem semiCount_slip {n : Nat} (hn : 1 ≤ n) :
   simpa [Finset.card_product, semiCount] using this
 
 end Count
+
+/-! ## Parity-block inputs: `a(2n) ≥ 2^{|C_n|} a(⌈n/2⌉)² a(⌊n/2⌋)²` -/
+
+section ParitySlip
+
+/-- Number of guaranteed slip positions: `n/2` for even `n`, `⌊(n+1)/4⌋` for odd `n`. -/
+def cnt (n : Nat) : Nat := if n % 2 = 0 then n / 2 else (n + 1) / 4
+
+/-- The guaranteed slip positions `C_n`: the odd `k ≤ n - 1` (`n` even), resp. the odd `k`
+with `2k + 1 ≤ n` (`n` odd). -/
+def cset (n : Nat) : Finset Nat := (Finset.range (cnt n)).image fun i => 2 * i + 1
+
+theorem card_cset (n : Nat) : (cset n).card = cnt n := by
+  unfold cset
+  rw [Finset.card_image_of_injective _ (fun x y e => by
+    have : 2 * x + 1 = 2 * y + 1 := e
+    omega), Finset.card_range]
+
+theorem mem_cset {n k : Nat} (hk : k ∈ cset n) :
+    k % 2 = 1 ∧ 1 ≤ k ∧ k + 1 ≤ n ∧ (n % 2 = 0 ∨ 2 * k + 1 ≤ n) := by
+  unfold cset cnt at hk
+  obtain ⟨i, hi, rfl⟩ := Finset.mem_image.1 hk
+  rw [Finset.mem_range] at hi
+  split at hi <;> omega
+
+theorem cset_sub (n : Nat) : cset n ⊆ Finset.Icc 1 (n - 1) := fun k hk => by
+  have := mem_cset hk; rw [Finset.mem_Icc]; omega
+
+/-- For `k ∈ C_n`, `qq n k = 2k mod* n` is even. -/
+theorem qq_even {n k : Nat} (hk : k ∈ cset n) : qq n k % 2 = 0 := by
+  obtain ⟨h1, h2, h3, h4⟩ := mem_cset hk
+  unfold qq
+  rcases h4 with he | ho
+  · have := Nat.mod_mod_of_dvd (2 * k - 1) (Nat.dvd_of_mod_eq_zero he)
+    omega
+  · have hlt : 2 * k - 1 < n := by omega
+    rw [Nat.mod_eq_of_lt hlt]; omega
+
+/-- For `k ∈ C_n`, `pp n k = (2k + 1) mod* n` is odd and at most `n`. -/
+theorem pp_odd {n k : Nat} (hk : k ∈ cset n) : pp n k % 2 = 1 ∧ pp n k ≤ n := by
+  obtain ⟨h1, h2, h3, h4⟩ := mem_cset hk
+  unfold pp
+  have hlt : 2 * k % n < n := Nat.mod_lt _ (by omega)
+  rcases h4 with he | ho
+  · have := Nat.mod_mod_of_dvd (2 * k) (Nat.dvd_of_mod_eq_zero he)
+    omega
+  · have hlt2 : 2 * k < n := by omega
+    rw [Nat.mod_eq_of_lt hlt2]; omega
+
+/-- The odds-first parity-block sequences of `[n]`. -/
+noncomputable def oddFirst (n : Nat) : Finset (List Nat) :=
+  (semiSeqs ((n + 1) / 2) ×ˢ semiSeqs ((n + (1 - 1)) / 2)).image (blockMap 1)
+
+theorem card_oddFirst (n : Nat) :
+    (oddFirst n).card = semiCount ((n + 1) / 2) * semiCount (n / 2) := by
+  unfold oddFirst
+  rw [Finset.card_image_of_injOn (blockMap_injOn (N := n) (c := 1) le_rfl), Finset.card_product]
+  rfl
+
+/-- Structure of an odds-first parity-block sequence. -/
+theorem oddFirst_struct {n : Nat} {ρ : List Nat} (h : ρ ∈ oddFirst n) :
+    ρ ∈ semiSeqs n ∧ ∃ A B : List Nat, ρ = A ++ B ∧ (∀ x ∈ A, x % 2 = 1) ∧
+      (∀ x ∈ B, x % 2 = 0) ∧ (∀ x, x % 2 = 1 → 1 ≤ x → x ≤ n → x ∈ A) := by
+  unfold oddFirst at h
+  obtain ⟨⟨α, β⟩, hp, rfl⟩ := Finset.mem_image.1 h
+  refine ⟨blockMap_mem le_rfl hp, ?_⟩
+  rw [Finset.mem_product, mem_semiSeqs, mem_semiSeqs] at hp
+  refine ⟨α.map (scale 1), β.map (scale (1 - 1)), rfl, ?_, ?_, ?_⟩
+  · intro x hx
+    obtain ⟨y, hy, rfl⟩ := List.mem_map.1 hx
+    have := (mem_range'_of_perm hp.1.1).1 hy; unfold scale; omega
+  · intro x hx
+    obtain ⟨y, -, rfl⟩ := List.mem_map.1 hx; unfold scale; omega
+  · intro x hx1 hx0 hxn
+    refine List.mem_map.2 ⟨(x + 1) / 2, (mem_range'_of_perm hp.1.1).2 (by omega), ?_⟩
+    unfold scale; omega
+
+theorem oddFirst_sub_condF {n : Nat} {D : Finset Nat} (hD : D ⊆ cset n) :
+    oddFirst n ⊆ condF n D := by
+  intro ρ hρ
+  obtain ⟨hmem, A, B, rfl, hA, hB, -⟩ := oddFirst_struct hρ
+  unfold condF
+  rw [Finset.mem_filter]
+  refine ⟨hmem, fun k hk hd => ?_⟩
+  have hjD : (A ++ B)[k] ∈ D := by
+    unfold ind at hd; split at hd
+    · assumption
+    · omega
+  have hj := mem_cset (hD hjD)
+  have hk' : k < A.length + B.length := by simpa using hk
+  have hkA : k < A.length := by
+    by_contra hc
+    have e : (A ++ B)[k] = B[k - A.length]'(by omega) :=
+      List.getElem_append_right (by omega)
+    have := hB _ (List.getElem_mem (l := B) (n := k - A.length) (by omega))
+    rw [← e] at this
+    omega
+  intro hq
+  rw [List.take_append_of_le_length hkA.le] at hq
+  have := hA _ (List.mem_of_mem_take hq)
+  have := qq_even (hD hjD)
+  omega
+
+theorem oddFirst_sub_condS {n : Nat} {D : Finset Nat} (hD : D ⊆ cset n) :
+    oddFirst n ⊆ condS n D := by
+  intro ρ hρ
+  obtain ⟨hmem, A, B, rfl, hA, hB, hAall⟩ := oddFirst_struct hρ
+  unfold condS
+  rw [Finset.mem_filter]
+  refine ⟨hmem, fun k hk hd => ?_⟩
+  have hjD : (A ++ B)[k] - 1 ∈ D := by
+    unfold ind at hd; split at hd
+    · assumption
+    · omega
+  have hj := mem_cset (hD hjD)
+  have hkA : A.length ≤ k := by
+    by_contra hc
+    have e : (A ++ B)[k] = A[k]'(by omega) := List.getElem_append_left (by omega)
+    have := hA _ (List.getElem_mem (l := A) (n := k) (by omega))
+    rw [← e] at this
+    omega
+  have hpp := pp_odd (hD hjD)
+  have hmA : pp n ((A ++ B)[k] - 1) ∈ A := hAall _ hpp.1 (by omega) hpp.2
+  rw [List.take_append, List.take_of_length_le hkA]
+  exact List.mem_append_left _ hmA
+
+/-- **Parity-slip recursion.**  `2^{|C_n|} · (a(⌈n/2⌉) · a(⌊n/2⌋))² ≤ a(2n)`. -/
+theorem semiCount_paritySlip {n : Nat} (hn : 1 ≤ n) :
+    2 ^ cnt n * (semiCount ((n + 1) / 2) * semiCount (n / 2)) ^ 2 ≤ semiCount (2 * n) := by
+  refine le_trans ?_ (semiCount_slip hn)
+  have hsub : (cset n).powerset ⊆ (Finset.Icc 1 (n - 1)).powerset :=
+    Finset.powerset_mono.2 (cset_sub n)
+  refine le_trans ?_ (Finset.sum_le_sum_of_subset hsub)
+  have : ∀ D ∈ (cset n).powerset,
+      (semiCount ((n + 1) / 2) * semiCount (n / 2)) ^ 2 ≤ (condF n D).card * (condS n D).card := by
+    intro D hD
+    rw [Finset.mem_powerset] at hD
+    rw [Nat.pow_two, ← card_oddFirst]
+    exact Nat.mul_le_mul (Finset.card_le_card (oddFirst_sub_condF hD))
+      (Finset.card_le_card (oddFirst_sub_condS hD))
+  refine le_trans ?_ (Finset.sum_le_sum this)
+  rw [Finset.sum_const, Finset.card_powerset, card_cset]
+  exact le_of_eq rfl
+
+/-- `a(4m) ≥ 2^m · a(m)^4`. -/
+theorem semiCount_four_mul {m : Nat} (hm : 1 ≤ m) :
+    2 ^ m * semiCount m ^ 4 ≤ semiCount (4 * m) := by
+  have := semiCount_paritySlip (n := 2 * m) (by omega)
+  rw [show cnt (2 * m) = m by unfold cnt; split <;> omega,
+    show (2 * m + 1) / 2 = m by omega, show 2 * m / 2 = m by omega,
+    show 2 * (2 * m) = 4 * m by omega, ← Nat.pow_two, ← Nat.pow_mul] at this
+  exact this
+
+/-- `a(4m+2) ≥ 2^{⌊(m+1)/2⌋} · a(m)² · a(m+1)²`. -/
+theorem semiCount_four_mul_add_two (m : Nat) :
+    2 ^ ((m + 1) / 2) * (semiCount (m + 1) * semiCount m) ^ 2 ≤ semiCount (4 * m + 2) := by
+  have := semiCount_paritySlip (n := 2 * m + 1) (by omega)
+  rw [show cnt (2 * m + 1) = (m + 1) / 2 by unfold cnt; split <;> omega,
+    show (2 * m + 1 + 1) / 2 = m + 1 by omega, show (2 * m + 1) / 2 = m by omega,
+    show 2 * (2 * m + 1) = 4 * m + 2 by omega] at this
+  exact this
+
+/-- **Super-exponential lower bound** along `N = 4^j`:  `N^N ≤ a(N)^8`, i.e.
+`a(N) ≥ N^{N/8}`. -/
+theorem pow_le_semiCount_pow_four (j : Nat) : (4 ^ j) ^ (4 ^ j) ≤ semiCount (4 ^ j) ^ 8 := by
+  induction j with
+  | zero =>
+    have := semiCount_one_pos
+    simp only [Nat.pow_zero, Nat.pow_one]
+    exact Nat.one_le_pow _ _ this
+  | succ j ih =>
+    have hpos : 1 ≤ 4 ^ j := Nat.one_le_pow _ _ (by omega)
+    have key := semiCount_four_mul hpos
+    rw [show 4 ^ (j + 1) = 4 * 4 ^ j by rw [Nat.pow_succ, Nat.mul_comm]]
+    have e1 : (4 : Nat) ^ (4 * 4 ^ j) = (2 ^ (4 ^ j)) ^ 8 :=
+      calc (4 : Nat) ^ (4 * 4 ^ j) = (2 ^ 2) ^ (4 * 4 ^ j) := rfl
+        _ = 2 ^ (2 * (4 * 4 ^ j)) := (Nat.pow_mul 2 2 _).symm
+        _ = 2 ^ (4 ^ j * 8) := by congr 1; omega
+        _ = (2 ^ (4 ^ j)) ^ 8 := Nat.pow_mul 2 _ 8
+    have e2 : (4 ^ j) ^ (4 * 4 ^ j) = ((4 ^ j) ^ (4 ^ j)) ^ 4 := by
+      rw [show 4 * 4 ^ j = 4 ^ j * 4 by omega, Nat.pow_mul]
+    calc (4 * 4 ^ j) ^ (4 * 4 ^ j)
+        = (2 ^ (4 ^ j)) ^ 8 * ((4 ^ j) ^ (4 ^ j)) ^ 4 := by rw [Nat.mul_pow, e1, e2]
+      _ ≤ (2 ^ (4 ^ j)) ^ 8 * (semiCount (4 ^ j) ^ 8) ^ 4 :=
+          Nat.mul_le_mul_left _ (Nat.pow_le_pow_left ih 4)
+      _ = (2 ^ (4 ^ j) * semiCount (4 ^ j) ^ 4) ^ 8 := by
+          rw [Nat.mul_pow]; congr 1; rw [← Nat.pow_mul, ← Nat.pow_mul]
+      _ ≤ semiCount (4 * 4 ^ j) ^ 8 := Nat.pow_le_pow_left key 8
+
+end ParitySlip
 
 end Slip
 end Folds
