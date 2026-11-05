@@ -30,6 +30,7 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `SelfDual.lean` (Mathlib) | `card_revMirrorFixed`: c(N) = number of valid half sequences; flip lemmas and a mod-4 reduction of c(N) for even N |
 | `Extremal.lean` (Mathlib) | exact extremal laws. Left-to-right maxima: at most ⌊log₂N⌋+1, attained (`lrmax_le`, `exists_lrmax`). Free steps (window empty): at most ⌊log₂(N+1)⌋+⌊log₂((N+1)/3)⌋+1, attained (`numFree_le`, `max_free`). Shifted parity blocks (`shifted_blocks`) |
 | `Growth.lean` (Mathlib) | composition `semiCount_comp`: a(qn) ≥ a(q)·a(n)^q; doubling splits a(3n) ≥ 2a(n)a(2n) (also for 5n, 7n); branching upper bound `semiCount_le_prod`; parity upper bound `semiCount_even_le_prod`: a(2h) ≤ (2h)!·(√e/2)^{h(1+o(1))} |
+| `WindowRule.lean` (Mathlib) | `semiStep_iff_window`: the window rule (above/below counts decide the half and which panels the window holds); `card_validSuffixes`: valid suffixes = valid prefixes; dead 2-prefixes (1,N),(N,1) for even N; **`card_validPrefixes_three_formula`**: 36·T(N,3) = 8N³ − 3N² − (30 or 12)N + c(N mod 6) |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
@@ -130,8 +131,7 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
   length k.** T(N,k) is the number of valid first-k-step sequences. It is a
   quasi-polynomial in N:
   - T(N,2) = ⌊N²/2⌋ (proven in Lean).
-  - T(N,3) = (2/9)N³ − (1/12)N² + ℓ(N)N + e(N), with period 6. Independently re-checked
-    for N ≤ 40.
+  - T(N,3) = (2/9)N³ − (1/12)N² + ℓ(N)N + e(N), with period 6 (proven in Lean).
   - T(N,4) has period 168.
 
   Mechanism (proven): for a fixed relative order of the k panels, the validity conditions
