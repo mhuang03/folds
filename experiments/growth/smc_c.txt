@@ -1,0 +1,2 @@
+N=512 P=2000 loga_est=1808.1750 logN!=2686.0605 ratio=0.6732  loga/(NlogN)=0.5661
+N=1024 extinct at k=995
