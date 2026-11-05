@@ -23,7 +23,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 | terms | a(1..36) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
 | congruences | a(N) ≡ c(N) (mod 4) (**proven**); 4 ∣ a(N) for N ≡ 3 (mod 4) (**proven**); no patterns modulo odd primes |
-| growth | **rigorously (N/8)^{N/32} ≤ a(N) ≤ N!·e^{−Θ(N)}** (super-exponential lower bound, proven in Lean; a(N) ≥ N^{N/8} for N = 4^j). **Conjecture:** a(N) = N!/(κ ln N)^N |
+| growth | **rigorously (N/512)^{N/22} ≤ a(N) ≤ N!·e^{−Θ(N)}** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
 | arithmetic effect | multiples of 3 sit above trend (all N ≤ 33). Mechanism: the 2-cycle {N/3, 2N/3} of the doubling map |
 
 Here T(N,k) is the number of valid k-step prefixes, and c(N) is the number of sequences
@@ -99,14 +99,15 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `ShiftedCount` (M) | a(2n) ≥ 2a(n)² + a(n−1)a(n+1) (odd n), and the halved version for even n |
 | `Independence2` (M) | the one-outside-element independence case (`card_pair_one_outside` and its mirror), and chains ending in such a pair |
 | `SuperExp` (M) | **super-exponential lower bound**: slip lemma; a(4m) ≥ 2^m·a(m)⁴; `self_pow_le_semiCount`: N^N ≤ 2^{3N}·a(N)^{32}; `pow_le_semiCount_pow_four`: (4^j)^{4^j} ≤ a(4^j)^8 |
+| `SuperExp2` (M) | slip chains B(2m) ≥ 2^m a(m)² B(m); `pow_le_semiCount_pow_six`: N^N ≤ 2^N·a(N)^6 for N = 2^L; `self_pow_le_semiCount_pow_22`: N^N ≤ 2^{9N}·a(N)^{22} for all N ≥ 1 |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
 
 1. **Asymptotics.** a(N) = N!/(κ_N ln N)^N, i.e. ln a = N ln N − N ln ln N − O(N).
    Evidence: debiased SMC to N = 4096 and a Feynman–Kac model; see
-   `experiments/asymptotics/NOTES.txt`. Rigorously 1/32 ≤ liminf ln a/(N ln N), and
-   limsup ≥ 1/8 (the slip construction, `Folds/SuperExp.lean`). The upper side is only
+   `experiments/asymptotics/NOTES.txt`. Rigorously 1/22 ≤ liminf ln a/(N ln N), and
+   limsup ≥ 1/6 (slip chains, `Folds/SuperExp2.lean`). Slip methods are capped at 1/2. The upper side is only
    N!·e^{−Θ(N)}.
 2. **Mod-3 effect.** Relative to the independence model, a(N) is above trend exactly
    when 3 ∣ N (all N ≤ 33). The proposed mechanism is the 2-cycle {N/3, 2N/3} of the
@@ -146,6 +147,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/periods/PROOFS.txt` | proof of the period-law upper bound; c_8, c_9; continuum acceptance |
 | `experiments/extremal/PROOFS.txt` | left-to-right maxima and free-step laws |
 | `experiments/superexp/PROOFS.txt` | slip construction and the super-exponential lower bound |
+| `experiments/superexp2/PROOFS.txt` | slip chains: exponents 1/6 (powers of 2) and 1/22 (all N), and the ceiling analysis |
 | `experiments/growth/PROOFS.txt` | composition, splits, upper bounds, SMC |
 | `experiments/asymptotics/NOTES.txt` | the N!/(κ ln N)^N conjecture, SMC to 4096 |
 | `experiments/descents/PROOFS.txt` | descent and LDS bounds, SAT data |
