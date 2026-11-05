@@ -1,0 +1,226 @@
+INTERLEAVINGS, GENERAL SLIPS, AND WHY THE 1/6 CHAIN RESISTS IMPROVEMENT   (experiments/superexp3/)
+=========================================================================================
+
+Notation as in ../superexp/PROOFS.txt and ../superexp2/PROOFS.txt.  V_n = valid (semi-symmetric)
+sequences of the n-strip, a(n) = |V_n|.  x mod* n = representative of x in [1, n].
+G(tau) = {k in [1,n-1] : k before q(k) = 2k mod* n},  G'(sigma) = {k : p(k) = (2k+1) mod* n before
+k+1},  B(n) = sum_{tau,sigma in V_n} 2^{|G(tau) ∩ G'(sigma)|} <= a(2n)  (slip lemma), and the chain
+B(2m) >= 2^m a(m)^2 B(m) gives ln a(N) >= (1/6) N ln N - O(N) along N = 2^L.
+PB(alpha, beta) = odds-first parity block (2x-1 for x in alpha) ++ (2y for y in beta).
+
+SUMMARY
+-------
+Goal: a rigorous exponent > 1/6 (along some subsequence).  NOT achieved.  The best proven
+exponents are unchanged: 1/6 along N = 2^L and 1/22 for all N (Folds/SuperExp2.lean).  What this
+round produced:
+
+ (1) Theorem A, the GENERAL SLIP LEMMA (paper proof, section 1; exhaustively verified): for ANY
+     set X of panels (any size n1, any N) the sequences "X in the order f_tau, then the rest in the
+     order g_sigma" are valid iff tau and sigma satisfy explicit INDUCED window conditions; for
+     strip-valid tau, sigma these are interval (order) conditions whose size is the doubling
+     defect of the discrepancy of X.  The old slip lemma (superexp Thm 1) is the case
+     X = {2i + d_i}; a second family, "aligned slips" X = {2i - e_i} (one panel of every pair
+     {2i-1, 2i}), has conditions along the edges of the de Bruijn graph j -> 2j, 2j-1 (mod* n)
+     (Corollary A2).
+ (2) Interleavings (task idea 1) are NOT a source of growth: for random valid halves the mean
+     number of valid shuffles of (2tau, 2sigma - 1) stays near 4.5 and E log2 W near 1.92 for
+     n <= 12 (section 2.1).  The interleaved sequences in F(16) = 64738 are interleavings only
+     in the trivial sense that their half-time set is not a parity class.
+ (3) With parity-block inputs the chain is OPTIMAL up to constant factors among ALL general-X
+     slips (section 2.3): summing Theorem A over every X with PB inputs gives 1.4 - 3.6 times the
+     chain's count (n = 4..14), with no exponential gain; the extra X certified by the free
+     halves alone are worth O(1) bits (section 2.4); residue-class inputs mod 3, 4 are worse
+     (2.5); odd N has no free general slips at all (2.6).
+ (4) The room (#{tau : G(tau) ⊇ odds} grows like 1.45^m a(m)^2, and the chain-type sum over
+     those tau and sigma is 2^m-ish times the PB part, section 3) lives entirely in tau whose
+     two halves are themselves slipped.  Certifying G for such tau forces conditions on the
+     second half beta (q(e) before e before p(e)) that are incompatible with beta being an
+     odds-first parity block -- the very property the coupled recursion B(m) needs (section 4).
+     Every fix pushes the same requirement one level down: an infinite regress, which is the
+     precise sense in which interleavings "resist certification".
+
+
+=========================================================================================
+1. THE GENERAL SLIP LEMMA
+=========================================================================================
+Setting.  N >= 2, X ⊆ [N] with |X| = n1, n2 = N - n1 >= 1.  f_1 < ... < f_{n1} are the elements
+of X, g_1 < ... < g_{n2} those of [N] \ X.  kappa(y) = |X ∩ [1, y]|, lambda(y) = y - kappa(y)
+(0 <= y <= N), extended by
+      kappa~(N a + r) = n1 a + kappa(r),     lambda~(N a + r) = n2 a + lambda(r)     (0 <= r < N),
+so kappa~(z) + lambda~(z) = z.  For a set T ⊆ [n1] (resp. U ⊆ [n2]) t(y) = |T ∩ [1,y]| and
+t~(n1 a + r) = t(r) + a|T| (cyclic count with modulus n1); u, u~ likewise with modulus n2.
+Cyclic form of a step (README 3, Lean semiStep_iff_cyclicStep): (S, m) is valid iff
+P~(2m - 1) = 2 P(m - 1), P(y) = |S ∩ [1,y]|, P~(N a + r) = P(r) + a|S|.
+
+Lemma 1 (transfer).  (a) |f(T) ∩ [1, y]| = t(kappa(y)) and, cyclically, P~_{f(T)}(z) = t~(kappa~(z)).
+(b) For S = X ∪ g(U): P_S(y) = kappa(y) + u(lambda(y)) and P~_S(z) = kappa~(z) + u~(lambda~(z)).
+Proof.  f is increasing, so f_x <= y iff x <= kappa(y); likewise g_x <= y iff x <= lambda(y).
+Cyclically, z = N a + r: P~(z) = t(kappa(r)) + a|T| = t~(n1 a + kappa(r)) (as kappa(r) <= n1);
+(b) the same with |S| = n1 + |U|.
+
+Theorem A (general slip lemma).
+ (i) First block.  T ⊆ [n1], j in [n1] \ T.  The step (f(T), f_j) is valid in the N-strip iff
+        t~(kappa~(2 f_j - 1)) = 2 t(j - 1).
+ (ii) Second block (on top of all of X).  U ⊆ [n2], j in [n2] \ U.  The step (X ∪ g(U), g_j) is
+     valid iff, with L = lambda~(2 g_j - 1),
+        u~(L) - 2 u(j - 1) = L - (2j - 1).
+ (iii) Interval form.  If moreover (T, j) is a valid step of the n1-strip (t~(2j-1) = 2t(j-1)),
+     (i) holds iff NO index z mod* n1, z in (min(2j-1, K), max(2j-1, K)], K = kappa~(2f_j - 1),
+     lies in T.  If (U, j) is a valid step of the n2-strip, (ii) holds iff EVERY index z mod* n2,
+     z in (min(2j-1, L), max(2j-1, L)], lies in U (counted with multiplicity: an interval of
+     length > n2, or one containing j, is impossible).
+ Hence for tau in V_{n1}, sigma in V_{n2}: (f_tau, g_sigma) is valid iff tau never places an
+ element of I_j before j and sigma places all of J_j before j (I_j, J_j the intervals of (iii)),
+ and distinct (X, tau, sigma) give distinct sequences, so
+        a(N)  >=  sum_{|X| = n1}  T(X) S(X),
+ T(X) = #{tau in V_{n1} : interval conditions},  S(X) = #{sigma in V_{n2} : ...}.
+Proof.  (i) By Lemma 1(a), P~(2f_j - 1) = t~(kappa~(2f_j - 1)) and P(f_j - 1) = t(kappa(f_j - 1))
+= t(j - 1).  (ii) y = 2g_j - 1.  P~(y) = kappa~(y) + u~(L) = y - L + u~(L), and
+P(g_j - 1) = kappa(g_j - 1) + u(lambda(g_j - 1)) = (g_j - j) + u(j - 1); the cyclic condition
+y - L + u~(L) = 2g_j - 2j + 2u(j - 1) is the claim.  (iii) t~ is nondecreasing and
+t~(b) - t~(a) = #{z in (a, b] : z mod* n1 in T}; subtract the strip condition.  QED
+The size of the conditions.  For N = 2n1, with the discrepancy D(y) = kappa(y) - y/2 (periodic),
+   kappa~(2 f_j - 1) - (2j - 1) = D(2 f_j - 1) - 2 D(f_j - 1) - 1/2,
+the doubling defect of D at f_j: a set X whose discrepancy is doubling-compatible near f_j imposes
+no condition at j.  Parity classes have D in {0, -1/2} (evens) or {0, 1/2} (odds): no conditions
+(the parity-block theorem).
+Verification.  gslipcheck.c: N = 2n, every X, (i), (ii) for ALL permutations (n <= 6) and the
+interval form for all strip-valid tau, sigma (n <= 8, 28.8 million block checks): 0 failures.
+gslipodd.py: every N <= 9, every n1, every X, every permutation (9.25 million step checks):
+0 failures.  gslip.py (N = 2n <= 10): the resulting criterion for whole sequences, 0 mismatches.
+
+Corollary A1 (old slip lemma).  X = {2i + d_i} (D-slips, pairs {2k, 2k+1}): the intervals are
+{q(j)} when d_j = 1 (tau: j before q(j)) and {p(j-1)} for the second block -- superexp Thm 1.
+Corollary A2 (aligned slips).  N = 2n, E ⊆ [n], X = {2i - e_i} (one panel of each pair
+{2i-1, 2i}; E = ∅: evens, E = [n]: odds).  For tau, sigma in V_n the sequence is valid iff for
+every j and each child c in {q(j) = 2j mod* n, p(j) = (2j-1) mod* n} with e_c != e_j:
+     c = q(j):  c in E -> tau: j before c;     j in E -> sigma: c before j;
+     c = p(j):  j in E -> tau: j before c;     c in E -> sigma: c before j.
+(In 0-based labels these are the edges x -> 2x+1, 2x of the de Bruijn graph mod n.)  eslip.py:
+n <= 5, every E, every tau, sigma: sufficient and necessary.  B_E(n) = sum_E T(E) S(E) is of the
+same size as B(n) (esum.c: B_E/a^2 = 2.0, 3.0, 3.38, 3.42, 4.58, 4.77, 4.62, 6.86, 6.57, 5.49,
+10.53 for n = 2..12, against B/a^2 = 1.25 ... 13.12).
+Odd N.  Theorem A holds verbatim with n1 = n+1, n2 = n (gslipodd.py); but see 2.6.
+
+
+=========================================================================================
+2. DATA: WHERE THE CERTIFIABLE FAMILIES STOP
+=========================================================================================
+2.1 Interleavings of valid halves (shuffle.c).  For tau, sigma in V_n let W(tau, sigma) be the
+number of valid sequences of the 2n-strip whose even panels appear in the order 2tau and whose odd
+panels appear in the order 2sigma - 1 (shuffles; W >= 2: both parity blocks).
+      n          2     3     4     5     6     7     8     9    10*   12*
+      E W       2.50  3.00  3.40  3.80  4.12  4.19  4.35  4.42  4.51  4.55
+      E log2 W  1.29  1.52  1.65  1.79  1.87  1.87  1.91  1.92  1.93  1.92      (* sampled)
+Bounded: interleaving valid halves gains O(1).  Mechanism: after an odd panel 2j-1 is inserted
+into the even block, every later even panel 2i must keep it out of its window ([1, 4i-1] in the
+left half), i.e. i < j/2 or i > (n+j)/2 - 1/4: each insertion freezes a window of length ~n/2.
+With the extra constraint "odd k before 2k mod* 2n" (the tau of the chain): E W = 1.25, 1.53, 1.62,
+1.75, 1.77 for n = 2, 4, 6, 8, 10.  The example 1 9 5 3 2 13 11 10 7 6 4 15 14 12 8 16 of
+superexp2 6.1 is such a shuffle (both halves are 1 5 3 2 7 6 4 8); these are rare.
+2.2 Where the mass of a(2n) is (discmass.c, midset.c, gsum.c).  Split a(2n) = sum_X g(X) h(X) by
+the half-time set X; per a(n)^2:
+      2n                  8      12      16       20       24
+      a(2n)/a(n)^2      11.2    41.6   220.2   1248.0   6662.4
+      max|D| <= 1/2      4.74    9.05   22.44    60.48   154.62   (= aligned sets, Cor. A2)
+      D-type sets        2.98    5.95   18.14    52.82   142.74
+      max|D| <= 1       10.78   36.23  172.10   877.89  4103.79
+      strip-valid blocks 6.32   11.81   17.21    35.72    66.59   (sum_X T(X) S(X), Thm A)
+      B(n) (D-slips)     2.12    3.22    5.26     8.63    13.12
+Most sequences have a half-time set of discrepancy <= 1, but their two block orders are NOT
+strip-valid: the window defects of the two halves compensate each other.  Theorem A with
+strip-valid blocks reaches only 1% of a(24).
+2.3 Parity-block inputs, all X (gsum.c, mode PB).  Summing Theorem A over every X with
+tau, sigma parity blocks (both orientations), per a(m)^4 (n = 2m), against the chain
+2^m B(m)/a(m)^2:
+      n             4      6       8      10      12      14
+      all X       24.25  35.75  123.07  169.97  519.25  929.68
+      chain        5     12      33.9    72.5   206     444
+Ratio 4.9, 3.0, 3.6, 2.3, 2.5, 2.1: a constant.  Nothing beyond the D-chain survives
+parity-block inputs exponentially.
+2.4 Moves paid by the free halves (freehalf.c).  Top size 4m, tau = PB(alpha, beta),
+sigma = PB(alpha', beta').  Count every X (Theorem A) whose conditions are free (odd before even)
+or fall inside alpha or beta' only (the halves the chain does not use):
+      m              2      3      4      5      6
+      E W          7.25   9.50  27.05  34.27  80.77     (2^m = 4, 8, 16, 32, 64)
+      E log2 W - m 0.77   0.25   0.63   0.10   0.27
+O(1) extra bits: no Jensen gain from the free halves.
+2.5 Residue-class inputs (freeq.c).  tau, sigma = residue-class block sequences mod q (any valid
+class order, arbitrary inner orders): the number of X certified for ALL inner orders grows like
+2^{n/2} (q = 2: 2^{n/2+1} sets, the odd D-slips in both orientations, C_free = 2^{n/2+1} + 6),
+about 1.6^n sets for q = 4 (36, 200, 1332 for n = 4, 8, 12; C_free = 632, 1992, 10076, growth
+~1.5^n), and less for q = 3.  The recursion a(2n) >= C_free a(n/q)^{2q} with C_free ~ K^n has
+exponent log2(K)/(2 log2(2q)) ~ 0.1 for q = 4, below 1/8 (q = 2).
+2.6 Odd N (freeodd.c).  With n1 = n+1, n2 = n and parity-block inputs, the number of X certified
+for all inner orders is 6, 3, 6, 3, 6 for N = 9, 11, 13, 15, 17 (all constructed sequences verified
+by brute force): odd nodes have no free slips even in the general family, so the all-N
+obstruction of superexp2 6.2 is not an artefact of D-slips.  (For EVEN sizes with odd halves,
+n odd, general X give 22, 48 sets for n = 7, 11 against 2^{(n+1)/4} = 4, 8 D-slips: a polynomial
+factor only: the ratio stays between 3 and 6 for n = 5..13.)
+
+
+=========================================================================================
+3. THE ROOM
+=========================================================================================
+3.1 R(n) := sum_{tau, sigma : G(tau), G'(sigma) ⊇ odds} 2^{|G ∩ G' ∩ evens|} is exactly what the
+chain's top level could use; the chain uses only its parity-block part a(m)^2 B(m) (oddroom.c):
+      n               4     6     8      10     12     14      16
+      R/(a^2 B)     1.45  1.72  3.16   5.69   8.19  20.98   41.55
+roughly x2 per step of m: an exponential factor C^m in B(2m) >= C^m 2^m a(m)^2 B(m) would raise
+the exponent to (1 + log2 C)/6, so the room is real (if C ~ 2, exponent ~ 1/3).
+3.2 The room is in the number of tau: #{tau in V_{2m} : G ⊇ odds}/a(m)^2 = 1.25, 2.03, 3.46, 8.54,
+18.0 (2m = 4, 8, 12, 16, 20; superexp2/pdp.c mode 5), about 1.45^m; the even-part coupling of non-PB pairs is about 57% as efficient (R/(H^2) at
+n = 16).  For a FIXED valid even subsequence beta, the number c(beta) of such tau
+(cbeta.c) has mean 1.79, 2.22, 2.33, 3.12 a(m) (m = 4, 6, 7, and 8 sampled) but minimum
+only 1.0, 1.28, 1.50, 1.46 a(m): no uniform gain per beta.
+3.3 The F-type count (G = everything; F(2m) >= a(m) F(m) in the chain): F(16) = 64738 = 26880
+(odds) + 37858 from 36 other half-time sets (midset.c mode 1).  At N = 32 (fmods.c), every
+single exchange odds Δ {u, v} with u ≡ 2 mod 4, |u - v| <= 3 contributes 0.035 - 0.11 of the
+odds term (24 exchanges, total 1.47): about 0.18 per u, i.e. lambda ~ 1.09 per position.
+Only even panels u ≡ 2 (mod 4) can enter X: u = 2k needs k (odd, in X) before it.
+
+
+=========================================================================================
+4. WHY THE NON-PARITY-BLOCK tau RESIST CERTIFICATION
+=========================================================================================
+Take tau in V_{2m} with first half X1 = odds with D-slips (2e <-> 2e+1) at e in D1 ⊆ [1, m-1]
+(the bulk of the room in 3.2: midset.c mode 5 lists x.x.x.xx..x.x.x. etc.), first block in the
+order alpha, second in the order beta (alpha, beta in V_m).  By Theorem A (odds-first variant;
+all of the following checked exhaustively for m <= 6, oddslipG.py, 0 failures):
+   valid iff   alpha: e+1 before p_m(e),     beta: q_m(e) before e        (e in D1),
+and G(tau) ⊇ odds iff additionally
+   (ii)  beta: e before p_m(e) and p_m(e) not in D1          (e in D1),
+   (i)   alpha: (k+1)/2 before e'+1 for odd k not in 2D1+1 with e' = k mod* m in D1;
+on the even positions, 2i in G(tau) iff [i, q(i) not in D1 and i in G(beta)] or [i in D1, q(i) not
+in D1] or [i, q(i) in D1 and alpha: i+1 before q(i)+1]; i not in D1 with q(i) in D1 is killed.
+ * For EVEN e (the slips that dominate the data) (i) is vacuous, but beta must place
+   q(e) (even) before e (even) before p(e) (odd).  An odds-first parity block beta violates
+   "e before p(e)"; an evens-first beta satisfies it but has G(beta) ∩ odds = ∅, losing the
+   m/2 positions k = 2i (i odd) that the chain gets for free one level down.  Either way the
+   coupled recursion B(m) (which needs beta = PB odds-first, G(beta) = odds ∪ 2G(beta_2)) breaks.
+ * For ODD e (leaves of the doubling forest) beta must place q(e) (even) before e (odd): again
+   impossible for odds-first beta; alpha must satisfy (e+1)/2 before e+1 before 2e+1 mod* m,
+   which no parity block satisfies (j before 2j before 4j-1).
+ * The single-exchange data (3.3) shows the b-side factor h(X1)/F(m) ~ 0.2 - 0.5 per defect:
+   the defect at level m must be absorbed by a defect of beta at level m/2, and so on (beta with
+   G(beta) = [1, m-1] \ D1 needs its own slipped first half).  A defect cascades down all
+   log m levels at a constant factor per level, i.e. a polynomial cost m^{-c} per defect, unless
+   the cascade can be stopped by a free move -- and 2.3 - 2.6 show there are no free moves left.
+So: interleaving-type freedom exists (section 3) but every certification of it needs the inner
+orders of the blocks to carry information that parity blocks (the only inputs whose G-sets are
+known exactly) cannot carry; with generic inputs the needed information is a statement about
+typical valid sequences (the asymptotics conjecture itself).
+
+
+=========================================================================================
+5. FILES (all single-core, < 1 GB)
+=========================================================================================
+gslipcheck.c, gslipodd.py, gslip.py   Theorem A (section 1), exhaustive.
+eslip.py, esum.c                      aligned slips (Corollary A2), B_E(n).
+shuffle.c                             interleavings of valid halves (2.1); mode 1: odd-before-2k.
+discmass.c, midset.c                  mass of a(2n) by half-time set (2.2, 3.3, 4).
+gsum.c, gsumq.c                       sums of Theorem A over all X: strip-valid / parity-block /
+                                      residue-class inputs (2.2, 2.3).
+freehalf.c, freeq.c, freeodd.c        free and half-free certified sets (2.4 - 2.6).
+oddroom.c, cbeta.c, godd.py, fmods.c  the room (section 3).
+oddslipG.py                           the conditions of section 4 (m <= 6, exhaustive).
