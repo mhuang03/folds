@@ -130,7 +130,8 @@ certtbl.py keeps one certificate per orbit of (nu, t) under sig and mirror that 
 misses.  Memory: the kernel work of one certificate is released after the declaration, but about
 1.5 MB per certificate stays (2.8 MB with `decide` on `fullOK` directly, which pushed the file
 to 2.8 GB); checking 40 certificates in a single `decide` costs about 2 GB more, so they are
-separate theorems.  Folds/Live4.lean with all 378 certificates: about 2.4 GB, 2 minutes.  (The live2 table check of q <= 16 needed about 5 GB in the
+separate theorems, elaborated sequentially (`set_option Elab.async false`; in parallel
+the file peaked at 2.7 GB).  Folds/Live4.lean with all 378 certificates: 2.1 GB, 2 minutes.  (The live2 table check of q <= 16 needed about 5 GB in the
 CycBal form.)  Palindromic certificates (`palOK`, `good_of_palOK`, palcert.py) are half the
 length but exist only for half of the nu.
 With the certificates every non-exceptional (q, nu, t) with q <= 27 is good (all even q
