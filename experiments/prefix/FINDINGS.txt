@@ -150,24 +150,43 @@ arm, the left arm, or neither arm of x_i.  Validity of the whole sequence is "ev
 of sigma sums to 0".  Given the order type pi and the matrix sigma, all conditions are
 linear inequalities of the form  x_i < x_j,  2x_j <= x_i,  2x_j >= x_i + 1,  2x_j <= N + x_i,
 2x_j >= N + x_i + 1,  1 <= x <= N, so each (pi, sigma) class is the set of lattice points of
-one parametric polytope P(N) = {A x <= b + N c}, and its count is a quasi-polynomial in N.
+one parametric polytope P(N) = {A x <= b + N c}; its lattice-point count is a quasi-polynomial
+in N once the combinatorial type of P(N) is stable (here, apparently, from N = 1 on).
 
-Empirical theorem (pieces.c: k = 3, 4 for N <= 80; k = 5 for N <= 80; k = 6 for N <= 40 and
-N = 60; k = 7 at N = 34; no exceptions):
-   for a VALID sequence, sigma is a function of the order type alone.
+Theorem (proved; rule.py checks the rule for every (S,c), N <= 14): for a valid sequence,
+sigma is a function of the order type alone.  Proof via the "window rule": let the new point
+c have A earlier points above and B below, y_1 > y_2 > ... the ones below, z_1 < z_2 < ...
+the ones above (nearest first).
+   A < B:  valid iff  y_A >= 2c - N > y_{A+1}   (y_0 = +inf).
+           [If c were in the left half, its window [1, 2c-1] would hold all B points below
+           and need B > A points above.  So c is in the right half, whose window [2c-N, N]
+           holds all A points above and must hold exactly the A nearest points below.]
+   A > B:  mirror image:  z_B <= 2c - 1 < z_{B+1}.
+   A = B:  valid iff y_B >= 2c - N and z_A <= 2c - 1 (the window holds every earlier point).
+So the set of earlier points in the window is: all of them if A = B, else all points on the
+smaller side plus the same number of nearest points on the larger side.  This depends only on
+the order type.  (This is the README's cyclic form P~(2m-1) = 2P(m-1) read through order
+statistics: the doubled point 2c - N, resp. 2c - 1, i.e. the doubling map, must fall in one
+particular gap of S.)  Checks: pieces.c finds no order type with two sign classes (k = 3, 4,
+5 for N <= 80, k = 6 for N <= 40 and N = 60, k = 7 at N = 34); contpatterns.py confirms it for
+the full-dimensional continuum classes, k <= 7.
 So
    T(N,k) = Sum over admissible order types pi of #(Z^k ∩ P_pi(N)),
+where P_pi(N) is cut out by the order of pi and, for each step j, at most two "straddle"
+inequalities  x_p >= 2x_j - N > x_q  (or x_p <= 2x_j - 1 < x_q)  with p, q read off from pi;
 a sum of Ehrhart-type quasi-polynomials, one polytope per order type.  This is the mechanism
 behind quasi-polynomiality, and it gives the leading coefficient as a finite sum of exact
 volumes, c_k = Sum_pi vol(P_pi(1)) (volumes.py reproduces 2/9 and 4283/48384, and gives c_5,
 c_6).  Number of admissible order types (those with nonempty P_pi for large N):
    k = 1..6:  1, 2, 6, 24, 116, 660    (k = 7: >= 4256 at N = 34)   -- not in the OEIS.
    The missing ones for k = 5 are 12453, 12543, 54123, 54213.
-For k <= 4 sigma follows a simple "neighbour rule": a new point that is a new minimum or
-maximum has no earlier point in its window, and an interior new point has exactly its two
-immediate neighbours (one each side) in its window (neighbor.c: 0 violations for k = 3, N <= 80 and k = 4, N <= 60).
-From k = 5 on, an interior point may also see 2+2 earlier points (e.g. 1,9,5,13,7 at N = 16),
-but which case occurs is still decided by the order type.
+Inadmissible example: 12453 (x1 < x2 < x5 < x3 < x4).  x5 has A = 2 above, B = 2 below, so
+its window must hold x1, which needs 2x5 <= N + x1; but x2 is a new maximum when placed, so
+2x2 > N + x1 (A = 0 rule), and x5 > x2.  Contradiction.
+For k <= 4 the window rule reduces to a "neighbour rule": a new minimum or maximum has no
+earlier point in its window, an interior new point has exactly its two immediate neighbours
+in it (neighbor.c: 0 violations for k = 3, N <= 80 and k = 4, N <= 60).  From k = 5 on the
+A = B = 2 case lets an interior point see all four earlier points (e.g. 1,9,5,13,7 at N = 16).
 
 Where the periods come from: the vertex denominators of these polytopes.  Constraints of type
 2x_j = x_i + {0, N} chain along the sequence; an undirected cycle of such halvings closes up as
