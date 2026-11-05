@@ -2,7 +2,8 @@
 Folds/Live4.lean, for q1 <= q <= q2.  BIN is the compiled fullcert.c.  For each q, the
 (nu, t) not yet good in the closure of covlean4.py (with the certificates of smaller q
 already added) are visited in order; for each one a certificate from fullcert is added and
-the closure under sig / mirror is recomputed, so one certificate is kept per orbit.
+the closure under sig / mirror is recomputed, so one certificate is kept per orbit (only
+nu <= q/2 is searched: the mirror gives the rest).
 Output: one line "q nu x_1 ... x_q" per certificate."""
 import subprocess
 import sys
@@ -18,7 +19,9 @@ for q in range(q1, q2 + 1):
             if not C.exc(q, nu, t) and (nu, t) not in S]
     if not need:
         continue
-    res = subprocess.run([BIN, str(q)], capture_output=True, text=True).stdout.split('\n')
+    nus = sorted({nu for nu, _ in need if 2 * nu <= q})   # the mirror covers q - nu
+    res = subprocess.run([BIN, str(q)] + [str(nu) for nu in nus], capture_output=True,
+                         text=True).stdout.split('\n')
     cert = {}
     for line in res:
         w = line.split()

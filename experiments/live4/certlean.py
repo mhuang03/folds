@@ -1,29 +1,19 @@
-"""certlean.py certs.txt: the Lean block (tables `certs<q>`, their `decide` checks, `certTbl`)
-for Folds/Live4.lean, from the output of certtbl.py.  Tables with more than CH entries are
-split into chunks (one `decide` per chunk keeps the kernel check small)."""
+"""certlean.py certs.txt: the Lean block of certificates for Folds/Live4.lean, one theorem
+`cert_<q>_<i> : fullOK (q, nu, pi) := fullOK_of_certB (by decide +kernel)` per line "q nu pi_1 ... pi_q" of certs.txt (output of
+certtbl.py).  One `decide` per certificate keeps every kernel check small (the memory is
+released between declarations; a chunk of 40 certificates in one `decide` needs ~2 GB more).
+Each certificate gives `Gd.cert cert_<q>_<i> rfl : Gd q nu pi_1`."""
 import sys
 
-import os
-CH = int(os.environ.get("CH", "40"))
-by = {}
+cnt = {}
+out = []
 for line in open(sys.argv[1]):
     w = list(map(int, line.split()))
-    if w:
-        by.setdefault(w[0], []).append((w[1], w[2:]))
-names = []
-out = []
-for q in sorted(by):
-    ent = by[q]
-    for c in range(0, len(ent), CH):
-        name = 'certs%d_%d' % (q, c // CH)
-        names.append(name)
-        body = ',\n  '.join('(%d, %d, [%s])' % (q, nu, ','.join(map(str, p))) for nu, p in ent[c:c + CH])
-        out.append('def %s : List (Nat × Nat × List Nat) :=\n  [%s]\n' % (name, body))
-        out.append('theorem %s_ok : %s.all (fun e => decide (fullOK e)) = true := by decide +kernel\n'
-                   % (name, name))
-out.append('/-- All certificates. -/\ndef certTbl : List (Nat × Nat × List Nat) :=\n  ' +
-           ' ++ '.join(names) + '\n')
-out.append('theorem certTbl_ok : certTbl.all (fun e => decide (fullOK e)) = true := by\n'
-           '  simp only [certTbl, List.all_append, ' +
-           ', '.join(n + '_ok' for n in names) + ', Bool.and_self]\n')
+    if not w:
+        continue
+    q, nu, pi = w[0], w[1], w[2:]
+    i = cnt.get(q, 0)
+    cnt[q] = i + 1
+    out.append('theorem cert_%d_%d : fullOK (%d, %d, [%s]) :=\n  fullOK_of_certB (by decide +kernel)'
+               % (q, i, q, nu, ','.join(map(str, pi))))
 print('\n'.join(out))

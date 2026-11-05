@@ -1,0 +1,167 @@
+Live 2-prefixes, part 4: rotation-stable sequences and a larger proven family
+============================================================================
+
+Notation as in experiments/live2/PROOFS.txt and experiments/live3/PROOFS.txt.  Panels [N];
+reach(m) = min(m-1, N-m); a step (S, m) is valid iff |S n L(m)| = |S n R(m)|.  Residue classes
+C_s = {s, s+q, ...} n [N], nu = N mod q, sig(t) = sig_{q,nu}(t) = ((nu - t) mod q) + 1.
+"Lean" refers to Folds/Live4.lean (no sorry, no native_decide; `decide` only on the
+certificates of section 5).
+
+STATUS
+  * The proven family of co-reachable 2-sets is now `Cov2` (Lean), the closure of the base
+    cases under residue transfers through every class in the closure `Gd` of good classes
+    (any modulus q) and the mirror.  It contains `Live2.Cov` (`Cov.cov2`).
+  * New uniform (all q) transfers: Theorem H of live3 (nu = +-1, odd q); nu = 0 (every q);
+    the reflection nu -> -nu; BLOCK CHAINS (live2 3.1 made a theorem, `good_comp`): good
+    classes mod j and mod m give good classes mod jm; in particular every class mod 2^a is
+    good for every nu (`good_pow_two`); PALINDROMIC CHAINS at nu = 4r + 1 (`good_palin`,
+    `goodL_palin`), with a parity recursion giving explicit families for all q = 1 (mod 8)
+    at nu = 5, q = 1 (mod 16) at nu = 9, ... (`CGs`, section 4).
+  * Finite certificates (section 5): every non-exceptional (q, nu, t) with q <= 27 is good
+    (one kernel-checked chain per orbit of sig / mirror that the uniform rules miss).
+  * Coverage (section 6): non-dead 2-sets proven co-reachable, N = 40: 523 (Cov) -> 541
+    (uniform rules) -> 631 (with certificates) of 779; N = 100: 2400 -> 2488 -> 3373 of 4949.
+  * Exceptional classes (goal 3): no proof; negative results in section 7.
+
+Programs (this directory, 1 core, < 1 GB):
+  covlean4.py    the families Cov and Cov2 (faithful to Lean), coverage numbers.
+  palnu.py, palsets.py    palindromic chains for every nu (section 4.1).
+  induced.py, cgood.py, cgsol.py, cgtbl.py   the transversal X_r, the induced window
+                 relation, the constrained problem CG (section 4.2).
+  fullcert.c, certtbl.py, certlean.py, certs.txt    certificates (section 5).
+  palcert.py     palindromic certificates (not used in the end, see 5).
+  excpar.py      parity orderings for the exceptional classes (section 7).
+
+
+1. Good classes
+---------------
+GoodL q nu pi:  pi is a valid sequence of the q-strip and sig o pi is valid too.
+Good q nu t:    some such pi starts with t.
+By live3 1.1(e) (Lean `chainOK_of_valid`) and its converse (`valid_of_chainOK`, the same
+argument backwards through `semiStep_iff_cycBal` and the duality), GoodL q nu pi is exactly
+"pi is a complete residue chain" (ChainOK for an order of all q classes).  A complete chain
+reversed is a chain (`GoodL.reverse`: reverse of a full valid sequence is valid), so
+Good q nu t means: class t can come first, equivalently last.  Hence (`coReach_good`):
+    Good q (N mod q) s, q <= N  ==>  D co-reachable in the class strip  ==>  image co-reachable.
+
+
+2. Sources and symmetries (all q)
+---------------------------------
+2.1 nu = 0 (`good_zero`): sig_{q,0} is the mirror t -> q+1-t, so any valid sequence starting
+    with t (`extends_single`) works.
+2.2 q <= 12 (`good_table`): the chains of the live2 table, completed by their class s (the
+    last step of a complete sequence is always valid, `semiStep_last`).
+2.3 Theorem H (`good_nu_one`): odd q = 2k+1, nu = 1, t = 2v+1 or 2k+2-2v (v odd <= k).
+2.4 sig (`good_sig`): Good q nu t ==> Good q nu sig(t)  (apply sig to pi).
+2.5 mirror (`good_mirror`): Good q nu t ==> Good q (-nu mod q) (q+1-t).
+    Proof: pi' = m o pi (m(t) = q+1-t) is valid; sig_{-nu} o m = m o sig_nu on [1, q]
+    (`sig_mirror`), so sig_{-nu} o pi' = m o (sig_nu o pi) is valid.  QED
+    (2.4 is the mirror of [N]; 2.5 is new: it relates N = nu and N = -nu.)
+
+
+3. Block chains (`good_comp`)
+-----------------------------
+THEOREM.  Let q = m j, nu = j c + e (c < m, e < j), and for a class a mod j let
+inner(a) = c + 1 (mod m) if a <= e, else c.  If
+    Good j e a,   Good m inner(a) y,   some class is good mod m for c, and (if e > 0) for c+1,
+then Good q nu ((y-1) j + a).
+Proof.  Take pi' good for (j, e) starting with a, and for every class b mod j an order
+alpha_b good for (m, inner(b)), with alpha_a starting with y.  Let pi = blocks j pi' alpha
+(class b of the q-strip, i.e. the panels (z-1) j + b, placed as a block in the order alpha_b,
+blocks in the order pi').  pi is valid (composition, Growth.semiSymmetric_blocks: q = m j,
+classes mod j are copies and j | q).  The key identity (`sig_cls`):
+    sig_{q,nu}((y-1) j + a) = (sig_{m,inner(a)}(y) - 1) j + sig_{j,e}(a),
+(write nu + q - t = j X + R with R < j and use (jX + R) mod mj = j (X mod m) + R).  Hence
+sig o pi = blocks j (sig_{j,e} o pi') beta with beta_{sig(b)} = sig_{m,inner(b)} o alpha_b,
+again a composition of valid sequences.  QED
+This is live2 3.1 (there for the RS reformulation) as a uniform theorem.  Corollary
+(`good_pow_two`): every (nu, t) mod 2^a is good (j = 2, induction on a).  With the table it
+makes q = 14, 16, 18, 20, 22, 24, 28, 32, ... complete up to the exceptional classes, and
+gives most classes for q = 15, 21, 25, 27, ... (covlean4.py -g).
+
+
+4. Palindromic chains (odd q)
+-----------------------------
+4.1 General form (`goodL_palin`).  If x and sig o x are valid from scratch, t0 = sig(t0) is
+    balanced by x and x, t0, reverse(sig o x) is a complete sequence, then it is good: sig
+    maps it to its reverse.  Validity of the last part: in a complete sequence S, m, T the
+    step m is valid after S iff after T (`semiStep_compl`), so the last part is valid iff
+    sig o x is valid from scratch (`semiSymmetric_append_rev`).
+    Numerically (palnu.py, q <= 13) palindromic chains exist exactly for nu = 1 or
+    nu = q - 1 (mod 4) (q = 13: nu in {0,1,4,5,8,9,12}), and then for almost every start.
+
+4.2 The transversal X_r at nu = 4r+1 (q = 2k+1, 2r < k).  sig reflects [1, nu] (centre
+    t0 = 2r+1) and [nu+1, q].  The palindromic transversals found (palsets.py) are
+        X_r = (evens below t0) + (odds above t0) = phi_r([k]),  phi_r(i) = 2i (i <= r),
+                                                                         2i+1 (i > r),
+    sig X_r = (odds below t0) + (evens above t0) = psi_r([k]),  psi_r(i) = 2i-1 / 2i,
+    and sig(phi_r(i)) = psi_r(sig_{k,2r}(i)) (`sig_phiR`).  t0 is balanced by X_r (r panels on
+    either side).  phi_r and psi_r are NOT window copies, but they agree with the window
+    relation of the k-strip except at the pairs (`agree_phi`, `agree_psi`, by omega)
+        exc1: (i, 2i) for r < i <= k/2,  (i, 2i - k) for 1 <= 2i - k <= r;
+        exc2: (i, 2i - 1) for i <= r < 2i - 1.
+    So (`good_palin`): if beta is good for (k, 2r) and places the exc1-partners of each step
+    later, and sig_{k,2r} o beta the exc2-partners (`CG k r beta`), then phi_r(beta_1) is good
+    mod q for nu = 4r+1.  (cgood.py: the agreement statement checked for k <= 12; the
+    constrained problem loses some solutions compared with the exact induced condition.)
+
+4.3 Parity recursion for CG.  For k = 2m, sig_{k,2r} exchanges the parity classes:
+    sig(2y-1) = 2 sig_{m,r}(y), sig(2y) = 2 sig_{m,r}(y) - 1.  So parity blocks (alpha odd,
+    gamma even) with alpha, gamma good for (m, r) are good for (2m, 2r) (`goodL_blocks`); the
+    exc1-pairs from an odd panel go to even panels (placed later), and the remaining
+    constraints concern gamma only (`cg_blocks`).  For r = 2r' they are exactly CG m r'
+    (`cg_double`); for r = 1 they reduce to "a before 2a" in gamma, solved by parity blocks
+    of a good sequence for (n, 1) and a Lemma-W sequence (k = 4n, `cg_four`).  Hence
+    (`CGs`, `Gd.palin`), for all n >= 2:
+        q = 8n + 1, nu = 5:      the classes phi_1(2b - 1), (1, b) good mod 2n;
+        q = 2^(s+3) n + 1, nu = 2^(s+2) + 1, etc. (dbl).
+    These are uniform in q (e.g. q = 17, 41, 73, 89, 97, ... at nu = 5), but they do not
+    reach N <= 100 pairs beyond the other rules.  For odd k the solutions of CG are not
+    parity blocks (cgsol.py) and no uniform construction was found.
+
+
+5. Certificates for q <= 27
+---------------------------
+fullOK (q, nu, pi) := nu < q and GoodL q nu pi; each certificate is one theorem
+`cert_q_i : fullOK (...) := fullOK_of_certB (by decide +kernel)`, where certB is a Boolean
+checker (countP form of the steps) proven sound, and gives Gd q nu pi_1 (`Gd.cert`).
+fullcert.c finds, for every (nu, t), a good sequence (subset DP over 2^q states, 1 core);
+certtbl.py keeps one certificate per orbit of (nu, t) under sig and mirror that the closure
+misses.  Memory: the kernel work of one certificate is released after the declaration, but about
+1.5 MB per certificate stays (2.8 MB with `decide` on `fullOK` directly, which pushed the file
+to 2.8 GB); checking 40 certificates in a single `decide` costs about 2 GB more, so they are
+separate theorems.  Folds/Live4.lean with all 378 certificates: about 2.4 GB, 2 minutes.  (The live2 table check of q <= 16 needed about 5 GB in the
+CycBal form.)  Palindromic certificates (`palOK`, `good_of_palOK`, palcert.py) are half the
+length but exist only for half of the nu.
+With the certificates every non-exceptional (q, nu, t) with q <= 27 is good (all even q
+<= 27 already followed from the uniform rules).
+
+
+6. Coverage
+-----------
+covlean4.py (faithful to Cov / Cov2): non-dead 2-sets of [N] in the family; columns all /
+valid prefixes / mixed parity.  "uniform" = Cov2 without the certificates (NOCERT=1).
+            non-dead   Cov    Cov2 uniform  Cov2      valid: Cov / Cov2   mixed: Cov / Cov2
+  N = 20:     189      153      153         164       116 / 127 of 132     63 / 74 of 99
+  N = 40:     779      523      541         631       379 / 487 of 532    203 / 289 of 399
+  N = 60:    1769     1085     1085        1387       758 / 1027 of 1199  435 / 633 of 899
+  N = 100:   4949     2400     2488        3373      1689 / 2449 of 3332  822 / 1405 of 2499
+  N = 200:  19899     7131     7853       11536      4971 / 8312 of 13332 2225 / 4592 of 9999
+Ceilings (same base, assuming Conjecture RS for all q): 662 at N = 40, 4206 at N = 100; the
+remaining losses are the primes q >= 29 at general nu, the adjacent pairs and the exceptional
+classes.  The uniform rules alone (Theorem H, block chains, palindromes at nu = 4r+1 with the
+parity recursion) change little for N <= 100: almost all of the gain comes from primes
+13 <= q <= 23 at general nu, for which only the certificates are available.
+
+
+7. Exceptional classes (goal 3)
+-------------------------------
+No proof.  Reductions tried:
+  * Parity (excpar.py): for N = 1 (mod q), C_1 n O is the class 1 of the odd strip
+    (size = 1 mod q, exceptional again, N odd) and C_1 n E the class (q+1)/2 of the even strip
+    (nu = 0, good).  But orderings of [N] - C_1 placing all of one parity class first fail
+    for q = 3 (N <= 28) and q = 5 (N <= 26), both orders; for q = 7 "evens first" works at
+    N = 15, 29.  So the parity split is not a general route.
+  * Shift: the windows of [2, N-1] in [N] differ from those of the (N-2)-strip by the pair
+    (x, 2x-1) resp. (x, 2x-N) (the outer window ends 1, N lie in C_1); this turns C_1 at N
+    into the other exceptional class C_q at N - 2 with doubling precedences: circular.
