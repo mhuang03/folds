@@ -1,0 +1,241 @@
+EXTREMAL LAWS FOR SEMI-SYMMETRIC FOLD SEQUENCES: PROOFS
+=========================================================
+
+Notation.  Panels 1..N.  A fold sequence a = (a_1, ..., a_N) is a permutation; at step k
+panel m = a_k is placed and S = {a_1, ..., a_{k-1}}.  r_m = min(m-1, N-m) and the window
+of m is W(m) = [m - r_m, m + r_m] \ {m}.  The step is valid iff
+    L_S(m) := |S ∩ [m-r_m, m-1]|  =  R_S(m) := |S ∩ [m+1, m+r_m]|.
+"m is in the left half" means 2m-1 <= N (then W(m) = [1, 2m-1] \ {m}); "m is in the right
+half" means 2m-1 >= N (then W(m) = [2m-N, N] \ {m}); the middle panel of odd N is both.
+lg x = floor(log2 x) for real x > 0 (so lg(2x) = lg x + 1), lg 0 := -1.
+Facts used: (R) the reversal of a valid sequence is valid; (B) parity blocks: for c in {0,1},
+"class c first, then the other class", i.e. sigma.map(2y-c) ++ tau.map(2y-(1-c)), is valid iff
+sigma (on (N+c)/2 panels) and tau (on the rest) are valid; the window of 2y-c intersected
+with class c is the image of the window of y in the smaller world.  Both are in Lean.
+
+Results (Lean names in Folds/Extremal.lean):
+
+  Thm 1  lrmax(a) <= lg N + 1 for valid a.                         [paper + Lean lrmax_le]
+  Thm 2  ... attained for every N >= 1.                             [paper + Lean exists_lrmax]
+  Thm 3  free(a) <= F(N) := lg(N+1) + lg((N+1)/3) + 1 for EVERY permutation a (validity not
+         needed).                                                    [paper + Lean numFree_le
+         (Lean uses Nat.log, so its bound reads 2 instead of 1 at N = 1)]
+  Thm 4  ... attained by a valid sequence for every N >= 1.          [paper; computer-checked
+         construction for N <= 200, experiments/extremal/construct.py]
+  So   max lrmax = lg N + 1   and   max free = lg(N+1) + lg((N+1)/3) + 1   for all N >= 1.
+  Descents: only partial results (section 3); the conjecture is open.
+
+
+1. LEFT-TO-RIGHT MAXIMA
+-----------------------
+Thm 1.  Let m_1 < m_2 < ... < m_s be the left-to-right maxima of a valid a (m_1 = a_1).
+Then s <= lg N + 1.
+
+Proof.  Let i >= 1 and let x = m_{i+1} be placed with earlier set S; M = m_i = max S.
+Nothing larger than x has been placed, so R_S(x) = 0, hence L_S(x) = 0, so M is not in
+the window of x:  x - M > r_x.  Since M >= 1, x - M <= x - 1, so r_x = N - x < x - M.
+With g_i = N + 1 - m_i this reads  2 g_{i+1} <= g_i.  As g_s >= 1 and g_1 <= N,
+2^{s-1} <= g_1 <= N, i.e. s <= lg N + 1.  (Lean: records_le_aux carries the bound
+records <= log2(N - M + 1) along the suffix after the current maximum M.)            □
+
+Thm 2.  For every N >= 1 some valid sequence has lg N + 1 left-to-right maxima.
+
+Proof.  Induction on N; N = 1: (1).  N >= 2: let c = 1 if N is even, c = 0 if N is odd;
+then class c (the class NOT containing N) has floor(N/2) panels.  Take sigma optimal on
+floor(N/2) panels and tau any valid sequence on ceil(N/2) panels, and form the parity block
+sequence a = sigma.map(2y-c) ++ tau.map(2y-(1-c)), valid by (B).  y -> 2y-c is increasing,
+so the records of the first block are exactly the images of the records of sigma; every
+element of the first block is < N and N lies in the second block, so N adds one more
+record.  lrmax(a) >= lrmax(sigma) + 1 >= lg floor(N/2) + 2 = lg N + 1.              □
+
+
+2. FREE STEPS
+-------------
+A step is free if W(m) ∩ S = ∅ (steps with r_m = 0 count).  F(N) := lg(N+1) + lg((N+1)/3) + 1
+with real logarithms: F = 1,2,3,3,4,4,5,5,5,5,6,6,6,6,7,... (N = 1,2,...); F increases
+exactly at N + 1 = 2^a and N + 1 = 3*2^b.
+
+Lemma 2.1 (where earlier panels can be).  Let f be placed freely and let x != f be placed
+earlier.  If f is in the left half then x >= 2f.  If f is in the right half then, with
+g = N+1-f, x <= N+1-2g, i.e. 2g <= N+1-x.
+Proof.  x is not in W(f).  Left half: W(f) = [1, 2f-1] \ {f}, so x >= 2f.  Right half:
+W(f) = [2f-N, N] \ {f}, so x <= 2f-N-1 = N+1-2g.                                    □
+
+Write h(A) = lg A + 1 for A >= 1 and h(0) = 0: the length of the longest chain
+A >= u_1 >= 2u_2, u_2 >= 2u_3, ... of positive integers.  h is monotone and
+h(floor(x/2)) = h(x) - 1 for x >= 1.
+
+Lemma 2.2 (potential).  Suppose that, from some moment on, every free LEFT panel f placed
+later satisfies f <= A and every free RIGHT panel satisfies N+1-f <= B.  Then at most
+h(A) + h(B) of the later steps are free.
+Proof.  Induction on the number of remaining steps.  If the next step x is not free, the
+hypotheses persist.  If x is free and in the left half, then x <= A, and by Lemma 2.1
+every later free left panel f has f <= floor(x/2), while the bound B persists; so the rest
+contributes at most h(floor(x/2)) + h(B) = h(x) - 1 + h(B) <= h(A) - 1 + h(B).  The right
+half is symmetric (g = N+1-x <= B and later free right panels have N+1-f <= floor(g/2)). □
+(Lemma 2.2 alone gives only the old bound 2 lg((N+1)/2) + 2.  The improvement comes from
+the FIRST step.)
+
+Thm 3.  For every permutation a of [1..N], free(a) <= F(N).
+Proof.  The first step x = a_1 is free.  By Lemma 2.1, every later free left panel f has
+2f <= x (whatever half x is in), and every later free right panel has
+2(N+1-f) <= N+1-x.  Lemma 2.2 with A = floor(x/2), B = floor((N+1-x)/2) gives
+    free(a) <= 1 + h(floor(x/2)) + h(floor((N+1-x)/2)) = h(x) + h(y),  y = floor((N+1-x)/2).
+If y = 0 this is lg x + 1 <= lg(N+1) + 1 <= F(N) (for N >= 2; for N = 1 directly).
+Otherwise let u = lg x, v = lg y + 1; then 2^u <= x and 2^v <= 2y <= N+1-x, so
+2^u + 2^v <= N+1 =: M, and it remains to show u + v <= lg M + lg(M/3):
+  * u = v: 2^{u+1} <= M gives u+1 <= lg M, and (if v >= 1) 3*2^{v-1} <= 2^{v+1} <= M gives
+    v-1 <= lg(M/3); add.  (u = v = 0 is trivial.)
+  * u > v (the other case is symmetric): 2^u <= M gives u <= lg M, and
+    3*2^v <= 2^u + 2^v <= M gives v <= lg(M/3).
+Hence free(a) <= u + v + 1 <= F(N).  (Lean: numFree_le, via freeCount_le, hgt_first_le,
+pow_add_pow_le.  Validity of a is never used.)                                      □
+
+The equality case explains the formula: F(N) = max over 2^u + 2^v <= N+1 of u + v + 1,
+i.e. a left chain 2^u, ..., 2, 1 and a right chain of mirror images 2^{v-1}, ..., 1 that
+fit together; the "/3" is the case u = v + 1 (or v = u + 1): 2^u + 2^{u-1} = 3*2^{u-1}.
+
+Construction.  Besides (B) we need a "shifted" parity block for even N.
+
+Lemma 2.3 (shifted parity blocks).  Let N = 2n, n >= 2, j = floor(n/2), and
+    phi(y) = 2y + [y > j]       (1 <= y <= n-1),   X = phi([1, n-1]) = {2,4,...,2j} ∪ {2j+3, 2j+5, ..., 2n-1},
+    psi(y) = 2y - 1 - [y > j+1] (1 <= y <= n+1),   Y = psi([1, n+1]) = {1,3,...,2j+1} ∪ {2j+2, 2j+4, ..., 2n}.
+X and Y partition [1..N] (X = evens <= 2j+1 together with odds > 2j+1).  Let sigma be valid on
+n-1 panels and tau valid on n+1 panels; if n is even assume moreover that tau places panel 1
+before its middle panel j+1.  Then a = sigma.map(phi) ++ tau.map(psi) is valid, and its
+free steps include the free steps of the first block (= those of sigma) and the steps at
+panels 1 and N.  In particular free(a) >= free(sigma) + 2.
+
+Proof.  Write W_P(y) for windows in the P-panel world.
+(i) X is a copy of the (n-1)-world: phi^{-1}(W_N(phi(y))) = W_{n-1}(y) (orientation kept).
+  - If 2y <= n then y <= j, phi(y) = 2y is in the left half of [1..N] and W_N = [1, 4y-1];
+    since phi(2y-1) <= 4y-1 < 4y <= phi(2y), the X-panels there are phi([1, 2y-1]), the
+    image of W_{n-1}(y) = [1, 2y-1].
+  - If 2y >= n and y > j then phi(y) = 2y+1 is in the right half, W_N = [4y+2-2n, 2n];
+    phi(2y-n) <= 4y-2n+1 < 4y-2n+2 <= phi(2y-n+1), so the X-panels there are
+    phi([2y-n+1, n-1]), the image of W_{n-1}(y) = [2y-(n-1), n-1].
+  - If 2y >= n and y <= j then n = 2j, y = j, phi(y) = n, W_N = [1, 2n-1] ⊇ X, and
+    W_{n-1}(y) = [1, n-1].
+  So in the first block (where S ⊆ X) validity and freeness of phi(y) are those of y in sigma.
+(ii) X is balanced in the window of every m in Y, except (n even) m = u := 2j+1 = n+1,
+  where |X ∩ left| - |X ∩ right| = 1.  Put k = 2j+1.  For a pair (m-d, m+d), if both lie on
+  the same side of k + 1/2 they have the same parity and the same X-membership.  If
+  m-d <= k < m+d, exactly one is in X, the left one iff m-d is even iff d ≡ m (mod 2).
+  The mixed d form an interval D = [d0, r_m], d0 = max(m-k, k+1-m), so the X-imbalance is 0
+  if |D| is even and +-1 if |D| is odd.
+    m <= k (m odd), left half: |D| = (m-1) - (k-m) = 2m-1-k = 2m-2j-2, even.
+    m <= k, right half: m >= n+1 >= k forces m = k = n+1, n = 2j even; |D| = (2n-m)-(k-m) =
+      2n-2j-1 odd, d0 = k+1-m = 1 ≡ m, so the imbalance is +1 (one more X-panel on the left).
+    m > k (m even): m <= n is impossible (n <= 2j+1 = k), so m is in the right half and
+      |D| = (2n-m) - (m-k) + 1 = 2n-2m+2j+2, even.
+(iii) Y is a copy of the (n+1)-world except at u (n even): for y != u,
+  psi^{-1}(W_N(psi(y))) = W_{n+1}(y).
+  - y <= j+1, 2y <= n+1 (left type in the (n+1)-world, y != u): psi(y) = 2y-1, 4y-3 <= 2n,
+    W_N = [1, 4y-3]; psi(2y-1) <= 4y-3 < 4y-2 <= psi(2y).
+  - y >= j+2 (then 2y >= n+3, right type): psi(y) = 2y-2, 4y >= 2n+5, so psi(y) is in the
+    right half, W_N = [4y-2n-4, 2n]; psi(2y-n-2) <= 4y-2n-5 < 4y-2n-4 <= psi(2y-n-1), giving
+    psi([2y-(n+1), n+1]) = image of W_{n+1}(y).
+  - n odd: these two cases cover all y (j+1 = (n+1)/2).  n even: the remaining index is
+    y = j+1 (the middle of the (n+1)-world), psi(y) = u = n+1, W_N(u) = [2, 2n] = all of Y
+    except panel 1 = psi(1).
+(iv) Second block.  At psi(y) with S = X ∪ psi(T): for y != u the X-part is balanced by (ii)
+  and the Y-part is the tau-step by (iii).  At u (n even): the X-part contributes +1 to
+  left - right, the Y-part contributes |T ∩ [2, j]| - |T ∩ [j+2, n+1]|
+  = (|T ∩ [1,j]| - 1) - |T ∩ [j+2, n+1]| = -1, using 1 ∈ T and validity of the middle step
+  of tau.  Total 0.
+(v) Panels 1 = psi(1) and N = psi(n+1) have r = 0, so they are free.                    □
+A tau as required always exists: if a valid tau places 1 after its middle, its reversal
+(valid by (R)) places 1 before.  (Without the shift, e.g. plain parity blocks for even N,
+one only gets free(sigma on n panels) + 1, which is one short whenever F(n) = F(n-1).
+Lemma 2.3 is exactly the missing even case.  Its two-block form, with Y also a world, exists
+only for n odd; computer search, iso_search.py, finds no other two-block decompositions for
+N = 6..12 apart from parity classes and, for 3 | N, a mod-3 class.)
+
+Thm 4.  For every N >= 1 some valid sequence has F(N) free steps.
+Proof.  N = 1: (1).  N = 2: (1,2).
+N = 2n+1 >= 3: evens first, then odds (B), with sigma optimal on n panels.  The evens
+block keeps sigma's free steps (window correspondence, S ⊆ evens), and panels 1 and N
+(r = 0) are free: free >= F(n) + 2.  And F(2n+1) = F(n) + 2, because
+lg(2(n+1)) = lg(n+1) + 1 and lg(2(n+1)/3) = lg((n+1)/3) + 1 (also for n = 1 with lg(2/3) = -1).
+N = 2n >= 4: Lemma 2.3 with sigma optimal on n-1 panels gives free >= F(n-1) + 2 = F(2n-1).
+F(2n) = F(2n-1) because N+1 = 2n+1 is odd and >= 5, so it is neither 2^a nor 3*2^b.     □
+Explicit recursive construction: construct.py, function free_seq; checked (validity and
+exactly F(N) free steps) for all N <= 200.
+
+Corollary.  max_a free(a) = lg(N+1) + lg((N+1)/3) + 1 for all N >= 1 (F increases exactly
+at N = 2^a - 1 and N = 3*2^b - 1), and since free and full steps have the same distribution
+(reversal), the same holds for the maximum number of full steps.
+
+
+3. DESCENTS (minimum = lg(N+1) - 1, conjectured)
+------------------------------------------------
+Status: OPEN in general.  What is proven / checked:
+
+(a) Data.  min des = lg(N+1) - 1 for all N <= 22 (exact subset DP, dp.c; earlier data had
+    N <= 18).  Sequences with lg(N+1) - 1 descents were found by a pruned DFS (desdfs.c) for
+    every N <= 34 (see mindes_dfs_out.txt), so the upper bound holds there.  Also, for N <= 11
+    (full enumeration), the minimum of the longest DECREASING subsequence, and of the longest
+    increasing one, is also lg(N+1) (a stronger statement, since des >= LDS - 1).  So the
+    natural strengthened conjecture is:  every valid sequence has a monotone (both kinds)
+    subsequence of length lg(N+1).
+
+(b) First and last runs (proof).  In the FIRST ascending run b_1 < b_2 < ... every b_j
+    (j >= 2) is in the right half and g_j = N+1-b_j satisfies 2 g_j <= g_{j-1}  [same argument
+    as Thm 1: nothing larger is placed, so the window must be empty].  In the LAST ascending
+    run c_1 < ... < c_t, all of c_1..c_{t-1} are in the left half with c_{i+1} >= 2 c_i
+    [complement lemma: the step at c_i is valid iff the unplaced panels c_{i+1}, ..., c_t,
+    all to its right, are balanced in its window, i.e. none is in it].  Hence
+    |first run| <= 1 + h(floor(N/2)) and |last run| <= h(floor((N+1)/2)) + 1 (h as in §2),
+    both about lg N + 1.
+    Consequences (proved by hand):
+      des = 0 only for N <= 2 (the increasing order fails at panel 2, window {1,3}).
+      des = 1 only for N <= 6.  With two runs B (first) and C (last), N = |B| + |C| <=
+        4 + lg floor(N/2) + lg floor((N+1)/2), which is < N for N >= 9.
+        N = 8: equality would need |B| = |C| = 4, so C = {1,2,4,c} and the halving chain of B
+        must be g = 4, 2, 1 with g_2 = 4 <= (9-b_1)/2, so b_1 = 1 ∈ C, a contradiction.
+        N = 7: |B| <= 3, |C| <= 4, so C = {1,2,4,c}, B = {b_1, 8-g_2, 7} with
+        g_2 ∈ {2,3}; covering [1..7] forces b_1 = 3 and {c, 8-g_2} = {5,6}.  g_2 = 3 violates
+        g_2 <= (8-3)/2; g_2 = 2 gives C = {1,2,4,5}, but 4 is not last in C and 5 < 2*4.
+    It does not bound middle runs: in the popcount order for N = 2^K - 2 the middle runs are
+    the binomial layers, of size up to C(K, K/2).
+
+(c) Left-half constraints alone are NOT enough.  If only the panels of the left half are
+    required to be balanced, min LDS = min LIS = 1, 2, 2, 2, 2, 2, 2, 2, 3 for N = 1..9
+    (so lg(N+1) fails at N = 7, 8).  A proof must therefore use both halves.  (Relevant
+    because for the first panel x the restriction of a to [1, x-1] satisfies exactly the
+    left-half constraints of the (x-1)-world, giving LDS(a) >= 1 + LDS(a|[1,x-1]);
+    this recursion only yields a weaker logarithmic bound.)
+
+(d) Constructions tried and failed (counterexamples to natural recursions):
+    - popcount order: valid exactly for N in {1..8, 11} ∪ {2^k-2, 2^k-1, 2^k} (earlier notes);
+    - deleting the max or min panel from the popcount order of 2^{K}-2 keeps validity only
+      for K = 3 (N = 6 -> 3); already 14 -> 13 fails;
+    - run-by-run merging of a min-des evens sequence and a min-des odds sequence (the way
+      popcount(14) arises from popcount(7) and a 7-panel sequence) works for some N but has
+      NO valid instance for N = 11, 12, 13 (q12-style search over all min-des pairs and
+      run shifts -1, 0, 1).  Parity blocks add descents (des(sigma) + des(tau) + ...), so
+      they cannot be used either.
+    The found minimisers (mindes_dfs_out.txt) have first run = {x} ∪ (right halving chain)
+    and last run = (doubling chain) ∪ {one more}, as (b) requires, but no uniform rule for
+    the middle runs was identified.
+
+4. CHARACTERISATIONS NOTED ALONG THE WAY
+----------------------------------------
+* The free panels form two "doubling chains": in time order, the free left panels decrease
+  and each is at most half the previous one, the free right panels likewise in mirror
+  coordinates, and after the very first step x every later free panel f satisfies
+  2f <= x (left) or 2(N+1-f) <= N+1-x (right) (Lemma 2.1).  These are the only constraints
+  used, and validity is irrelevant for the upper bound.  The maximum is attained by valid
+  sequences, so validity costs nothing for this statistic.
+* Left-to-right maxima: the gaps N - m_i to the right edge more than halve
+  (2(N+1-m_{i+1}) <= N+1-m_i), the mirror of the free-chain law.
+* Shifted parity classes (Lemma 2.3): besides the evens/odds, the set
+  "evens below 2j+1, odds above it" (j = floor(n/2), N = 2n) is a copy of the (n-1)-world, and
+  its complement is a copy of the (n+1)-world (n odd) or so with one twisted middle step
+  (n even).  For odd n the correspondence is exact in both directions, so EXACTLY
+  a(n-1) * a(n+1) valid sequences start with the set X (checked: N = 6: 20, N = 10: 960).
+  These are disjoint from the parity-block families (X is not inside a parity class for
+  n >= 3), so a(2n) >= 2 a(n)^2 + a(n-1) a(n+1) for odd n >= 3.  For even n the middle step
+  of the Y-block is twisted (valid iff the tau-imbalance there equals [1 placed] - 1), so the
+  count of sequences starting with X is larger than a(n-1) a(n+1)/2 (N = 8: 92 vs 56,
+  N = 12: 6020 vs 3584); a(2n) >= 2 a(n)^2 + a(n-1) a(n+1)/2 still follows.  Not formalised.
