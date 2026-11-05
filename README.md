@@ -118,3 +118,16 @@ A partial semi-symmetric sequence cannot always be completed. The smallest examp
 - `experiments/extremal/PROOFS.txt`. Proofs of the extremal laws. Shifted parity blocks
   give a(2n) ≥ 2a(n)² + a(n−1)a(n+1) for odd n (on paper). Open: the minimum number of
   descents is ⌊log₂(N+1)⌋−1 (checked for N ≤ 22).
+- `experiments/prefix/FINDINGS.txt`. **Exact formulas for valid prefixes of fixed
+  length k.** T(N,k) is the number of valid first-k-step sequences. It is a
+  quasi-polynomial in N:
+  - T(N,2) = ⌊N²/2⌋ (proven in Lean).
+  - T(N,3) = (2/9)N³ − (1/12)N² + ℓ(N)N + e(N), with period 6. Independently re-checked
+    for N ≤ 40.
+  - T(N,4) has period 168.
+
+  Mechanism (proven): for a fixed relative order of the k panels, the validity conditions
+  are linear inequalities, so T(N,k) is a sum of lattice-point counts of polytopes
+  (Ehrhart theory). The leading coefficients are known exactly for k ≤ 7. The
+  denominators involve 2^m − 1 (doubling-map periods). The valid suffixes of length k are
+  counted by the same T(N,k).
