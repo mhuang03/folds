@@ -11,7 +11,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 `a_k`, so it is `min(a_k - 1, N - a_k)`, not `min(k-1, N-k)`. And the semi-symmetric
 count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 
-## Lean (`Folds/`). Build with `lake exe cache get && lake build`. Only `Counting.lean` uses Mathlib
+## Lean (`Folds/`). Build with `lake exe cache get && lake build`. Files marked (Mathlib) use Mathlib
 
 | file | contents |
 |---|---|
@@ -23,6 +23,9 @@ count tests `a_k ± d ∈ S`, not `a_{k±d}`.
 | `Counting.lean` (Mathlib) | `semiCount_even`: a(2n) ≥ 2a(n)²; `semiCount_odd`: a(2n+1) ≥ 2a(n)a(n+1); `semiCount_ge_pow`: a(N) ≥ 2^{N−1}; `card_class_prefix` (exact count of sequences that start with a full parity class) |
 | `RevMirror.lean` | reversal∘mirror preserves semi-symmetry; `revMirror_no_fixed`: no fixed points when N ≡ 3 (mod 4) |
 | `Radius.lean` | capped-radius variant; radius 1 ⇔ each panel's time is a local max or min relative to its neighbours |
+| `Recursion.lean` (Mathlib) | **the recursion**: `g_eq_sum`, `semiCount_eq_g`, and the reversal/meet-in-the-middle identity `semiCount_eq_sum_split`: a(N) = Σ_{|S|=k} g(S)·g(Sᶜ) |
+| `Congruence.lean` (Mathlib) | `semiCount_mod_four`: a(N) ≡ c(N) (mod 4), where c(N) is the number of sequences fixed by reversal∘mirror; a(N) even for N ≥ 2; `semiCount_mod_four_of_three`: 4 ∣ a(N) when N ≡ 3 (mod 4) |
+| `Prefix.lean` (Mathlib) | `card_prefixTwo`: there are ⌊N²/2⌋ valid 2-step prefixes; `card_reachTwo`: ⌊N²/3⌋ reachable 2-sets |
 | `Cyclic.lean` | `semiStep_iff_cyclicStep` (cyclic/doubling form, all `N`), prefix forms `semiStep_iff_left`/`_right`, interval-count forms, complement lemmas, `deadEnd_four` |
 
 The theorems in `Basic.lean` are proven for all `N`. Brute-force counting is done
