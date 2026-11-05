@@ -3,3 +3,4 @@ smc3
 *.o
 runs/dump_*
 desc
+toy

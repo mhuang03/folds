@@ -27,6 +27,9 @@ Second result (`dyadic_defect`, `semiStep_iff_dyadic`): for `N = 2^L` the cyclic
 `P̃(2m-1) - 2P(m-1)` is a sum over the one-bits `j` of `x = m - 1` of the doubling-balance
 terms `#(image of I_j under doubling) - 2·#I_j` of the dyadic intervals `I_j` along the binary
 expansion of `x`, plus `[2x mod N + 1 ∈ S]` (see the section below).
+
+Third result (`half_balance`): for `N = 2h`, if the antipodal panels `m` and `m + h` are both
+valid, exactly half of `S` lies in `[m, m + h - 1]` (the parity lemma is the case `|S|` odd).
 -/
 
 namespace Folds

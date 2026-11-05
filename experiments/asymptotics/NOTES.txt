@@ -12,7 +12,48 @@ E(x) = P(x) - k x/N the discrepancy, c = m - 1/2.
 
 SUMMARY
 -------
-@SUMMARY@
+Conjecture (best supported):   c = 1, with a ln ln N second-order term:
+     ln a(N) = N ln N - N - N ln sigma_bar(N) - O(N),   sigma_bar(N) = Theta(ln N) (heuristic),
+     a(N) = N! / (kappa_N ln N)^N  with kappa_N slowly varying (0.92 at N = 1024, 0.96 at 2048,
+     rising), i.e. a(N) = N!/(Theta(log N))^{N(1+o(1))}, as the growth agent conjectured.
+The exact mechanism, in three steps:
+ (1) [data] Acceptance is a local CLT: V/(N-k) = G/(sqrt(2pi) sigma_J), G = 1.02-1.05, where
+     sigma_J is the spread of the integer imbalance field J over the free panels (valid move
+     = free zero of J).  This holds to 2-5% at every N = 64..4096 and every stage k/N.
+     So  d(N) := (ln N! - ln a(N))/N = ln sqrt(2pi) + mean_t ln sigma_J(t) - mean_t ln G.
+ (2) [data + heur] Low discrepancy is produced by SELECTION, not by the dynamics: the uniform
+     random greedy has sigma_J ~ 10-70 and never completes (0/100 runs, N = 64..16384).
+     a(N) is a Feynman-Kac (directed-polymer) partition function: random set paths weighted
+     by prod_k 1/sigma_J(S_k).  The "soft" model that keeps only this weight (toy.c: random
+     permutations weighted by prod_k (N-k)/(sqrt(2pi) sigma_J)) reproduces sigma_J of the
+     true process within 5% and d(N) within 0.02-0.1 for N = 64..2048.
+ (3) [heur] Gaussian Feynman-Kac analysis of the Fourier modes along doubling chains
+     (var J = sum_n |S^(n/2) - S^(n)|^2/(pi n)^2): each mode is confined only while it lives,
+     giving equal contributions ~ sigma_J per octave of frequencies up to ~N/sigma_J, hence
+     sigma_J^2 ~ A sigma_J ln N, i.e. sigma_J = A (ln N - ln sigma_J) + B: LOGARITHMIC, not
+     sqrt(log N) and not a power.  Predicted A = 0.35-0.45; fitted A = 0.64.
+Numerics (smc3.c, a corrected and much faster SMC; N up to 4096, 1-2 cores):
+   * old SMC estimates were biased low by up to 28 in ln a at N = 1024 (ln of an unbiased
+     estimator; bias ~ 0.04 N^2/P).  New: ln a(512) = 1815.8(6), ln a(1024) = 4182(3),
+     ln a(2048) = 9494(8), ln a(4096) = @A4096@.
+   * sigma_bar(N) = exp(mean_t ln sigma_J) = 1.36, 1.65, 1.99, 2.32, 2.69, 3.07, @S4096@ for
+     N = 64, 128, ..., 2048, 4096: fits (ln N)^{1.34} or A(lnN - ln sigma)+B (rms 0.011-0.016),
+     not N^g (rms 0.039, systematic) and not sqrt(ln N) (rms 0.047).  The local power exponent
+     d ln sigma / d ln N falls: 0.30, 0.25, 0.21, 0.21, 0.19 (N = 128 .. 1536).
+   * d(N) fits: alpha ln ln N + b + e/ln N with alpha = 1.6 (rms 0.003), or c' ln N + b + e/ln N
+     with c' = 0.15 (i.e. c = 0.85, rms 0.0015) - the deficit alone cannot decide; the sigma_J
+     analysis (falling local exponent, logarithmic per-octave structure) is what favours c = 1.
+Rigorous (new, Lean, Folds/Asymptotics.lean, no sorry/native_decide):
+   * dipole lemma (imb_cons): adding x changes J by +1 on [x/2+1, x-1], -1 on [x+1, (N+x)/2];
+   * binary-digit decomposition (dyadic_defect, semiStep_iff_dyadic): for N = 2^L the cyclic
+     defect P~(2m-1) - 2P(m-1) is a sum over the one-bits of m-1 of doubling-balance terms
+     #(2 I_j) - 2 #(I_j) of the dyadic intervals along its binary expansion, plus one local bit;
+   * half-circle balance (half_balance): for N = 2h, if m and m+h are both valid then exactly
+     |S|/2 points of S lie in [m, m+h-1] (generalises the parity lemma).
+   No super-exponential lower bound was proved.  Section 4 reduces it to exhibiting a
+   dead-end-free strategy with N^{c'} choices on a positive fraction of steps, and explains why
+   the natural candidates (unguided moves; equal-count rounds = the composition theorem) fail.
+
 
 
 =========================================================================================
@@ -32,7 +73,7 @@ card_minus_support): every placed panel moves the field on about half of the str
 A panel whose window misses x is unaffected (imb_cons_of_not_mem_window,
 semiStep_cons_iff).  smc*.c and desc.c update J by exactly this rule, O(N) per step.
 
-1.2 Binary-digit decomposition (N = 2^L)                       [paper; dyadic.py checks it]
+1.2 Binary-digit decomposition (N = 2^L)        [Lean: dyadic_defect, semiStep_iff_dyadic]
 ----------------------------------------
 Write positions 0..N-1 (panel p <-> position p-1), S' = S - 1, n(w) = |S' in I_w| for the
 dyadic interval I_w of a binary word w, sigma(w) = w without its first digit (sigma is the
@@ -61,8 +102,9 @@ t = k/N in [1/8, 7/8] (diag3.py; the integrated mean_t log G is 0.016-0.048, tab
 The histogram of J over free panels is close to Gaussian (kurtosis 3.2-3.6, h(0) ~ h(+-1)).
 So the whole question is the size of sigma_J(N, t):
     ln a(N) = ln N! - N d(N),    d(N) = mean_t ln(sqrt(2 pi) sigma_J(t)) - mean_t ln G.
-(The max discrepancy Dmax = max|E| behaves like 1.6 sigma_J; growth agent's "frac x D =
-0.65" is the same statement, since 1/(sqrt(2 pi) 1.6) = 0.25 ... 0.65/1.6 matches.)
+(The max discrepancy Dmax = max_x |E(x)| is about 1.4 sigma_J at N = 64 and 1.75 sigma_J at
+N = 2048, so frac x Dmax = G (Dmax/sigma_J)/sqrt(2pi) = 0.58-0.72: this is the growth agent's
+"fraction x discrepancy ~ 0.65".  The relevant quantity is the typical spread sigma_J, not Dmax.)
 
 
 =========================================================================================
@@ -83,6 +125,17 @@ weighted by exp(-sum_k ln sigma_J(S_k)).  Low-discrepancy paths dominate the COU
 they have exponentially more continuations.  This is why the SMC (which resamples by V)
 sees small sigma_J while unguided paths blow up, and why no "potential" is preserved by
 the dynamics itself.
+
+Test of this picture (toy.c, "soft model"): random permutations (each step a uniformly random
+FREE panel, valid or not) weighted by prod_k (N-k)/(sqrt(2pi) sigma_J(S_k)) - the hard constraint
+replaced by its local-CLT average, nothing else kept.  Population SMC, P = 4000-16000:
+     N            64     128    256    512    1024   2048
+     sigma(1/2)  1.53   1.86   2.18   2.48   2.88   3.29     (true process: 1.64 1.96 2.28 2.64 3.00 3.44)
+     sigma_bar   1.27   1.55   1.88   2.20   2.57   2.93     (true: 1.36 1.65 1.99 2.32 2.69 3.07)
+     d(N)        1.06   1.29   1.48   1.65   1.81   1.95     (true: 1.17 1.37 1.54 1.70 1.85 1.99)
+The soft model tracks the true sigma_J within 4-7% with the same growth, and its deficit
+converges to the true one.  So the asymptotics of a(N) is that of this Feynman-Kac problem
+with potential ln sigma_J; the exact zero condition only adds a lower-order correction.
 
 2.2 Fourier form of sigma_J                                      [paper, continuum version]
 ---------------------------
@@ -138,7 +191,10 @@ Checks (dyadic.py on SMC snapshots, t = 1/2):
    (adjacent levels correlate at -0.2 to -0.3) cancel 74-78% of it.
 The model captures the mechanism (selection along the path + doubling chains) and the
 logarithmic law; its constant is a factor ~1.5-2 too small and it does not explain the
-slow increase of the local slope.
+slow increase of the local slope.  Since the soft model (2.1) reproduces the data, the
+discrepancy is in the Gaussian/linearised treatment of the FK problem, not in the FK picture.
+Likely cause: ln var J is concave, so linearising it over-penalises large excursions of the
+few lowest modes, which carry 20-40% of var J (octaves 0-2 above).
 
 2.4 Consequence for a(N)                                         [heur]
 ------------------------
@@ -271,6 +327,8 @@ smc2.c     SMC with the incremental field J (full arrays) and J-histogram diagno
 smc3.c     SMC with compact free lists, population growing near the end (P_k = P N/(N-k)),
            diagnostics (frac, sigma_J, Dmax, structure function of E) and set snapshots
 desc.c     uniform random greedy descent (no resampling): death statistics, sigma_J growth
+toy.c      the soft Feynman-Kac model (random permutations weighted by prod (N-k)/(sqrt(2pi) sigma_J))
+fkmodel.py Gaussian Feynman-Kac model on doubling chains (A = 0.345);  table.py  table of 3.2
 diag.py, diag3.py   summaries of the diagnostics;  dyadic.py  binary-digit identity check,
            level variances and Fourier/octave decomposition of var J;  fit2.py  fits
 sweep1.sh, sweep2.sh, pscan.sh, big.sh   run scripts;  runs/   outputs (prod.txt, pscan.txt,
