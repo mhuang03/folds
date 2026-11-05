@@ -1,0 +1,137 @@
+INDEPENDENCE OF SINGLE-PANEL CONSTRAINTS
+========================================
+
+Notation. N panels, a uniformly random ordering (fold sequence) of [1..N].
+For a panel m: r = reach N m = min(m-1, N-m), window W_m = [m-r, m+r],
+left arm L_m = [m-r, m), right arm R_m = (m, m+r].
+C_m = "the step placing m is semi-symmetric" = #(L_m before m) = #(R_m before m).
+w(r) = 4^r r!^2/(2r+1)!  (Wallis fraction; Folds/Wallis.lean: #C_m = N! w(r)).
+
+Lean: Folds/Independence.lean.  Everything in sections 1-3 and 5 is formalized
+(no sorry, no native_decide; axioms propext, Classical.choice, Quot.sound).
+Section 4 (one outside element) is a paper proof only, checked by brute force.
+
+
+1. THE RELABELLING LEMMA  (Lean: card_fiber_eq, card_indep, card_indep_disjoint)
+-------------------------------------------------------------------------------
+Let A ⊆ X be finite sets of numbers, and let Q be a property of orderings of X that
+is invariant under relabelling the entries of A among themselves: for orderings u, u'
+of A, let g = relab u u' (the i-th entry of u goes to the i-th entry of u', everything
+outside A is fixed); we require Q(l.map g) <-> Q(l) for every ordering l of X.
+
+Claim. For every property P of orderings of A,
+   #{l : P(l|A) and Q(l)} * |A|! = #{u in ord(A) : P(u)} * #{l : Q(l)},
+where l|A is the subsequence of l consisting of the entries in A.
+
+Proof. For u in ord(A) let F(u) = {l : l|A = u and Q(l)}.  The map l -> l.map(relab u u')
+is a bijection F(u) -> F(u') (inverse l -> l.map(relab u' u)): it sends orderings of X to
+orderings of X, (l.map g)|A = (l|A).map g = u.map g = u', and Q is preserved.  So every
+fibre has the same size c.  Summing over fibres,
+   #{P(l|A) and Q(l)} = #{u : P(u)} * c   and   #{Q(l)} = |A|! * c.            QED
+
+Corollary (disjoint supports).  If A, B ⊆ X are disjoint then for any P, Q
+   #{l : P(l|A) and Q(l|B)} * |A|! * |B|! = |X|! * #{u : P u} * #{v : Q v}.
+(Q(l|B) is invariant under relabelling A since relab fixes B pointwise; apply the claim
+twice, the second time with Q = true.)
+
+
+2. THE STEP CONDITION AS A FUNCTION OF RELATIVE ORDER  (cstep_restrict, cstep_relab)
+------------------------------------------------------------------------------------
+(i) C_m(l) <-> C_m(l|S) whenever W_m ⊆ S: the set of panels before m in l|S is the set
+    before m in l intersected with S, and C_m only looks at the part inside W_m.
+(ii) Call A compatible with b (Lean: Compat N A b) if b ∉ A, and A ⊆ L_b or A ∩ L_b = ∅,
+    and A ⊆ R_b or A ∩ R_b = ∅.  Then C_b(l.map g) <-> C_b(l) for every relabelling g of
+    A: g is injective and fixes b, so before(l.map g, b) = g(before(l, b)); g preserves
+    membership in L_b and in R_b, so both counts are unchanged.
+
+(iii) Restricted Wallis count (card_window_orderings).  Applying section 1 with
+    A = W_m, X = [1..N], Q = true, and (i):  #C_m * (2r+1)! = N! * #{u in ord(W_m) : C_m(u)},
+    so by the Wallis theorem #{u in ord(W_m) : C_m(u)} = 4^r r!^2.
+
+
+3. PAIRS AND CHAINS  (card_constrSeqs_chain, card_pair_of_disjoint, card_pair_of_subset_arm)
+-------------------------------------------------------------------------------------------
+Theorem.  Let m_1, ..., m_k in [1..N] be such that W_{m_i} is compatible with m_j for all
+i < j.  Then
+   #{sequences: C_{m_1} and ... and C_{m_k}} * prod (2 r_i + 1)! = N! * prod 4^{r_i} r_i!^2.
+Proof by induction on k.  Put A = W_{m_1}, P = C_{m_1} (a property of l|A by 2(i)),
+Q = C_{m_2} and ... and C_{m_k} (relabel-invariant for A by 2(ii)).  Section 1 gives
+#(P and Q) * (2r_1+1)! = 4^{r_1} r_1!^2 * #Q by 2(iii), and #Q is the induction hypothesis.
+
+Special cases:
+ * Goal 1 (case (a)): W_a ∩ W_b = ∅.  Then W_a misses both arms of b and b ∉ W_a.
+ * Goal 2 (case (b), nothing outside): W_a ⊆ L_b or W_a ⊆ R_b.  Then b ∉ W_a and W_a
+   misses the other arm.  (This is exactly the relabelling proof from the cluster notes.)
+ * Families with pairwise disjoint windows (card_constrSeqs_disjoint).
+
+Remark (disjoint families are tiny).  Every window contains panel 1 (if r = m-1) or panel N
+(if r = N-m).  So a family with pairwise disjoint windows has at most 2 members, and
+"goal 4 for disjoint windows" yields at best a(N) <= N! w(r) w(r').  The useful families are
+the compatible chains, e.g. doubling chains below.
+
+
+4. CASE (b) WITH ONE OUTSIDE ELEMENT  (paper proof; brute force N <= 9)
+----------------------------------------------------------------------
+Geometry.  Suppose b ∉ W_a, the overlap W_a ∩ W_b contains a and lies in one arm, say L_b,
+and exactly one element e of W_a lies outside W_b.  W_a and W_b are intervals, so e is the
+end of W_a away from b: e = a - r_a = (b - r_b) - 1 >= 1.  If b were in the left half then
+b - r_b = 1, impossible; so b is in the right half, L_b = [2b-N, b-1], R_b = [b+1, N].
+If a were in the right half, W_a would contain N ∈ R_b.  So a is in the left half, e = 1,
+b - r_b = 2, i.e. N = 2n+2 is even, b = n+2, W_b = [2, N], L := L_b = [2, n+1],
+R := R_b = [n+3, 2n+2], |L| = |R| = n, and W_a = [1, 2a-1] with 2a-1 <= n+1.
+(The mirror image is the other possibility.)  brute.py lists exactly these pairs:
+(2,4), (3,5) for N=6 and (2,5), (4,7) for N=8, all independent, and no mismatch with the
+(a)/(b) classification for N <= 9.
+
+Claim.  C_a and C_b are independent.
+
+Step 1 (the rank of e does not affect C_b).  Let i(l) = number of L-panels before e = 1
+in l, in 0..n.  Then #{l : C_b(l), i(l) = i} does not depend on i.
+Proof.  Split at b (as in Wallis.lean): an ordering with before-set A of b is counted
+|A|! (2n+1-|A|)! times.  C_b says |A ∩ L| = |A ∩ R| = J.  Given A:
+  - if e ∈ A (|A| = 2J+1), then i = #(A∩L before e), uniform on 0..J;
+  - if e ∉ A (|A| = 2J),   then i = J + #(L \ A before e), uniform on J..n.
+Hence with T1(J) = C(n,J)^2 (2J+1)!(2n-2J)!/(J+1) and T2(J) = C(n,J)^2 (2J)!(2n+1-2J)!/(n-J+1),
+   #{C_b, i} = sum_{J >= i} T1(J) + sum_{J <= i} T2(J),
+and #{C_b, i+1} - #{C_b, i} = T2(i+1) - T1(i).  Using C(n,i+1)/C(n,i) = (n-i)/(i+1),
+   T2(i+1)/T1(i) = ((n-i)/(i+1))^2 * (2i+2)/(2n-2i) * (i+1)/(n-i) = 1.
+So the count is constant in i.  (rank_check.py: N=4,6,8 give [8,8], [128,128,128],
+[4608,4608,4608,4608].)
+Continuous version of the same identity: with iid uniform times, conditioning on the time t
+of b, the integrand C(n,K)(2K)!(2n+1-2K)! = C(n,K-1)(2K-1)!(2n+2-2K)! (Beta integrals)
+shows E[P(C_b | times of L u {e}) | rank of e = i] is constant.
+
+Step 2 (relabelling L).  Let M = L ∪ {e} ⊇ W_a.  The map l -> l|M has fibres; the group
+of relabellings of L (fixing e) acts on the orderings of M with a given rank i of e
+transitively, preserves C_b (2(ii): L ⊆ L_b, b ∉ L) and preserves i.  As in section 1, for
+any two orderings rho, rho' of M with the same rank i of e,
+   #{l : l|M = rho, C_b(l)} = #{l : l|M = rho', C_b(l)} =: c_i,
+and #{C_b, i} = n! * c_i.
+Step 3.  C_a depends only on l|W_a, hence on l|M.  Therefore
+   #{C_a and C_b} = sum_i #{rho in ord(M): rank_e(rho) = i, C_a(rho)} * c_i
+                  = (#C_b/(n+1)!) * sum_i #{rho : rank i, C_a(rho)}       (c_i = #C_b/((n+1) n!) by Step 1)
+                  = #C_b * #{rho in ord(M) : C_a(rho)}/(n+1)!
+                  = #C_b * w(r_a)  = #C_a #C_b / N!.                        QED
+Note the key extra fact compared to section 3: C_b is NOT invariant under relabelling
+W_a (e is invisible to C_b, the other elements are not), but C_b is independent of the
+rank of e within L ∪ {e}, which is all that the relabelling argument needs.
+
+Lean status: not formalized.  It needs (1) the section-1 lemma with fibres over orderings
+of M with fixed rank of e (a straightforward variant of card_fiber_eq), and (2) Step 1, a
+Wallis-style split at b keeping track of the rank of e (the telescoping above).  (2) is the
+bulk of the work.
+
+
+5. UPPER BOUNDS  (semiCount_mul_le_chain, card_constrSeqs_doubling, semiCount_mul_le_dyadic)
+-------------------------------------------------------------------------------------------
+Every semi-symmetric sequence satisfies every C_m, so for a compatible chain
+   a(N) * prod (2r_i+1)! <= N! * prod 4^{r_i} r_i!^2,   i.e.  a(N) <= N! prod w(r_i).
+Doubling chains: left-half panels (2m <= N+1) m_1, ..., m_k with 2 m_i <= m_j for i < j form
+a compatible chain: W_{m_i} = [1, 2m_i - 1] ⊆ [1, m_j - 1] = L_{m_j}.
+Dyadic family: m_i = 2^i, i < k, valid when 2^k <= N+1; r_i = 2^i - 1:
+   a(N) * prod_{i<k} (2^{i+1}-1)! <= N! * prod_{i<k} 4^{2^i-1} ((2^i-1)!)^2,
+i.e. a(N) <= N! prod_{i<k} w(2^i - 1).  Since w(r) ~ sqrt(pi/(4r)), this is
+a(N) <= N! exp(-(ln 2/4) log2(N)^2 + O(log N)): rigorous but weaker than the existing
+N! e^{-Theta(N)} bound.  (One can also append the mirrored chain N+1-2^j, j < k', when
+2^k + 2^{k'} <= N+2, since those windows are disjoint from the left ones; this only changes
+constants and is not formalized separately, but card_constrSeqs_chain covers it.)

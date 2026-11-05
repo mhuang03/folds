@@ -2,6 +2,22 @@ import Folds.Wallis
 
 /-!
 # Independence of single-panel constraints
+
+For a panel `m` with `r = reach N m`, `C_m` is the event that the step placing `m` is
+semi-symmetric (`Cstep`); its window is `[m - r, m + r]` (`window`), with arms `leftArm` and
+`rightArm`.  Paper proofs: `experiments/independence/PROOFS.txt`.
+
+* `card_indep`: if `Q` is invariant under relabelling the entries of `A ⊆ X`, then every
+  event of the relative order on `A` is independent of `Q` (uniform orderings of `X`).
+  `card_indep_disjoint`: events of the relative orders on disjoint `A`, `B` are independent.
+* `card_window_orderings`: on the orderings of its own window, `C_m` holds for exactly
+  `4^r (r!)²` of the `(2r+1)!` orderings.
+* `card_constrSeqs_chain`: for panels `m₁, …, m_k` where each earlier window is compatible
+  (`Compat`) with each later panel, `#(C_{m₁} ∧ … ∧ C_{m_k}) · ∏ (2rᵢ+1)! = N! ∏ 4^{rᵢ} (rᵢ!)²`.
+* `card_pair_of_disjoint`: disjoint windows give independent constraints.
+  `card_pair_of_subset_arm`: so does a window lying inside one arm of the other panel.
+* `semiCount_mul_le_chain`, `semiCount_mul_le_dyadic`: the resulting upper bounds on `a(N)`,
+  e.g. `a(N) ≤ N! ∏_{i<k} w(2^i - 1)` when `2^k ≤ N + 1`.
 -/
 
 namespace Folds
