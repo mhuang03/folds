@@ -3,6 +3,11 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Finset.Sigma
 import Mathlib.Order.Interval.Finset.Nat
+import Mathlib.Tactic.Ring
+import Mathlib.Tactic.GCongr
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.NormNum
 import Folds.Counting
 import Folds.Cyclic
 
@@ -41,8 +46,11 @@ sequences of `[n]`, the conditions hold for every `D ⊆ C_n` (odd `k`; for odd 
 * `pow_le_semiCount_pow_four`: `N^N ≤ a(N)^8` for `N = 4^j`, i.e. `a(N) ≥ N^{N/8}`:
   **a super-exponential lower bound**.
 
-Paper proof of `ln a(N) ≥ (1/32) N ln N - (ln 2 / 4) N` for all `N` from these
-recursions: `experiments/superexp/PROOFS.txt`.
+All `N` (`self_pow_le_semiCount`): `N^N ≤ 2^{3N} a(N)^{32}`, i.e. `a(N) ≥ (N/8)^{N/32}`,
+by strong induction from `a(4m) ≥ 2^m a(m)^4`, `a(4m+2) ≥ 2^{⌊(m+1)/2⌋} a(m)² a(m+1)²` and
+`a(2n+1) ≥ 2 a(n) a(n+1)` (for odd `N` the surplus of the even child pays for the convexity
+loss), with the Bernoulli-type bound `(2n+1)^n ≤ 2 (2n)^n`.
+Paper proofs: `experiments/superexp/PROOFS.txt`.
 -/
 
 namespace Folds
@@ -727,6 +735,204 @@ theorem pow_le_semiCount_pow_four (j : Nat) : (4 ^ j) ^ (4 ^ j) ≤ semiCount (4
       _ ≤ semiCount (4 * 4 ^ j) ^ 8 := Nat.pow_le_pow_left key 8
 
 end ParitySlip
+
+/-! ## All `N`: `N^N ≤ 2^{3N} a(N)^{32}`, i.e. `a(N) ≥ (N/8)^{N/32}` -/
+
+section AllN
+
+/-- `(k+1)^n (k-n) ≤ k^{n+1}` (a Bernoulli-type bound). -/
+theorem succ_pow_mul_sub_le (k : Nat) : ∀ n, n ≤ k → (k + 1) ^ n * (k - n) ≤ k ^ (n + 1)
+  | 0, _ => by simp
+  | n + 1, h => by
+    have ih := succ_pow_mul_sub_le k n (by omega)
+    have e : (k + 1) * (k - (n + 1)) ≤ k * (k - n) := by
+      obtain ⟨t, rfl⟩ : ∃ t, k = n + 1 + t := ⟨k - (n + 1), by omega⟩
+      rw [show n + 1 + t - (n + 1) = t by omega, show n + 1 + t - n = t + 1 by omega]
+      nlinarith
+    calc (k + 1) ^ (n + 1) * (k - (n + 1)) = (k + 1) ^ n * ((k + 1) * (k - (n + 1))) := by ring
+      _ ≤ (k + 1) ^ n * (k * (k - n)) := Nat.mul_le_mul_left _ e
+      _ = k * ((k + 1) ^ n * (k - n)) := by ring
+      _ ≤ k * k ^ (n + 1) := Nat.mul_le_mul_left _ ih
+      _ = k ^ (n + 1 + 1) := by ring
+
+/-- `(2n+1)^n ≤ 2 (2n)^n`. -/
+theorem odd_pow_le (n : Nat) (hn : 1 ≤ n) : (2 * n + 1) ^ n ≤ 2 * (2 * n) ^ n := by
+  have h := succ_pow_mul_sub_le (2 * n) n (by omega)
+  rw [show 2 * n - n = n by omega] at h
+  have : (2 * n + 1) ^ n * n ≤ (2 * (2 * n) ^ n) * n := by
+    calc (2 * n + 1) ^ n * n ≤ (2 * n) ^ (n + 1) := h
+      _ = (2 * (2 * n) ^ n) * n := by ring
+  exact Nat.le_of_mul_le_mul_right this (by omega)
+
+theorem pow_two_mul (k : Nat) : (4 : Nat) ^ k = 2 ^ (2 * k) := by
+  rw [Nat.pow_mul]
+
+/-- `(2n+1)^{2n+1} ≤ 2^{2n+2} n^n (n+1)^{n+1}`. -/
+theorem odd_self_pow_le (n : Nat) (hn : 1 ≤ n) :
+    (2 * n + 1) ^ (2 * n + 1) ≤ 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1)) := by
+  have h1 := odd_pow_le n hn
+  have h2 : (2 * n + 1) ^ (n + 1) ≤ (2 * (n + 1)) ^ (n + 1) :=
+    Nat.pow_le_pow_left (by omega) _
+  calc (2 * n + 1) ^ (2 * n + 1) = (2 * n + 1) ^ n * (2 * n + 1) ^ (n + 1) := by
+        rw [← Nat.pow_add]; congr 1; omega
+    _ ≤ (2 * (2 * n) ^ n) * (2 * (n + 1)) ^ (n + 1) := Nat.mul_le_mul h1 h2
+    _ = 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1)) := by
+        rw [Nat.mul_pow, Nat.mul_pow]; ring
+
+/-- `(4m+2)^{4m+2} ≤ 2^{8m+6} m^{2m} (m+1)^{2m+2}`. -/
+theorem four_two_pow_le (m : Nat) (hm : 1 ≤ m) :
+    (4 * m + 2) ^ (4 * m + 2) ≤ 2 ^ (8 * m + 6) * ((m ^ m) ^ 2 * ((m + 1) ^ (m + 1)) ^ 2) := by
+  have h1 := odd_pow_le m hm
+  have h2 : (2 * m + 1) ^ (2 * m + 2) ≤ (2 * (m + 1)) ^ (2 * m + 2) :=
+    Nat.pow_le_pow_left (by omega) _
+  calc (4 * m + 2) ^ (4 * m + 2) = 2 ^ (4 * m + 2) * (((2 * m + 1) ^ m) ^ 2 *
+        (2 * m + 1) ^ (2 * m + 2)) := by
+        rw [show 4 * m + 2 = 2 * (2 * m + 1) by omega, Nat.mul_pow, ← Nat.pow_mul,
+          ← Nat.pow_add]
+        congr 2; omega
+    _ ≤ 2 ^ (4 * m + 2) * ((2 * (2 * m) ^ m) ^ 2 * (2 * (m + 1)) ^ (2 * m + 2)) := by
+        gcongr
+    _ = 2 ^ (8 * m + 6) * ((m ^ m) ^ 2 * ((m + 1) ^ (m + 1)) ^ 2) := by
+        rw [Nat.mul_pow 2 m, Nat.mul_pow 2 (m + 1)]
+        ring
+
+theorem semiCount_pos (N : Nat) : 1 ≤ semiCount N := by
+  rcases Nat.eq_zero_or_pos N with h | h
+  · subst h
+    exact Finset.card_pos.2 ⟨[], mem_semiSeqs.2 ⟨by decide, by decide⟩⟩
+  · exact le_trans (Nat.one_le_two_pow) (semiCount_ge_pow N h)
+
+/-- The induction behind `self_pow_le_semiCount`, with a surplus `2^{2N}` for even `N ≥ 4`. -/
+theorem self_pow_le_aux : ∀ N, 1 ≤ N →
+    N ^ N ≤ 2 ^ (3 * N) * semiCount N ^ 32 ∧
+      (N % 2 = 0 → 4 ≤ N → N ^ N * 2 ^ (2 * N) ≤ 2 ^ (3 * N + 12) * semiCount N ^ 32) := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+  intro hN
+  have ha := semiCount_pos N
+  -- small cases
+  have small : N ≤ 8 → N ^ N ≤ 2 ^ (3 * N) * semiCount N ^ 32 := by
+    intro h8
+    calc N ^ N ≤ 8 ^ N := Nat.pow_le_pow_left h8 _
+      _ = 2 ^ (3 * N) * 1 := by rw [Nat.mul_one, Nat.pow_mul]
+      _ ≤ 2 ^ (3 * N) * semiCount N ^ 32 := Nat.mul_le_mul_left _ (Nat.one_le_pow _ _ ha)
+  rcases Nat.lt_or_ge N 6 with hlt | hge
+  · -- N ≤ 5: only the plain bound is needed except N = 4
+    refine ⟨small (by omega), fun he h4 => ?_⟩
+    have e4 : N = 4 := by omega
+    subst e4
+    have key := semiCount_four_mul (m := 1) le_rfl
+    have h1 := semiCount_pos 1
+    -- 4^4 * 2^8 = 2^16 ≤ 2^24 * a(4)^32
+    calc 4 ^ 4 * 2 ^ (2 * 4) ≤ 2 ^ (3 * 4 + 12) * 1 := by norm_num
+      _ ≤ 2 ^ (3 * 4 + 12) * semiCount 4 ^ 32 :=
+        Nat.mul_le_mul_left _ (Nat.one_le_pow _ _ (semiCount_pos 4))
+  · obtain ⟨q, r, hr, rfl⟩ : ∃ q r, r < 4 ∧ N = 4 * q + r := ⟨N / 4, N % 4, Nat.mod_lt _ (by omega), (Nat.div_add_mod N 4).symm⟩
+    have hpow : ∀ k, 0 < 2 ^ k := fun k => Nat.two_pow_pos k
+    rcases (show r = 0 ∨ r = 2 ∨ r = 1 ∨ r = 3 by omega) with h0 | h2 | hodd
+    · -- N = 4q
+      subst h0
+      rw [Nat.add_zero] at hN ha ih ⊢
+      have hq : 1 ≤ q := by omega
+      have key := semiCount_four_mul hq
+      have Qq := (ih q (by omega) hq).1
+      have H : (4 * q) ^ (4 * q) * 2 ^ (12 * q) ≤ semiCount (4 * q) ^ 32 :=
+        calc (4 * q) ^ (4 * q) * 2 ^ (12 * q) = 2 ^ (8 * q) * (q ^ q) ^ 4 * 2 ^ (12 * q) := by
+              rw [Nat.mul_pow, pow_two_mul, ← Nat.pow_mul, show q * 4 = 4 * q by ring]
+              congr 2; ring
+          _ ≤ 2 ^ (8 * q) * (2 ^ (3 * q) * semiCount q ^ 32) ^ 4 * 2 ^ (12 * q) := by gcongr
+          _ = (2 ^ q * semiCount q ^ 4) ^ 32 := by ring
+          _ ≤ semiCount (4 * q) ^ 32 := Nat.pow_le_pow_left key 32
+      have h1 : (4 * q) ^ (4 * q) ≤ (4 * q) ^ (4 * q) * 2 ^ (12 * q) :=
+        Nat.le_mul_of_pos_right _ (hpow _)
+      refine ⟨?_, fun _ _ => ?_⟩
+      · calc (4 * q) ^ (4 * q) ≤ semiCount (4 * q) ^ 32 := h1.trans H
+          _ ≤ 2 ^ (3 * (4 * q)) * semiCount (4 * q) ^ 32 := Nat.le_mul_of_pos_left _ (hpow _)
+      · calc (4 * q) ^ (4 * q) * 2 ^ (2 * (4 * q)) ≤ (4 * q) ^ (4 * q) * 2 ^ (12 * q) :=
+              Nat.mul_le_mul_left _ (Nat.pow_le_pow_right (by omega) (by omega))
+          _ ≤ semiCount (4 * q) ^ 32 := H
+          _ ≤ 2 ^ (3 * (4 * q) + 12) * semiCount (4 * q) ^ 32 := Nat.le_mul_of_pos_left _ (hpow _)
+    · -- N = 4q + 2
+      subst h2
+      have hq : 1 ≤ q := by omega
+      have key := semiCount_four_mul_add_two q
+      generalize ht : (q + 1) / 2 = t at key
+      have ht' : q ≤ 2 * t := by omega
+      have Qq := (ih q (by omega) hq).1
+      have Qq1 := (ih (q + 1) (by omega) (by omega)).1
+      have hb := four_two_pow_le q hq
+      have hexp : 2 ^ (16 * q) ≤ (2 ^ t) ^ 32 := by
+        rw [← Nat.pow_mul]; exact Nat.pow_le_pow_right (by omega) (by omega)
+      have H : (4 * q + 2) ^ (4 * q + 2) * 2 ^ (16 * q) ≤
+          2 ^ (20 * q + 12) * semiCount (4 * q + 2) ^ 32 :=
+        calc (4 * q + 2) ^ (4 * q + 2) * 2 ^ (16 * q)
+            ≤ 2 ^ (8 * q + 6) * ((q ^ q) ^ 2 * ((q + 1) ^ (q + 1)) ^ 2) * 2 ^ (16 * q) := by
+              gcongr
+          _ ≤ 2 ^ (8 * q + 6) * ((2 ^ (3 * q) * semiCount q ^ 32) ^ 2 *
+                (2 ^ (3 * (q + 1)) * semiCount (q + 1) ^ 32) ^ 2) * (2 ^ t) ^ 32 := by
+              gcongr
+          _ = 2 ^ (20 * q + 12) * (2 ^ t * (semiCount (q + 1) * semiCount q) ^ 2) ^ 32 := by
+              ring
+          _ ≤ 2 ^ (20 * q + 12) * semiCount (4 * q + 2) ^ 32 := by gcongr
+      refine ⟨?_, fun _ _ => ?_⟩
+      · refine Nat.le_of_mul_le_mul_right (c := 2 ^ (16 * q)) ?_ (hpow _)
+        calc (4 * q + 2) ^ (4 * q + 2) * 2 ^ (16 * q) ≤ 2 ^ (20 * q + 12) * semiCount (4 * q + 2) ^ 32 := H
+          _ ≤ 2 ^ (3 * (4 * q + 2) + 16 * q) * semiCount (4 * q + 2) ^ 32 :=
+              Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by omega) (by omega))
+          _ = 2 ^ (3 * (4 * q + 2)) * semiCount (4 * q + 2) ^ 32 * 2 ^ (16 * q) := by ring
+      · refine Nat.le_of_mul_le_mul_right (c := 2 ^ (16 * q)) ?_ (hpow _)
+        calc (4 * q + 2) ^ (4 * q + 2) * 2 ^ (2 * (4 * q + 2)) * 2 ^ (16 * q)
+            = (4 * q + 2) ^ (4 * q + 2) * 2 ^ (16 * q) * 2 ^ (2 * (4 * q + 2)) := by ring
+          _ ≤ 2 ^ (20 * q + 12) * semiCount (4 * q + 2) ^ 32 * 2 ^ (2 * (4 * q + 2)) := by gcongr
+          _ = 2 ^ (28 * q + 16) * semiCount (4 * q + 2) ^ 32 := by ring
+          _ ≤ 2 ^ (28 * q + 18) * semiCount (4 * q + 2) ^ 32 :=
+              Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by omega) (by omega))
+          _ = 2 ^ (3 * (4 * q + 2) + 12) * semiCount (4 * q + 2) ^ 32 * 2 ^ (16 * q) := by ring
+    · -- N odd, N = 2n + 1 with n ≥ 3
+      obtain ⟨n, hn⟩ : ∃ n, 4 * q + r = 2 * n + 1 := ⟨(4 * q + r) / 2, by omega⟩
+      rw [hn] at ih ha hN ⊢
+      have hn3 : 3 ≤ n := by omega
+      have key := semiCount_odd (n := n) (by omega)
+      -- the product bound, using the surplus of the even one of n, n + 1
+      have P : n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) ≤
+          2 ^ (6 * n + 15) * (semiCount n * semiCount (n + 1)) ^ 32 := by
+        rcases Nat.even_or_odd n with ⟨t, ht⟩ | ⟨t, ht⟩
+        · have E := (ih n (by omega) (by omega)).2 (by omega) (by omega)
+          have Q1 := (ih (n + 1) (by omega) (by omega)).1
+          calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) = (n ^ n * 2 ^ (2 * n)) * (n + 1) ^ (n + 1) := by
+                ring
+            _ ≤ (2 ^ (3 * n + 12) * semiCount n ^ 32) * (2 ^ (3 * (n + 1)) * semiCount (n + 1) ^ 32) := by
+                gcongr
+            _ = 2 ^ (6 * n + 15) * (semiCount n * semiCount (n + 1)) ^ 32 := by ring
+        · have E := (ih (n + 1) (by omega) (by omega)).2 (by omega) (by omega)
+          have Q0 := (ih n (by omega) (by omega)).1
+          calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)
+              ≤ n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1)) := by gcongr; omega
+            _ = n ^ n * ((n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1))) := by ring
+            _ ≤ (2 ^ (3 * n) * semiCount n ^ 32) * (2 ^ (3 * (n + 1) + 12) * semiCount (n + 1) ^ 32) := by
+                gcongr
+            _ = 2 ^ (6 * n + 15) * (semiCount n * semiCount (n + 1)) ^ 32 := by ring
+      have hb := odd_self_pow_le n (by omega)
+      refine ⟨?_, fun h2 _ => by omega⟩
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (2 * n) * 2 ^ 32) ?_ (by positivity)
+      calc (2 * n + 1) ^ (2 * n + 1) * (2 ^ (2 * n) * 2 ^ 32)
+          ≤ 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1)) * (2 ^ (2 * n) * 2 ^ 32) := by gcongr
+        _ = 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)) * 2 ^ 32 := by ring
+        _ ≤ 2 ^ (2 * n + 2) * (2 ^ (6 * n + 15) * (semiCount n * semiCount (n + 1)) ^ 32) * 2 ^ 32 := by
+            gcongr
+        _ = 2 ^ (8 * n + 17) * (2 * (semiCount n * semiCount (n + 1))) ^ 32 := by ring
+        _ ≤ 2 ^ (8 * n + 17) * semiCount (2 * n + 1) ^ 32 := by gcongr
+        _ ≤ 2 ^ (3 * (2 * n + 1) + 2 * n + 32) * semiCount (2 * n + 1) ^ 32 := by
+            gcongr <;> omega
+        _ = 2 ^ (3 * (2 * n + 1)) * semiCount (2 * n + 1) ^ 32 * (2 ^ (2 * n) * 2 ^ 32) := by ring
+
+/-- **Super-exponential lower bound for all `N`**:  `N^N ≤ 2^{3N} a(N)^{32}`, i.e.
+`a(N) ≥ (N/8)^{N/32}`. -/
+theorem self_pow_le_semiCount {N : Nat} (hN : 1 ≤ N) : N ^ N ≤ 2 ^ (3 * N) * semiCount N ^ 32 :=
+  (self_pow_le_aux N hN).1
+
+end AllN
 
 end Slip
 end Folds
