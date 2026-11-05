@@ -100,13 +100,37 @@ This runs the full forward DP (all layers, u128, mirror-reduced; practical to N�
 * `by_first = by_last(m)`: #sequences starting with m (= #sequences ending with m, by reversal)
 * `by_first2[m][x]`: #sequences starting with `m, x`
 
+## Timings (4 threads, 15 GB VM; see `results/semi.txt`)
+
+| N | a(N) | time | storage |
+|---|---|---|---|
+| 28 | 3603074636066234798 | 1.7 s | u64 |
+| 29 | 27545080998591561856 | 5.0 s | u64 |
+| 30 | 262878496654501774250 | 7.0 s | u64 |
+| 31 | 2037247307316034896720 | 16 s | u64 |
+| 32 | 20222490725552617395966 | 27 s | u64 |
+| 33 | 171668579369815966705184 | 74 s | u64, 9.3 GB |
+| 34 | 1711977358970374039688092 | 4 × ~125 s | u32 CRT, 9.4 GB |
+| 35 | 14916356465581456801127844 | 7 × 313–755 s | u16 CRT, 9.1 GB, machine under load |
+
+**Largest N reached: 35.**
+
+The stats files `results/stats/semi_N.txt` (N = 2..24) also contain `alive_sets` /
+`doomed_sets` (`g>0` and `f=0`; the `doomed_total` column reproduces the "dead ends"
+1, 2, 4, 18, 30, 63, … of the top-level README).
+
 ## Wall
 
 Memory is the limit. The middle layer has `C(N, N/2)/2` orbits.
-* N=35 needs u16 residues (7 runs).
+* N=35 already needs u16 residues: 7 runs, about 1 hour total on a shared machine.
 * N=36 has 4.5e9 orbits in the middle layer plus 4.3e9 in the previous one. Even u16
-  gives 17.5 GB. It would need u8 residues (~12 runs of ~25 min each), or
-  block-wise freeing of the previous layer combined with streaming the final
-  combination. For even N the complement maps every block `(i,j)` of the middle layer
-  to itself, so the middle layer never has to be stored whole. Or it would need a
-  machine with ≥ 32 GB.
+  gives 17.5 GB. To go further, one of these is needed:
+  (a) u8 residues: ~13 runs of ~15–25 min each.
+  (b) block-wise freeing of the previous layer while the next is built, together with
+      streaming the even-N combination. For even N, complementing maps every block
+      `(i, j)` of the middle layer to itself, so the middle layer never has to exist
+      whole. Peak would be ≈ |layer 17| + two blocks of layer 16 (~13 GB in u16).
+  (c) a machine with ≥ 32 GB RAM, which runs u16 directly. Time per residue is
+      ≈ 2.2× the N=35 time.
+  Each N costs ×2.2 in time and ×2 in memory, so N=37–38 needs a bigger machine
+  whatever the approach.
