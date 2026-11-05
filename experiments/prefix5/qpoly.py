@@ -9,7 +9,7 @@ Classes are summed within groups of equal period, then the groups are added (per
 For each coefficient c_j(N) of T = sum_j c_j(N) N^j it prints the minimal period and the
 exact-order Fourier components (c_j = sum_d g_d(N mod d), g_d with frequencies of exact
 order d), and checks the total against the direct series expansion for N <= NCHECK.
-Writes qpK_c<j>.txt for the nonconstant coefficients (residue, value) at their minimal period.
+Writes components_K.json (all components) and qpK_c<j>.txt for the nonconstant coefficients (residue, value) at their minimal period.
 """
 import sys
 import json
@@ -142,8 +142,10 @@ def components(parts):
 
 
 summary = []
+dump = {}
 for j in range(K, -1, -1):
     comp = components(coef[j])
+    dump[j] = {d: [str(x) for x in g] for d, g in comp.items()}
     per = lcm(*comp) if comp else 1
     print(f'c_{j}: minimal period {per}; exact-order components d = {sorted(comp)}', flush=True)
     summary.append((j, per, comp))
@@ -160,3 +162,6 @@ for j in range(K, -1, -1):
                 print(f'      d={d}:', ' '.join(str(x) for x in g))
             else:
                 print(f'      d={d}: (length {d}, denominators lcm', lcm(*[x.denominator for x in g]), ')')
+
+with open(f'components_{K}.json', 'w') as f:
+    json.dump(dump, f)
