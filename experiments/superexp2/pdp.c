@@ -3,6 +3,7 @@
    Usage: pdp n mode
    mode bit 1: F : k before q(k) = 2k mod* n          (k = 1..n-1)
    mode bit 2: F': p(k) = (2k+1) mod* n before k + 1   (k = 1..n-1)
+   mode bit 4: restrict the F / F' constraints to odd k
    mode 0 gives a(n).  Prints the exact count. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +22,7 @@ int main(int argc, char **argv) {
   n = atoi(argv[1]); int mode = atoi(argv[2]);
   memset(pred, 0, sizeof pred);
   for (int k = 1; k <= n - 1; k++) {
+    if ((mode & 4) && k % 2 == 0) continue;
     if (mode & 1) { int q = ms(2 * k); pred[q] |= 1u << (k - 1); }
     if (mode & 2) { int p = ms(2 * k + 1); pred[k + 1] |= 1u << (p - 1); }
   }

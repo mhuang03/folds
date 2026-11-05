@@ -1,0 +1,227 @@
+CHAINED SLIPS: RAISING THE SUPER-EXPONENTIAL EXPONENT              (experiments/superexp2/)
+=========================================================================================
+
+Notation as in ../superexp/PROOFS.txt.  V_n = valid (semi-symmetric) sequences of the n-strip,
+a(n) = |V_n|, x mod* n = representative of x in [1, n].  For tau, sigma in V_n:
+    G(tau)    = {k in [1,n-1] : tau places k before q_n(k) = 2k mod* n},
+    G'(sigma) = {k in [1,n-1] : sigma places p_n(k) = (2k+1) mod* n before k+1}.
+The slip lemma (superexp Theorem 1, Lean semiCount_slip) says
+    a(2n) >= B(n) := sum_{D ⊆ [1,n-1]} #condF(n,D) #condS(n,D) = sum_{tau,sigma in V_n} 2^{|G(tau) ∩ G'(sigma)|},
+condF(n,D) = {tau : D ⊆ G(tau)}, condS(n,D) = {sigma : D ⊆ G'(sigma)}.  PB(alpha, beta) is the
+odds-first parity-block sequence (2x-1 for x in alpha) ++ (2y for y in beta).
+[Lean] = Folds/SuperExp2.lean (namespace Folds.Slip; no sorry, no native_decide; axioms
+propext, Classical.choice, Quot.sound only).
+
+RESULTS
+-------
+Theorem 1 (chain recursion) [Lean: slipSum_chain].  For m >= 1
+        B(2m)  >=  2^m a(m)^2 B(m).
+Theorem 2 (powers of two) [Lean: pow_le_semiCount_pow_six, pow_two_aux].  For N = 2^L
+        N^N <= 2^N a(N)^6,    i.e.   a(N) >= (N/2)^{N/6},
+and also N^N <= B(N)^3.  (Previously a(N) >= N^{N/8} for N = 4^j.)
+Theorem 3 (all N) [Lean: self_pow_le_semiCount_pow_25, alln_aux].  For every N >= 1
+        N^N <= 2^{9N} a(N)^25,    i.e.   a(N) >= (N/512)^{N/25}.
+(Previously N^N <= 2^{3N} a(N)^32.)
+Theorem 4 (restricted chain; paper, verified exhaustively for small sizes).
+    M(x,y,r) := sum_{D ⊆ [1,r]} #condF(x,D) #condS(y,D)   satisfies, for 2r <= x, 2r+1 <= y,
+        M(x,y,r) >= 2^{ceil(r/2)} a(ceil(x/2)) a(floor(y/2)) M(floor(x/2), ceil(y/2), floor(r/2)),
+    and B(n) >= M(n, n, floor((n-1)/2)).  With it the all-N exponent rises to 1/22:
+        N^N <= 2^{9N} a(N)^22      (paper; Lean has 1/25).
+Theorem 5 (averaging; paper).  For every n >= 1 (odd n included)
+        a(2n) >= B(n) >= 2^{(n-1)/4} a(n)^2.
+So, rigorously,
+        ln a(N) >= (1/6) N ln N - O(N)    along N = 2^L      (Lean),
+        ln a(N) >= (1/25) N ln N - O(N)   for all N           (Lean),  1/22 on paper,
+i.e.  liminf ln a(N)/(N ln N) >= 1/22 (1/25 in Lean),  limsup >= 1/6.  Conjectured truth: 1.
+
+
+=========================================================================================
+1. WHY THE OLD RECURSION STOPPED AT 1/8, AND THE IDEA
+=========================================================================================
+The parity-slip recursion took tau, sigma odds-first parity blocks and slipped only at odd k,
+where block membership alone gives the order conditions: n bits at size 4n... i.e.
+a(4m) >= 2^m a(m)^4: 1/4 bit per element, 2 levels of halving: exponent (1/4)/2 = 1/8.
+For EVEN k = 2i the conditions are not lost, they are passed one level down:
+   q_{2m}(2i)   = 2 q_m(i)          (qq_double:  (4i-1) mod 2m = 2((2i-1) mod m) + 1),
+   p_{2m}(2i)   = 2 p_m(i) - 1      (pp_double:  4i mod 2m = 2(2i mod m)),
+so inside an odds-first block sequence the condition at 2i is EXACTLY the condition at i for
+the half that carries it: tau = PB(alpha, beta) has
+        G(PB(alpha, beta))  =  odds ∪ 2 G(beta),          G'(PB(alpha, beta)) = odds ∪ 2 G'(alpha)
+(odd k: k is odd and q(k) even, resp. p(k) odd and k+1 even, so block order decides; even k = 2i:
+both panels lie in the same block and their order is that of i, q_m(i) in beta, resp. of p_m(i),
+i+1 in alpha).  Hence the coupled sum B reproduces itself one level down: only the EVEN half
+of tau and the ODD half of sigma are coupled; the other two halves are free.
+[Data: bsum.c computes B(n) exactly for n <= 14; chaincheck.py, section 4.]
+
+
+=========================================================================================
+2. PROOF OF THEOREM 1
+=========================================================================================
+Let n = 2m.  For E ⊆ O := {odd k <= 2m-1} (|O| = m) and D' ⊆ [1, m-1] put
+D = E ∪ 2D' ⊆ [1, 2m-1].  (dbl, dbl_sub; the map (E, D') -> D is injective: E = odd part,
+D' = half of the even part, dbl_injOn.)
+(a) If alpha in V_m and beta in condF(m, D') then PB(alpha, beta) in condF(2m, D).
+    [blockMap_mem_condF]  PB(alpha,beta) is valid (parity-block theorem).  Let x = tau_k in D.
+    x odd: x is in the odd block, q_{2m}(x) is even, and every panel before x is odd.
+    x = 2i even, i in D': x = 2 beta_j sits in the even block, the panels before it are all odds
+    and 2 beta_1, ..., 2 beta_{j-1}; q_{2m}(2i) = 2 q_m(i) is even and is among them iff
+    q_m(i) is among beta_1..beta_{j-1}, which beta in condF(m, D') forbids.
+(b) If alpha' in condS(m, D') and beta' in V_m then PB(alpha', beta') in condS(2m, D).
+    [blockMap_mem_condS]  Let x = sigma_k with x - 1 in D.
+    x - 1 odd: x is even (second block) and p_{2m}(x-1) is odd, so it lies in the complete
+    first block.  x - 1 = 2i even, i in D': x = 2i + 1 = 2 alpha'_k - 1 with alpha'_k = i + 1;
+    p_{2m}(2i) = 2 p_m(i) - 1 is placed before x iff p_m(i) is among alpha'_1..alpha'_{k-1},
+    which alpha' in condS(m, D') guarantees.
+(c) Counting [slipSum_chain]: PB is injective, so #condF(2m, D) >= a(m) #condF(m, D') and
+    #condS(2m, D) >= #condS(m, D') a(m), and
+    B(2m) >= sum_{E ⊆ O} sum_{D'} a(m)^2 #condF(m,D') #condS(m,D') = 2^m a(m)^2 B(m).   QED
+Remark.  In terms of single sequences: F(n) := #{tau : G(tau) = [1,n-1]} (nonzero only for
+n = 2^L, since the doubling map mod n has no cycle in [1,n-1] only then) satisfies
+F(2m) >= a(m) F(m) and a(2n) >= 2^{n-1} F(n)^2 (mirror-reversal maps G to n - G'); the
+sequences realising the maximal slip set D = [1,n-1] are the "recursively odds-first"
+ones.  Exact: F(4), F(8), F(16) = 2, 24, 64738 (pdp.c), against the chain bound 2, 20, 26880.
+
+
+=========================================================================================
+3. PROOF OF THEOREMS 2 AND 3
+=========================================================================================
+Theorem 2.  x = 2^L, induction on L of  Q(L): x^x <= 2^x a(x)^6  and  R(L): x^x <= B(x)^3.
+L = 0: B(1) = a(1)^2 = 1.  Step (B(x) <= a(2x) by the slip lemma, Theorem 1):
+   (2x)^{2x} = 2^{2x} (x^x)^2 <= 2^{2x} B(x)^6 <= 2^{2x} a(2x)^6                 (Q(L+1))
+   (2x)^{2x} = 2^{2x} x^x x^x <= 2^{2x} (2^x a(x)^6)(B(x)^3) = (2^x a(x)^2 B(x))^3 <= B(2x)^3.
+Solving the recursions exactly (b_L := lower bound for log2 B(2^L), b_{L+1} = 2^L + 2b_{L-1} + b_L,
+b_0 = 0, b_1 = 1): b_L = (L/3 + 1/9) 2^L - (-1)^L/9, hence log2 a(2^L) >= (L/6 - 1/9) 2^L - 1/9,
+i.e. a(N) >= N^{N/6} 2^{-(N+1)/9} for N = 2^L.
+
+Theorem 3.  Strong induction on N >= 1 of the triple
+   (i)   N^N <= 2^{9N} a(N)^25,
+   (ii)  N even:  N^N 2^{2N} <= 2^{9N} a(N)^25              (surplus of 2 bits per panel),
+   (iii) (2N)^{2N} 2^{4N} <= 2^{18N} B(N)^25.
+Tools: a(2n) >= B(n); Theorem 1; B(2m+1) >= 2^{floor((m+1)/2)} a(m)^2 a(m+1)^2 (the old parity
+slip, now stated for B: slipSum_odd); a(2n+1) >= 2a(n)a(n+1); B >= 1; and the Bernoulli
+bounds (2n+1)^{2n+1} <= 2^{2n+2} n^n (n+1)^{n+1}, (4m+2)^{4m+2} <= 2^{8m+6} m^{2m}(m+1)^{2m+2}.
+(iii), N <= 64: (2N)^{2N} 2^{4N} = (8N)^{2N} <= 512^{2N} = 2^{18N}.
+(iii), N = 2m >= 66: with (i)(m), (iii)(m) and Theorem 1,
+   (4m)^{4m} 2^{8m} 2^{4m} = 2^{14m} ((2m)^{2m} 2^{4m}) (m^m)^2 <= 2^{50m} (a(m)^2 B(m))^25
+                           <= 2^{25m} B(2m)^25 <= 2^{36m} B(2m)^25 2^{4m}.
+(iii), N = 2m+1 >= 65 (m >= 32): let E be the even one of m, m+1; (ii)(E) and (i) of the other
+   give m^m (m+1)^{m+1} 2^{2m} <= 2^{9N} (a(m)a(m+1))^25, so with t = floor((m+1)/2), 2t >= m,
+   (4m+2)^{4m+2} 2^{4N} 2^{4m} <= 2^{16m+10} (m^m (m+1)^{m+1} 2^{2m})^2
+                               <= 2^{16m+10} 2^{18N} (a(m)a(m+1))^50
+                               <= 2^{25t+4m} 2^{18N} (a(m)a(m+1))^50 <= 2^{18N} B(N)^25 2^{4m},
+   using 16m + 10 <= 25t + 4m (m >= 20).
+(i), (ii), N = 2n: (iii)(n) and a(2n) >= B(n).
+(i), N = 2n+1 >= 3: N^N 2^{2n} <= 2^{2n+2} n^n (n+1)^{n+1} 2^{2E} <= 2^{2n+2} 2^{9N} (a(n)a(n+1))^25
+   <= 2^{9N} (2a(n)a(n+1))^25 2^{2n} <= 2^{9N} a(N)^25 2^{2n}.   QED
+Why 25.  The odd step needs the surplus s = 2 bits per panel of the even child (splitting N
+into two halves costs about N bits of the potential N log2 N, and only the even child carries
+a surplus).  The critical case is (iii) for odd N = 2m+1: the gain K t ~ K m/2 must pay the
+two levels of entropy (8m), the parent's surplus (8m) minus the even grandchildren's surplus
+(4m): (K/2) m >= 12m, K >= 24, and the additive constants need K = 25.  Numerically the
+recursions used here give exactly 1/24 asymptotically on the worst N (binary 1010...10,
+simplebound.py: 0.0428 at N ~ 2^640), so 1/25 is essentially optimal for this system.
+
+=========================================================================================
+4. VERIFICATION (1-2 cores)
+=========================================================================================
+chaincheck.py  (1) inclusions (a), (b) of Theorem 1 for every m <= 6, every D' and every
+               alpha, beta: 2, 12, 64, 720, 6832, 134784 implications, 0 failures;
+               (2) the explicit family of size 2^m a(m)^2 B(m) of slip sequences
+               slip(E ∪ 2D', PB(alpha,beta), PB(alpha',beta')) built for N = 4m = 4, 8, 12, 16:
+               2, 80, 3072, 339200 sequences, all valid, all distinct, count = formula.
+mcheck.py      Theorem 4: inclusions for all x <= 10, y in {x, x+1}, admissible r, all D':
+               28302 implications, 0 failures; exact M(x,y,r) vs the recursive bound.
+bsum.c         exact B(n), n <= 14 (enumerates V_n, superset sums over G-sets).
+pdp.c          subset DP for a(n) with precedence constraints (F(n), F'(n), odd-k versions).
+chainbound.py, simplebound.py, mbound.py   numerical values of the recursions for all N.
+oddslip.py, qslip.py, splitslip.py         explorations of section 6.
+Lean           Folds/SuperExp2.lean: slipSum, slipSum_le, sq_le_slipSum, qq_double,
+               pp_double, dbl_injOn, blockMap_mem_condF, blockMap_mem_condS, slipSum_chain,
+               pow_two_aux, pow_le_semiCount_pow_six, slipSum_odd, alln_aux,
+               self_pow_le_semiCount_pow_25.
+
+
+=========================================================================================
+5. THEOREMS 4 AND 5 (PAPER) AND THE BEST ALL-N EXPONENT OF THESE METHODS
+=========================================================================================
+5.1 Theorem 4 (restricted chain).  If 2r <= x and 2r+1 <= y, then for k <= r no reduction
+mod x or y happens: q_x(k) = 2k, p_y(k) = 2k+1.  Let tau = PB(alpha, beta) in V_x
+(alpha in V_{ceil(x/2)}, beta in V_{floor(x/2)}), D = E ∪ 2D', E ⊆ odds <= r, D' ⊆ [1, floor(r/2)].
+Odd k in E: k odd before 2k even.  k = 2i: 2i and 4i are both even, their order is that of i
+and 2i = q_{floor(x/2)}(i) in beta (2i <= r <= floor(x/2)).  So beta in condF(floor(x/2), D')
+suffices.  sigma = PB(alpha', beta') in V_y: odd k: 2k+1 odd before k+1 even; k = 2i: 4i+1 and
+2i+1 are odd, their order is that of 2i+1 = p_{ceil(y/2)}(i) and i+1 in alpha' (2i < ceil(y/2)
+as 2i <= r <= (y-1)/2).  So alpha' in condS(ceil(y/2), D') suffices.  The ceil(r/2) odd positions
+are free; summing as in Theorem 1 gives the recursion.  B(n) >= M(n, n, floor((n-1)/2)) since
+the D-range only shrinks.  The new feature: the chain works for ODD sizes too (no wrap is
+needed below the top level), at the price of using only the lower half of the positions.
+[mcheck.py, 0 failures.]
+5.2 All N with Theorem 4.  Same induction as Theorem 3 with K = 22 and a fourth statement
+   (iv) x^x y^y 2^{13 r} <= 2^{9(x+y)} M(x,y,r)^22    for y in {x, x+1}, 2r <= x, 2r+1 <= y,
+        x <= 2r + 2.
+(iv) for r <= 13 is trivial (x, y <= 29 and 13r <= 3.25(x+y)).  For r >= 14: with x1 = ceil(x/2),
+x2 = floor(x/2), y1, y2 likewise, x^x <= 2^{x+1} x1^{x1} x2^{x2}, (i) for x1, y2 and (iv) for
+(x2, y1, floor(r/2)) (its side conditions hold), it suffices that
+x + y + 2 + 13 ceil(r/2) <= 22 ceil(r/2); as x + y + 2 <= 4r + 7 this holds for r >= 14.
+(iii) for odd n = 2m+1 >= 13 (u = 9 covers n <= 63 trivially): B(n) >= M(n,n,m) and (iv) give
+(2n)^{2n} 2^{4n} = 2^{6n} n^{2n} <= 2^{6n - 13m} 2^{18n} B(n)^22 and 6n <= 13m for m >= 6.
+(iii) for even n and (i), (ii) as in Theorem 3 (K = 22 >= 10 resp. >= 2).
+Hence N^N <= 2^{9N} a(N)^22 for all N.  (Not formalised: it needs the analogues of
+blockMap_mem_condF/S for odd sizes and a four-part induction; the arithmetic is the same.)
+The potential-function bound for these tools is K >= 20 (odd node: surplus 2; even node 2y
+with y odd: K/4 >= 3 + 2 from three levels of entropy and the surplus), and mbound.py gives
+about 0.055 = 1/18 on the worst N (binary 1010..., exactly half of the nodes odd).
+
+5.3 Theorem 5 (averaging, task idea 2).  Reversal is a bijection of V_n, and for k in [1,n-1]
+q(k) != k and p(k) != k+1, so exactly one of tau, rev(tau) has k in G (resp. G').  Hence
+#{tau : k in G(tau)} = #{sigma : k in G'(sigma)} = a(n)/2 and, tau and sigma being independent,
+sum_{tau,sigma} |G ∩ G'| = (n-1) a(n)^2 / 4.  By AM-GM (convexity of 2^x)
+        B(n) = sum 2^{|G ∩ G'|} >= a(n)^2 2^{(n-1)/4}.
+This holds for odd n as well, but by itself gives only exponent 1/8 for N = 2^L, and 1/24
+for all N (the even node 2n with n odd has two odd children: 2/3 of the mass is odd).
+Checked against exact B(n), n <= 14 (bsum.c): B/a^2 = 1.25, 1.5, 2.12, 2.27, ..., 20.6 >= 2^{(n-1)/4}.
+
+
+=========================================================================================
+6. LIMITS OF THE SLIP METHOD AND WHAT WAS TRIED
+=========================================================================================
+6.1 Accounting.  A recursion in which a node of size 2n gains b*n bits and its mass descends
+on average d levels of halving gives exponent b/(2d) (per element: b/2 bits per node, d
+levels).  Old parity slip: b = 1/2, d = 2 -> 1/8.  Kill variant (superexp 6.2): 0.116.
+Chain: b = 1 (every k in [1, n-1] is a slip: the odd k at this node, the k = 2*odd one level
+down in the coupled pair (beta, alpha'), etc.), d = 3 (the free halves alpha, beta' sit 2
+levels down, the next free pair 3 levels down, ...; sum_j (j+1)/2^j = 3) -> 1/6.
+b = 1 is the maximum of the slip lemma (B(n) <= 2^{n-1} a(n)^2), so any recursion built
+only on a(2n) >= B(n) has exponent <= 1/2.  To beat 1/6 one must lower d, i.e. control
+G(tau) for sequences tau that are NOT parity blocks.  Each slip inside tau itself (tau =
+rev slip(tau1, sigma1, D1)) displaces 2e, 2e+1 and spoils up to 3 odd positions of G(tau)
+(superexp 6.2): the kill variant trades these and ends at 0.116 < 1/6.  Exact counts show
+there IS room: #{tau in V_n : G(tau) ⊇ odds} / a(n/2)^2 = 1.25, 2.0, 3.5, 8.5, 18.0 for
+n = 4, 8, 12, 16, 20 (pdp.c mode 5), i.e. most such tau are not parity blocks (e.g. the
+boundary between the blocks can be interleaved: 1 9 5 3 2 13 11 10 7 6 4 15 14 12 8 16 has
+all of G = [1,15]); F(16) = 64738 vs the parity chain 26880.  An exponential factor C^m in
+F(2m) >= C^m a(m) F(m) would raise the exponent to (1 + 2 log2 C)/6, but no structured family
+realising it was found (we could not certify the interleaved ones in a recursive way).
+6.2 Odd N.  An odd node N = 2n+1 has no slip lemma: oddslip.py (N <= 21) shows that for a
+single slip at k the F- and S-conditions are single order conditions only for k of opposite
+parities (F for one parity of k, S for the other), except k = n; with parity-block inputs
+the S-condition fails or holds for half of the inputs, never for all.  So an odd node gains
+nothing and costs about N bits of the N log N potential, which is why the all-N exponent
+is limited to 1/20 by these tools (5.2), and why the old all-N proof needed a surplus.
+6.3 Ternary slips (task idea 4).  N = 3n, residue classes mod 3 in the class order (1,3,2)
+(composition theorem).  qslip.py / splitslip.py: a slip 3j <-> 3j+1 between classes 3 and 1
+is exactly a binary slip inside the doubling-split copy B = classes {1,3} (its B-indices are
+2j, 2j+1), with the conditions "2j mod* n before j" (class 3) and "j+1 before (2j+1) mod* n"
+(class 1).  A slip 3i-2 <-> 3i-1 across the split (classes 1 and 2) needs only "(2i-1) mod* n
+before i" in the class-2 block when i is even; with an odds-first class-2 block all even i are
+free (exhaustive N = 12: 1600 cases; random N = 24: 20000 cases; 0 failures; false for odd n:
+N = 15, 21 fail).  But it fails as soon as the B part is not a parity block (splitslip.py
+modes randB, slipB: 35-70% invalid for a random valid B, 35-40% for a slipped B), so these
+split slips give a(3n) >= 2^{n/2} a(n)^2 a(n/2)^2 (n even, numerically verified only), whose
+gain per level (n/2 bits for an entropy cost of about 5.75n bits: ~0.09) is below the chain's.
+6.4 Summary.  The chain extracts the maximal number of slips per node (one per k); the
+remaining loss is structural: the inputs whose order conditions can be certified are parity
+blocks, which costs one level of halving per coupling, and odd nodes have no slips at all.
+Exponent 1 (the conjecture) needs control of order relations in typical sequences, i.e.
+super-constant freedom per element per level, which binary choices per position cannot give
+(the cap of every slip-lemma recursion is 1/2).
