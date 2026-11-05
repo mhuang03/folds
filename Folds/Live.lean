@@ -302,4 +302,49 @@ theorem not_extends_corner {N : Nat} (hN : N % 2 = 1) (h7 : 7 ≤ N) {p : List N
       exact (List.reverse_perm [N - 1, 2, 1]).symm
     exact not_extends_corner3 hN h7 hp' h.mirror
 
+/-! ## The sporadic dead 2-prefix `(1, 7)` for `N = 7`
+
+After `{1, 7}` the only step is `4`; after `{1, 4, 7}` it is `3` or `5`; then `2` (resp.
+`6`); then nothing. -/
+
+theorem not_extends_seven_aux {a : List Nat} (hf : IsFoldSeq 7 a) (hs : SemiSymmetric 7 a)
+    (h2 : ∀ x, x ∈ a.take 2 ↔ x ∈ [1, 7]) : False := by
+  have hla : a.length = 7 := by rw [hf.length_eq]; simp
+  have a2 : a[2] = 4 := next_mem (P := fun m => m = 4) hf hs (by omega) h2 fun m hm1 hmN hm hst => by
+    revert hm1 hmN hm hst; revert m; decide
+  have h3 : ∀ x, x ∈ a.take 3 ↔ x ∈ [1, 7, 4] := fun x => by
+    rw [mem_take_succ_iff (by omega), h2, a2]; simp; tauto
+  have a3 : a[3] = 3 ∨ a[3] = 5 := next_mem (P := fun m => m = 3 ∨ m = 5) hf hs (by omega) h3 fun m hm1 hmN hm hst => by
+    revert hm1 hmN hm hst; revert m; decide
+  rcases a3 with a3 | a3
+  · have h4 : ∀ x, x ∈ a.take 4 ↔ x ∈ [1, 7, 4, 3] := fun x => by
+      rw [mem_take_succ_iff (by omega), h3, a3]; simp; tauto
+    have a4 : a[4] = 2 := next_mem (P := fun m => m = 2) hf hs (by omega) h4 fun m hm1 hmN hm hst => by
+      revert hm1 hmN hm hst; revert m; decide
+    have h5 : ∀ x, x ∈ a.take 5 ↔ x ∈ [1, 7, 4, 3, 2] := fun x => by
+      rw [mem_take_succ_iff (by omega), h4, a4]; simp; tauto
+    exact next_mem (P := fun _ => False) hf hs (by omega) h5 fun m hm1 hmN hm hst => by
+      revert hm1 hmN hm hst; revert m; decide
+  · have h4 : ∀ x, x ∈ a.take 4 ↔ x ∈ [1, 7, 4, 5] := fun x => by
+      rw [mem_take_succ_iff (by omega), h3, a3]; simp; tauto
+    have a4 : a[4] = 6 := next_mem (P := fun m => m = 6) hf hs (by omega) h4 fun m hm1 hmN hm hst => by
+      revert hm1 hmN hm hst; revert m; decide
+    have h5 : ∀ x, x ∈ a.take 5 ↔ x ∈ [1, 7, 4, 5, 6] := fun x => by
+      rw [mem_take_succ_iff (by omega), h4, a4]; simp; tauto
+    exact next_mem (P := fun _ => False) hf hs (by omega) h5 fun m hm1 hmN hm hst => by
+      revert hm1 hmN hm hst; revert m; decide
+
+/-- **Sporadic dead 2-prefix.**  For `N = 7` (odd!) the valid prefixes `[1, 7]` and
+`[7, 1]` cannot be completed. -/
+theorem not_extends_seven : ¬ Extends 7 [1, 7] ∧ ¬ Extends 7 [7, 1] := by
+  constructor
+  all_goals
+    rintro ⟨a, hf, hs, hpre⟩
+    have e := List.prefix_iff_eq_take.1 hpre
+    refine not_extends_seven_aux hf hs fun x => ?_
+    rw [show (2 : Nat) = List.length [1, 7] from rfl]
+    first
+    | rw [← e]
+    | rw [show List.length [1, 7] = List.length [7, 1] from rfl, ← e]; simp; tauto
+
 end Folds
