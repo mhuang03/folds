@@ -18,7 +18,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 
 | question | status |
 |---|---|
-| closed form for a(N) | **none found; very unlikely**. No OEIS match; huge prime factors; no holonomic recurrence; the symmetric analogue A003407 provably has no exponential growth rate |
+| closed form for a(N) | **none found; very unlikely**. No OEIS match; huge prime factors; no holonomic recurrence; even the symmetric analogue A003407 has no known formula (and, per Ho 2026, no exponential growth rate) |
 | recursive formula | **proven** (Lean): subset recursion `g`, and a(N) = Σ_{\|S\|=k} g(S)·g(Sᶜ) for every k |
 | terms | a(1..35) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (both **proven**); T(N,4) has period 168 (fitted); single-panel Wallis count (**proven**) |
@@ -133,7 +133,8 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 ## Practical note for folders
 
 A partial semi-symmetric sequence can get stuck. For example, with N = 4, bisecting
-panels 1 then 4 leaves no valid move. Two sequences that are always safe:
-- the "parity block" order: recursively bisect all even panels in a valid order, then all
-  odd ones;
-- its generalisation by residue classes mod q (the composition theorem).
+panels 1 then 4 leaves no valid move. Two families that never get stuck:
+- the "parity block" order: bisect all even panels (recursively, in a valid order for
+  ⌊N/2⌋ panels), then all odd ones, or the reverse;
+- when q ∣ N, the same by residue classes mod q: whole classes in the order of a valid
+  q-sequence, each class internally in a valid (N/q)-order (the composition theorem).
