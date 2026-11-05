@@ -80,3 +80,27 @@ def qp(N):  # the fitted quasi-polynomial, see FINDINGS.txt
 for N in range(1, 31):
     assert brute_T3(N) == formula_T3(N) == qp(N), N
 print('Z(a,b) formula and quasi-polynomial agree with brute force for N = 1..30')
+
+
+# ---- exact discrete derivation: T(N,3) = 2*(P123 + P213 + P132) (the mirror images are
+# 321, 231, 312).  Only these sign classes occur; each is the lattice-point set of one polytope.
+def P213(N):   # x2 < x1 < x3, 2x2 <= x1 (x2 outside left arm), 2x3 > N+x1 (x3 outside right arm)
+    return sum((a // 2) * ((N + 1 - a) // 2) for a in range(1, N + 1))
+
+
+def P123(N):   # x1 < x2 < x3, 2x2 > N+x1, 2x3 > N+x2
+    return sum((N - b + 1) // 2 for a in range(1, N + 1) for b in range(a + 1, N + 1) if 2 * b > N + a)
+
+
+def P132(N):   # x1 < x3 < x2, 2x2 > N+x1, x3 in right arm of x1 and in left arm of x2
+    t = 0
+    for a in range(1, N + 1):
+        for b in range(a + 1, N + 1):
+            if 2 * b > N + a:
+                t += max(0, (N + a) // 2 - max(a + 1, (b + 2) // 2) + 1)
+    return t
+
+
+for N in range(1, 41):
+    assert 2 * (P123(N) + P213(N) + P132(N)) == qp(N), N
+print('T(N,3) = 2*(P123+P213+P132) checked for N = 1..40')
