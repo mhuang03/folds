@@ -1,0 +1,21 @@
+N=512 extinct at k=510
+N=512 P=1000 Pmax=64000 loga_est=1807.6550 logN!=2686.0605 ratio=0.67298 deficit=1.71564
+N=512 P=1000 Pmax=64000 loga_est=1803.5778 logN!=2686.0605 ratio=0.67146 deficit=1.72360
+N=512 P=1000 Pmax=64000 loga_est=1808.9516 logN!=2686.0605 ratio=0.67346 deficit=1.71310
+N=512 P=1000 Pmax=64000 loga_est=1810.2460 logN!=2686.0605 ratio=0.67394 deficit=1.71058
+N=512 P=1000 Pmax=64000 loga_est=1804.6630 logN!=2686.0605 ratio=0.67186 deficit=1.72148
+N=512 P=1000 Pmax=64000 loga_est=1810.1203 logN!=2686.0605 ratio=0.67389 deficit=1.71082
+N=512 P=1000 Pmax=64000 loga_est=1804.9772 logN!=2686.0605 ratio=0.67198 deficit=1.72087
+N=512 P=4000 Pmax=256000 loga_est=1814.0678 logN!=2686.0605 ratio=0.67536 deficit=1.70311
+N=512 P=4000 Pmax=256000 loga_est=1812.6317 logN!=2686.0605 ratio=0.67483 deficit=1.70592
+N=512 P=4000 Pmax=256000 loga_est=1813.3147 logN!=2686.0605 ratio=0.67508 deficit=1.70458
+N=512 P=4000 Pmax=256000 loga_est=1809.0023 logN!=2686.0605 ratio=0.67348 deficit=1.71300
+N=512 P=4000 Pmax=256000 loga_est=1810.9150 logN!=2686.0605 ratio=0.67419 deficit=1.70927
+N=512 P=4000 Pmax=256000 loga_est=1808.5050 logN!=2686.0605 ratio=0.67329 deficit=1.71398
+N=512 P=16000 Pmax=1024000 loga_est=1815.4040 logN!=2686.0605 ratio=0.67586 deficit=1.70050
+N=512 P=16000 Pmax=1024000 loga_est=1814.3293 logN!=2686.0605 ratio=0.67546 deficit=1.70260
+N=512 P=16000 Pmax=1024000 loga_est=1815.9766 logN!=2686.0605 ratio=0.67607 deficit=1.69938
+N=512 P=16000 Pmax=1024000 loga_est=1817.9950 logN!=2686.0605 ratio=0.67683 deficit=1.69544
+N=512 P=64000 Pmax=4096000 loga_est=1814.4560 logN!=2686.0605 ratio=0.67551 deficit=1.70235
+N=512 P=64000 Pmax=4096000 loga_est=1816.3808 logN!=2686.0605 ratio=0.67622 deficit=1.69859
+N=512 P=64000 Pmax=4096000 loga_est=1816.2217 logN!=2686.0605 ratio=0.67617 deficit=1.69890

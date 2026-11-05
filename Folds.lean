@@ -14,3 +14,4 @@ import Folds.Wallis
 import Folds.SelfDual
 import Folds.Extremal
 import Folds.Growth
+import Folds.Asymptotics

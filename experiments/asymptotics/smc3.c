@@ -1,7 +1,7 @@
 /* smc3.c -- SMC estimate of a(N) with a compact free-panel representation and a growing
  * population near the end (where the prefix tree has its dead ends).  Not a proof.
  *
- *   usage: ./smc3 N P seed [Pmax] [statfile]
+ *   usage: ./smc3 N P seed [Pmax] [statfile] [dumpfile]
  *
  * A particle stores only its free panels (sorted) and the imbalance J on them:
  *   J(m) = #(S in right arm of m) - #(S in left arm of m);  m is a valid move iff J(m) = 0.
@@ -28,6 +28,7 @@ int main(int argc, char **argv) {
   for (int i = 0; i < 10; i++) rnd();
   long Pmax = argc > 4 ? atol(argv[4]) : 64 * P0;
   FILE *sf = argc > 5 ? fopen(argv[5], "w") : NULL;
+  FILE *df = argc > 6 ? fopen(argv[6], "w") : NULL;   /* dump of free sets at t = 1/4, 1/2, 3/4 */
   size_t cap = (size_t)P0 * N + 16;               /* entries: sum_i f = P_k (N-k) <= P0 N + Pmax */
   cap += (size_t)Pmax;
   uint16_t *F = malloc(cap * 2), *F2 = malloc(cap * 2);
@@ -76,6 +77,16 @@ int main(int argc, char **argv) {
               (double)k / N, P, sum / P, logZ, fr / nd, sdj / nd, mj / nd, dm / nd);
       for (int l = 0; l < nl; l++) fprintf(sf, "%s%.4f", l ? "," : "", se[l] / nd);
       fprintf(sf, "\n"); fflush(sf);
+    }
+    if (df && (4 * k == N || 2 * k == N || 4 * k == 3 * N)) {
+      long nd = P < 200 ? P : 200;
+      for (long ii = 0; ii < nd; ii++) {
+        long i = ii * P / nd;
+        fprintf(df, "%d", k);
+        for (int m = 0; m < f; m++) fprintf(df, " %d", F[i * f + m]);
+        fprintf(df, "\n");
+      }
+      fflush(df);
     }
     if (f == 1) break;
     long Pn = (long)((double)P0 * N / (f - 1)); if (Pn > Pmax) Pn = Pmax; if (Pn < P0) Pn = P0;
