@@ -117,7 +117,15 @@ Popcount (N = 2^(t+1)-2, c = t - popcount) has inv(m) = r(m) everywhere (it is v
     30 s at N = 126, 50-75 s at N = 140..159 (bigger formulas).  CaDiCaL 1.5.3, 1 core.
     Left-half-only (left_t5.txt): SAT at N = 156, UNSAT at N = 157..160 (~20 s each), so the
     exact one-sided threshold is 156 and K(5) = 157.
-3.3 t = 6, N = 127 (t6.txt): see the file.
+    Second solver: Kissat 4.0.4 also gives UNSAT at N = 67, 100, 126, 156
+    (crosscheck_kissat_t5.txt).  No DRAT certificates were produced.
+3.3 t = 6, N = 127 (t6.txt): no answer after ~54 min CPU (CaDiCaL, --norm), stopped.
+    Scaling from N = 15 (t=3, 0.0 s), 31 (t=4, 0.1 s), 63 (t=5, ~110 s) suggests ~10^5 s.
+    A full t = 6 proof would also need the left-only threshold K(6) (~400?) and the full
+    problem for N in [127, K(6)), with formulas up to ~4*10^7 clauses: out of reach here.
+3.4 Attainment with 6 labels (attain_t6.txt): admissible 6-label labellings exist for
+    N = 63..126 where found (see file; each checked by the independent check()), so
+    min LDS of right-heavy permutations = lg(N+1) for every such N <= 126.
 
 
 4. AGGREGATED (LP) CERTIFICATES
