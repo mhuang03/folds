@@ -37,7 +37,11 @@ unsafe extern "C" {
     fn munmap(addr: *mut std::ffi::c_void, len: usize) -> i32;
     fn madvise(addr: *mut std::ffi::c_void, len: usize, advice: i32) -> i32;
     fn mprotect(addr: *mut std::ffi::c_void, len: usize, prot: i32) -> i32;
+    fn fallocate(fd: i32, mode: i32, off: i64, len: i64) -> i32;
 }
+const MAP_SHARED: i32 = 0x01;
+const FALLOC_FL_KEEP_SIZE: i32 = 0x01;
+const FALLOC_FL_PUNCH_HOLE: i32 = 0x02;
 const PROT_NONE: i32 = 0;
 const PROT_RW: i32 = 3;
 const MAP_PRIVATE: i32 = 0x02;
@@ -47,18 +51,44 @@ const MADV_DONTNEED: i32 = 4;
 const MADV_HUGEPAGE: i32 = 14;
 const PAGE: usize = 4096;
 
-/// A lazily backed array of `len` words (anonymous `mmap`, zero on first touch).
+/// A lazily backed array of `len` words, zero on first touch.  Anonymous `mmap` by
+/// default.  With `FOLDS_SPILL=<dir>`, regions of at least `FOLDS_SPILL_MIN` bytes
+/// (default 1e9) are `MAP_SHARED` mappings of a sparse file in `<dir>` instead: the
+/// pages are then page cache, which the kernel can write back and evict under memory
+/// pressure instead of OOM-killing (this VM puts all tool processes in one 14.3 GB
+/// memory cgroup).  Released ranges are hole-punched, so disk use follows the live set.
 pub struct Region<W: Word> {
     ptr: *mut W,
     len: usize,
     bytes: usize,
+    file: Option<(std::fs::File, std::path::PathBuf)>,
 }
 unsafe impl<W: Word> Send for Region<W> {}
 unsafe impl<W: Word> Sync for Region<W> {}
 
+fn spill_dir(bytes: usize) -> Option<std::path::PathBuf> {
+    let dir = std::env::var_os("FOLDS_SPILL")?;
+    let min: usize = std::env::var("FOLDS_SPILL_MIN").ok().and_then(|v| v.parse().ok()).unwrap_or(1_000_000_000);
+    (bytes >= min).then(|| std::path::PathBuf::from(dir))
+}
+
 impl<W: Word> Region<W> {
     pub fn new(len: usize) -> Self {
+        use std::os::unix::io::AsRawFd;
+        static SEQ: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let bytes = (len.max(1) * W::BYTES + PAGE - 1) / PAGE * PAGE;
+        if let Some(dir) = spill_dir(bytes) {
+            let path = dir.join(format!(
+                "folds-{}-{}.bin",
+                std::process::id(),
+                SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+            ));
+            let f = std::fs::OpenOptions::new().read(true).write(true).create_new(true).open(&path).expect("spill file");
+            f.set_len(bytes as u64).expect("spill set_len");
+            let p = unsafe { mmap(std::ptr::null_mut(), bytes, PROT_RW, MAP_SHARED, f.as_raw_fd(), 0) };
+            assert!(p as isize != -1, "mmap of spill file {path:?} failed");
+            return Region { ptr: p as *mut W, len, bytes, file: Some((f, path)) };
+        }
         let p = unsafe {
             mmap(std::ptr::null_mut(), bytes, PROT_RW, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0)
         };
@@ -66,7 +96,7 @@ impl<W: Word> Region<W> {
         if bytes >= 1 << 22 {
             unsafe { madvise(p, bytes, MADV_HUGEPAGE) };
         }
-        Region { ptr: p as *mut W, len, bytes }
+        Region { ptr: p as *mut W, len, bytes, file: None }
     }
     #[inline(always)]
     pub fn data(&self) -> &[W] {
@@ -82,12 +112,17 @@ impl<W: Word> Region<W> {
     /// Give the pages lying entirely inside `[start, start+len)` back to the OS and
     /// make them inaccessible.
     pub fn release(&self, start: usize, len: usize) {
+        use std::os::unix::io::AsRawFd;
         let a = (self.ptr as usize + start * W::BYTES + PAGE - 1) / PAGE * PAGE;
         let b = (self.ptr as usize + (start + len) * W::BYTES) / PAGE * PAGE;
         if b > a {
             unsafe {
                 madvise(a as *mut _, b - a, MADV_DONTNEED);
                 mprotect(a as *mut _, b - a, PROT_NONE);
+                if let Some((f, _)) = &self.file {
+                    let off = (a - self.ptr as usize) as i64;
+                    fallocate(f.as_raw_fd(), FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, off, (b - a) as i64);
+                }
             }
         }
     }
@@ -95,6 +130,9 @@ impl<W: Word> Region<W> {
 impl<W: Word> Drop for Region<W> {
     fn drop(&mut self) {
         unsafe { munmap(self.ptr as *mut _, self.bytes) };
+        if let Some((_, path)) = &self.file {
+            let _ = std::fs::remove_file(path);
+        }
     }
 }
 
