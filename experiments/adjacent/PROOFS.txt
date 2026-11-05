@@ -16,7 +16,8 @@ STATUS
     (`coReach_adjacent`, `coReach_interval`).
   * The proof is a greedy algorithm with a sign invariant (Theorem G): it proves more, namely a
     simple sufficient criterion for co-reachability of ANY set B, which covers e.g. every
-    2-set inside one half of the strip.  Added to the proven family: `Cov3` = Cov2 + Theorem G,
+    2-set inside one half of the strip, and the exceptional classes C_q with N = -1 (mod q)
+    (Corollary 2; half of the exceptional classes, open since live2).  Added to the proven family: `Cov3` = Cov2 + Theorem G,
     closed under residue transfers and the mirror.  Non-dead 2-sets proven co-reachable:
         N = 20: 189 of 189 (Cov2: 164);   N = 40: 748 of 779 (631);
         N = 60: 1625 of 1769 (1387);      N = 100: 4409 of 4949 (3373).
@@ -128,7 +129,7 @@ wide mixed-parity pairs of section 4.
 ---------------------------------------
 Cov3 (Lean `Adjacent.Cov3`): constructors cov2 (every set of Live4.Cov2), inward (every
 D in [1, N] satisfying (*) for some centre), res (residue transfer through a good class, as
-in Cov2), mirror.  `Cov3.coReach`, `Cov3.extends` (valid 2-prefixes in the family are live),
+in Cov2), mult (transfer through the multiples of q when q | N + 1, Corollary 2), mirror.  `Cov3.coReach`, `Cov3.extends` (valid 2-prefixes in the family are live),
 `Cov3.adjacent`.  covlean5.py computes the family faithfully (it reuses
 experiments/live4/covlean4.py for Cov2 and the good classes; for a 2-set the criterion (*)
 holds for some centre iff max{m : I_B(m) < 0} < min{m : I_B(m) > 0}).
@@ -139,7 +140,8 @@ holds for some centre iff max{m : I_B(m) < 0} < min{m : I_B(m) > 0}).
   N = 60:      1769      1387     1209      1625     1027 / 1055 of 1199  633 / 757 of 899
   N = 100:     4949      3373     3349      4409     2449 / 2792 of 3332 1405 / 2105 of 2499
 For 13 <= N <= 30 Cov3 misses only {1, N} with N odd in {13, 15, 19, 23, 25, 27, 29}; from
-N = 31 on also wide pairs, e.g. N = 32: (1, 30), (2, 31), (3, 32).
+N = 31 on also wide pairs, e.g. N = 32: (1, 30), (2, 31), (3, 32).  (The rule mult adds no
+2-set in these ranges: the pairs it reaches are already covered otherwise.)
 
 Which 2-sets satisfy (*)?  For B = {u, v}, u < v, panels outside [u, v] are harmless (I_B <= 0
 left of u, >= 0 right of v).  Inside, I_B(m) = [u in L(m)] - [v in R(m)]; it is +1 only if
@@ -204,6 +206,7 @@ Reductions found on the way (all superseded by Theorem G; scripts kept):
   checkG.py        constructive check of Theorem G
   inward.py, covlean5.py   the criterion (*) on 2-sets; the family Cov3 and its coverage
   peel.py, peel2.py, tp_test.py   Theorems G', G'' (peeling), two-phase search
+  classpeel.py, classinward.py    residue classes (exceptional ones) and the criteria
   trace.py, imbal.py   greedy traces and imbalance fields
   intervals.py, intreach.py, noncoreach.py, nonreach.py   interval / 3-set data
   adjinfo.c, cuts.c, symadj.c, nested.c, jnest.c, jseg.c, halfinf.c, qj.c, rtw.c, p2.c,
@@ -220,5 +223,7 @@ Reductions found on the way (all superseded by Theorem G; scripts kept):
   inward_interval : a ≤ b → Inward N (a + b) (Finset.Icc a b)
   coReach_interval : 1 ≤ a → a ≤ b → b ≤ N → CoReach N (Finset.Icc a b)
   coReach_adjacent : 1 ≤ r → r + 1 ≤ N → CoReach N {r, r + 1}           (Adjacent Lemma)
+  inward_of_symm, coReach_mult : 0 < q → (N + 1) % q = 0 → CoReach N (rPanels q N q).toFinset
+  coReach_mult_transfer : ... → CoReach (ccount q q N) D → CoReach N (D.image (cls q q))
   extends_interval : valid prefix p with p.toFinset = Icc a b (1 ≤ a ≤ b ≤ N) → Extends N p
-  Cov3 (cov2 / inward / res / mirror), Cov3.coReach, Cov3.adjacent, Cov3.extends
+  Cov3 (cov2 / inward / res / mult / mirror), Cov3.coReach, Cov3.adjacent, Cov3.extends
