@@ -1,0 +1,202 @@
+CLUSTER / CORRELATION ANALYSIS OF a(N)  (experiments/cluster/)
+==================================================================
+
+Notation: C_m is the constraint at panel m, r_m = min(m-1, N-m), w(r) = (2r)!!/(2r+1)!!.
+y(N) = log(a/a_W).  kappa(m,m') = P(C_m and C_m')/(w_m w_m') - 1 for a uniformly random permutation.
+Window W_m = [m-r, m+r] with its centre included.  Arms: left arm L_m = [m-r, m-1], right arm R_m = [m+1, m+r].
+Left-half windows are [1, 2m-1] and do not depend on N, so all left-left kappas are numbers that do not depend on N.
+
+Bottom line
+-----------
+* Pair correlations are exactly computable. Their zero set has a clean geometric description.
+  For macroscopic windows they tend to a universal function K(gamma) >= 0 of one overlap cosine.
+* The second-order (pair) cluster expansion fails. Its sum is negative up to N = 24, and it then grows
+  like 0.0084 N^2. That growth is impossible for y, which is at most about (1/2) N log N.
+  It explains neither the drift nor the mod-3 effect.
+* The Gaussian (determinant) resummation reproduces the pair limit and turns the N^2 into roughly
+  N log^2 N. It overshoots y by about 0.06 N at N <= 33 and also has no mod-3 effect.
+* Wallis model, exactly:
+  log a_W = (N/2) log(pi N/(2e)) + (1/4) log N + (1/3) log 2 + (1/2) log pi + 3 zeta'(-1) + 1/(6N) + O(N^-2).
+  This holds for both parities.
+* y(N) is not linear. Best fit: y ~ 0.175 N log N - 0.55 N + const + 0.034 [3|N].
+  So log a(N) ~ 0.67 N log N - 0.82 N, with an effective N log N coefficient that is still creeping up.
+* Mod 3: there is a real excess delta_3 ~ 0.035 at 3 | N, decaying slowly (roughly 1/N or N^-1/2).
+  It comes from the period-2 orbit {N/3, 2N/3} of the doubling map. Constraints k and 2k (N = 3k) involve
+  exactly the same two prefix sets. In the full system they have the strongest long-range effective
+  coupling, J ~ 0.06, about 0.26/sqrt(N). Bare pair probabilities and the Gaussian geometry miss it.
+* No effect for 4, 5 or 7 | N. The 3-cycle of 7 | N shows no 3-body coupling.
+
+1. EXACT PAIR CORRELATIONS
+--------------------------
+Method (pair.py exact, kappa.c floating point):
+* Only the relative order of U = W_m u W_m' matters.
+* Condition on the two centre times u < v. Every other element of U is before u, between u and v,
+  or after v.
+* Exact version: a DP over (I, J, D1, D2) gives a sum over assignments with weight I! J! K!/(n+2)!.
+* Float version: Gauss-Legendre in (u, v), with a DP over (D1, D2).
+* Checks: pair.py against brute force for N <= 7; kappa.c against the exact rationals (kappa_cache.txt)
+  for N <= 22.
+
+Independence. kappa = 0 exactly iff one of the following holds (checked on all 4959 pairs with N <= 33):
+  (a) the windows are disjoint; or
+  (b) for one of the two constraints, say a (the other is b):
+      - b is not in W_a;
+      - W_a meets W_b only inside one arm of b, and the overlap contains a;
+      - at most one element of W_a lies outside W_b.
+  Proof when no element of W_a lies outside W_b: C_b is invariant under relabelling the elements of W_a,
+  because they all play the same role in C_b. Given what C_b sees, the relative order of W_a is still
+  uniform. The one-outside case is exact in the data, but I have no proof for it.
+Consequences:
+  - Left-half m and m' >= 2m are independent.
+  - Every other overlapping pair is correlated, even with no centre in the other's window.
+
+Small closed forms:
+  - Neither centre in the other's window, r = 1, overlap one element: kappa = 1/(16(2r'+3)).
+  - r = 2 with the whole right arm inside the other's left arm: kappa = 61/(512(2r'+3)).
+  - Other overlaps have no simple form; for example r = 3 gives (2r'+3)·kappa = 0.17399, 0.17387, 0.17378, ...
+  - Adjacent left pairs, kappa(m, m+1) = -1/16, -23/768, -73/12288, 1669/131072, 4559/163840,
+    169341/4194304, 95898353/2^31, ... The sign changes at m = 5, and the values then grow like about
+    0.07 log m (0.102 at m = 16).
+  - Doubling pairs kappa(m, 2m) for N = 51 are 0 for m <= 13 (case (b)). They are small and positive
+    (at most 0.022) where 2m enters the right half.
+Negative kappas occur only for small windows (a lattice effect).
+
+Continuum limit (continuum.py, continuum_sum.py). For windows of size Theta(N), the local CLT for the
+two window imbalances, given the centre times, gives
+   kappa -> K(gamma),   gamma = <a_m, a_m'>/(2 sqrt(r r')),
+where a_m is the +-1 role vector of the window, so gamma is the cosine between the two role vectors, and
+   K(gamma) = (1/pi^2) Int Int [t(1-t)t'(1-t')]^(-1/2) (1-R^2)^(-1/2) dt dt' - 1,
+   R = gamma sqrt(t(1-t')/((1-t)t'))  for t < t' (symmetric otherwise).
+Properties of K:
+  - K >= 0.
+  - K(gamma) = (1/2 - 4/pi^2) gamma^2 + O(gamma^4). The coefficient is exact: the integral equals
+    pi^2/2 - 4 after t = sin^2.
+  - Values: K(0.2) = 0.00385, K(0.5) = 0.0264, K(0.8) = 0.0858, K(0.96) = 0.174; K diverges
+    logarithmically as gamma -> 1.
+Nested left pair with x' = lambda x (1 < lambda < 2): gamma = (2 - lambda)/sqrt(lambda).
+Convergence is slow. Example (2j, 3j) with gamma = 0.408 and K = 0.0169: the exact kappa is
+-0.032 (j=2), -0.0008 (j=8), +0.0054 (j=14).
+The fraction of pairs with gamma != 0 tends to 1/2, the mean of gamma^2 is 0.119, and
+   Sum_{m<m'} K(gamma) = C2 N^2,  C2 = 0.00840 (0.00780, 0.00810, 0.00825, 0.00833 at N = 100..800).
+
+2. SECOND-ORDER (CLUSTER) MODEL
+-------------------------------
+Exact S2 = sum log(1 + kappa) (pairsum.py; pairsum.txt for N <= 33, pairsum56.txt beyond):
+   N    y=log(a/aW)   S1=sum kappa   S2      y - S2
+  12     0.296         -0.446       -0.458   0.754
+  18     0.918         -0.443       -0.467   1.385
+  24     1.854         -0.050       -0.098   1.952
+  30     3.064          0.786        0.701   2.363
+  33     3.678          1.397        1.285   2.393
+  44      -             4.62         4.37
+  54      -             9.07         8.63    (left-left 6.98, left-right 1.65)
+Conclusions:
+* Pairs do not explain the drift. S2 is negative for N <= 24 and then rises quadratically, heading
+  for C2 N^2. Since y <= log(N!/a_W) ~ N log N/2, the pair (cluster) expansion cannot converge.
+  O(N^2) pairs have O(1) correlations, and higher cumulants must cancel almost all of their sum.
+  Nested left-left pairs (and their mirrors) dominate.
+* Pairs do not explain the mod-3 effect. The bumps of S2 are smooth (b(S2) is about -0.02 for every N,
+  bumps.txt). After subtracting S2 the mod-3 pattern is cleaner: b(y - S2) is about +0.03 at 3 | N
+  and about 0 otherwise for N >= 18.
+Gaussian resummation (gauss_mc.py, gauss_large.py, gauss_quenched.py):
+  a_G/a_W = E_{t iid arcsine}[ det(Gamma o B(t))^(-1/2) ], where Gamma is the cosine (gamma) matrix and
+  B is the Brownian-bridge correlation matrix of the centre times. Its second order is exactly K(gamma).
+* Results: y_G(N) = 0.43 (N=10), 2.05 (20), 4.53 (30), 5.40 (33). This is y + 0.06 N roughly, so it
+  overshoots.
+* Growth: the quenched E[-1/2 log det]/(N ln^2 N) = 0.013, 0.015, 0.016, 0.018, 0.018, 0.019 for
+  N = 40..1280.
+* It turns the N^2 into about N log^2 N, which still eventually breaks the N log N bound.
+  The local CLT cannot hold for all constraints at once.
+* It has no mod-3 bump within Monte Carlo error.
+
+3. ASYMPTOTICS
+--------------
+Wallis model, exact (wallis_exact.py). Write w(r) = sqrt(pi) Gamma(r+1)/(2 Gamma(r+3/2)). Then
+Sum_{r<n} log w(r) = n log(sqrt(pi)/2) + log G(n+1) - log G(n+3/2) + log G(3/2) (Barnes G), and
+   log a_W(N) = (N/2) log(pi N/(2e)) + (1/4) log N + gamma_W + 1/(6N) + O(N^-2),
+   gamma_W = (1/3) log 2 + (1/2) log pi + 3 zeta'(-1) = 0.3071505720...
+This holds for both parities. It was checked with mpmath to N = 2·10^8, and Richardson extrapolation
+confirms the 1/(6N) term.
+
+Data (asym.py, asym.txt). Fits use parity constants and [3|N]:
+* y(N) is not linear: a N + b log N extrapolates badly.
+* Best fits, N >= 14, rms about 0.009:
+    y ~ 0.175 N ln N - 0.548 N + 1.66 (even) / 1.58 (odd) + 0.034 [3|N]
+    y ~ -0.180 N + 0.049 N^1.5 + const
+  Fitted on N <= 29, both predict N = 30..33 to within 0.03 in log.
+* Equivalently log(N!/a)/N ~ p log N + q, with p falling slowly: about 0.366 at N ~ 12, 0.355 at
+  N ~ 18 and 0.343 at N ~ 28.
+Conjecture (empirical):
+   log a(N) = c N log N - alpha N + (1/4) log N + const_parity + delta_3(N) [3|N] + ...
+   c_eff = 0.65-0.68 (N = 15..33), alpha ~ 0.82 at c = 0.675, delta_3(N) ~ 0.7/N.
+The effective coefficient c is still increasing (from 0.634 to 0.657 by local fits). The Gaussian model
+also says it grows. So a(N) = N!^(c + o(1)) with c >= about 0.66. These data cannot tell c < 1 from
+c = 1, which would mean the constraints become asymptotically almost implied by one another.
+
+4. THE MOD-3 EFFECT AND OTHER MODULI
+------------------------------------
+Regression (moduli.py, moduli.txt). y(N) = per-parity cubic + delta_d [d | N], N >= 10:
+* delta_3 = 0.035 +- 0.004, and the rms drops from 0.0215 to 0.0094.
+* The fitted delta_3 varies a little with the window: 0.038 (N >= 10), 0.034 (N >= 14), 0.030 (N >= 18).
+  Decaying forms fit better than a constant: 0.023 (30/N) has rms 0.0072, 0.029 sqrt(30/N) has 0.0075,
+  and a constant has 0.0094.
+* Most of the decay of the raw bump b(N) quoted in the task (+0.104 at N = 9 to +0.006 at N = 30) is the
+  smooth convex background. b(N) for N not divisible by 3 is about -0.03. The difference
+  b(3|N) - b(other) ~ 1.5 delta_3 ~ 0.05 persists to N = 30.
+* N = 2 (mod 3) sits slightly above N = 1 (mod 3): +0.006 +- 0.004.
+* No other modulus shows an effect:
+  - delta_4 = 0.007 +- 0.0055
+  - delta_5 = 0.0065 +- 0.005
+  - delta_7 = -0.0025 +- 0.006
+  - [6|N] and [9|N] add nothing beyond [3|N]
+  - the residue-class averages of b(N) mod 4, 5, 7 and 8 are flat.
+
+Mechanism (dpx.c, dropone.py, droptwo.py, cyclepairs.py, triples.py; exact subset DP, N <= 24).
+Effective coupling inside the full system:
+   J(m,m') = log[ a · a_{-m,m'} / (a_{-m} a_{-m'}) ],
+where a_{-X} counts sequences with the constraints in X removed.
+* For N = 3k the strongest long-range effective couplings are exactly the doubling 2-cycle (k, 2k)
+  and its mirror (k+1, 2k+1):
+    N        9      12     15     18     21     24
+    J(k,2k)  0.080  0.073  0.076  0.057  0.062  0.052   (about 0.26/sqrt N)
+  For N = 3k-1 there is one such pair, (k, 2k), which is its own mirror (0.06-0.08).
+  For N = 3k+1 the analogous pairs are weak (at most 0.03).
+* Sum over the near-2-cycle pairs (cyclepairs.txt):
+  - 3k: 0.12-0.18
+  - 3k-1: 0.08-0.10
+  - 3k+1: 0.055-0.07
+  The ordering 0 > 2 > 1 is the same as in the regression.
+* The conditional single-site factor u_m = log[P(C_m | all others)/w] peaks at the cycle panels when
+  3 | N: m = 4 for N = 9 and 12, m = 6 for N = 15, m = 8 for N = 21 (dropone.txt).
+Arithmetic in prefix form (N = 3k):
+   C_k:  P(2k-1) = 2 P(k-1)          C_2k:  s + P(k-1) = 2 P(2k-1)
+Both constraints involve exactly the same two prefix sets [1,k-1] and [1,2k-1], in either time order.
+If the counts did not change between the two times, these would force P(k-1) = s/3 and P(2k-1) = 2s/3.
+In the doubling form E(2c) = 2E(c), going around the period-2 orbit {N/3, 2N/3} gives E = 4E, so E = 0.
+Valid sequences have small discrepancy, so given the first constraint the second is much more likely.
+That is a positive effective coupling. For N = 3k +- 1 one of the two sets is off by one panel,
+the other constraint's centre, in one of the two time orders, so the loop closes only partly.
+In bare (unconditioned) probabilities this coupling is invisible: kappa(k, 2k) is about 0.004 at N = 12.
+It also does not appear in the Gaussian geometry. It is a renormalised effect of the constrained ensemble.
+Longer cycles:
+  - 7 | N has the 3-cycle {k, 2k, 4k} (and its mirror). Its exact 3-body interaction J3 is at most 0.0025
+    in absolute value at N = 14 and 21, the same as for the same panels at N = 13, 15, 16, 19, 20, 22, 23, 24.
+    The closing pair is not enhanced either.
+  - 5 | N has a 4-cycle and shows nothing.
+  So at these sizes only the 2-cycle matters, which fits the null results for d = 5 and 7.
+Knock-out test (knockout.py): removing the four cycle panels and refitting is too noisy to decide
+(rms 0.05), because the knocked-out geometry itself depends on N mod 3.
+
+FILES
+-----
+pair.py           exact rational pair probabilities and kappa (brute-force checked); kappa_g for abstract windows
+model2.py         exact second-order model up to N = 22 (kappa_cache.txt)
+kappa.c           floating-point pair probabilities for all pairs (./kappa N, ./kappa -g m r m' r')
+pairsum.py        pair sums by class -> pairsum.txt (N <= 33), pairsum56.txt; raw data in kdata/ (not committed)
+continuum.py      K(gamma); continuum_sum.py gives C2
+wallis_exact.py   exact log a_W and the Barnes-G asymptotics
+gauss_mc.py, gauss_large.py, gauss_quenched.py   Gaussian determinant resummation (gauss_*.txt)
+asym.py           asymptotic fits (asym.txt); bumps.py (bumps.txt); moduli.py (moduli.txt)
+dpx.c             exact subset DP with chosen constraints removed
+dropone.py, droptwo.py, cyclepairs.py, triples.py, knockout.py   effective couplings (*.txt)
+classify.py, explore1.py   tables of kappa by geometry
