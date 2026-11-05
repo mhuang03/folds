@@ -1,6 +1,6 @@
 """Generate LRAT certificates for the labelling checks, as Lean `Cert`s (Folds/LabellingSAT.lean).
 
-The encoding mirrors `Folds.LSAT.gen` exactly (clause tags `CTag`, variables `VarTag`):
+The encoding mirrors `Folds.LSAT.gen` (Folds/LabellingSATCore.lean) exactly (clause tags `CTag`, variables `VarTag`):
   y m u            = [c m < u]                              (u = 0..t)
   inLit m v p      = p < r : ( y (m-1-p) (v+1), + )         left window, [c x <= v]
                      p >= r: ( y (m+1+(p-r)) v, - )         right window, [c x >= v]
@@ -11,7 +11,7 @@ The encoding mirrors `Folds.LSAT.gen` exactly (clause tags `CTag`, variables `Va
 The totalizer tree halves [0, 2r); outputs are capped at r+1 (as in labelling2/sat2.py).
 
 Pipeline: CNF -> cadical --lrat (ASCII) -> lrat-trim (ASCII) -> keep the used input clauses,
-renumber clauses (inputs 1..u, then the proof steps) and variables (by first use), emit Lean.
+renumber clauses (inputs 0..u-1, then the proof steps) and variables (by first use), emit Lean.
 
 usage: gen.py N t [--left] [--name NAME]      (writes Lean `def NAME : Cert` to stdout)
 env:   CADICAL, LRAT_TRIM: paths of the binaries (default: in PATH)
@@ -120,9 +120,9 @@ def solve(N, t, left, tmp):
     assert not steps[-1][1], 'no empty clause'
     norig = len(dim)
     used = sorted({h for _, _, hs in steps for h in hs if h <= norig})
-    cid = {h: i + 1 for i, h in enumerate(used)}
+    cid = {h: i for i, h in enumerate(used)}         # ids: inputs 0..u-1, step k: u + k
     for k, (i, _, _) in enumerate(steps):
-        cid[i] = len(used) + k + 1
+        cid[i] = len(used) + k
     inv = {v: g for g, v in var.items()}
     nv = {}
 
@@ -161,6 +161,22 @@ def emit(name, vt, init, stp):
     return '\n'.join(out) + '\n'
 
 
+KIND_TAG = {'lo': 0, 'hi': 1, 'ord': 2, 'tot': 3, 'win': 4}
+
+
+def emit_str(name, vt, init, stp):
+    """Lean `noncomputable def NAME : Cert := lsat_cert% "..."` (Folds/LabellingSATCore.lean)"""
+    def j(xs):
+        return ' '.join(map(str, xs))
+    vts = ['n' if g is None else g[0] + ' ' + j(g[1:]) for g in vt]
+    ins = [j([KIND_TAG[g[0]], *g[1:], *c]) for g, c in init]
+    sts = [j([len(c), *c, *h]) for c, h in stp]
+    assert not stp[-1][0]
+    empty = len(init) + len(stp) - 1
+    body = '#\n'.join([',\n'.join(xs) for xs in (vts, ins, sts)] + [str(empty)])
+    return f'noncomputable def {name} : Cert := lsat_cert% "\n{body}"\n'
+
+
 if __name__ == '__main__':
     N, t = int(sys.argv[1]), int(sys.argv[2])
     left = '--left' in sys.argv
@@ -170,4 +186,4 @@ if __name__ == '__main__':
     sys.stderr.write(f'N={N} t={t} left={left}: {nvars} vars {ncls} clauses -> used {len(init)} '
                      f'clauses, {len(vt) - 1} vars, {len(stp)} steps, '
                      f'{sum(len(h) for _, h in stp)} hints\n')
-    print(emit(name, vt, init, stp))
+    print(emit_str(name, vt, init, stp))

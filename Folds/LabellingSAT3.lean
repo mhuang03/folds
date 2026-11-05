@@ -1,3 +1,4 @@
+import Folds.LabellingSAT
 import Folds.LabellingSAT3Certs
 
 /-!
@@ -15,6 +16,45 @@ are kernel-checked LRAT certificates (`Folds/LabellingSAT3Certs.lean`).
 
 namespace Folds
 namespace LSAT
+
+/-! ## The seven checks, assembled from the kernel-checked certificates -/
+
+theorem noLab_L21_3 : NoLab true 21 3 :=
+  cert_L21_3.sound_of_refutes cert_L21_3_init <|
+    cert_L21_3.refutes_seg cert_L21_3_0 <|
+    cert_L21_3.refutes_end cert_L21_3_end
+
+theorem noLab_F15_3 : NoLab false 15 3 :=
+  cert_F15_3.sound_of_refutes cert_F15_3_init <|
+    cert_F15_3.refutes_seg cert_F15_3_0 <|
+    cert_F15_3.refutes_end cert_F15_3_end
+
+theorem noLab_F16_3 : NoLab false 16 3 :=
+  cert_F16_3.sound_of_refutes cert_F16_3_init <|
+    cert_F16_3.refutes_seg cert_F16_3_0 <|
+    cert_F16_3.refutes_end cert_F16_3_end
+
+theorem noLab_F17_3 : NoLab false 17 3 :=
+  cert_F17_3.sound_of_refutes cert_F17_3_init <|
+    cert_F17_3.refutes_seg cert_F17_3_0 <|
+    cert_F17_3.refutes_end cert_F17_3_end
+
+theorem noLab_F18_3 : NoLab false 18 3 :=
+  cert_F18_3.sound_of_refutes cert_F18_3_init <|
+    cert_F18_3.refutes_seg cert_F18_3_0 <|
+    cert_F18_3.refutes_end cert_F18_3_end
+
+theorem noLab_F19_3 : NoLab false 19 3 :=
+  cert_F19_3.sound_of_refutes cert_F19_3_init <|
+    cert_F19_3.refutes_seg cert_F19_3_0 <|
+    cert_F19_3.refutes_end cert_F19_3_end
+
+theorem noLab_F20_3 : NoLab false 20 3 :=
+  cert_F20_3.sound_of_refutes cert_F20_3_init <|
+    cert_F20_3.refutes_seg cert_F20_3_0 <|
+    cert_F20_3.refutes_end cert_F20_3_end
+
+/-! ## Three labels -/
 
 theorem admBound_three : AdmBound 3 := by
   refine admBound_succ admBound_two (fun hadm ht => ?_)

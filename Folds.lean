@@ -29,6 +29,7 @@ import Folds.SuperExp3
 import Folds.Live2
 import Folds.Live3
 import Folds.Live4
+import Folds.LabellingSATCore
 import Folds.LabellingSAT
 import Folds.LabellingSAT3Certs
 import Folds.LabellingSAT3
