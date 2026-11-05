@@ -47,8 +47,8 @@ fn crt(res: &[u64], mods: &[u64]) -> u128 {
     for (&r, &m) in res.iter().zip(mods) {
         let mm = m as u128;
         let t = ((r as u128 + mm - x % mm) % mm) * inv_mod((prod % mm) as u64, m) as u128 % mm;
-        x += prod * t;
-        prod = prod.checked_mul(mm).expect("CRT modulus product overflows u128");
+        x += prod.checked_mul(t).expect("CRT overflows u128");
+        prod = prod.saturating_mul(mm);
     }
     x
 }
@@ -85,7 +85,22 @@ fn count(n: usize, rule: Rule, mode: Mode, verbose: bool) -> (u128, f64) {
                     eprintln!("  N={} residue mod {} = {} ({:.1}s)", n, m, r, t.elapsed().as_secs_f64());
                 }
             }
-            crt(&res, mods)
+            let x = crt(&res, mods);
+            if res.len() >= 2 {
+                // one redundant modulus: if the value is below the product of all but the
+                // last modulus, dropping the last residue must give the same answer.
+                let y = crt(&res[..res.len() - 1], &mods[..res.len() - 1]);
+                eprintln!(
+                    "  N={} CRT {} with {} moduli, {} with {} ({})",
+                    n,
+                    x,
+                    res.len(),
+                    y,
+                    res.len() - 1,
+                    if x == y { "stable: verified" } else { "NOT stable: add moduli" }
+                );
+            }
+            x
         }
     };
     (v, t.elapsed().as_secs_f64())
@@ -138,6 +153,31 @@ fn main() {
     }
     match args[0].as_str() {
         "check" => check(),
+        // split a long CRT computation over several processes
+        "residue" => {
+            // folds residue <rule> N <16|32> IDX
+            let rule = Rule::parse(&args[1]).unwrap_or_else(|| usage());
+            let n: usize = args[2].parse().unwrap();
+            let w: usize = args[3].parse().unwrap();
+            let q: usize = args[4].parse().unwrap();
+            let chk = Checker::new(n, rule);
+            let t = Instant::now();
+            let (m, r) = if w == 32 {
+                (MOD32[q], dp::count::<u32>(n, &chk, dp::Ring { modulus: MOD32[q] }, verbose))
+            } else {
+                (MOD16[q], dp::count::<u16>(n, &chk, dp::Ring { modulus: MOD16[q] }, verbose))
+            };
+            println!("{} N={} mod {} = {} {:.1}s", rule.name(), n, m, r, t.elapsed().as_secs_f64());
+        }
+        "crt" => {
+            // folds crt <16|32> r0 r1 ...  (residues for moduli 0, 1, ...)
+            let w: usize = args[1].parse().unwrap();
+            let res: Vec<u64> = args[2..].iter().map(|s| s.parse().unwrap()).collect();
+            let mods: &[u64] = if w == 32 { &MOD32[..res.len()] } else { &MOD16[..res.len()] };
+            let x = crt(&res, mods);
+            let y = crt(&res[..res.len() - 1], &mods[..res.len() - 1]);
+            println!("{} ({})", x, if x == y { "stable: verified" } else { "NOT stable: add moduli" });
+        }
         "stats" => {
             if args.len() < 3 {
                 usage();
