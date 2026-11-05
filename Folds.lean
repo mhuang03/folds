@@ -18,3 +18,4 @@ import Folds.WindowRule
 import Folds.Asymptotics
 import Folds.Descents
 import Folds.Live
+import Folds.Independence
