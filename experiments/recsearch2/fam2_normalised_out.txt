@@ -1,0 +1,77 @@
+sequence                   mode   boxes terms  best excess (r,d,K,E)   hits
+a/n!                       P-rec     57    38  +0 (1,0,2,37)          0
+a/n!                       P-rec     46    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a/n!                       C-fin     14    38  +0 (1,0,2,37)          0
+a/n!                       C-fin     13    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a n!/(2n)!                 P-rec     57    38  +0 (1,0,2,37)          0
+a n!/(2n)!                 P-rec     46    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a n!/(2n)!                 C-fin     14    38  +0 (1,0,2,37)          0
+a n!/(2n)!                 C-fin     13    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a^2/n!                     P-rec     57    38  +0 (1,0,2,37)          0
+a^2/n!                     P-rec     46    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a^2/n!                     C-fin     14    38  +0 (1,0,2,37)          0
+a^2/n!                     C-fin     13    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a/n^n                      P-rec     57    38  +0 (1,0,2,37)          0
+a/n^n                      P-rec     46    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a/n^n                      C-fin     14    38  +0 (1,0,2,37)          0
+a/n^n                      C-fin     13    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a/[n]_2!                   P-rec     57    38  +0 (1,0,2,37)          0
+a/[n]_2!                   P-rec     46    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+a/[n]_2!                   C-fin     14    38  +0 (1,0,2,37)          0
+a/[n]_2!                   C-fin     13    38  +0 (1,0,2,31)          0   [first 6 eqs dropped]
+r=a(n)/a(n-1)              P-rec     57    37  +0 (1,0,2,36)          0
+r=a(n)/a(n-1)              P-rec     42    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r=a(n)/a(n-1)              C-fin     14    37  +0 (1,0,2,36)          0
+r=a(n)/a(n-1)              C-fin     12    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+Delta r                    P-rec     55    36  +0 (1,1,4,35)          0
+Delta r                    P-rec     40    36  +0 (1,0,2,29)          0   [first 6 eqs dropped]
+Delta r                    C-fin     14    36  +0 (2,0,3,34)          0
+Delta r                    C-fin     12    36  +0 (1,0,2,29)          0   [first 6 eqs dropped]
+n a(n-1)/a(n)              P-rec     57    37  +0 (1,0,2,36)          0
+n a(n-1)/a(n)              P-rec     42    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+n a(n-1)/a(n)              C-fin     14    37  +0 (1,0,2,36)          0
+n a(n-1)/a(n)              C-fin     12    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r/n                        P-rec     57    37  +0 (1,0,2,36)          0
+r/n                        P-rec     42    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r/n                        C-fin     14    37  +0 (1,0,2,36)          0
+r/n                        C-fin     12    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r/n - 1                    P-rec     57    37  +0 (1,1,4,36)          0
+r/n - 1                    P-rec     42    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r/n - 1                    C-fin     14    37  +0 (2,0,3,35)          0
+r/n - 1                    C-fin     12    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r/(2^n-1)                  P-rec     57    37  +0 (1,0,2,36)          0
+r/(2^n-1)                  P-rec     42    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r/(2^n-1)                  C-fin     14    37  +0 (1,0,2,36)          0
+r/(2^n-1)                  C-fin     12    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+r(n)/r(n-1)                P-rec     55    36  +0 (1,0,2,35)          0
+r(n)/r(n-1)                P-rec     40    36  +0 (1,0,2,29)          0   [first 6 eqs dropped]
+r(n)/r(n-1)                C-fin     14    36  +0 (1,0,2,35)          0
+r(n)/r(n-1)                C-fin     12    36  +0 (1,0,2,29)          0   [first 6 eqs dropped]
+a(n)/a(fl n/2)^2           P-rec     57    37  +0 (1,0,2,36)          0
+a(n)/a(fl n/2)^2           P-rec     42    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+a(n)/a(fl n/2)^2           C-fin     14    37  +0 (1,0,2,36)          0
+a(n)/a(fl n/2)^2           C-fin     12    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+a(n)/(a(fl)a(cl))          P-rec     57    37  +0 (1,0,2,36)          0
+a(n)/(a(fl)a(cl))          P-rec     42    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+a(n)/(a(fl)a(cl))          C-fin     14    37  +0 (1,0,2,36)          0
+a(n)/(a(fl)a(cl))          C-fin     12    37  +0 (1,0,2,30)          0   [first 6 eqs dropped]
+a(2n)/a(n)^2               P-rec     16    19  +0 (1,0,2,18)          0
+a(2n)/a(n)^2               P-rec      6    19  +0 (1,0,2,12)          0   [first 6 eqs dropped]
+a(2n)/a(n)^2               C-fin      6    19  +0 (1,0,2,18)          0
+a(2n)/a(n)^2               C-fin      3    19  +0 (1,0,2,12)          0   [first 6 eqs dropped]
+a(2n+1)/(a(n)a(n+1))       P-rec     14    18  +0 (1,0,2,17)          0
+a(2n+1)/(a(n)a(n+1))       P-rec      5    18  +0 (1,0,2,11)          0   [first 6 eqs dropped]
+a(2n+1)/(a(n)a(n+1))       C-fin      6    18  +0 (1,0,2,17)          0
+a(2n+1)/(a(n)a(n+1))       C-fin      3    18  +0 (1,0,2,11)          0   [first 6 eqs dropped]
+r(2n)                      P-rec     16    19  +0 (1,0,2,18)          0
+r(2n)                      P-rec      6    19  +0 (1,0,2,12)          0   [first 6 eqs dropped]
+r(2n)                      C-fin      6    19  +0 (1,0,2,18)          0
+r(2n)                      C-fin      3    19  +0 (1,0,2,12)          0   [first 6 eqs dropped]
+r(2n+1)                    P-rec     14    18  +0 (1,0,2,17)          0
+r(2n+1)                    P-rec      5    18  +0 (1,0,2,11)          0   [first 6 eqs dropped]
+r(2n+1)                    C-fin      6    18  +0 (1,0,2,17)          0
+r(2n+1)                    C-fin      3    18  +0 (1,0,2,11)          0   [first 6 eqs dropped]
+a(n+1)a(n-1)-a(n)^2        P-rec     55    36  +0 (1,1,4,35)          0
+a(n+1)a(n-1)-a(n)^2        P-rec     40    36  +0 (1,0,2,29)          0   [first 6 eqs dropped]
+a(n+1)a(n-1)-a(n)^2        C-fin     14    36  +0 (2,0,3,34)          0
+a(n+1)a(n-1)-a(n)^2        C-fin     12    36  +0 (1,0,2,29)          0   [first 6 eqs dropped]
