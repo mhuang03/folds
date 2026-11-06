@@ -1,0 +1,189 @@
+MAXIMUM NUMBER OF VALID MOVES FOR EVEN |S|                          (experiments/maxmoves/)
+=========================================================================================
+
+Notation as in ../pathlemma/PROOFS.txt.  S ⊆ [1, N], s = |S|, P(j) = #{x in S : x <= j},
+P~(j) = P(j mod N) + floor(j/N) s.  A free panel m is valid iff P~(2m-1) = 2 P(m-1)
+(semiStep_iff_cyclicStep).  V(S) = number of valid free panels = |moves N S|.
+"[Lean]" = Folds/MaxMoves.lean (no sorry, no native_decide).  "[paper]" = proved here.
+"[data]" = computed with the tools in this directory.
+
+
+SUMMARY
+-------
+The conjecture "N even, |S| even, |S| >= 2  ==>  V(S) <= ceil(2N/3)" is FALSE as stated, but
+true in the corrected form below.
+
+(A) [Lean, any N]  |S| = 2 (mod 4)  ==>  3 V(S) <= 2N,  i.e.  V(S) <= floor(2N/3).
+    (card_moves_two_mod_four.)  Tight for every N <= 24 (both parities), e.g. S = {N/3, 2N/3}.
+(B) [paper, any N]  |S| = 2^a t, t odd, a >= 1  ==>  (a+2) V(S) <= (a+1) N.
+    (a = 1 is (A); a = 0 with the same method gives only V <= (N + s)/2, the odd-N bound.)
+(C) [data] (A) fails for |S| = 0 (mod 4), even for REACHABLE sets:
+        N = 40, S = {6, 12, 24, 25}  (valid order 25, 12, 6, 24):  V = 27 = ceil(80/3) > 26,
+        N = 60, S = {8, 17, 34, 35}  (valid order 35, 17, 34, 8):  V = 41 > ceil(120/3) = 40,
+        N = 150, s = 4: max V = 105 = 0.70 N.
+    In the continuum limit the supremum for s = 4 is 5/7 = 0.714 (S = {3/7, 3/7, 5/7, 6/7}:
+    a doubling orbit mod 7 with a double point), for s = 8 it is >= 0.732.  The exhaustive data
+    of ../pathlemma (N <= 26) show 2N/3 + O(1) only because N is too small to see it.
+(D) Consequence for the tree bound (Lean: semiCount_even_le_prod_two_mod_four,
+    semiCount_odd_le_prod_two_mod_four; constants: constants.py):
+        a(N) <= N! exp(-(c + o(1)) N),
+        N even:  c = 0.096574 (old)  ->  0.114607 with (A)  ->  0.121540 with (B)
+        N odd :  c = 0.058892 (old)  ->  0.076924 with (A)  ->  0.083857 with (B)
+    (A) adds 0.018033 for either parity; all levels a >= 2 of (B) together add 0.006933.
+
+
+=========================================================================================
+1. DATA                                                     [extremal.c, fixeds.c, reach4.c]
+=========================================================================================
+Max of V over ALL S with |S| even >= 2 (extremal.c, exhaustive):
+     N        6   8  10  12  14  16  18  20  (22  24  26 from ../pathlemma/maxv.c)
+   max V      4   5   6   8   9  10  12  13   14  16  17      = floor(2N/3)
+check2adic.c (exhaustive, every N in [4, 24], both parities): no S violates (B); for
+s = 2 (mod 4) the maximum is exactly floor(2N/3) for every N in [4, 24] except N = 9, 15, 21
+(N = 3 mod 6, where it is floor(2N/3) - 1).
+fixeds.c / reach4.c, s = 4 (exhaustive over all 4-sets):
+     N      20  24  30  36  40  48  60  72  90  120  150
+   max V    13  16  20  24  27  32  41  50  62   84  105
+ floor(2N/3)13  16  20  24  26  32  40  48  60   80  100
+The maximisers are reachable in every case checked (N = 40, 48, 60, 72, 90).
+s = 6 (fixeds.c): N = 30, 40, 50, 60 give 18, 26, 32, 39, all <= floor(2N/3), as (A) says.
+Extremal sets (s = 2 mod 4): S = {N/3, 2N/3}-like pairs, e.g. N = 18, S = {6, 13}, valid
+{1,2,3, 7..12, 16,17,18}; for s = 4 at N = 18: {4, 7, 12, 15}; for s = 6 at N = 18:
+{2, 5, 8, 11, 14, 17} (every free panel valid, V = f = 2N/3).
+
+
+=========================================================================================
+2. THE GAP DECOMPOSITION                                                [Lean + paper]
+=========================================================================================
+Let x_1 < ... < x_s be the elements of S.  The GAP of a panel m in [1, N] is k = P(m-1) in
+[0, s];  W_k = {m : P(m-1) = k} = [x_k + 1, x_{k+1}] (x_0 = 0, x_{s+1} := N for k = s) is an
+interval of w_k panels (gapSet), sum_k w_k = N (sum_gapSet), and for k < s it contains exactly
+one panel of S (x_{k+1}); so the free panels of gap k number w_k - 1 (k < s), w_s (k = s).
+Let z_k = number of valid panels in gap k (validIn), V = sum_k z_k (card_moves_eq_sum).
+
+2.1 Doubled positions.  For 1 <= m <= N:
+      2m <= N:  P~(2m-1) = P(2m-1)       = gap of the panel 2m,
+      2m >  N:  P~(2m-1) = P(2m-N-1) + s = s + gap of the panel 2m - N
+(cycBelow_two_mul_lo/hi).  So a valid panel of gap k has its doubled panel (2m, or 2m - N)
+in gap 2k (if 2m <= N) or in gap 2k - s (if 2m > N).  In particular gap k sends its valid
+panels to the "doubled gap" 2k mod s, read on the circle: residue 0 is the wrap gap
+W_s ∪ W_0 (sizes add: delta_0 = w_0 + w_s), and residue j != 0 is W_j.
+
+2.2 Half count.  The doubled panels of distinct m differ by >= 2, and a gap is an interval,
+so at most (|W| + 1)/2 panels m have their doubled panel in a given gap W (two_mul_card_le:
+if the doubled panels of min D and max D are in W, all panels between are, so
+2(max - min) + 1 <= |W|).  For gap 0 even 2 z_0 <= w_0, since then 2m - 1 is in W_0 as well
+(two_mul_card_le_of_pairs).  Hence, writing r(k) = 2k mod s:
+      2 z_0 <= w_0;   2 z_s <= w_s + 1;   2 z_{s/2} <= w_s + w_0 + 2 (s even, two halves);
+      2 z_k <= w_{r(k)} + 1   for 1 <= k <= s - 1, 2k != s;
+and trivially
+      z_k <= w_k - 1   for k < s     (validIn_card_lt).
+These are the only facts used.  Note they are local in the GAP structure; the positions of
+the gaps on the circle play no further role.  (That is why the bound is not tight for
+a >= 2: the true maximum needs positional information; see 5.)
+
+2.3 Continuum version.  With gap lengths gamma_j (sum 1, gamma_0 the gap through 0) the
+valid measure is sum_k |J_k ∩ J_{2k}/2| <= gamma_0/2 + sum_{k=1}^{s-1} min(gamma_k,
+gamma_{2k mod s}/2).  gaplp.py maximises the right side by LP: 1/2 (s odd), 2/3 (s = 2 mod 4),
+3/4 (s = 4 mod 8), 4/5 (s = 8 mod 16), 5/6 (s = 16 mod 32): exactly (a+1)/(a+2) for
+v2(s) = a.  The discrete proofs below are the LP duals.
+
+
+=========================================================================================
+3. PROOF OF (A): |S| = 2 (mod 4)  ==>  3 V <= 2 N                [Lean: arith_two_mod_four]
+=========================================================================================
+Let s = 2u, u odd.  For k in [0, u-1] the gaps k and k + u have the same doubled residue 2k
+and OPPOSITE parities (u odd).  Write o(k) for the odd one (o(0) = u).
+  * k odd (k < s):  3 z_k = 2 z_k + z_k <= 2(w_k - 1) + z_k.
+  * k even:         3 z_k.
+Then bound the remaining single z's by the doubled gap.  Doubling everything:
+  pair {k, k+u}, 1 <= k <= u-1, r = 2k:
+      6 z_odd + 6 z_even <= 4(w_o - 1) + (w_r + 1) + 3(w_r + 1) = 4 w_o + 4 w_r;
+  triple {0, u, 2u}:
+      6 z_0 + 6 z_u + 6 z_{2u} <= 3 w_0 + [4(w_u - 1) + (w_s + w_0 + 2)] + 3(w_s + 1)
+                                = 4 w_0 + 4 w_u + 4 w_s + 1.
+As k runs over [0, u-1], o(k) runs over the odd numbers in [1, 2u-1] and 2k (with 2u) over the
+even numbers in [0, 2u].  Summing:  6 V <= 4 sum_k w_k + 1 = 4N + 1, so 3V <= 2N.   QED
+(Lean: card_moves_two_mod_four (hnd) (hS) (hs : S.length % 4 = 2) : 3 * (moves N S).card ≤ 2 * N,
+for every N; the bijection k -> o(k) is Finset.sum_nbij'.)
+Remarks.  No parity of N is used.  Equality forces z_k = w_k - 1 (all free panels valid) for
+odd k and z_k = (w_{2k}+1)/2 for even k: e.g. s = 2, S = {N/3, 2N/3}.
+
+
+=========================================================================================
+4. PROOF OF (B): v2(|S|) = a >= 1  ==>  (a+2) V <= (a+1) N                         [paper]
+=========================================================================================
+Let s = 2^a t (t odd), eps = 1/(a+2), c = 1 - eps.  The LEVEL of k in [1, s-1] is
+L(k) = min(v2(k), a).  The doubling r(k) = 2k mod s raises the level by one below a.  A residue
+j of level L in [1, a-1] has two preimages k = j/2, j/2 + s/2, both of level L - 1; a nonzero
+residue of level a has one preimage of level a - 1 and one (nonzero) of level a; residue 0 has
+the preimages 0 (the boundary gaps) and s/2 (level a - 1).  Odd residues have no preimage.
+Weights:  alpha_L = 1 - (L+1) eps  (L < a),   alpha_a = 0.  For each k in [1, s-1]:
+      z_k <= alpha (w_k - 1) + (1 - alpha) (w_{r(k)} + 1)/2       (convex combination of 2.2)
+(for k = s/2 the second bound is (w_0 + w_s + 2)/2), and z_0 + z_s <= (w_0 + w_s + 1)/2.
+Charge received by a gap of residue j (coefficient of w_j, resp. of delta_0 = w_0 + w_s):
+   j odd:                 alpha_0 = 1 - eps;
+   level L in [1, a-1]:   alpha_L + 2 (1 - alpha_{L-1})/2 = 1 - (L+1) eps + L eps = 1 - eps;
+   level a, j != 0:       0 + (1 - alpha_{a-1})/2 + (1 - 0)/2 = (1 + a eps)/2 = 1 - eps;
+   residue 0:             1/2 + (1 - alpha_{a-1})/2 = (1 + a eps)/2 = 1 - eps.
+So V <= (1 - eps) N + E, where the constant E collects the -alpha and +(1-alpha)/2 terms:
+with n_L = 2^{a-L-1} t residues of level L < a and t - 1 nonzero residues of level a,
+   E = 1/2 + (t-1)/2 + (1 - alpha_{a-1})/2 + sum_{L<a} n_L (1 - 3 alpha_L)/2
+     = t/2 + a eps/2 + (t/2) [ -2^{a+1} + 2 + 3 eps (2^{a+1} - a - 2) ].
+a = 1: bracket = -1, E = 1/6.  a >= 2: bracket <= 2^{a+1}(1-a)/(a+2) - 1 <= -3, so E < 0.
+Hence (a+2) V <= (a+1) N + (a+2) E with (a+2) E <= 1/2, and by integrality (a+2)V <= (a+1)N.
+(a = 1 reproduces section 3.)  check2adic.c confirms (B) exhaustively for N <= 24.
+For a = 0 (s odd) residue 0 is its own only preimage and the best weights are alpha = 0:
+V <= (N + s)/2, which is the odd-N parity bound (for even N the antipodal argument of
+Growth.lean gives the better N/2).
+
+
+=========================================================================================
+5. HOW FAR FROM THE TRUTH                                                 [contopt.py]
+=========================================================================================
+Continuum suprema of the valid measure (random restarts + Nelder-Mead, exact objective):
+     s     1     2     3     4      6      8
+   sup   1/2   2/3   1/2   5/7   2/3   >= 0.732      (gap-LP bound (a+1)/(a+2): 3/4, 4/5)
+The s = 4 optimum S = {3/7, 3/7, 5/7, 6/7} is the doubling orbit {3, 6, 5}/7 with 3/7
+doubled; the s = 8 optimum also uses clustered points on a doubling orbit (mod 15?).
+Guess: sup over v2(s) = a of the valid fraction = 1 - 2^{a-1}/(2^{a+1} - 1) (2/3, 5/7, 11/15),
+tending to 3/4.  Proving this needs positional information (the overlaps
+J_k ∩ J_{2k}/2, not just their lengths); it would add at most ~0.003 to the constants.
+
+
+=========================================================================================
+6. THE NEW CONSTANTS                                                    [constants.py]
+=========================================================================================
+Per level class the deficit sum_i ln((N-i)/B_i) / N tends to
+   density * int_0^{x*} ln((1-x)/b(x)) dx,   x* = where b(x) = 1 - x.
+   odd i, N even (b = 1/2, density 1/2)                       0.096574
+   odd i, N odd  (b = (1+x)/2, x* = 1/3, density 1/2)         0.058892
+   i = 2 mod 4   (b = 2/3, x* = 1/3, density 1/4)             0.018033
+   v2(i) = a     (b = (a+1)/(a+2), density 2^{-a-1}), a >= 2  0.006933 in total
+       (a = 2: 0.004711, a = 3: 0.001446, a = 4: 0.000489, ...)
+Finite-N check (constants.py, ln(N!/prod B_i)/N): N = 100000: 0.11461 (A), 0.12154 (A+B);
+N = 100001: 0.07692, 0.08386.
+So, rigorously (Lean for the product, the integral is elementary):
+      a(N) <= N! e^{-(0.1146 + o(1)) N}   (N even),    a(N) <= N! e^{-(0.0769 + o(1)) N}  (N odd),
+and with (B) on paper 0.1215 and 0.0838.
+
+
+=========================================================================================
+7. FILES
+=========================================================================================
+extremal.c    exhaustive over all S (N <= 30): max V per size, maximisers
+fixeds.c      exhaustive over all S of one size s <= 6 (larger N)
+reach4.c      as fixeds.c, also the max over reachable S (some order is a valid prefix)
+check2adic.c  exhaustive check of (B) and of floor(2N/3) for s = 2 mod 4, one N
+orders.py     V(S) and the valid orders of a given S
+gaplp.py      the gap-length LP of 2.3
+contopt.py    continuum maximum of the valid measure for fixed s
+constants.py  the constants of section 6
+Lean: Folds/MaxMoves.lean
+  sum_range_two_mul_add_one, sum_range_two_mul, arith_two_mod_four, gapSet, validIn,
+  below_mono, below_le_length, gapSet_convex, two_mul_card_le, two_mul_card_le_of_pairs,
+  cycBelow_two_mul_lo, cycBelow_two_mul_hi, cyc_of_mem_moves, exists_mem_gapSet,
+  validIn_card_le, validIn_card_lt, validIn_lo_card, validIn_hi_card, validIn_hi_empty,
+  validIn_zero_card, validIn_card_split, card_moves_eq_sum, sum_gapSet,
+  card_moves_two_mod_four, semiCount_even_le_prod_two_mod_four,
+  semiCount_odd_le_prod_two_mod_four, moves_sixty (the counterexample for s = 0 mod 4).
