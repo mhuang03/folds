@@ -31,3 +31,12 @@ for N in [400, 1000, 4000, 10000]:
         S += [y for y in range(h + 1, N + 1) if math.floor(r2 * (y - h)) > math.floor(r2 * (y - h - 1))]
         s, V, f, disc, rms = stats(N, S)
         print("N=%5d r1=%.2f r2=%.2f |S|=%5d  V/(N-|S|)=%.3f  disc=%7.1f  rms J=%8.1f" % (N, r1, r2, s, V / f, disc, rms))
+
+# Explicit family (Prop. 3.1): N = 8n, S = {2, 4, ..., 4n} ∪ {4n+4, 4n+8, ..., 8n}.
+print("explicit family N = 8n, S = evens of [1,4n] + multiples of 4 in (4n, 8n]:")
+for n in [10, 100, 1000]:
+    N = 8 * n
+    S = list(range(2, 4 * n + 1, 2)) + list(range(4 * n + 4, 8 * n + 1, 4))
+    s, V, f, disc, rms = stats(N, S)
+    print("  N=%5d |S|=%5d free=%5d V=%5d (>= n = %d)  V/free=%.3f  disc=%.1f (N/16=%.1f)  rms J=%.1f"
+          % (N, s, f, V, n, V / f, disc, N / 16, rms))
