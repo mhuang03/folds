@@ -1,0 +1,46 @@
+semi F(N,1)                             [2, 4, 10, 15, 75, 238, 916, 2527] -> no match
+semi F(N,2)                             [2, 3, 7, 18, 37, 135, 466, 1564] -> no match
+semi F(N,3)                             [3, 6, 20, 44, 141, 441, 1706, 6169] -> no match
+semi F(N,mid)                           [2, 3, 6, 20, 64, 209, 696, 2546] -> no match
+semi F(2n+1,n+1)                        [2, 6, 64, 696, 8630, 157248, 4604326, 122464358] -> no match
+semi F(N,N/2) even                      [3, 20, 209, 2546, 44392, 901747, 23526367, 817054376] -> no match
+semi F(N,mid-1)                         [2, 7, 18, 44, 141, 635, 2207, 8466] -> no match
+semi F2(N,1,N)                          [2, 0, 0, 0, 24, 0, 76, 0] -> no match
+semi F2(N,1,N-1)                        [2, 2, 5, 5, 16, 48, 135, 189] -> no match
+semi F2(N,N/2+..) first nonzero after 1 [2, 2, 5, 10, 44, 90, 373, 1024] -> no match
+semi E-O first panel odd N              [20, 148, 2312, 56344, 1680608, 41779316, 1654712136, 53436724154] -> no match
+semi T(N,N-2)                           [3, 8, 24, 80, 240, 1008, 3948, 16696] -> no match
+semi T(N,N-3)                           [4, 12, 40, 138, 554, 2160, 9300, 38896] -> no match
+semi T(N,N-2)-a(N)? (a - T(N,N-2))      [2, 4, 16, 16, 112, 308, 1182, 3610] -> no match
+semi reach total                        [4, 8, 15, 30, 58, 110, 222, 441] -> no match
+semi reach(N,N-2)                       [3, 5, 10, 14, 20, 27, 36, 44] -> no match
+semi reach(N,3)                         [4, 10, 18, 30, 46, 69, 94, 128] -> no match
+semi reach(N,4)                         [5, 14, 28, 58, 100, 158, 240, 355] -> no match
+semi reach(N,mid)                       [2, 3, 5, 8, 18, 30, 58, 100] -> no match
+semi dead total                         [2, 4, 7, 12, 21, 39, 62, 122] -> no match
+semi alive total                        [4, 8, 14, 28, 54, 92, 192, 378] -> no match
+semi alive(N,3)                         [4, 8, 18, 23, 44, 63, 92, 120] -> no match
+semi nonzero F2 count                   [2, 4, 6, 12, 16, 22, 30, 40] -> no match
+sym  F(N,1)                             [2, 2, 5, 10, 28, 24, 50, 124] -> ['A296530 Number of non-averaging permutations of [n] with first element n.']
+sym  F(N,2)                             [2, 3, 5, 6, 10, 26, 50, 50] -> no match
+sym  F(N,3)                             [3, 6, 13, 16, 36, 62, 134, 146] -> no match
+sym  F(N,mid)                           [2, 3, 6, 13, 32, 51, 76, 161] -> ['A296531 Number of non-averaging permutations of [n] with first element ceiling']
+sym  F(2n+1,n+1)                        [2, 6, 32, 76, 386, 2280, 12828, 27656] -> no match
+sym  F(N,N/2) even                      [3, 13, 51, 161, 903, 5018, 19720, 48788] -> no match
+sym  F(N,mid-1)                         [2, 5, 6, 16, 36, 74, 138, 345] -> no match
+sym  F2(N,1,N)                          [2, 0, 0, 0, 24, 0, 0, 0] -> no match
+sym  F2(N,1,N-1)                        [2, 0, 5, 0, 0, 0, 50, 0] -> no match
+sym  F2(N,N/2+..) first nonzero after 1 [2, 2, 5, 10, 28, 24, 50, 124] -> ['A296530 Number of non-averaging permutations of [n] with first element n.']
+sym  E-O first panel odd N              [] -> ['(too short)']
+sym  T(N,N-2)                           [3, 8, 20, 52, 118, 290, 570, 1206] -> no match
+sym  T(N,N-3)                           [4, 12, 32, 82, 208, 432, 884, 1904] -> no match
+sym  T(N,N-2)-a(N)? (a - T(N,N-2))      [2, 0, -4, -14, -8, -74, -140, -298] -> no match
+sym  reach total                        [4, 8, 15, 28, 51, 86, 142, 232] -> no match
+sym  reach(N,N-2)                       [3, 5, 8, 11, 12, 13, 15, 16] -> no match
+sym  reach(N,3)                         [4, 8, 14, 22, 32, 45, 60, 80] -> no match
+sym  reach(N,4)                         [5, 11, 20, 34, 53, 75, 108, 151] -> no match
+sym  reach(N,mid)                       [2, 3, 5, 8, 14, 22, 34, 53] -> no match
+sym  dead total                         [2, 4, 10, 15, 30, 44, 80, 113] -> no match
+sym  alive total                        [4, 8, 14, 24, 40, 52, 72, 92] -> no match
+sym  alive(N,3)                         [4, 6, 10, 11, 12, 12, 14, 16] -> no match
+sym  nonzero F2 count                   [2, 4, 6, 8, 10, 10, 12, 14] -> no match

@@ -1,10 +1,271 @@
-STRUCTURE OF THE REFINED SEQUENCES  (experiments/structure2/)   -- WORK IN PROGRESS
-================================================================================
-Plan: refined triangles F(N,m), F2(N,m1,m2), T(N,k), reachable/live counts (from
-rust `folds stats semi N`, N <= 26); ratio / growth-correction sequences; prime
-factorisations of a(1..38); cross-sequence relations (PSLQ/LLL); comparison with
-the symmetric analogue A003407.
+STRUCTURE OF THE REFINED SEQUENCES                                   (experiments/structure2/)
+==========================================================================================
+Question: are the refined objects (first-panel counts, first-pair counts, prefix counts,
+reachable sets) nicer than a(N)?  What are the exact shapes of r(N) = a(N)/a(N-1) and of the
+correction y(N) = ln a(N) - ln a_W(N)?  How do the prime factors of a(N) behave?  Are there
+exact cross-sequence relations?  All runs used 1-2 cores and < 3 GB of RAM.
 
-Note (trivial): L(N,m) = F(N,m) by reversal (a valid sequence reversed is valid),
-so the "ending with m" triangle is the same as the "starting with m" one.
-Existing stats for N <= 24 are in rust/results/stats/semi_N.txt.
+Notation.  F(N,m) = #valid sequences starting with panel m;  L(N,m) = #ending with m;
+F2(N,m,x) = #starting with (m,x);  T(N,k) = #valid k-prefixes;  R(N,k) = #reachable k-sets;
+A(N,k) = #alive k-sets (reachable and completable);  c(N) = self-dual count;  J, I as in
+../jseq/NOTES.txt;  s(N) = the symmetric count (A003407).  "[proven]" = proved here or in
+Lean (Folds/Structure2.lean), "[data]" = checked on the stated range, "[conj]" = conjecture.
+
+SUMMARY
+ 1. L(N,m) = F(N,m) (reversal), F(N,m) = F(N,N+1-m) (mirror), and for even N exactly half of
+    the valid sequences start with an odd panel.  [proven, Lean]  The (1,x) starts are exactly
+    those with 2x >= N+2.  [proven, Lean]  Every other exact identity tested failed.
+ 2. THE FIRST-PANEL LAW HAS A LIMIT SHAPE.  Var(first panel)/N^2 = 0.0574 +- 0.0001 for every
+    N = 18..30 (no drift).  The law is explained to total variation ~0.025 by the Wallis
+    (independence) heuristic P(last = m) ∝ 1/w(r_m), whose continuum limit is the density
+    h(x) = (3/sqrt 2) sqrt(min(x,1-x)) with variance 1/17.5 = 0.05714.  [data / conj]
+    Only the first three panels at each edge deviate strongly (ratio to Wallis 0.60, 0.91,
+    0.86 at m = 1, 2, 3; N = 30).  N*F(N,1)/a(N) -> 0 slowly (0.37 at N = 12, 0.20 at N = 30).
+ 3. SYMMETRIC CASE (A003407): exactly half of the 3-AP-free sequences start with an odd panel,
+    for EVERY N <= 28, odd N included.  [conj, data N <= 28]  For odd N the k-th panel is
+    parity-balanced for every step k <= (N+1)/4 (N <= 11, brute force).  In the semi case
+    this balance fails for every odd N >= 7.  sym F(N,1) and F(N,ceil(N/2)) are OEIS
+    A296530, A296531 (consistency check of the sym data).
+ 4. y(N) = ln a - ln a_W  =  smooth  -  0.081*[N odd]  +  0.67*[3|N]/N  +  noise(sd 0.008)
+    on N = 10..38.  The parity offset is a CONSTANT (not decaying); the 3|N bonus is better fit
+    by 0.67/N than by a constant (AIC -273 vs -266).
+ 5. r(N)/N is not alpha + beta/ln N with alpha > 0: on the SMC estimates to N = 4096,
+    (r/N)*ln N falls slowly, 0.96 (N ~ 35) -> 0.83 (N ~ 2900), i.e. r(N) ~ N/(kappa ln N) with
+    kappa slowly increasing, effective r/N ~ (ln N)^{-1.18} over 35..4096.
+ 6. Prime factors of a(N): typical of random integers; no prime p <= 50 divides a(N) on a
+    residue class mod q <= 12 beyond 2 and 4 | a(N) (N = 3 mod 4) (already proven).
+ 7. No exact linear relation with polynomial coefficients among a, c, J, I, F(N,1), F(N,2),
+    F(N,mid), T(N,N-2), T(N,N-3), R, F2(N,1,N), the semi parity defect E-O, s, sym F(N,1):
+    1838 overdetermined searches (>= 4 spare equations each), none found.
+ 8. R(N,k) (reachable sets by size) is log-concave in k for every N <= 30.  [conj]  (Not
+    real-rooted; the symmetric analogue is not log-concave from N = 8.)
+
+Files
+ common.py      loaders: a, s (semi_counts.txt), c (../arith), `folds stats` outputs
+ runstats.sh    `folds stats semi|sym N` -> data/stats_N.txt (semi 25..30), data/symstats_N.txt
+                (sym 2..28).  semi N <= 24 are in ../../rust/results/stats/.  N = 30 takes ~1 min.
+ triangles.py   tables of section 1 (data/tri_semi.txt, data/tri_sym.txt)
+ firstlaw.py    the first-panel law vs the Wallis heuristic (data/firstlaw_out.txt)
+ parity_pos.py  brute force: parity balance of the k-th panel, sym and semi, N <= 11
+ rowpolys.py    real-rootedness / log-concavity / alternating sums of rows (data/rowpolys_out.txt)
+ ratios.py      r(N), y(N), model selection, SMC interval rates (data/ratios_out.txt)
+ factor.py      factorisations, small-prime statistics, 2-adic valuations (data/factor_out.txt)
+ relations.py   exact nullspace search for linear relations (data/relations_out.txt)
+ oeis2.py       OEIS lookups of columns, diagonals and derived sequences (data/oeis_out.txt)
+
+
+1. REFINED TRIANGLES
+--------------------
+1.1 Data.  F(N,m) for m <= ceil(N/2) (the rest by mirror symmetry):
+   N  F(N,1..ceil(N/2))
+   5  4 7 6
+   6  10 18 20
+   7  15 37 44 64
+   8  75 135 141 209
+   9  238 466 441 635 696
+  10  916 1564 1706 2207 2546
+  11  2527 5603 6169 8400 8466 8630
+  12  11959 27026 32261 35869 40231 44392
+  13  44193 97183 107241 158201 160938 163784 157248
+  14  227118 478329 574325 765481 816246 820708 901747
+ Full rows, F2, T(N,k), R(N,k), A(N,k) (N <= 26), dead-end sets: rust/results/stats/semi_N.txt
+ (N <= 24) and data/stats_N.txt (N = 25..30).
+
+1.2 Exact facts.  [proven; Lean: Folds/Structure2.lean]
+ * L(N,m) = F(N,m): reversal is a bijection on valid sequences.  So the "ending with m"
+   triangle is the same object as the "starting with m" one.
+ * F(N,m) = F(N,N+1-m) (mirror).
+ * For even N: #{first panel odd} = #{first panel even} = a(N)/2 (the mirror swaps parity
+   when N+1 is odd).  For odd N the mirror preserves parity and the balance FAILS in the semi
+   case: E - O = #even-first - #odd-first =
+     20, 148, 2312, 56344, 1680608, 41779316, 1654712136, 53436724154, 2559348278480,
+     146989716562612, 7818662696900268, 522220844799116936   (N = 7, 9, ..., 29),
+   (E-O)/a = 0.078, 0.035, 0.033, 0.035, 0.035, 0.028, 0.030, 0.021, 0.022, 0.022, 0.019, 0.019,
+   slowly decreasing.  For N = 3, 5 it is 0.  Odd-first sequences are rarer.  Not in OEIS.
+ * F2(N,1,x) > 0 only if 2x >= N+2 (proven: panel 1 lies in the left arm of x iff 2x <= N+1),
+   and F2(N,1,N) = 0 for even N (the dead prefix {1,N}, ../live).  For odd N all of
+   x = (N+3)/2..N occur (data N <= 30).  The F2-zero pattern: the zero ordered pairs are
+   exactly the invalid 2-prefixes plus (1,N), (N,1) for even N (N <= 30).
+
+1.3 The first-panel law (firstlaw.py).  Write p_N(m) = F(N,m)/a(N).
+   N     8      12     16     20     24     26     28     30
+  Var/N^2 .0595 .0590 .0581 .0575 .0575 .0574 .0573 .0574
+  It is flat at 0.0574 from N = 18 on.  The heuristic: the LAST panel's constraint is free
+  (full window), so under independence P(last = m) ∝ 1/w(r_m), w(r) = 4^r r!^2/(2r+1)! (the
+  proven single-panel Wallis factor).  This model has Var_W/N^2 = 0.0628 (N=8) .. 0.0589
+  (N=30) -> 1/17.5 = 0.057143.  Exact law vs model at N = 30 (N p(m), N q(m), ratio):
+     m   1     2     3     4     5     6     8     10    12    14    15
+     p .201  .456  .542  .796  .887  .952  1.107 1.209 1.305 1.359 1.424
+     q .335  .502  .628  .733  .824  .907  1.052 1.180 1.296 1.402 1.452
+     r .60   .91   .86   1.09  1.08  1.05  1.05  1.02  1.01  .97   .98
+  TV distance 0.023-0.033 for N = 12..30, not shrinking fast.  So the exact law is the
+  Wallis law with a boundary layer at m = 1, 2, 3 (and their mirrors): placing panel 1, 2 or 3
+  first puts a point into the left arm of almost every left-half window and is penalised;
+  panels 4..9 pick up the slack.
+  CONJECTURE (first-panel limit law).  N*p_N(xN) -> h(x) = (3/sqrt 2) sqrt(min(x,1-x)) in the
+  bulk, so Var/N^2 -> 1/17.5.  The data are consistent with this (0.0574 vs 0.05714), but the
+  approach is not visible within N <= 30, so the limit might also be ~0.0574.  The middle
+  value N*p_N(ceil(N/2)) = 1.38-1.45 (N = 24..30), against h(1/2) = 1.5.
+  Edge columns: F(N,m)/F(N,1) for fixed m drift slowly upwards (m = 4: 3.4 -> 3.95, m = 6:
+  3.7 -> 4.7, N = 12..30); N*F(N,1)/a(N) = 0.374 (12), 0.273 (20), 0.201 (30): neither
+  constant*ln N nor sqrt N scaling holds.  The decay is slow, about N^-0.7 locally.
+  F(N,1)/F(N,2) = 0.44-0.47 for N = 11..30 (no visible trend).
+
+1.4 Symmetric analogue (data/tri_sym.txt; sym F rows in data/symstats_N.txt).
+ * Exactly half of all 3-AP-free sequences start with an odd panel, for every N <= 28
+   (odd N included).  [conj]
+   Brute force (parity_pos.py) for the k-th panel: at odd N the odd-even difference is 0 for
+   k <= (N+1)/4 and k >= N+1-(N+1)/4 and nonzero in the middle, e.g. N = 11:
+   [0,0,0,44,416,1540,416,44,0,0,0].  For the semi rule it is nonzero already at k = 1
+   (N = 7: [-20,24,32,184,32,24,-20]).  No proof found: the obvious involution (swap the first
+   two panels) is not always available.  If true, this is a structural property of 3-AP-free
+   permutations that the semi-symmetric relaxation does NOT share.
+ * Many accidental-looking equalities F(N,m) = F(N,m') with m' != N+1-m, e.g. pairs (1,2),
+   (3,4), ... at N = 14, 18, 22, 26 (N = 2 mod 4), palindromic 4-blocks at N = 20, 28,
+   triples (1,3) at N = 19, 27.  None occur in the semi case.  Not analysed further.
+ * The sym first-panel law has a plateau in the middle: N*p(m) ~ 2.2-2.4 for
+   max(m, N+1-m) <= 16 versus 0.5-1.0 outside (N = 25..28).  The jump sits at a power of 2,
+   which reflects the binary structure of 3-AP-free orderings.  The semi law is smooth.
+ * sym F(N,1) = A296530 (non-averaging permutations with first element n) and sym
+   F(N,ceil(N/2)) = A296531; the other sym columns are not in OEIS.
+
+1.5 Prefix counts and sets.
+ * T(N,N-2)/a(N) -> ~0.969 (0.9684 at N = 29); T(N,N-3)/a(N) -> ~0.573 (0.5725 at N = 29).
+   Mean branching T(N,k)/T(N,k-1) alternates with the parity of k in the second half
+   (N = 28: ... 3.34, 3.36, 2.75, 2.81, 2.23, 2.25, 1.59, 1.69, 1.03, 1.00), the parity
+   lemma at work.
+ * Reachable sets: sum_k R(N,k)/2^N = 0.8188 (N = 26), 0.8182 (N = 29), slowly decreasing; alive
+   sets 0.6616 (N = 26).  R(N,3) = 1, 4, 10, 18, 30, 46, 69, 94, 128, ... (not in OEIS; a
+   quasi-polynomial, cf. ../prefix V(N,3)).
+ * Row polynomials (rowpolys.py): F_N(t), T_N(t), R_N(t) are never real-rooted (N <= 30).
+   R_N(t) is log-concave for every N <= 30 [conj: always]; T_N(t) is not log-concave from
+   N = 11; F_N(t) is not even unimodal for most odd N (N = 9, 13, 15, 21, 23, 25, 27, 29),
+   because of small dips like F(9,3) < F(9,2).  The alternating sums R_N(-1) =
+   -1, -2, -2, -6, -6, -15, -13, -39, -43, -99, -129, -363, -428, -1033, -1248, -3119, ...
+   (N = 4..19) are not in OEIS.
+ * No recurrence in N along fixed m (m = 1, 2, 3), along m = ceil(N/2) or N/2, or along the
+   diagonals T(N,N-2), T(N,N-3) (section 4).  F(N,mid) is not related to a((N +- 1)/2):
+   F(2n+1,n+1)/(a(n)a(n+1)) grows without bound.  No column or diagonal is in OEIS
+   (data/oeis_out.txt, 23 semi sequences).
+
+
+2. RATIOS AND THE GROWTH CORRECTION
+-----------------------------------
+(ratios.py, data/ratios_out.txt)
+2.1 Exact range N <= 38.  r(N)/N = 0.250 (31), 0.310 (32), 0.257 (33), 0.293 (34), 0.249 (35),
+ 0.303 (36), 0.238 (37), 0.291 (38): a strong even/odd alternation, plus a bump at 3 | N.
+ Model selection for y(N) = ln a(N) - ln a_W(N), N = 10..38, smooth part 1, N, ln N, N/ln N:
+    periodic part                 params  resid sd   AIC
+    none                             4     0.048    -172
+    parity constant                  5     0.019    -226
+    parity + [3|N] constant          6     0.0092   -266.5   odd -0.081(4), 3|N +0.033(4)
+    parity + [3|N]/N                 6     0.0082   -273.2   odd -0.081(3), 3|N +0.67(7)/N
+    parity + [4|N] or [5|N]          7     0.0094 / 0.0087   (both insignificant: 0.002(5), 0.008(4))
+    full mod 6 constants             9     0.0093   -264
+    full mod 6 / N only              9     0.021    -218   (a pure 1/N periodic part is wrong)
+    mod 6 constants + mod 6 / N     14     0.0059   -288   (over-parametrised, 29 points)
+ CONJECTURE.  ln a(N) = ln a_W(N) + S(N) - delta [N odd] + gamma [3|N]/N + o(1/N), with S
+ smooth, delta = 0.081 +- 0.004 and gamma = 0.67 +- 0.07.  Equivalently
+     r(N)/N = rho(N) * exp(-+2 delta) * (1 + O([3|N]/N)),  with + for even N and - for odd N.
+ The parity offset does not decay (it is the same on N = 10..24 and N = 24..38), so it is a
+ genuine O(1) multiplicative constant e^{-0.081} = 0.922 for odd N relative to the even
+ interpolation.  The Wallis model itself already contains the middle-panel factor, so this
+ is an extra correlation effect of the middle panel (it is placed only at odd steps).
+ The bump b(N) = y(N) - (y(N-2)+y(N+2))/2: N*b(N) is +0.19..+0.55 for 3 | N and -0.4..-1.0
+ otherwise (N = 12..36), consistent with an O(1/N) arithmetic term on top of the curvature.
+ Within residue classes N*[y(N) - (y(N-1)+y(N+1))/2] (N >= 20) grows slightly
+ (e.g. N = 0 mod 6: 2.47, 3.12, 3.87), so the alternation in y is not exactly
+ constant + c/N.  The data cannot separate this from the smooth part.
+
+2.2 Far out (SMC, ../asymptotics NOTES 3.2).  Interval geometric means of r(N)/N:
+     interval   32-38  48-64  96-128 192-256 384-512 768-1024 1536-2048 2048-4096
+     r/N        .271   .238   .201   .173    .152    .130     .116      .104
+     (r/N) ln N .962   .954   .944   .932    .929    .883     .869      .830
+ So r(N)/N -> 0.  An expansion alpha + beta/ln N + ... fitted on these points gives
+ alpha = -0.03, i.e. alpha = 0 within the errors.  The natural form is r(N) = N/(kappa(N) ln N)
+ with kappa(N) = 1.04 (N ~ 35) .. 1.20 (N ~ 2900), slowly increasing.  This is the
+ discrete-derivative version of the README conjecture a(N) = N!/(kappa ln N)^N.  The SMC
+ form D of ../asymptotics (d(N) = 1.69 lnln N - 1.675 + 1.83/ln N) predicts r/N = 0.263 at
+ N = 38, against the exact mean of the parity classes 0.265.  The periodic parts cannot be
+ seen at SMC precision.
+
+2.3 a(N)/(N a(N-1)) = r(N)/N (same sequence) and y(N)/N = 0.132 at N = 38, still rising
+ (README: log(a/a_W) ~ 0.09N earlier); y/N increases by ~0.004 per step at N ~ 35.
+
+
+3. FACTORISATIONS
+-----------------
+(factor.py, data/factor_out.txt; all a(1..38) and c(1..41) fully factored)
+ a(N), N = 24..38:
+  24  2 * 489865076925487
+  25  2^2 * 443 * 18839 * 196642211
+  26  2^2 * 5^3 * 7 * 53149 * 298793329
+  27  2^3 * 3 * 28697 * 599815537241
+  28  2 * 7 * 2339 * 259499 * 424013137
+  29  2^7 * 11 * 89501 * 218581555007
+  30  2 * 5^3 * 21929 * 32839 * 1460179687
+  31  2^4 * 3 * 5 * 11 * 31 * 24893051164663183
+  32  2 * 3^2 * 191 * 5882050821859400057
+  33  2^5 * 2848629851 * 1883236287587
+  34  2^2 * 13 * 29 * 179 * 23017 * 38953 * 7073820181
+  35  2^2 * 3 * 47 * 523 * 5827279 * 8677930122313
+  36  2^2 * 3 * 53 * 1061 * 769459 * 313770816491017
+  37  2 * 59 * 857 * 14194762997899659087161
+  38  2 * 7^2 * 19 * 57110071 * 146689901 * 1018341341
+ * Small odd primes, N = 6..38 (33 terms): #{N : p | a(N)} = 9, 7, 7, 3, 3, 0, 2, 0, 2, 1
+   for p = 3, 5, 7, 11, 13, 17, 19, 23, 29, 31; random expectation 33/p = 11, 6.6, 4.7, 3.0,
+   2.5, 1.9, 1.7, 1.4, 1.1, 1.1.  Mean number of distinct odd primes < 1000: 1.42 (random
+   1.70).  Consistent with random integers.  No excess of 3 even though 3 | N is arithmetically
+   special.
+ * Largest prime factor: log P/log a(N) ranges over 0.32-0.98 (N = 10..38), median ~0.55,
+   like random integers (Dickman: median 0.61).  The record a(24) = 2*prime.
+ * 2-adic: v2(a(N)) for N = 2..38 has distribution {1: 13, 2: 11, 3: 4, 4: 3, 5: 4, 7: 1, 8: 1}.
+   This is heavier than a random even integer (18.5, 9.2, 4.6, 2.3, 1.2, 0.6, 0.3), but entirely
+   because 4 | a(N) for N = 3 mod 4 (proven).  Restricted to N != 3 mod 4, v2 = 1 iff
+   c(N) = 2 mod 4 (proven), and the higher valuations look random.  a mod 8 is not
+   determined by c mod 8 (e.g. N = 4: a = 2, c = 6 mod 8).
+ * Residue classes: the only (p <= 50, q <= 12) class with p | a(N) for every N in it is
+   p = 5, N = 8 mod 11 (only 3 terms: N = 8, 19, 30; a(41) will test it), i.e. nothing.
+   No 8 | a(N) or 16 | a(N) on any class.
+ * c(N) and s(N) factorisations (data/factor_out.txt) are equally unstructured.
+
+
+4. CROSS-SEQUENCE RELATIONS
+---------------------------
+(relations.py, data/relations_out.txt)
+ Search: for each target X in {a, c, F(N,1), F(N,2), F(N,mid), T(N,N-2), T(N,N-3), E-O,
+ J, F2(N,1,N), R, s, sym F(N,1)} and pools of 0-2 of {a, c, F(N,1), F(N,mid), T(N,N-2), J},
+ the exact rational nullspace of [N^p Y(N-j)], j <= J, p <= P, with (J,P) in
+ {(1,0),(2,0),(1,1),(3,0),(2,1),(1,2),(4,0),(3,1)}, over all N where the terms exist
+ (N >= 6), keeping only systems with >= 4 more equations than unknowns.  1838 systems:
+ NO relation.  Adding convolution terms (sum a(i)a(N-i), a(floor N/2)a(ceil N/2), 2^N, N!) to
+ a, c, J, F(N,1), T(N,N-2): no relation.
+ c(2n) versus a(n): c(2n)/a(n)^2 -> 0 quickly (1.4e-5 at n = 15).  The right scale is
+ c(2n) ~ sqrt(a(2n)): c(2n)^2/a(2n) = 3.6, 1.5, 5.2, 4.2, 3.1, 3.5, 5.6, 3.1, 6.0, 5.0, 4.4,
+ 5.0, 6.4, 4.1, 6.2, 5.6, 5.2, 5.7 (n = 2..19), bounded but irregular (cf. ../arith).
+ Conclusion: the refined counts are as "transcendental" as a(N) itself.  The only exact
+ identities are the symmetry ones of 1.2 and the known (A), (B) decompositions.
+
+
+5. SYMMETRIC ANALOGUE (summary of what transfers)
+-------------------------------------------------
+ transfers: reversal/mirror identities; F2 support rules for (1,x) (in the sym case (1,x) is
+   valid iff 2x >= N+2 as well); the first-panel law has a bulk-plus-boundary shape.
+ does not transfer: the parity balance of the first panel at odd N holds for sym (N <= 28) but
+   not for semi; R log-concavity holds for semi (N <= 30) but not for sym; sym F rows show
+   power-of-2 plateaus and many exact coincidences, semi rows are smooth.
+ Neither has any column/diagonal recurrence or OEIS match except the two known sym columns.
+
+
+6. NEGATIVE RESULTS (collected)
+ * No recurrence (constant or polynomial coefficients, up to 4 shifts) for any column,
+   diagonal or row sum; no relation to a of smaller size.
+ * No real-rooted row polynomials.
+ * No OEIS match for any semi refined sequence (23 tried) or derived one (E-O, R_N(-1)).
+ * No residue-class divisibility beyond the proven 2-adic facts; prime factors look random.
+ * The mod-6 effect is not a pure c_r/N periodic correction; a constant parity term plus a
+   [3|N]/N term is the best small model.
+
+
+7. LEAN  (Folds/Structure2.lean, no sorry, no native_decide)
+ See section 1.2 and the file header.
