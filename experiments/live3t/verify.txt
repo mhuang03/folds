@@ -1,0 +1,6 @@
+one3N.py 201:
+N = 1 mod 4: failures []
+oneBN2.py 202:
+failures: []
+one2N8.py 204:
+failures: []

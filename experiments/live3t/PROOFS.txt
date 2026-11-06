@@ -3,8 +3,8 @@ Live 3-prefixes, part 5: the residual to N = 200, and parametric families beyond
 
 Notation as in experiments/live3p, live3q, live3r, live3s PROOFS.txt (valid steps, CoReach,
 Theorem G, near copies = Live3r Theorem 1, Good3, Covered3R, Covered3T, Residual3T).
-"Lean" refers to Folds/Live3t.lean (imports Folds.Live3s; no sorry, no native_decide; 44 s,
-2.75 GB peak with `lean -M 3000`, `Elab.async false`; lean.sh / memtime.py).
+"Lean" refers to Folds/Live3t.lean (imports Folds.Live3s; no sorry, no native_decide; 62 s,
+2.74 GB peak with `lean -M 3000`, `Elab.async false`; lean.sh / memtime.py).
 
 STATUS
   * NOT DONE: `forall N > 50, Residual3T N` is NOT proven (nor Residual3U, below).
@@ -29,18 +29,24 @@ STATUS
       coReach_one_three_N : N = 1 mod 4, N >= 17  ->  {1, 3, N} co-reachable
                             (and {1, N - 2, N} by the mirror)
       coReach_one_b_N     : N = 2 mod 4, N >= 30, 2 <= b <= N - 1  ->  {1, b, N} co-reachable
+      coReach_one_two_N8  : N = 4 mod 8, N >= 28  ->  {1, 2, N} co-reachable
+                            (and {1, N - 1, N} by the mirror)
     and the reduction with these families added:
       Covered3U N a b c := Covered3T N a b c or OneN N a b c,
       OneN N a b c      := a = 1, c = N, and (N = 2 mod 4, N >= 30, or N = 1 mod 4, N >= 17,
-                           b in {3, N - 2}),
+                           b in {3, N - 2}, or N = 4 mod 8, N >= 28, b in {2, N - 1}),
       Residual3U N      := the valid non-dead triples not settled by Covered3U are co-reachable,
       residual3T_of_residual3U, good3_of_residual3U, residual3T_all_of_residual3U
     (the last has the hypothesis shape of Live3Final.extends3_iff_of_residual3T).
     Together with Live3r.coReach_one_even_N ({1, 2k, N}, N odd) the whole corner family
     {1, b, N} is now parametric for N = 1, 2, 3 mod 4 wherever it occurs in Live3q's residual
     ({1, 3, N} occurs there only for N = 1, 2 mod 4; odd b for odd N never occurs, b = 3 aside).
-  * NOT DONE: no new {1, 2, c} family (section 4).
-  * NUMERICAL: both closed forms checked for every N <= 201 (one3N.py, oneBN2.py: injective
+    For N = 0 mod 4 the family {1, b, N} occurs in Live3q's residual only as {1, 2, N},
+    {1, N - 1, N} (N = 52..100), so with coReach_one_two_N8 only N = 0 mod 8 is left there.
+  * NOT DONE: of the {1, 2, c} leftovers only c = N for N = 4 mod 8 is new in closed form
+    (and c = N for N = 2 mod 4, as b = 2 of coReach_one_b_N); the rest is section 4.
+  * NUMERICAL: the three closed forms checked for every N <= 201 (one3N.py, oneBN2.py,
+    one2N8.py; verify.txt: injective
     increasing, irregular panels inside the preimage, preimage valid and not dead, the
     complement rule), before the Lean proofs, which are for all N.
 
@@ -89,7 +95,18 @@ RESULT (resid.txt has every N):
     1) and not dead in [p].  So {1, b, N} is the image of {1, b/2 + 1, p} with e = (b + 1) mod 2
     for 2 <= b <= 2s + 1; the b >= 2s + 2 are the mirror images.  (For N = 0 mod 4 the same
     copy has p odd and fails; Z(N, N/2 + 2) for N = 4 mod 8 settles the even b and the small
-    odd b with the centre 1/2 but not the odd b in (N/4, N/2] (oneBN3.py); not formalized.)
+    odd b with the centre 1/2 but not the odd b in (N/4, N/2] (oneBN3.py); only b = 2 is
+    formalized, (c).)
+(c) {1, 2, N}, N = 8t + 4 (Live3t.coReach_one_two_N8).  Live3r's hints use Z(N, p) with
+    p = N/2 + 2^(v-1), v = v_2(N); for v = 2 this is p = 4t + 4 and
+       zB t k = 2k - 1, 2k - 2, 2k - 3, 2k - 4   on (0, t + 1], (t + 1, 2t + 2], (2t + 2, 3t + 3],
+                                                 (3t + 3, 4t + 4]
+    ( = floor(k (N + 2)/(p + 1)), checked in one2N8.py).  With 2 sent from 3 to 2 it is regular
+    outside {2}; the image {1, 2} + odd [5, 2t + 1] + even [2t + 2, 4t + 2] + odd [4t + 3, 6t + 3]
+    + even [6t + 4, 8t + 4] satisfies Theorem G with the centre 1/2 (counting function FB with
+    seven pieces; the arm-count inequality is proved region by region with the piece lemmas
+    FB_0 .. FB_5, ~13 omega leaves instead of a 7^4 case split, to stay under 3 GB), and
+    {1, 2, N} is the image of {1, 2, p}, not dead in the even strip [p].
 
 
 3. Why the rest of Live3q's residual is not parametric here
@@ -125,6 +142,15 @@ The {1, 2, c} left for N <= 200 follow the patterns of live3s section 2:
     s + 1): the ghost problem of live3q section 4 (i).
 (b) The completions of live3r leftchk.txt for {1, 2, N - 1} start with the halving chain
     N/2 + 1, N/2, ... and then need 20-50 unstructured steps; no parametric pattern found.
+(c) A lead for N = 1 mod 4, even c (explore12.py): phi12 (odd class, 3 -> 2) with the panel
+    (c + 2)/2 sent to c is regular outside {2, (c + 2)/2}, and its image needs more than the 4
+    image steps that rcov tries, but not many: at N = 77, c = 62 is settled with the steps
+    4, 44, 24, 14, 64 and c = 66 with 4, 3, 52, 40, 28, 68 (nearTrB hints; Covered3R allows
+    any step list, so these c are NOT in the true residual of Covered3T; the lists of section 1
+    are upper bounds).  The steps after 4 form a halving chain m -> m/2 + 2 from (N + 11)/2,
+    then c + 2: a chain of length ~log N on a dense, explicit background, which is the setting
+    in which a chain lemma might be provable.  At N = 81, c = 74 needs > 5 steps; at N = 97 the
+    search with <= 7 steps did not finish.  Not pursued further.
 Not formalized; the dense-top-structure lemma of live3s section 3(c) remains the missing piece.
 
 
@@ -139,5 +165,10 @@ Not formalized; the dense-top-structure lemma of live3s section 3(c) remains the
   oneBN.py, oneBN2.py   {1, b, N} through Z(N, N/2 + 1): search, and the exact Lean rule
   oneBN3.py             N = 4 mod 8 through Z(N, N/2 + 2) (partial)
   fams.py, newfam.py    classification of the Live3q residual; coverage by the closed forms
+  one2N8.py             check of the {1, 2, N} closed form for N = 4 mod 8 (N <= 204)
+  verify.txt            output of one3N.py, oneBN2.py, one2N8.py
   top12.py, gk.c        {1, 2, N - 1} through zA, and the step search for its image
+  explore12.py          {1, 2, c}, N = 1 mod 4, c even: phi12 with a moved panel + steps (4c)
+  collect.py            merges the resid.py outputs into resid.txt
+  bisect.py             compile one block of Live3t.lean (memory debugging)
   lean.sh, memtime.py   compile against the prebuilt oleans of the main checkout
