@@ -260,5 +260,306 @@ theorem coReach_one_half {N : Nat} (hN : 8 ≤ N) (h4 : N % 4 = 0) :
   have e2 : chiY (N / 4 + 1) = N / 2 + 2 := by unfold chiY; split_ifs <;> omega
   rwa [e1, e2] at this
 
+/-! ## Swapped Beatty copies -/
+
+/-- The swapped Beatty map: the right-aligned Beatty copy `X(N, p, h)` with its last element
+moved to `N - c`. -/
+def swapF (N p h c r : Nat) : Nat := if r = p then N - c else beatty N p h r
+
+/-- Hypotheses of the swap lemma: `p ≥ 3` odd, `h ≤ 1`, `c ≥ 2`, `N + h ≥ 2cp + 1`. -/
+structure SwapHyp (N p h c : Nat) : Prop where
+  p3 : 3 ≤ p
+  odd : p % 2 = 1
+  h1 : h ≤ 1
+  c2 : 2 ≤ c
+  big : 2 * c * p + 1 ≤ N + h
+
+theorem SwapHyp.hh {N p h c : Nat} (H : SwapHyp N p h c) : h + 2 * p ≤ N + 1 := by
+  have := H.big; have := H.c2; have := H.h1; have := H.p3
+  nlinarith
+
+theorem SwapHyp.N4 {N p h c : Nat} (H : SwapHyp N p h c) : 4 * p ≤ N ∧ 2 * c + 2 ≤ N := by
+  have := H.big; have := H.c2; have := H.h1; have := H.p3
+  constructor <;> nlinarith
+
+theorem beatty_mono {N p h y z : Nat} (hyz : y ≤ z) : beatty N p h y ≤ beatty N p h z :=
+  Nat.div_le_div_right (Nat.sub_le_sub_right (Nat.mul_le_mul_right N hyz) h)
+
+theorem beatty_top {N p h : Nat} (hp : 2 ≤ p) (h1 : h ≤ 1) (hN : 1 ≤ N) :
+    beatty N p h p = N - h := by
+  unfold beatty
+  interval_cases h
+  · rw [Nat.sub_zero, Nat.sub_zero, Nat.mul_div_cancel_left N (by omega)]
+  · obtain ⟨M, rfl⟩ : ∃ M, N = M + 1 := ⟨N - 1, by omega⟩
+    rw [show M + 1 - 1 = M by omega]
+    have e : p * (M + 1) = p * M + p := by ring
+    have e2 : (M + 1) * p = p * M + p := by ring
+    have e3 : M * p = p * M := Nat.mul_comm M p
+    apply Nat.div_eq_of_lt_le
+    · rw [e3, e]; omega
+    · rw [e2, e]; omega
+
+/-- The last-but-one element lies below `N - 2c`. -/
+theorem swap_last {N p h c : Nat} (H : SwapHyp N p h c) :
+    beatty N p h (p - 1) + 2 * c < N := by
+  have big := H.big; have c2 := H.c2; have h1 := H.h1; have p3 := H.p3
+  unfold beatty
+  obtain ⟨p', rfl⟩ : ∃ p', p = p' + 1 := ⟨p - 1, by omega⟩
+  rw [show p' + 1 - 1 = p' by omega]
+  have hc : 2 * c ≤ N := by nlinarith
+  obtain ⟨t, rfl⟩ : ∃ t, N = 2 * c + t := ⟨N - 2 * c, by omega⟩
+  have key : p' * (2 * c + t) < t * (p' + 1) + h := by nlinarith
+  have ht1 : 1 ≤ t := by nlinarith
+  have ht : 1 ≤ t * (p' + 1) := Nat.mul_pos ht1 (by omega)
+  have : (p' * (2 * c + t) - h) / (p' + 1) < t := by
+    rw [Nat.div_lt_iff_lt_mul (by omega)]
+    omega
+  omega
+
+/-- The elements left of the middle stay at most `(N - c)/2`. -/
+theorem swap_mid_lo {N p h c : Nat} (H : SwapHyp N p h c) :
+    2 * beatty N p h (p / 2) + c ≤ N := by
+  have big := H.big; have c2 := H.c2; have h1 := H.h1; have p3 := H.p3
+  unfold beatty
+  obtain ⟨k, rfl⟩ : ∃ k, p = 2 * k + 1 := ⟨p / 2, by have := H.odd; omega⟩
+  rw [show (2 * k + 1) / 2 = k by omega]
+  have hq := Nat.div_mul_le_self (k * N - h) (2 * k + 1)
+  generalize (k * N - h) / (2 * k + 1) = q at hq ⊢
+  have hq' : q * (2 * k + 1) ≤ k * N := le_trans hq (Nat.sub_le _ _)
+  by_contra hcon
+  have h2 : (N + 1) * (2 * k + 1) ≤ (2 * q + c) * (2 * k + 1) :=
+    Nat.mul_le_mul_right _ (by omega)
+  nlinarith
+
+/-- The elements right of the middle lie beyond `N/2`. -/
+theorem swap_mid_hi {N p h c : Nat} (H : SwapHyp N p h c) :
+    N + 1 ≤ 2 * beatty N p h (p / 2 + 1) := by
+  have hN4 := H.N4; have h1 := H.h1; have p3 := H.p3
+  unfold beatty
+  obtain ⟨k, rfl⟩ : ∃ k, p = 2 * k + 1 := ⟨p / 2, by have := H.odd; omega⟩
+  rw [show (2 * k + 1) / 2 = k by omega]
+  have hm := Nat.div_add_mod ((k + 1) * N - h) (2 * k + 1)
+  have hlt := Nat.mod_lt ((k + 1) * N - h) (show 0 < 2 * k + 1 by omega)
+  have hx : (k + 1) * N - h + h = (k + 1) * N := Nat.sub_add_cancel (by nlinarith)
+  generalize ((k + 1) * N - h) / (2 * k + 1) = q at hm ⊢
+  generalize ((k + 1) * N - h) % (2 * k + 1) = r at hm hlt
+  generalize (k + 1) * N - h = x at hm hx
+  by_contra hcon
+  have h2 : (2 * q) * (2 * k + 1) ≤ N * (2 * k + 1) := Nat.mul_le_mul_right _ (by omega)
+  nlinarith
+
+theorem swap_facts {N p h c : Nat} (H : SwapHyp N p h c) {y : Nat} (_hy1 : 1 ≤ y)
+    (hyp : y ≤ p - 1) :
+    beatty N p h y + 2 * c < N ∧ ¬ (N - c + 1 ≤ 2 * beatty N p h y ∧ 2 * beatty N p h y ≤ N - h) := by
+  refine ⟨lt_of_le_of_lt (Nat.add_le_add_right (beatty_mono hyp) _) (swap_last H), ?_⟩
+  rcases Nat.lt_or_ge (p / 2) y with hy | hy
+  · have := beatty_mono (N := N) (p := p) (h := h) (show p / 2 + 1 ≤ y by omega)
+    have := swap_mid_hi H
+    omega
+  · have := beatty_mono (N := N) (p := p) (h := h) hy
+    have := swap_mid_lo H
+    omega
+
+theorem swapF_lt {N p h c j : Nat} (hj : j < p) : swapF N p h c j = beatty N p h j :=
+  by unfold swapF; split_ifs <;> first | rfl | omega
+
+theorem swapF_top {N p h c : Nat} : swapF N p h c p = N - c := by
+  unfold swapF; simp
+
+/-- **The swapped Beatty set is a window copy.** -/
+theorem winEmb_swap {N p h c : Nat} (H : SwapHyp N p h c) : WinEmb N p (swapF N p h c) := by
+  have hh := H.hh
+  have hN4 := H.N4
+  have hp3 := H.p3
+  have wb := winEmb_beatty (show 1 ≤ p by omega) hh
+  have htop := beatty_top (N := N) (show 2 ≤ p by omega) H.h1 (by omega)
+  refine ⟨fun y h1 h2 => ?_, fun x y hx1 hxp hy1 hyp e => ?_, fun j y hj1 hjp hy1 hyp => ?_,
+    fun j y hj1 hjp hy1 hyp => ?_⟩
+  · rcases Nat.lt_or_ge y p with hy | hy
+    · rw [swapF_lt hy]; exact wb.bound y h1 h2
+    · rw [show y = p by omega, swapF_top]; omega
+  · rcases Nat.lt_or_ge x p with hx | hx <;> rcases Nat.lt_or_ge y p with hy | hy
+    · rw [swapF_lt hx, swapF_lt hy] at e; exact wb.inj x y hx1 hxp hy1 hyp e
+    · rw [swapF_lt hx, show y = p by omega, swapF_top] at e
+      have := (swap_facts H hx1 (by omega)).1; omega
+    · rw [swapF_lt hy, show x = p by omega, swapF_top] at e
+      have := (swap_facts H hy1 (by omega)).1; omega
+    · omega
+  · rcases Nat.lt_or_ge j p with hj | hj <;> rcases Nat.lt_or_ge y p with hy | hy
+    · rw [swapF_lt hj, swapF_lt hy]; exact wb.left j y hj1 hjp hy1 hyp
+    · rw [swapF_lt hj, show y = p by omega, swapF_top]
+      have := (swap_facts H hj1 (by omega)).1
+      constructor <;> intro h' <;> omega
+    · rw [swapF_lt hy, show j = p by omega, swapF_top]
+      have := (swap_facts H hy1 (by omega)).1
+      unfold reach
+      constructor <;> intro h' <;> omega
+    · rw [show j = p by omega, show y = p by omega]
+      constructor <;> intro h' <;> omega
+  · rcases Nat.lt_or_ge j p with hj | hj <;> rcases Nat.lt_or_ge y p with hy | hy
+    · rw [swapF_lt hj, swapF_lt hy]; exact wb.right j y hj1 hjp hy1 hyp
+    · have key := wb.right j p hj1 hjp (by omega) le_rfl
+      rw [htop] at key
+      rw [swapF_lt hj, show y = p by omega, swapF_top, ← key]
+      obtain ⟨hA, hB⟩ := swap_facts H hj1 (by omega)
+      rw [not_and_or, Nat.not_le, Nat.not_le] at hB
+      have := H.h1; have := H.c2
+      unfold reach
+      constructor <;> intro h' <;> omega
+    · rw [swapF_lt hy, show j = p by omega, swapF_top]
+      have := (swap_facts H hy1 (by omega)).1
+      constructor <;> intro h' <;> omega
+    · rw [show j = p by omega, show y = p by omega]
+      constructor <;> intro h' <;> omega
+
+theorem mem_swap {N p h c x : Nat} (H : SwapHyp N p h c) :
+    x ∈ (Finset.Icc 1 p).image (swapF N p h c) ↔
+      x = N - c ∨ x ∈ (Finset.Icc 1 (p - 1)).image (beatty N p h) := by
+  simp only [Finset.mem_image, Finset.mem_Icc]
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    rcases Nat.lt_or_ge y p with h' | h'
+    · exact Or.inr ⟨y, ⟨hy.1, by omega⟩, (swapF_lt h').symm⟩
+    · exact Or.inl (by rw [show y = p by omega, swapF_top])
+  · rintro (rfl | ⟨y, hy, rfl⟩)
+    · exact ⟨p, ⟨by have := H.p3; omega, le_rfl⟩, swapF_top⟩
+    · exact ⟨y, ⟨hy.1, by omega⟩, swapF_lt (by have := H.p3; omega)⟩
+
+theorem mem_beatty_top {N p h c x : Nat} (H : SwapHyp N p h c) :
+    x ∈ (Finset.Icc 1 p).image (beatty N p h) ↔
+      x = N - h ∨ x ∈ (Finset.Icc 1 (p - 1)).image (beatty N p h) := by
+  have hN4 := H.N4
+  have htop := beatty_top (N := N) (show 2 ≤ p by have := H.p3; omega) H.h1 (by omega)
+  simp only [Finset.mem_image, Finset.mem_Icc]
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    rcases Nat.lt_or_ge y p with h' | h'
+    · exact Or.inr ⟨y, ⟨hy.1, by omega⟩, rfl⟩
+    · exact Or.inl (by rw [show y = p by omega, htop])
+  · rintro (rfl | ⟨y, hy, rfl⟩)
+    · exact ⟨p, ⟨by have := H.p3; omega, le_rfl⟩, htop⟩
+    · exact ⟨y, ⟨hy.1, by omega⟩, rfl⟩
+
+theorem lt_of_mem_low {N p h c x : Nat} (H : SwapHyp N p h c)
+    (hx : x ∈ (Finset.Icc 1 (p - 1)).image (beatty N p h)) : x + 2 * c < N := by
+  obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hx
+  rw [Finset.mem_Icc] at hy
+  exact (swap_facts H hy.1 hy.2).1
+
+/-- **The swapped Beatty set satisfies Theorem G** with the centre at `N - c`: left of it,
+the Beatty set already pulls every panel to the right and the move only adds to right arms;
+right of it, nothing of the set lies in a right arm. -/
+theorem inward_swap {N p h c : Nat} (H : SwapHyp N p h c) :
+    Inward N (2 * (N - c)) ((Finset.Icc 1 p).image (swapF N p h c)) := by
+  have hh := H.hh
+  have hN4 := H.N4
+  have h1 := H.h1
+  have c2 := H.c2
+  intro m hm1 hmN hmB
+  have hmc : m ≠ N - c := fun e => hmB ((mem_swap H).2 (Or.inl e))
+  have hmZ : m ∉ (Finset.Icc 1 (p - 1)).image (beatty N p h) := fun e =>
+    hmB ((mem_swap H).2 (Or.inr e))
+  refine ⟨by omega, fun hlt => ?_, fun hgt => ?_⟩
+  · have hmX : m ∉ (Finset.Icc 1 p).image (beatty N p h) := by
+      rw [mem_beatty_top H]; rintro (e | e)
+      · omega
+      · exact hmZ e
+    have hb := (inward_beatty (show 1 ≤ p by have := H.p3; omega) hh h1 m hm1 hmN hmX).2.1
+      (by omega)
+    rw [leftCount_finset, rightCount_finset] at hb ⊢
+    have hr : reach N m ≤ m - 1 := by unfold reach; omega
+    have L : (List.range' 1 (reach N m)).countP
+        (fun d => decide (m - d ∈ (Finset.Icc 1 p).image (swapF N p h c))) =
+        (List.range' 1 (reach N m)).countP
+        (fun d => decide (m - d ∈ (Finset.Icc 1 p).image (beatty N p h))) := by
+      apply List.countP_congr; intro d hd; rw [List.mem_range'_1] at hd
+      simp only [decide_eq_true_eq, mem_swap H, mem_beatty_top H]
+      constructor <;> rintro (e | e)
+      · omega
+      · exact Or.inr e
+      · omega
+      · exact Or.inr e
+    rw [L]
+    set Z := (Finset.Icc 1 (p - 1)).image (beatty N p h)
+    have R1 : (List.range' 1 (reach N m)).countP
+        (fun d => decide (m + d ∈ (Finset.Icc 1 p).image (beatty N p h))) ≤
+        (List.range' 1 (reach N m)).countP (fun d => decide (m + d ∈ Z)) +
+        (List.range' 1 (reach N m)).countP (fun d => decide (d = N - h - m)) := by
+      refine le_trans (le_of_eq (List.countP_congr fun d hd => ?_)) (countP_or_le _ _ _)
+      rw [List.mem_range'_1] at hd
+      simp only [Bool.or_eq_true, decide_eq_true_eq, mem_beatty_top H]
+      constructor
+      · rintro (e | e)
+        · exact Or.inr (by omega)
+        · exact Or.inl e
+      · rintro (e | e)
+        · exact Or.inr e
+        · exact Or.inl (by omega)
+    have R2 : (List.range' 1 (reach N m)).countP (fun d => decide (m + d ∈ Z)) +
+        (List.range' 1 (reach N m)).countP (fun d => decide (d = N - c - m)) ≤
+        (List.range' 1 (reach N m)).countP
+        (fun d => decide (m + d ∈ (Finset.Icc 1 p).image (swapF N p h c))) := by
+      refine countP_add_le _ _ _ _ (fun d hd => ?_) (fun d hd => ?_) (fun d hd => ?_)
+      · simp only [decide_eq_true_eq]
+        rintro ⟨e1, e2⟩
+        have := lt_of_mem_low H e1
+        omega
+      · simp only [decide_eq_true_eq, mem_swap H]; exact Or.inr
+      · rw [List.mem_range'_1] at hd
+        simp only [decide_eq_true_eq, mem_swap H]; intro e; left; omega
+    rw [countP_single] at R1 R2
+    split_ifs at R1 R2 <;> omega
+  · rw [rightCount_finset]
+    have : (List.range' 1 (reach N m)).countP
+        (fun d => decide (m + d ∈ (Finset.Icc 1 p).image (swapF N p h c))) = 0 := by
+      rw [List.countP_eq_zero]
+      intro d hd
+      rw [List.mem_range'_1] at hd
+      simp only [decide_eq_true_eq, mem_swap H]
+      rintro (e | e)
+      · omega
+      · have := lt_of_mem_low H e; omega
+    rw [this]; exact Nat.zero_le _
+
+theorem coReach_swap {N p h c : Nat} (H : SwapHyp N p h c) :
+    CoReach N ((Finset.Icc 1 p).image (swapF N p h c)) := by
+  refine coReach_of_inward (fun x hx => ?_) (inward_swap H)
+  obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hx
+  rw [Finset.mem_Icc] at hy ⊢
+  exact (winEmb_swap H).bound y hy.1 hy.2
+
+/-- **Transfer through a swapped Beatty copy.** -/
+theorem coReach_swap_transfer {N p h c : Nat} (H : SwapHyp N p h c) {D : Finset Nat}
+    (hDs : D ⊆ Finset.Icc 1 p) (hD : CoReach p D) : CoReach N (D.image (swapF N p h c)) :=
+  coReach_winEmb (winEmb_swap H) (coReach_swap H) hDs hD
+
+/-- **Corner pairs.**  For `p ≥ 3` odd, `p ≠ 7`, `h ≤ 1`, `c ≥ 2` and `N + h ≥ 2cp + 1`, the pair
+`{c + 1, N + 1 - ⌊(N - h)/p⌋}` is co-reachable: the mirror of the image of `{1, p}` under the
+swapped Beatty copy. -/
+theorem coReach_corner {N p h c : Nat} (H : SwapHyp N p h c) (hp7 : p ≠ 7) :
+    CoReach N {c + 1, N + 1 - (N - h) / p} := by
+  have hN4 := H.N4
+  have h1p := coReach_one_N p H.odd hp7
+  have := coReach_mirror (coReach_swap_transfer H (D := {1, p}) (fun x hx => by
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+    rw [Finset.mem_Icc]; have := H.p3; omega) h1p)
+  rw [Finset.image_insert, Finset.image_singleton, Finset.image_insert,
+    Finset.image_singleton, swapF_top, swapF_lt (by have := H.p3; omega)] at this
+  have e : beatty N p h 1 = (N - h) / p := by unfold beatty; rw [Nat.one_mul]
+  rw [e, show N + 1 - (N - c) = c + 1 by omega, Finset.pair_comm] at this
+  exact this
+
+/-- **`{3, N - 3}` is co-reachable for every `N ≥ 37`**: a corner pair with `c = 2`, `h = 1`
+and `p` the odd number among `⌊(N-1)/4⌋, ⌊(N-1)/4⌋ - 1` (so `4p ≤ N - 1 < 5p`, `p ≥ 9`). -/
+theorem coReach_three {N : Nat} (hN : 37 ≤ N) : CoReach N {3, N - 3} := by
+  obtain ⟨p, hp⟩ : ∃ p, p = if (N - 1) / 4 % 2 = 1 then (N - 1) / 4 else (N - 1) / 4 - 1 :=
+    ⟨_, rfl⟩
+  have hp9 : 9 ≤ p ∧ p % 2 = 1 ∧ 4 * p ≤ N - 1 ∧ N - 1 < 5 * p := by
+    rw [hp]; split_ifs <;> omega
+  have H : SwapHyp N p 1 2 := ⟨by omega, hp9.2.1, le_rfl, le_rfl, by omega⟩
+  have := coReach_corner H (by omega)
+  have e : (N - 1) / p = 4 := Nat.div_eq_of_lt_le (by omega) (by omega)
+  rwa [e, show N + 1 - 4 = N - 3 by omega] at this
+
 end Live6
 end Folds
