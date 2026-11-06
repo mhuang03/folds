@@ -128,6 +128,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Structure2` (M) | refined-count identities: L(N,m) = F(N,m) (reversal), mirror symmetry, exactly a(N)/2 sequences start with an odd panel for even N |
 | `ThinCover*` (M) | **Conjecture C for all N** (`ThinCover.conjectureC`): a valid 2-prefix extends to a full semi-symmetric sequence iff it is not one of the explicit dead pairs. Built from slice and parallelogram certificates (LP-certified polynomial inequalities) for N ≥ 1000, plus 699 kernel checks for 301 ≤ N < 1000 |
 | `SymParity` (M) | symmetric (3-AP-free) case: exactly half the sequences start with an odd panel (`two_mul_card_head_odd`; first and last panels always differ in parity); the same at step k when 4k ≤ N+1 (`two_mul_card_getElem_odd`, via the orientation theorem `orient`) |
+| `SymStructure` (M) | symmetric case: **merge theorem** (`merge_iff_apFree`): 3-AP-free ⇔ both parity subsequences are 3-AP-free and the D-entry comes first on every linked pair; `parity_sort` |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -220,6 +221,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `docs/RECURRENCE_LITERATURE.md` | which recurrence classes are compatible with N!/(log N)^N growth; prioritised ansätze |
 | `experiments/recsearch2/REPORT.txt` | niche recurrence search (all negative), with proofs that OGF-Mahler and 2-regular forms are impossible |
 | `experiments/thincover/PROOFS.txt` | the final thin-set certificates and kernel checks completing Conjecture C |
+| `experiments/symstruct/PROOFS.txt` | 3-AP-free structure: an exact merge-count identity for θ(n), the prefix-extension test, Sharma's ⌊N/2⌋−6 bound for all N (sharp), the dyadic pattern of the opening run, L_k(N) recursion, log-periodic ratio θ(n)/(2θθ) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
