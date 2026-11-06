@@ -1,0 +1,11 @@
+*
+!*/
+!*.c
+!*.h
+!*.txt
+!*.py
+!*.sh
+!*.lean
+!.gitignore
+tmp/
+__pycache__/
