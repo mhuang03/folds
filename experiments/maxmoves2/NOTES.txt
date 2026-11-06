@@ -1,0 +1,104 @@
+THE 2-ADIC MAX-MOVES BOUND                                          (experiments/maxmoves2/)
+=========================================================================================
+
+Notation as in ../maxmoves/PROOFS.txt: S ⊆ [1, N], s = |S|, V(S) = |moves N S|, gaps W_k,
+w_k = |W_k|, z_k = number of valid panels in gap k.  "[Lean]" = Folds/MaxMoves2.lean (no sorry,
+no native_decide).
+
+SUMMARY
+-------
+(B)  [Lean]  s = 2^a t, t odd, a >= 1  ==>  (a+2) V <= (a+1) N.          (card_moves_two_adic)
+(B') [Lean]  same hypothesis  ==>  2(a+2) V + 2(a-1) s <= 2(a+1) N + a.  (card_moves_two_adic_size)
+     i.e. V <= ((a+1) N - (a-1) s)/(a+2) + a/(2(a+2)).  For a = 1 this is (B); for a >= 2 the
+     size term is new, and it is what the gap LP gives (gaplp2.py: the real relaxation of exactly
+     the hypotheses of arith_two_adic has max V/N = ((a+1) - (a-1) x)/(a+2) + O(1/N), x = s/N).
+(C)  [data] "V <= 5N/7 + O(1) for s = 4 (mod 8)" is FALSE: the continuum supremum for s = 12 is
+     23/32 = 0.71875 > 5/7 (contmilp.py, exact MILP), and the discretised configuration gives
+     N = 35840, s = 12: V = 25721 > 5N/7 = 25600 (discrete_check.py), V/N -> 23/32.
+(D)  [Lean + constants2.py] tree bounds a(N) <= N! exp(-(c + o(1)) N):
+                           even N      odd N
+        before (A only)    0.114607    0.076924     (Folds/MaxMoves.lean)
+        with (B)           0.121540    0.083857     semiCount_{even,odd}_le_prod_two_adic
+        with (B')          0.125516    0.087834     semiCount_{even,odd}_le_prod_two_adic_size
+
+
+1. VERIFICATION                                         [check2adic.c, check2adic2.c]
+-----------------------------------------------------------------------------------------
+../maxmoves/check2adic.c and check2adic2.c, exhaustive over all S ⊆ [1, N], every N in [4, 22]:
+no violation of (B) or (B').  Worst values of ((a+2)V - (a+1)N, 2(a+2)V + 2(a-1)s - 2(a+1)N - a):
+   N   a=1       a=2        a=3         a=4
+   6   (0,-1)    (-10,-14)
+  12   (0,-1)    (-4,-2)    (-28,-27)
+  18   (0,-1)    (-6,-6)    (-22,-15)   (-78,-64)
+  20   (-1,-3)   (-8,-10)   (-20,-11)   (-76,-60)
+  22   (-2,-5)   (-10,-14)  (-23,-17)   (-74,-56)
+(full output: run ./check2adic2 N for N = 4..22; about 1 s per N at N = 22.)
+(B) is tight for a = 1 (N = 0 mod 6); (B') has slack -2 at N = 12, a = 2 (S of size 4 with
+V = 8 = N - s: at x = s/N = 1/3 the bound ((a+1) - (a-1)x)/(a+2) equals 1 - x for every a).
+
+
+2. PROOF OF (B')                                                         [Lean]
+-----------------------------------------------------------------------------------------
+Inputs (Folds/MaxMoves.lean): for s = 2u,
+   2 z_0 <= w_0,  2 z_s <= w_s + 1,  2 z_u <= w_s + w_0 + 2,
+   2 z_k <= w_{2k} + 1 (1 <= k < u),  2 z_k <= w_{2k-s} + 1 (u < k < s),  z_k + 1 <= w_k (k < s).
+Levels (sum_levels): write a = b + 1.  [1, s) is the disjoint union of
+   level l < a:  {2^l (2i+1) : i < n_l},  n_l = 2^{b-l} t,
+   level a:      {2^a (i+1) : i < t - 1}.
+Let Z_l, A_l be the sums of z, w over level l, Za, Aa over level a, Zb = z_0 + z_s, B = w_0 + w_s.
+Summing the inputs over a level (doubling: level l -> level l+1 two-to-one; level a-1 ->
+level a plus the boundary, via i -> (2i+1) mod t; level a -> level a, via i -> 2(i+1) mod t; the
+last two are injective since t is odd, sum_comp_le_of_injOn):
+   (1) Z_l + n_l <= A_l                     (l <= b)
+   (2) 2 Z_l <= 2 A_{l+1} + n_l              (l < b)
+   (3) 2 Z_b <= Aa + B + t + 1
+   (4) 2 Za <= Aa + t - 1
+   (5) 2 Zb <= B + 1
+Chain (chain_two_adic): by induction on L <= b,
+   2(b+3) sum_{l<L} Z_l <= 2(b+2) sum_{l<L} A_l + 2L A_L + 2 n_L (2b - 3L) - 4 n_0 b
+(step: add 2(b+1-L)*(1)_L + (L+1)*(2)_L and use n_L = 2 n_{L+1}).  At L = b add 4*(1)_b,
+(b+1)*(3), (b+3)*(4), (b+3)*(5): all constants cancel except
+   2(b+3) V + 4 n_0 b <= 2(b+2) N + b + 1,   4 n_0 b = 2 b s.
+These are the weights alpha_L = (a+1-L)/(a+2) of ../maxmoves/PROOFS.txt section 4; the only
+difference is that the constant 2^{a+1}(1-a) t of the paper proof is kept as -(a-1) s.
+
+
+3. TREE CONSTANTS                                                        [constants2.py]
+-----------------------------------------------------------------------------------------
+Lean products (B_i = bound at level i, N - i trivially):
+   i odd:  min(N - i, N/2) (N even),  min(N - i, h + 1 + floor(i/2)) (N = 2h+1);   B_0 = N;
+   i even >= 2, a = v2(i):  min(N - i, floor((a+1)N/(a+2)))                    [_two_adic]
+                        or  min(N - i, floor((2(a+1)N + a - 2(a-1)i)/(2(a+2))))  [_two_adic_size]
+Per class the deficit is density * int_0^{x*} ln((1-x)/b(x)) dx:
+   v2(i) = a, b = (a+1)/(a+2):  2^{-a-1} (ln((a+2)/(a+1)) - 1/(a+2))   (x* = 1/(a+2))
+   v2(i) = a, b = ((a+1) - (a-1)x)/(a+2):  x* = 1/3 for every a
+        a:            1         2         3         4         5      all
+        (B)       0.018033  0.004710  0.001446  0.000489  0.000176  0.024966
+        (B')      0.018033  0.006515  0.002551  0.001049  0.000445  0.028942
+   odd i: 0.096574 (N even, = (ln 2 - 1/2)/2), 0.058892 (N odd).
+Finite-N check ln(N!/prod B_i)/N with exactly the Lean B_i: N = 10^6: 0.121540 / 0.125516,
+N = 10^6 + 1: 0.083858 / 0.087834.
+
+
+4. HOW FAR FROM THE TRUTH FOR a >= 2                           [contmilp.py, discrete_check.py]
+-----------------------------------------------------------------------------------------
+contmilp.py computes the exact continuum supremum (fixed s, N -> oo) of V/N by a MILP over
+point positions (one binary per gap: is the gap's valid interval nonempty).
+     s     2    4     6    8      12      16     20
+   sup   2/3  5/7  2/3  11/15  23/32  23/30  23/32
+   (B)   2/3  3/4  2/3  4/5    3/4    5/6    3/4
+So the guess "1 - 2^{a-1}/(2^{a+1}-1)" of ../maxmoves/PROOFS.txt holds for s = 2^a but not for
+s = 2^a t with t > 1: for a = 2, s = 12 already beats 5/7, and a bound 5N/7 + O(1) for all
+s = 4 (mod 8) is false (section SUMMARY (C)).  Whether sup_t tends to 3/4 is open; the
+s = 12 optimum is S ≈ {3/14 (x3), 17/56, ~0.40, 3/7, 17/28 (x2), 5/7, 45/56, 6/7 (x2)}.
+For the tree bound only levels s = xN with x <= 1/3 matter, where (B') already uses s.
+
+
+5. FILES
+-----------------------------------------------------------------------------------------
+check2adic2.c     exhaustive check of (B) and (B') for one N (N <= 30)
+gaplp2.py         real relaxation of the gap inequalities as a function of x = s/N
+contmilp.py       exact continuum supremum of V/N for fixed s (MILP)
+discrete_check.py V for discretised continuum maximisers (the s = 12 counterexample to 5/7)
+constants2.py     the tree constants of section 3
+Binaries go in bin/ (ignored).
