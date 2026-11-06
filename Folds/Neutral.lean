@@ -146,8 +146,7 @@ theorem P_le (hN : 0 < N) (hX : X ⊆ Finset.Icc 1 N) :
         · rintro (rfl | ⟨hx, h⟩)
           · exact ⟨hm, le_rfl⟩
           · exact ⟨hx, by omega⟩
-      rw [e, Finset.card_insert_of_notMem (by simp), if_pos hm]
-      
+      rw [e, Finset.card_insert_of_notMem (by simp)]; simp [hm]
     · have e : X.filter (· ≤ t + 1) = X.filter (· ≤ t) := by
         ext x; simp only [Finset.mem_filter]
         constructor
@@ -157,7 +156,7 @@ theorem P_le (hN : 0 < N) (hX : X ⊆ Finset.Icc 1 N) :
           · subst e; exact absurd hx hm
           · omega
         · rintro ⟨hx, h⟩; exact ⟨hx, by omega⟩
-      rw [e, if_neg hm, Nat.add_zero]
+      rw [e]; simp [hm]
 
 theorem P_N (hN : 0 < N) (hX : X ⊆ Finset.Icc 1 N) : P N X N = X.card := by
   rw [P_le hN hX N le_rfl]
@@ -436,10 +435,10 @@ theorem size_bound (hN : 0 < N) (hX : X ⊆ Finset.Icc 1 N) (hn : IsNeutral N X)
       ((Nat.gcd X.card N : Int) * q : Int) ≤ μ := by
     intro μ hu hl
     by_contra hc
-    push_neg at hc
+    push Not at hc
     have h1 : (N : Int) * w < 0 := by linarith
     have hw0 : w < 0 := by
-      by_contra hw0; push_neg at hw0; nlinarith
+      by_contra hw0; push Not at hw0; nlinarith
     have : (N : Int) * w ≤ N * (-1) := mul_le_mul_of_nonneg_left (by omega) hNpos.le
     linarith
   have c1 := neg X.card b.1 b.2.2.1
@@ -759,7 +758,7 @@ theorem mem_resE {j n x : Nat} (hj : 1 ≤ j) :
     have hx : x = (2 * j + 1) * u + r := (Nat.div_add_mod x _).symm
     have hr : r < 2 * j + 1 := Nat.mod_lt _ hq
     have hun : u < n := by
-      by_contra hc; push_neg at hc
+      by_contra hc; push Not at hc
       have := Nat.mul_le_mul_left (2 * j + 1) hc
       omega
     refine ⟨j * u + (r / 2 - 1) + 1, Finset.mem_Icc.2 ⟨by omega, ?_⟩, ?_⟩
@@ -1054,7 +1053,7 @@ theorem enum_countEmb (hX : X ⊆ Finset.Icc 1 N) :
       fun h => Nat.find_min' _ h⟩
   refine ⟨fun y t _ => gal y t, fun y hy => ?_, ecnt_zero hX, ecnt_N hX⟩
   by_contra hc
-  push_neg at hc
+  push Not at hc
   have a1 := (gal (y + 1) _).1 le_rfl
   have a2 : enum N X y ≤ enum N X (y + 1) := (gal y _).2 (by omega)
   have e : enum N X (y + 1) = enum N X y := le_antisymm hc a2
@@ -1125,6 +1124,256 @@ theorem isCopy_iff_winEmb (hX : X ⊆ Finset.Icc 1 N) :
     rwa [enum_image hX] at this
   · rintro ⟨φ, hφ, e⟩
     rw [← e]; exact isCopy_winEmb hφ
+
+/-! ## J(k) universality -/
+
+/-- No prefix of `l` of size `2, …, k - 1` has a copy (in the `N`-strip) as its set. -/
+def NoCopyPrefix (N k : Nat) (l : List Nat) : Prop :=
+  ∀ t ∈ Finset.Ico 2 k, ¬ IsCopy N (l.take t).toFinset
+
+instance (N k : Nat) : DecidablePred (NoCopyPrefix N k) := fun l =>
+  inferInstanceAs (Decidable (∀ t ∈ Finset.Ico 2 k, ¬ IsCopy N (l.take t).toFinset))
+
+/-- `J(k)`: valid `k`-sequences with no copy prefix of size `2, …, k - 1`. -/
+def Jc (k : Nat) : Nat := ((semiSeqs k).filter (NoCopyPrefix k k)).card
+
+/-- `J_N(X)`: valid orderings of `X` (in the `N`-strip) with no copy prefix of size
+`2, …, |X| - 1`. -/
+def JN (N : Nat) (X : Finset Nat) : Nat := ((semiOrders N X).filter (NoCopyPrefix N X.card)).card
+
+theorem toFinset_map_eq (φ : Nat → Nat) (l : List Nat) :
+    (l.map φ).toFinset = l.toFinset.image φ := by
+  ext x; simp
+
+theorem noCopyPrefix_map {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) {σ : List Nat}
+    (hσ : ∀ y ∈ σ, 1 ≤ y ∧ y ≤ p) : NoCopyPrefix N p (σ.map φ) ↔ NoCopyPrefix p p σ := by
+  unfold NoCopyPrefix
+  refine forall_congr' fun t => imp_congr_right fun _ => not_congr ?_
+  rw [← List.map_take, toFinset_map_eq]
+  apply isCopy_image_iff hφ
+  intro y hy
+  rw [List.mem_toFinset] at hy
+  exact Finset.mem_Icc.2 (hσ y (List.mem_of_mem_take hy))
+
+theorem map_mem_semiOrders {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) {σ : List Nat}
+    (hσ : σ ∈ semiSeqs p) : σ.map φ ∈ semiOrders N ((Finset.Icc 1 p).image φ) := by
+  rw [mem_semiSeqs] at hσ
+  rw [mem_semiOrders]
+  have b : ∀ y ∈ σ, 1 ≤ y ∧ y ≤ p := fun y hy => (mem_range'_of_perm hσ.1).1 hy
+  have hnd := nodup_of_foldSeq hσ.1
+  refine ⟨⟨hφ.nodup_map hnd b, ?_⟩, (hφ.semiSymmetric_iff hnd b).2 hσ.2⟩
+  have hs := (isFoldSeq_iff.1 hσ.1).2
+  rw [toFinset_map_eq, hs]
+
+theorem exists_lift {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) {l : List Nat}
+    (hl : l ∈ semiOrders N ((Finset.Icc 1 p).image φ)) :
+    ∃ σ ∈ semiSeqs p, σ.map φ = l := by
+  rw [mem_semiOrders] at hl
+  obtain ⟨⟨hnd, hX⟩, hss⟩ := hl
+  obtain ⟨σ, rfl, hσ⟩ := list_lift (P := fun y => 1 ≤ y ∧ y ≤ p) l (fun x hx => by
+    have : x ∈ l.toFinset := List.mem_toFinset.2 hx
+    rw [hX, Finset.mem_image] at this
+    obtain ⟨y, hy, e⟩ := this
+    exact ⟨y, Finset.mem_Icc.1 hy, e⟩)
+  have hndσ : σ.Nodup := List.Nodup.of_map φ hnd
+  have hset : σ.toFinset = Finset.Icc 1 p := by
+    apply Finset.eq_of_subset_of_card_le
+    · intro y hy
+      rw [List.mem_toFinset] at hy
+      exact Finset.mem_Icc.2 (hσ y hy)
+    · rw [List.toFinset_card_of_nodup hndσ]
+      have h1 : (σ.map φ).toFinset.card = (σ.map φ).length := List.toFinset_card_of_nodup hnd
+      rw [hX, List.length_map, Finset.card_image_of_injOn hφ.injOn_Icc] at h1
+      omega
+  have hf : IsFoldSeq p σ := isFoldSeq_iff.2 ⟨hndσ, hset⟩
+  refine ⟨σ, ?_, rfl⟩
+  rw [mem_semiSeqs]
+  exact ⟨hf, (hφ.semiSymmetric_iff hndσ hσ).1 hss⟩
+
+/-- **Universality of `J`.**  If `φ` window-embeds the `p`-strip, the valid orderings of its
+image with no copy prefix of size `2, …, p - 1` number exactly `J(p)`. -/
+theorem JN_winEmb {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) :
+    JN N ((Finset.Icc 1 p).image φ) = Jc p := by
+  unfold JN Jc
+  rw [winEmb_image_card hφ]
+  symm
+  apply Finset.card_nbij (fun σ => σ.map φ)
+  · intro σ hσ
+    rw [Finset.mem_coe, Finset.mem_filter] at hσ ⊢
+    have b : ∀ y ∈ σ, 1 ≤ y ∧ y ≤ p := fun y hy =>
+      (mem_range'_of_perm (mem_semiSeqs.1 hσ.1).1).1 hy
+    exact ⟨map_mem_semiOrders hφ hσ.1, (noCopyPrefix_map hφ b).2 hσ.2⟩
+  · intro σ hσ σ' hσ' e
+    rw [Finset.mem_coe, Finset.mem_filter, mem_semiSeqs] at hσ hσ'
+    exact hφ.map_inj (fun y hy => (mem_range'_of_perm hσ.1.1).1 hy)
+      (fun y hy => (mem_range'_of_perm hσ'.1.1).1 hy) e
+  · intro l hl
+    rw [Finset.mem_coe, Finset.mem_filter] at hl
+    obtain ⟨σ, hσ, rfl⟩ := exists_lift hφ hl.1
+    have b : ∀ y ∈ σ, 1 ≤ y ∧ y ≤ p := fun y hy =>
+      (mem_range'_of_perm (mem_semiSeqs.1 hσ).1).1 hy
+    exact ⟨σ, Finset.mem_filter.2 ⟨hσ, (noCopyPrefix_map hφ b).1 hl.2⟩, rfl⟩
+
+/-- **`J(k)` universality.**  For every copy `X` of size `k` in the `N`-strip,
+`J_N(X) = J(k)`. -/
+theorem J_universal (hX : X ⊆ Finset.Icc 1 N) (hc : IsCopy N X) : JN N X = Jc X.card := by
+  obtain ⟨φ, hφ, e⟩ := (isCopy_iff_winEmb hX).1 hc
+  have := JN_winEmb hφ
+  rw [e] at this
+  exact this
+
+/-! ## Identity (B) -/
+
+/-- **Filtered prefix fibres.**  For `S ⊆ [1, N]` with `|S| = k` and a property `R` of the
+first `k` panels, `#{w : S_k(w) = S, R(w_1 … w_k)} = #{orderings u of S with R u} · g([1,N] \ S)`. -/
+theorem card_prefix_filter {k : Nat} {S : Finset Nat}
+    (hS : S ∈ (Finset.Icc 1 N).powersetCard k) (R : List Nat → Prop) [DecidablePred R] :
+    ((semiSeqs N).filter (fun a => (a.take k).toFinset = S ∧ R (a.take k))).card =
+      ((semiOrders N S).filter R).card * g N (Finset.Icc 1 N \ S) := by
+  rw [Finset.mem_powersetCard] at hS
+  have hk : k ≤ N := by
+    have := Finset.card_le_card hS.1; rw [hS.2] at this; simpa using this
+  rw [g, ← Finset.card_product]
+  apply Finset.card_nbij' (fun a => (a.take k, (a.drop k).reverse))
+    (fun p => p.1 ++ p.2.reverse)
+  · intro a ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, mem_semiSeqs] at ha
+    obtain ⟨⟨hf, hss⟩, hSa, hR⟩ := ha
+    have hnd := nodup_of_foldSeq hf
+    rw [semiSymmetric_split_iff hf (k := k) (by
+      have : a.length = N := by rw [hf.length_eq]; simp
+      omega)] at hss
+    simp only [Finset.coe_product, Set.mem_prod, Finset.mem_coe, Finset.mem_filter,
+      mem_semiOrders]
+    refine ⟨⟨⟨⟨take_nodup hnd k, hSa⟩, hss.1⟩, hR⟩, ⟨⟨?_, ?_⟩, hss.2⟩⟩
+    · exact List.nodup_reverse.2 (hnd.sublist (List.drop_sublist _ _))
+    · ext x
+      rw [List.mem_toFinset, List.mem_reverse, mem_drop_iff_of_nodup hnd, Finset.mem_sdiff,
+        ← hSa, List.mem_toFinset, ← List.mem_toFinset (l := a), (isFoldSeq_iff.1 hf).2]
+  · rintro ⟨u, v⟩ hp
+    simp only [Finset.coe_product, Set.mem_prod, Finset.mem_coe, Finset.mem_filter,
+      mem_semiOrders] at hp
+    obtain ⟨⟨⟨⟨hnu, hu⟩, hsu⟩, hRu⟩, ⟨⟨hnv, hv⟩, hsv⟩⟩ := hp
+    have hulen : u.length = k := by
+      rw [← List.toFinset_card_of_nodup hnu, hu, hS.2]
+    have hf : IsFoldSeq N (u ++ v.reverse) := by
+      rw [isFoldSeq_iff]
+      refine ⟨List.nodup_append.2 ⟨hnu, List.nodup_reverse.2 hnv, ?_⟩, ?_⟩
+      · intro x hx y hy e
+        subst e
+        have h1 : x ∈ u.toFinset := List.mem_toFinset.2 hx
+        have h2 : x ∈ v.toFinset := List.mem_toFinset.2 (List.mem_reverse.1 hy)
+        rw [hu] at h1; rw [hv, Finset.mem_sdiff] at h2
+        exact h2.2 h1
+      · rw [List.toFinset_append, List.toFinset_reverse, hu, hv,
+          Finset.union_sdiff_of_subset hS.1]
+    have ht : (u ++ v.reverse).take k = u := List.take_left' hulen
+    have hd : (u ++ v.reverse).drop k = v.reverse := List.drop_left' hulen
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, mem_semiSeqs]
+    refine ⟨⟨hf, ?_⟩, by rw [ht, hu], by rw [ht]; exact hRu⟩
+    rw [semiSymmetric_split_iff hf (k := k) (by simp; omega), ht, hd, List.reverse_reverse]
+    exact ⟨hsu, hsv⟩
+  · intro a _
+    simp
+  · rintro ⟨u, v⟩ hp
+    simp only [Finset.coe_product, Set.mem_prod, Finset.mem_coe, Finset.mem_filter,
+      mem_semiOrders] at hp
+    have hulen : u.length = k := by
+      rw [← List.toFinset_card_of_nodup hp.1.1.1.1, hp.1.1.1.2, hS.2]
+    simp [List.take_left' hulen, List.drop_left' hulen]
+
+/-- The copies of size `k` in the `N`-strip. -/
+def copies (N k : Nat) : Finset (Finset Nat) := ((Finset.Icc 1 N).powersetCard k).filter (IsCopy N)
+
+/-- `C_N(k) = ∑_{X copy, |X| = k} g([1, N] \ X)`. -/
+def CN (N k : Nat) : Nat := ∑ X ∈ copies N k, g N (Finset.Icc 1 N \ X)
+
+/-- `S_k(w)` is a copy and no earlier `S_t` (`2 ≤ t < k`) is. -/
+def FirstCopy (N k : Nat) (a : List Nat) : Prop :=
+  IsCopy N (a.take k).toFinset ∧ NoCopyPrefix N k a
+
+instance (N k : Nat) : DecidablePred (FirstCopy N k) := fun a =>
+  inferInstanceAs (Decidable (IsCopy N (a.take k).toFinset ∧ NoCopyPrefix N k a))
+
+theorem noCopyPrefix_take {k : Nat} {a : List Nat} :
+    NoCopyPrefix N k (a.take k) ↔ NoCopyPrefix N k a := by
+  unfold NoCopyPrefix
+  refine forall_congr' fun t => imp_congr_right fun ht => ?_
+  rw [List.take_take, Nat.min_eq_left (Finset.mem_Ico.1 ht).2.le]
+
+/-- The sequences whose first copy prefix has size `k`: `J(k) · C_N(k)` of them. -/
+theorem card_firstCopy {k : Nat} (hk : k ≤ N) :
+    ((semiSeqs N).filter (FirstCopy N k)).card = Jc k * CN N k := by
+  have hbu : (semiSeqs N).filter (FirstCopy N k) = (copies N k).biUnion (fun X =>
+      (semiSeqs N).filter (fun a => (a.take k).toFinset = X ∧ NoCopyPrefix N k (a.take k))) := by
+    ext a
+    simp only [Finset.mem_filter, Finset.mem_biUnion, copies, FirstCopy, noCopyPrefix_take]
+    constructor
+    · rintro ⟨ha, hc, hn⟩
+      refine ⟨(a.take k).toFinset, ⟨?_, hc⟩, ha, rfl, hn⟩
+      rw [mem_semiSeqs] at ha
+      have hnd := nodup_of_foldSeq ha.1
+      have hlen : a.length = N := by rw [ha.1.length_eq]; simp
+      rw [Finset.mem_powersetCard, List.toFinset_card_of_nodup (take_nodup hnd k),
+        List.length_take]
+      refine ⟨fun x hx => ?_, by omega⟩
+      rw [List.mem_toFinset] at hx
+      exact Finset.mem_Icc.2 ((mem_range'_of_perm ha.1).1 (List.mem_of_mem_take hx))
+    · rintro ⟨X, ⟨-, hc⟩, ha, e, hn⟩
+      exact ⟨ha, e ▸ hc, hn⟩
+  rw [hbu, Finset.card_biUnion]
+  · unfold CN
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro X hX
+    simp only [copies, Finset.mem_filter] at hX
+    rw [card_prefix_filter hX.1 (NoCopyPrefix N k)]
+    have hXc := (Finset.mem_powersetCard.1 hX.1)
+    have := J_universal hXc.1 hX.2
+    unfold JN at this
+    rw [hXc.2] at this
+    rw [this]
+  · intro X _ Y _ hne
+    simp only [Function.onFun]
+    rw [Finset.disjoint_left]
+    intro a ha hb
+    rw [Finset.mem_filter] at ha hb
+    exact hne (ha.2.1.symm.trans hb.2.1)
+
+/-- **Identity (B).**  `a(N) = J(N) + ∑_{k=2}^{N-1} J(k) · C_N(k)`, classifying each sequence
+by its first copy prefix of size `2, …, N - 1`. -/
+theorem identity_B (N : Nat) :
+    semiCount N = Jc N + ∑ k ∈ Finset.Ico 2 N, Jc k * CN N k := by
+  rw [semiCount, ← Finset.card_filter_add_card_filter_not (s := semiSeqs N) (NoCopyPrefix N N)]
+  congr 1
+  have hbu : (semiSeqs N).filter (fun a => ¬ NoCopyPrefix N N a) =
+      (Finset.Ico 2 N).biUnion (fun k => (semiSeqs N).filter (FirstCopy N k)) := by
+    ext a
+    simp only [Finset.mem_filter, Finset.mem_biUnion]
+    constructor
+    · rintro ⟨ha, hn⟩
+      unfold NoCopyPrefix at hn
+      push Not at hn
+      have hex : ∃ t, t ∈ Finset.Ico 2 N ∧ IsCopy N (a.take t).toFinset := hn
+      refine ⟨Nat.find hex, (Nat.find_spec hex).1, ha, (Nat.find_spec hex).2, ?_⟩
+      intro t ht hc
+      have hlt := (Finset.mem_Ico.1 ht).2
+      have hN := (Finset.mem_Ico.1 (Nat.find_spec hex).1).2
+      exact Nat.find_min hex hlt ⟨Finset.mem_Ico.2 ⟨(Finset.mem_Ico.1 ht).1, by omega⟩, hc⟩
+    · rintro ⟨k, hk, ha, hc, -⟩
+      exact ⟨ha, fun h => h k hk hc⟩
+  rw [hbu, Finset.card_biUnion]
+  · apply Finset.sum_congr rfl
+    intro k hk
+    exact card_firstCopy (Finset.mem_Ico.1 hk).2.le
+  · intro k hk k' hk' hne
+    simp only [Function.onFun]
+    rw [Finset.disjoint_left]
+    intro a ha hb
+    rw [Finset.mem_filter] at ha hb
+    rcases Nat.lt_or_gt_of_ne hne with h | h
+    · exact hb.2.2 k (Finset.mem_Ico.2 ⟨(Finset.mem_Ico.1 hk).1, h⟩) ha.2.1
+    · exact ha.2.2 k' (Finset.mem_Ico.2 ⟨(Finset.mem_Ico.1 hk').1, h⟩) hb.2.1
 
 end Neutral
 end Folds
