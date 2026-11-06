@@ -84,7 +84,8 @@ static int tryt(int a,int b,int c,char *out){
       int y1=0,e1=0,y2=0,e2=0; int idx[3]={ii,jj,ll}, ee[3]={ce[0][A],ce[1][B],ce[2][C]};
       for(int s=0;s<3;s++) if(ee[s]){ if(!y1){y1=idx[s];e1=ee[s];} else {y2=idx[s];e2=ee[s];} phi[idx[s]]+= (ee[s]==1?1:-1); }
       int inc=1; for(int y=1;y<=p;y++){ if(phi[y]<1||phi[y]>N)inc=0; if(y<p&&phi[y]>=phi[y+1])inc=0;} if(!inc)continue;
-      if(!regall(p,ii,jj,ll))continue;
+      if(!regall(p,ii,jj,ll)){ if(getenv("DBG")){ printf("  irr k=%d p=%d u=%d v=%d D=(%d,%d,%d) mv=%d,%d %d,%d irregular:",bk[q],p,bu[q],bv[q],ii,jj,ll,y1,e1,y2,e2);
+          for(int x=1;x<=p;x++){ if(x==ii||x==jj||x==ll)continue; for(int y=1;y<=p;y++) if(rel(N,phi[x],phi[y])!=rel(p,x,y)){printf(" %d(vs %d)",x,y);break;} } printf("\n"); } continue;}
       W I=0; for(int y=1;y<=p;y++)I|=(W)1<<(phi[y]-1);
       char so[64]; if(NOY){ sprintf(so,"NOY"); } else if(!ycheck(I,so)){ if(!YPSI||!ypsi(I,so))continue; }
       sprintf(out,"R %d %d %d %d %d %d %d %d %d %d %d %s",bk[q],p,bu[q],bv[q],y1,e1,y2,e2,ii,jj,ll,so); return 1; }

@@ -14,6 +14,17 @@ import Folds.ThinCover
   relation around every panel outside the transferred set (not necessarily around the
   others); with an ordering of the complement of the image from scratch they transfer
   co-reachable sets.
+* `nearTrB`, `nearTrP`: decidable near-copy rules (a copy `copyF` with up to two panels moved
+  by one; the complement of the image by Theorem G after explicit steps, or through a second
+  near copy whose two irregular panels form a live 2-prefix, `ThinCover.conjectureC`).
+* `coReach_X_odd`, `coReach_chiX_transfer`, `chiXB`: the copy `X_N = {1, 4, 6, …, N - 3, N}`
+  is co-reachable for every odd `N ≥ 17` (Live5: `N ≡ 3 mod 4`), so it transfers.
+* Families for all `N`: `coReach_one_even_N` (`{1, 2k, N}`, `N` odd) and
+  `coReach_one_two_odd` (`{1, 2, c}`, `N ≡ 1 mod 4`, `c` odd), by closed-form (near) copies.
+* `Covered3R`, `Residual3R`, `residual3_of_residual3R`, `good3_of_residual3R`,
+  `residual3_all_of_residual3R`: the reduction of Live3q with the enlarged rules; numerically
+  (`experiments/live3r`, N = 51..70) the residual of `Covered3R` is the family `{1, 2, c}`
+  (and its mirror) only.
 -/
 
 namespace Folds
@@ -946,6 +957,162 @@ theorem coReach_of_nearTrP {N a b c k p u v y₁ e₁ y₂ e₂ i j l i₁ i₂ 
       · exact absurd h hx.2.2
       · exact h) hD
   simpa [Finset.image_insert, ea, eb, ec] using this
+
+/-! ## A closed-form near copy: `{1, 2, c}` for `N ≡ 1 (mod 4)` and odd `c`
+
+`phi12 : [p] → [N]` (`N = 2p - 1`, `p` odd) is the odd class with the panel `3` moved to `2`:
+`1 ↦ 1`, `2 ↦ 2`, `y ↦ 2y - 1`.  It preserves the window relation around every panel except
+`2` (for even `p` the panel `(p + 2)/2` would be irregular as well).  Its image
+`{1, 2, 5, 7, …, N}` is co-reachable: `4` is a valid step, and `{1, 2, 4, 5, 7, …, N}` pulls no
+panel to the left (Theorem G with the centre `1/2`).  So `{1, 2, c}` (`c` odd) is the image of
+`{1, 2, (c + 1)/2}`, co-reachable in `[p]` by induction. -/
+
+/-- The odd class with `3` moved to `2`. -/
+def phi12 (y : Nat) : Nat := if y = 2 then 2 else 2 * y - 1
+
+theorem nearEmb_phi12 {p : Nat} (hp : 3 ≤ p) (ho : p % 2 = 1) :
+    NearEmb (2 * p - 1) p phi12 (fun j => j ≠ 2) := by
+  refine ⟨fun y h1 h2 => ?_, fun x y hx1 hxp hy1 hyp e => ?_, fun j y hj1 hjp hR hy1 hyp => ?_,
+    fun j y hj1 hjp hR hy1 hyp => ?_⟩
+  · unfold phi12; split_ifs <;> omega
+  · unfold phi12 at e; split_ifs at e <;> omega
+  · unfold phi12 reach; split_ifs <;> omega
+  · unfold phi12 reach; split_ifs <;> omega
+
+theorem mem_image_phi12 {p x : Nat} (hp : 3 ≤ p) :
+    x ∈ (Finset.Icc 1 p).image phi12 ↔
+      x = 1 ∨ x = 2 ∨ (x % 2 = 1 ∧ 5 ≤ x ∧ x ≤ 2 * p - 1) := by
+  rw [Finset.mem_image]
+  constructor
+  · rintro ⟨y, hy, rfl⟩; rw [Finset.mem_Icc] at hy; unfold phi12; split_ifs <;> omega
+  · intro h
+    rcases h with rfl | rfl | h
+    · exact ⟨1, Finset.mem_Icc.2 ⟨le_rfl, by omega⟩, by simp [phi12]⟩
+    · exact ⟨2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by simp [phi12]⟩
+    · exact ⟨(x + 1) / 2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by
+        unfold phi12; split_ifs <;> omega⟩
+
+/-- `#({1, 2, 4} ∪ {odd ≥ 5}) ∩ [0, t)`. -/
+def F12 (t : Nat) : Nat := if 5 ≤ t then t / 2 + 1 else if 3 ≤ t then 2 else t - 1
+
+theorem countP_F12 : ∀ n lo, (List.range' lo n).countP
+    (fun x => decide (x = 1 ∨ x = 2 ∨ x = 4 ∨ (x % 2 = 1 ∧ 5 ≤ x))) = F12 (lo + n) - F12 lo
+  | 0, lo => by simp
+  | n + 1, lo => by
+    rw [List.range'_succ, List.countP_cons, countP_F12 n (lo + 1),
+      show lo + (n + 1) = lo + 1 + n by omega]
+    have hm : F12 (lo + 1) ≤ F12 (lo + 1 + n) := by unfold F12; split_ifs <;> omega
+    have key : F12 (lo + 1) =
+        F12 lo + (if lo = 1 ∨ lo = 2 ∨ lo = 4 ∨ (lo % 2 = 1 ∧ 5 ≤ lo) then 1 else 0) := by
+      unfold F12; split_ifs <;> omega
+    simp only [decide_eq_true_eq]
+    split_ifs at key ⊢ <;> omega
+
+theorem countP_sub_range' (P : Nat → Prop) [DecidablePred P] (m : Nat) :
+    ∀ r, r < m → (List.range' 1 r).countP (fun d => decide (P (m - d))) =
+      (List.range' (m - r) r).countP (fun x => decide (P x))
+  | 0, _ => by simp
+  | r + 1, h => by
+    have e : List.range' (m - (r + 1)) (r + 1) = (m - (r + 1)) :: List.range' (m - r) r := by
+      rw [List.range'_succ, show m - (r + 1) + 1 = m - r by omega]
+    rw [List.range'_concat, List.countP_append, countP_sub_range' P m r (by omega), e,
+      List.countP_cons, show 1 + 1 * r = r + 1 by omega]
+    simp only [List.countP_cons, List.countP_nil]
+    omega
+
+theorem countP_add_range' (P : Nat → Prop) [DecidablePred P] (m : Nat) :
+    ∀ r, (List.range' 1 r).countP (fun d => decide (P (m + d))) =
+      (List.range' (m + 1) r).countP (fun x => decide (P x))
+  | 0 => by simp
+  | r + 1 => by
+    rw [List.range'_concat, List.range'_concat, List.countP_append, List.countP_append,
+      countP_add_range' P m r]
+    simp only [List.countP_cons, List.countP_nil, show m + (1 + 1 * r) = m + 1 + 1 * r by omega]
+
+/-- **`{1, 2, c}` is co-reachable for `N ≡ 1 (mod 4)` and odd `c`, `7 ≤ c ≤ N - 4`**, given
+the smaller strips. -/
+theorem coReach_one_two_odd {N c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q) (hN4 : N % 4 = 1)
+    (h17 : 17 ≤ N) (hc : c % 2 = 1) (hc7 : 7 ≤ c) (hcN : c + 4 ≤ N) : CoReach N {1, 2, c} := by
+  obtain ⟨p, hp⟩ : ∃ p, p = (N + 1) / 2 := ⟨_, rfl⟩
+  have hNp : N = 2 * p - 1 := by omega
+  have hφ := nearEmb_phi12 (p := p) (by omega) (by omega)
+  have hmem := fun x => mem_image_phi12 (p := p) (x := x) (by omega)
+  -- the image `B` and `B ∪ {4}`
+  set B := (Finset.Icc 1 p).image phi12 with hB
+  have hBs : B ⊆ Finset.Icc 1 N := by
+    intro x hx; rw [hmem] at hx; rw [Finset.mem_Icc]; omega
+  have h4 : (4 : Nat) ∉ B := by rw [hmem]; omega
+  have hmem4 : ∀ x, 1 ≤ x → x ≤ N →
+      (x ∈ insert 4 B ↔ (x = 1 ∨ x = 2 ∨ x = 4 ∨ (x % 2 = 1 ∧ 5 ≤ x))) := by
+    intro x hx1 hxN; rw [Finset.mem_insert, hmem]; omega
+  have hinw : Inward N 1 (insert 4 B) := by
+    intro m hm1 hmN hmB
+    refine ⟨by omega, fun h => by omega, fun _ => ?_⟩
+    rw [leftCount_finset, rightCount_finset]
+    obtain ⟨r, hr⟩ : ∃ r, r = reach N m := ⟨_, rfl⟩
+    rw [← hr]
+    have hr1 : r ≤ m - 1 := by rw [hr]; unfold reach; omega
+    have hr2 : r ≤ N - m := by rw [hr]; unfold reach; omega
+    have L : (List.range' 1 r).countP (fun d => decide (m - d ∈ insert 4 B)) =
+        F12 m - F12 (m - r) := by
+      have e1 := countP_sub_range' (fun x => x ∈ insert 4 B) m r (by omega)
+      have e2 : (List.range' (m - r) r).countP (fun x => decide (x ∈ insert 4 B)) =
+          (List.range' (m - r) r).countP
+            (fun x => decide (x = 1 ∨ x = 2 ∨ x = 4 ∨ (x % 2 = 1 ∧ 5 ≤ x))) := by
+        apply List.countP_congr; intro x hx; rw [List.mem_range'_1] at hx
+        simp only [decide_eq_true_eq]; exact hmem4 x (by omega) (by omega)
+      rw [countP_F12, show m - r + r = m by omega] at e2
+      exact e1.trans e2
+    have R : (List.range' 1 r).countP (fun d => decide (m + d ∈ insert 4 B)) =
+        F12 (m + 1 + r) - F12 (m + 1) := by
+      have e1 := countP_add_range' (fun x => x ∈ insert 4 B) m r
+      have e2 : (List.range' (m + 1) r).countP (fun x => decide (x ∈ insert 4 B)) =
+          (List.range' (m + 1) r).countP
+            (fun x => decide (x = 1 ∨ x = 2 ∨ x = 4 ∨ (x % 2 = 1 ∧ 5 ≤ x))) := by
+        apply List.countP_congr; intro x hx; rw [List.mem_range'_1] at hx
+        simp only [decide_eq_true_eq]; exact hmem4 x (by omega) (by omega)
+      rw [countP_F12] at e2
+      exact e1.trans e2
+    rw [L, R]
+    have hm' := (hmem4 m hm1 hmN).not.1 hmB
+    unfold reach at hr
+    unfold F12
+    split_ifs <;> omega
+  have hY4 : CoReach N (insert 4 B) := coReach_of_inward (fun x hx => by
+    rw [Finset.mem_insert] at hx; rcases hx with rfl | hx
+    · rw [Finset.mem_Icc]; omega
+    · exact hBs hx) hinw
+  have hstep : SemiStep N B.toList 4 := by
+    unfold SemiStep
+    rw [leftCount_finset, rightCount_finset, show reach N 4 = 3 by unfold reach; omega]
+    simp only [List.range', List.countP_cons, List.countP_nil, hmem]
+    norm_num
+    split_ifs <;> omega
+  have hY : CoReach N B := coReach_of_step hBs (by omega) (by omega) h4 hstep hY4
+  -- the preimage `{1, 2, (c + 1)/2}`
+  have hv : valid3B p 1 2 ((c + 1) / 2) = true := by
+    unfold valid3B
+    have h1 : step2B p ((c + 1) / 2) ((c + 1) / 2) 2 = true := by
+      unfold step2B reach; simp only [beq_iff_eq]; split_ifs <;> omega
+    have h2 : step2B p ((c + 1) / 2) 2 1 = true := by
+      unfold step2B reach; simp only [beq_iff_eq]; split_ifs <;> omega
+    simp [h1, h2]
+  have hd : dead3B p 1 2 ((c + 1) / 2) = false := by
+    simp only [dead3B, Bool.or_eq_false_iff, Bool.and_eq_false_iff, beq_eq_false_iff_ne,
+      decide_eq_false_iff_not, ne_eq]
+    omega
+  have hD := IH p (by omega) (by omega) 1 2 ((c + 1) / 2) le_rfl (by omega) (by omega)
+    (by omega) hv hd
+  rw [hNp] at hY ⊢
+  have := coReach_nearEmb hφ hY (D := {1, 2, (c + 1) / 2}) (fun x hx => by
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+      rw [Finset.mem_Icc]; omega)
+    (fun j _ _ hj => by simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hj
+                        exact hj.2.1) hD
+  have e1 : phi12 1 = 1 := by simp [phi12]
+  have e2 : phi12 2 = 2 := by simp [phi12]
+  have e3 : phi12 ((c + 1) / 2) = c := by unfold phi12; split_ifs <;> omega
+  simpa [Finset.image_insert, e1, e2, e3] using this
 
 /-! ## The enlarged rules and the reduction -/
 
