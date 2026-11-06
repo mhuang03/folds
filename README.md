@@ -131,6 +131,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `SymStructure` (M) | symmetric case: **merge theorem** (`merge_iff_apFree`): 3-AP-free ⇔ both parity subsequences are 3-AP-free and the D-entry comes first on every linked pair; `parity_sort` |
 | `Live3p` (M) | 3-prefix liveness: **iff for every N ≤ 30, N ≠ 7** (`extends3_iff_le_30`); dead 3-sets proven dead for all N; Theorem G for 3-sets in closed form (`F3S`, `coReach3_of_F`) |
 | `SymStructure2` (M) | symmetric case: recursive extension test **Theorem E** (`ext_iff_cond`, decidable via `extB`), prefix-count recursion **Theorem L** (`live_rec`; L_k(N) = O(N)), exact shuffle-count identity for θ(N), and **Sharma's bound for all N** (`ends_parity`: a[k] has a[0]'s parity whenever k+6 < N/2; sharp at N = 26) |
+| `PeriodLaw` (M) | arithmetic bookkeeping for the period-law exactness proofs (closed-form weights never vanish) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -158,6 +159,9 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
      for odd k. Two-cycle faces give components of order 93 and 105 at k = 9.
    - **The bivariate generating function Σ T(N,k)tᴺuᵏ is not D-finite (proven)**, so
      there is no finite transfer structure in k. See `experiments/periods2/PROOFS.txt`.
+   - **Exact full periods** of T(N,8) = B(8) = 158739840 and T(N,9) = B(9) = 5397154560.
+     Theorem D1 (c_1, every m) and Theorem D2 (c_2, m ≤ 19) are proven on paper; see
+     `experiments/periods3/PROOFS.txt`. Components from shorter cycles for k > m are open.
    - Leading coefficients c_k are exact for k ≤ 9, e.g. 9!·c_9 ≈ 101.7. The continuum
      acceptance p_k = c_k/c_{k−1} decays like ≈ 0.75/(ln k + 0.25) (continuum SMC to
      k ≈ 1000), matching the a(N) = N!/(κ ln N)^N conjecture.
@@ -225,6 +229,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/thincover/PROOFS.txt` | the final thin-set certificates and kernel checks completing Conjecture C |
 | `experiments/symstruct/PROOFS.txt` | 3-AP-free structure: an exact merge-count identity for θ(n), the prefix-extension test, Sharma's ⌊N/2⌋−6 bound for all N (sharp), the dyadic pattern of the opening run, L_k(N) recursion, log-periodic ratio θ(n)/(2θθ) |
 | `experiments/live3p/PROOFS.txt` | 3-prefix liveness: the classification to N = 44, Theorem G for 3-sets, the route to all N |
+| `experiments/periods3/PROOFS.txt` | period-law exactness: Theorems D1/D2, exact periods of T(N,8), T(N,9), non-simple vertices |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
