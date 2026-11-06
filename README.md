@@ -126,6 +126,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Residual` (M) | lattice-parallelogram and slice lemmas; regions `RegionPF`, `RegionSL`, `RegionS`; `conjectureC_of_coverAll`: Conjecture C for all N follows from the semialgebraic covering statement `CoverAll N` (N > 300), which has an empty residual for 301 ≤ N ≤ 3000 |
 | `CoverAll` (M) | **the whole 2-D bulk** of the pair triangle for all N ≥ 301 (`bulk`, three cells, 11 LP-certified leaves); `d1_line`; `conjectureC_of_thinCover`: Conjecture C for all N reduces to `ThinCover`, a statement about lines with bounded offsets and a bounded box |
 | `Structure2` (M) | refined-count identities: L(N,m) = F(N,m) (reversal), mirror symmetry, exactly a(N)/2 sequences start with an odd panel for even N |
+| `ThinCover*` (M) | **Conjecture C for all N** (`ThinCover.conjectureC`): a valid 2-prefix extends to a full semi-symmetric sequence iff it is not one of the explicit dead pairs. Built from slice and parallelogram certificates (LP-certified polynomial inequalities) for N ≥ 1000, plus 699 kernel checks for 301 ≤ N < 1000 |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -165,16 +166,10 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    exhaustive search and SAT), so LDS ≥ min(⌊log₂(N+1)⌋, 6) and the descent bound holds for
    all N ≤ 126. See `experiments/labelling2/PROOFS.txt`. There is no proof yet: the extremal labellings are not unique for t ≥ 4;
    see `experiments/labelling/PROOFS.txt`.
-5. **Liveness (Conjecture C).** Every 2-set is co-reachable (its complement can be
-   ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
-   valid prefixes for N ≤ 31). The Adjacent Lemma, co-reachability of every interval,
-   and {1,N} for odd N ≠ 7 are now **proven** (Lean). The Lean family covers every
-   non-dead pair at N = 100 and 130. **Proven in Lean for every N ≤ 300.** For larger N it
-   reduces to `ThinCover N`. The 2-D bulk is proven, so what remains are thin sets:
-   lines u′ − u ≤ 9, u′ = 2u + e for |e| ≤ 15, u ≤ 3, and a box near (N/4, 3N/8). Each
-   line has a constant-slice certificate found numerically. See
-   `experiments/coverall/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
-   `experiments/live2/PROOFS.txt`.
+5. **Liveness (Conjecture C) — now a theorem (Lean, `Folds.ThinCover.conjectureC`).** A valid
+   2-prefix [m₁, m₂] can be completed to a full semi-symmetric sequence iff it is not
+   {1,N} for even N ≥ 4 or {1,7} at N = 7. Open: the analogous statement for longer prefixes
+   (the dead 3-prefixes are classified for N ≤ 31).
 
 ## Where things are
 
@@ -223,6 +218,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/structure2/FINDINGS.txt` | refined counts (none nicer than a(N)), the first-panel limit law (density ∝ √min(x,1−x)), the parity offset in growth, factorisations, 1838 failed cross-sequence searches |
 | `docs/RECURRENCE_LITERATURE.md` | which recurrence classes are compatible with N!/(log N)^N growth; prioritised ansätze |
 | `experiments/recsearch2/REPORT.txt` | niche recurrence search (all negative), with proofs that OGF-Mahler and 2-regular forms are impossible |
+| `experiments/thincover/PROOFS.txt` | the final thin-set certificates and kernel checks completing Conjecture C |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
