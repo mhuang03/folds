@@ -1,0 +1,179 @@
+UPPER SLIPS WITH AVERAGING: ALL-N EXPONENT 1/22 -> 1/17          (experiments/superexp4/)
+=========================================================================================
+
+Notation as in ../superexp2/PROOFS.txt.  V_n = valid sequences of the n-strip, a(n) = |V_n|,
+x mod* n = representative in [1, n], qq_n(j) = 2j mod* n, pp_n(k) = (2k+1) mod* n,
+G(tau) = {k : tau places k before qq_n(k)}, G'(sigma) = {k : sigma places pp_n(k) before k+1},
+B(n) = sum_D #condF(n,D) #condS(n,D) <= a(2n) (slip lemma),
+M(x,y,r) = sum_{D ⊆ [1,r]} #condF(x,D) #condS(y,D) (restricted chain, superexp2 Thm 4).
+PB(alpha, beta) = odds-first parity block.  [Lean] = Folds/SuperExp4.lean, namespace
+Folds.Slip.Up; no sorry, no native_decide; axioms propext, Classical.choice, Quot.sound.
+
+RESULT
+------
+Theorem (all N) [Lean: self_pow_le_semiCount_pow_17, alln17_aux].  For every N >= 1
+        N^N <= 2^{11N} a(N)^17,      i.e.   a(N) >= (N/2048)^{N/17}.
+So  liminf ln a(N) / (N ln N) >= 1/17  (previously 1/22, Folds/SuperExp2.lean); along
+N = 2^L the exponent stays 1/6.
+
+Two ingredients:
+ (U) upper slip positions of B(n) for odd n, certified on the FREE halves by averaging
+     over reversals [Lean: slipSum_odd_up, wSum_ge, avg4];
+ (P) a retuned potential induction: the surplus of the even child of an odd node is used
+     at the top of B(odd n), instead of feeding M(n, n, (n-1)/2) whole into the M-induction.
+(P) alone already gives 1/19 (see section 3); with (U) 1/17.  The potential-function limit
+of this system is 1/(16+eps) (section 3); the true recursion values are about 0.065 = 1/15.4
+on the worst N = binary 1010...10 (model3.py, U = 1/16).
+
+
+=========================================================================================
+1. THEOREM U: UPPER SLIPS OF B(2h+1)
+=========================================================================================
+Let n = 2h+1.  The restricted chain uses the slip positions k <= h of B(n) only, with
+tau = PB(alpha, beta), sigma = PB(alpha', beta'), alpha, alpha' in V_{h+1}, beta, beta' in
+V_h; alpha and beta' are FREE (counted by a(h+1), a(h)).  Upper positions: I_h = [(h+3)/2, h]
+(i.e. h + 2 <= 2i <= 2h), |I_h| = floor(h/2), k = 2i - 1 in (h, 2h).
+
+Lemma U1 [Lean: qq_up, pp_up, qq_up', pp_up'].  For i in I_h:
+   qq_n(2i-1) = 4i-2h-3 = 2 qq_{h+1}(i) - 1,      qq_{h+1}(i) = 2i-h-1,
+   pp_n(2i-1) = 4i-2h-2 = 2 pp_h(i-1),            pp_h(i-1)  = 2i-1-h.
+Hence (odd panels first in tau, even panels second in sigma):
+   PB(alpha, beta) places 2i-1 before qq_n(2i-1)   iff  alpha places i before qq_{h+1}(i),
+   PB(alpha', beta') places pp_n(2i-1) before 2i   iff  beta' places pp_h(i-1) before i.
+(Both panels of the first pair are odd, i.e. in alpha; both of the second are even, in beta'.)
+
+Lemma U2 [Lean: blockMap_mem_condF_up, blockMap_mem_condS_up].  For E ⊆ odd numbers <= h,
+D' ⊆ [1, h/2], U ⊆ I_h, with D = E ∪ 2D' ∪ (2U - 1):
+   alpha with "i before qq_{h+1}(i)" for i in U, beta in condF(h, D')  =>  PB(alpha,beta) in condF(n, D),
+   alpha' in condS(h+1, D'), beta' with "pp_h(i-1) before i" for i in U  =>  PB(alpha',beta') in condS(n, D).
+Proof.  Positions in E and 2D' exactly as in superexp2 Thm 4 (no wrap: 2k <= n for k <= h);
+upper positions by Lemma U1.  The three parts of D are disjoint (E odd <= h, 2D' even <= h,
+2U - 1 odd > h), so (E, D', U) -> D is injective.
+
+Theorem U [Lean: slipSum_odd_up].
+   B(2h+1) >= 2^{ceil(h/2)} W(h) M(h, h+1, floor(h/2)),
+   W(h) = sum_{U ⊆ I_h} #{alpha in V_{h+1} : i before qq_{h+1}(i), i in U} *
+                        #{beta' in V_h : pp_h(i-1) before i, i in U}.
+
+Lemma A (averaging over four reversals) [Lean: avg4, wSum_ge].  Let r, r' be involutions of
+finite sets S, T and P(x,i), Q(y,i) conditions with P(r x, i) <-> not P(x,i),
+Q(r'y, i) <-> not Q(y,i) for i in I.  Then
+   4 sum_{U ⊆ I} #{x : P(x,U)} #{y : Q(y,U)}  >=  |S| |T| 2^{ceil(|I|/4)}.
+Proof.  The sum equals sum_{x,y} 2^{c(x,y)}, c(x,y) = #{i in I : P(x,i) and Q(y,i)} (count
+U ⊆ the common good set).  Summing the four terms (x,y), (rx,y), (x,r'y), (rx,r'y) — the sum
+is invariant under each — the four counts partition I, so one is >= ceil(|I|/4).
+Application: reversal is an involution of V_m and, for distinct a, b, flips "a before b"
+(notBefore_reverse); qq_{h+1}(i) = 2i-h-1 != i and pp_h(i-1) = 2i-1-h != i.  So
+   4 W(h) >= a(h+1) a(h) 2^{ceil(floor(h/2)/4)}                       (wSum_ge)
+and Theorem U gives B(2h+1) >= 2^{ceil(h/2) + ceil(floor(h/2)/4) - 2} a(h+1) a(h) M(h,h+1,floor(h/2)):
+about n/16 more bits than the restricted chain alone.
+
+Checks.  upcheck.py: Lemma U1 as an iff for all alpha, beta, n = 5..11 (11968 checks, 0
+failures).  upfamily.py: the whole family of Theorem U built explicitly for h = 2, 3, 4
+(N = 10, 14, 18): 200, 10000, 732736 sequences, all distinct, number = 2^{ceil(h/2)} W M
+exactly, all valid (h <= 3 all checked, h = 4 every 7th); 4W/(a a 2^{ceil(|I|/4)}) = 2.5,
+2.5, 3.06 (>= 1 as Lemma A says).
+
+
+=========================================================================================
+2. THE INDUCTION (K = 17, u = 11) [Lean: alln17_aux]
+=========================================================================================
+Strong induction on N >= 1 of
+   (i)   N^N <= 2^{11N} a(N)^17
+   (ii)  N even:  N^N 2^{2N} <= 2^{11N} a(N)^17
+   (iii) (2N)^{2N} 2^{4N} <= 2^{22N} B(N)^17
+   (iv)  N^N y^y 2^{8r} <= 2^{11(N+y)} M(N,y,r)^17   (y in {N,N+1}, 2r <= N, 2r+1 <= y, N <= 2r+2).
+(iv): r <= 12 trivial (N, y <= 32, 8r <= 6(N+y)).  r >= 13: mSum_chain, (i) for the free
+   halves, (iv) one level down; needs N + y + 2 <= 9 ceil(r/2), true as N+y+2 <= 4r+7
+   (arith17_iv).
+(iii): N <= 256 trivial ((8N)^{2N} <= 2048^{2N} = 2^{22N}).  N = 2m: chain B(2m) >= 2^m a(m)^2 B(m)
+   (needs only K >= 10).  N = 2h+1, h >= 128: N^N <= 2^{N+1}(h+1)^{h+1}h^h; the pair
+   bound h^h (h+1)^{h+1} 2^{2h} <= 2^{11N}(a(h)a(h+1))^17 (from (i), (ii): the even one of
+   h, h+1 carries the surplus), (iv) for (h, h+1, floor(h/2)) and Theorem U + Lemma A give
+   (2N)^{2N} 2^{4N} <= 2^{22N} B^17 provided
+        8N + 36 <= 2h + 8 floor(h/2) + 17(ceil(h/2) + ceil(floor(h/2)/4))     (arith17_iii),
+   true for h >= 128 (per h: 16 vs 16.625).
+(i), (ii): as in superexp2 (a(2n) >= B(n); a(2n+1) >= 2a(n)a(n+1) and the pair bound).
+
+
+=========================================================================================
+3. WHY 17, AND WHAT THE OLD 22 LEFT ON THE TABLE
+=========================================================================================
+Asymptotic potential accounting (bits per element, K-units): surplus 0 at odd N, 2 at even N,
+4 per element for B(n) (needed by (ii)), s per unit of r for M.
+   M recursion:      K/2 >= 4 + s/2                     (entropy x+y ~ 4r, gain K r/2)
+   B(odd n), top:    K/2 + K/8 [U] + 2 + s/2 >= 16       (per h, n = 2h+1)
+Without U: K/2 + 2 + (K-8)/2 >= 16 -> K >= 18+eps (K = 19 provable).  With U: K/2 + K/8 + 2 +
+(K-8)/2 >= 16 -> K >= 16 + eps; K = 17 leaves the margin 0.625 h that pays the constants.
+The old proof (K = 22) fed M(n, n, (n-1)/2) into the M-induction directly, so the even child of
+the odd node never contributed its surplus: s h >= 6n forced s >= 12 and K >= 20 (+2 slack).
+To go below 16 one needs gains at the ODD nodes a(2n+1): a gain of g n bits lowers the even
+surplus needed by the odd node from 2 to 2 - Kg; with g = 1/32 the same accounting gives
+K >= 14.6.  True recursion values on the worst N (model.py, model3.py): 0.058 (old tools),
+0.065 (with U), 0.075 (with U and g = 1/16); 1/6 needs g ~ 1/2.
+
+
+=========================================================================================
+4. THE ODD-NODE QUESTION (task ideas 1-3): FINDINGS
+=========================================================================================
+4.1 Why odd N has no free slips (structural).  An adjacent swap {y, y+1} of a split X changes
+the counting function kappa only at y.  The window condition of a panel f involves kappa(f-1)
+and kappa~(2f-1) (cyclic, period N).  So the swap creates conditions at f = y, y+1 (its own
+panels), f = y+1 (f-1 = y) and at every f with 2f-1 ≡ y (mod N).  For even N and y even
+(D-slips) the last equation has no solution: 2 conditions per slip, one on each block — the
+source of the slip lemma.  For odd N, 2 is invertible mod N, so EVERY swap has a third
+condition, at the doubling preimage f ≡ (y+1)/2 (mod N):
+  * D-slips {2k, 2k+1}, small k (N = 2n+1, 4k+1 <= N; checked by the general slip lemma):
+        tau: k before 2k,  sigma: 2k+1 before k+1,  and
+        k ≡ n+1 (2):  tau: (k+n+1)/2 before k;     k ≡ n (2):  sigma: k+1 before (k+n+2)/2
+    (the wrap panel k+n+1 sits in the upper middle);
+  * aligned slips {2i-1, 2i} (X = {2i - e_i}): for E ⊆ [1, (n+1)/2] no wrap conditions at
+    all (aodd.py, n = 5, 6 and the derivation from Theorem A), the conditions are the tree
+    edges j -> 2j, 2j-1 inside [1, 2r] — but a single slip again has 3 (parent edge + 2
+    child edges); p-chains have about one per element but their ends cost conditions.
+  conds.c (N = 16, 17, all X): the number of X with (c_tau, c_sigma) = (1,1) conditions is 14
+  for N = 16 (the 14 single D-slips/aligned-type swaps) but 2 for N = 17.
+4.2 But odd N is not poorer in total: osum.c sums Theorem A over ALL X with strip-valid
+blocks: sum_X T(X)S(X)/(a(n1)a(n2)) = 6.02, 6.41, 9.88, 13.64, 16.33 for N = 9, 11, 13, 15, 17
+against 6.32, 7.51, 11.81, 15.18, 17.21 for N = 8, 10, 12, 14, 16.  The mass is spread over
+hundreds of X (no dominant structured family).
+4.3 Odd nodes vs children.  An odd node 2n+1 -> (n, n+1) has one odd child, whose own bound
+is only a parity block (2 a a): imposing PB structure on the odd child is free.  With the
+even child full (averaging, single condition) and the odd child PB, the D-slips with k = 2i,
+i of one parity class, k <= n/2, have all three conditions certified (one by averaging on
+the even child, one free or averaged on a grandchild, the wrap one free by parity):
+gain about n/32 - n/16 bits per odd node (paper, verified only through the condition
+formulas of 4.1; NOT formalised — it needs an odd-N version of the slip lemma
+Folds/SuperExp.lean).  Accounting of section 3: K about 15.  Constraining the even child to a parity block
+instead loses its own B-gain, which every construction tried here could not repay.
+4.4 Truncation (task idea 2).  trunc.py: the slip-chain family A(M) (M = 8, 16) does NOT
+truncate validly: at M = 16, deleting the panels > N leaves invalid sequences for 256-464 of
+the 512 members for every N = 5..15 except N = 8; the distinct valid truncations number 2-128.  Reason:
+truncating slip(D, tau, sigma) of size 2n to an odd size 2n'+1 produces the odd D-slip of
+4.1, whose wrap conditions are size dependent (the tree family truncates because parity
+blocks have no conditions at all).
+4.5 "+1" (task idea 3).  Inserting 2n+1 into slip(D, tau, sigma) (size 2n) is the same as
+inserting n+1 into sigma, i.e. the odd slip of 4.1 again; the +1 criterion for the slip
+sequence reduces to the wrap conditions.  No free extension.
+4.6 Other splits of odd N.  dsplit.c: for N <= 24 the only "free" splits (both blocks
+defect-free for every inner order) are the doubling splits with d | N (sizes jN/d,
+(j+1)N/d): prime N has only the parity split.  model2.py: allowing doubling splits whenever
+a small odd d divides a node raises the model value for typical N (0.11 at N ~ 2^40) but the
+worst N (prime chains) is not improved, and a proof would be number-theoretic.
+
+
+=========================================================================================
+5. FILES (1 core, < 1 GB)
+=========================================================================================
+upcheck.py     Lemma U1 (exhaustive, n <= 11).
+upfamily.py    Theorem U family, explicit (h <= 4): count, distinctness, validity, Lemma A ratio.
+trunc.py       truncation of the slip-chain family (4.4).
+aodd.py        aligned slips on odd strips: conditions characterised by order pairs (4.1).
+osum.c         sums of the general slip lemma over all X, any N (4.2).  gcc -O2 -o osum osum.c
+conds.c        interval-condition counts (c_tau, c_sigma) for every X (4.1).
+dsplit.c       free (defect-free) splits (4.6).
+model.py, model2.py, model3.py   numerical recursion models (sections 3, 4).
+Lean           Folds/SuperExp4.lean: NotBefore, notBefore_reverse, sum_pow_ge, avg4, iset,
+               qq_up, pp_up, upF, upS, wSum, wSum_ge, blockMap_mem_condF_up,
+               blockMap_mem_condS_up, slipSum_odd_up, small_slipSum', arith17_iv,
+               arith17_iii, alln17_aux, self_pow_le_semiCount_pow_17.

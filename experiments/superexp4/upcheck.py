@@ -36,17 +36,22 @@ def PB(a, b): return tuple([2 * x - 1 for x in a] + [2 * y for y in b])
 def before(t, x, y): return t.index(x) < t.index(y)
 
 
-for s in range(2, 6):
-    n = 2 * s + 1
-    Va, Vb = V(s + 1), V(s)
-    I = [i for i in range(1, s + 1) if 2 * i >= s + 2]
-    bad = tot = 0
-    for a in Va:
-        for b in Vb:
-            t = PB(a, b)
-            for i in I:
-                k = 2 * i - 1
-                tot += 2
-                bad += before(t, k, ms(2 * k, n)) != before(a, i, ms(2 * i, s + 1))
-                bad += before(t, ms(2 * k + 1, n), k + 1) != before(b, ms(2 * i - 1, s), i)
-    print(f"n={n}: |I|={len(I)} checks={tot} failures={bad}")
+def main():
+  for s in range(2, 6):
+      n = 2 * s + 1
+      Va, Vb = V(s + 1), V(s)
+      I = [i for i in range(1, s + 1) if 2 * i >= s + 2]
+      bad = tot = 0
+      for a in Va:
+          for b in Vb:
+              t = PB(a, b)
+              for i in I:
+                  k = 2 * i - 1
+                  tot += 2
+                  bad += before(t, k, ms(2 * k, n)) != before(a, i, ms(2 * i, s + 1))
+                  bad += before(t, ms(2 * k + 1, n), k + 1) != before(b, ms(2 * i - 1, s), i)
+      print(f"n={n}: |I|={len(I)} checks={tot} failures={bad}")
+
+
+if __name__ == "__main__":
+    main()
