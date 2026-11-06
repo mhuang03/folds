@@ -10,17 +10,23 @@ For a family `(K, L, R, α, β, smax, amin)` of `Live8.dirOK` and a pair `(a, c)
 right distance), the witnesses `s` are the integers between the lower bounds
 `(aK - α + 1)/(L + 1)`, `(cK - β + 1)/(R + 1)`, `R`, `2` and the upper bounds `(aK - α)/L`,
 `(cK - β)/R`, `smax`.  If every upper bound exceeds every lower bound by at least `1` (twelve
-affine conditions on `(a, c)`, `famCons`), a witness exists (`dirOK_of_cons`).  So the pair
+affine conditions on `(a, c)`, `famCons`), a witness exists (`wit_of_cons`).  So the pair
 passes `dirAny` as soon as the polygon `Π = {famCons ≥ 0}` contains a lattice point, and that
 holds, position-free, as soon as `Π` contains a fundamental parallelogram of `ℤ²`
 (`exists_lattice_point`): `ParOK`.
 
-* `Aff`, `famCons`, `dirOK_of_cons`: the pair lemma.
-* `exists_lattice_point`: a fundamental parallelogram with all four corners in `Π` contains a
-  lattice point of `Π`.
-* `RegionPF`: some family and orientation whose polygon contains a fundamental parallelogram;
-  `dirAny_of_regionPF`.
-* `Proven2`, `Residual2`, `residual_of_residual2`, `conjectureC_of_residual2`.
+* `Aff`, `famCons`, `wit_of_cons`, `Wit`: the pair lemma.
+* `exists_lattice`, `exists_lattice_point`: a fundamental parallelogram (sides `w₁`,
+  `w₂ + δ w₁`) with all four corners in a polygon contains a lattice point of the polygon.
+* `RegionPF`: some family and orientation whose witness polygon contains a fundamental
+  parallelogram; `covered_of_regionPF`.
+* `sliceCons`, `sliceCons'`, `SliceOK`, `RegionSL`: the slices `a = p c + j`, `c = p a + j`
+  (polygons in `(s, c)` resp. `(s, a)` whose lattice points are witnesses); `covered_of_regionSL`.
+* `shape_*`, `u3_*`, `corner_d1`, `RegionS`: explicit families (fixed small shapes, `u = 3` with
+  `|N - 3u'| ≤ 5`, the corner `N = 3u'`, `u = u' - 1`).
+* `Proven2`, `Residual2`, `residual_of_residual2`, `conjectureC_of_residual2`; the covering
+  statement `CoverAll` and `conjectureC_of_coverAll`.  `CoverAll N` (hence `Residual N`) is
+  **not** proven; it holds numerically for `301 ≤ N ≤ 3000` (`experiments/residual`).
 -/
 
 namespace Folds

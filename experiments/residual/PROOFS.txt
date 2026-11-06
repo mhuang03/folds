@@ -117,9 +117,16 @@ For N >= 301 (omega / short ring identities; u3.c checks 301 <= N <= 200000):
 6. Numerics (residual2.c: the pipeline old regions -> PF -> S -> SL, exact, with a dirAny
    sanity check of every SL pair; regions.c semantics for the old regions)
 -----------------------------------------------------------------------------------------
-  301 <= N <= 3000:   see the "all:" line of `residual2 301 3000 1` (recorded below).
-  sample 3001 <= N <= 30000 (step 997): see `residual2 3001 30000 997`.
-  RESULTS: (filled in below)
+  residual2 301 3000 1:
+     all: tot 373320900 old 222480454 PF 150254688 S 13500 SL 572258 left 0 bad 0
+  i.e. of the 3.733e8 mixed wide non-special pairs, the old regions take 59.6%, RegionPF the
+  remaining 40.25% except 585758 pairs (0.157%), of which RegionS takes 13500 (about 5 per N)
+  and RegionSL the other 572258 (each re-checked with dirAny); nothing is left: CoverAll N
+  holds for every 301 <= N <= 3000.
+  Per N (old residual -> after PF -> after PF + S + SL):
+     N = 301:  1553 -> 69 -> 0;   N = 1001: 16824 -> 129 -> 0;   N = 3001: 150871 -> 320 -> 0;
+     N = 6002: 603812 -> 804 -> 0 (residual2 6001 6002 1).
+  sample 3001 <= N <= 30000 (step 997), residual2 3001 30000 997: SAMPLE_RESULT
 
 7. What remains: the covering statement CoverAll N for N > 300
 --------------------------------------------------------------
