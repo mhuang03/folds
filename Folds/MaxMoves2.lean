@@ -1,4 +1,5 @@
 import Folds.MaxMoves
+import Mathlib.Data.Nat.Factorization.Basic
 
 namespace Folds
 
@@ -335,5 +336,63 @@ theorem card_moves_two_adic {a t : Nat} (ha : 1 ≤ a) (hs : S.length = 2 ^ a * 
   exact card_moves_two_adic' hnd hS hs ht
 
 end Gaps
+
+/-! ## The tree bound -/
+
+/-- At a level `i ≥ 1` (`i = |S|`, even) with `v₂(i) = a`, at most `(a+1)N/(a+2)` panels are
+valid. -/
+theorem card_moves_le_two_adic {N : Nat} {S : List Nat} (hnd : S.Nodup)
+    (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) (h0 : S.length ≠ 0) (heven : S.length % 2 = 0) :
+    (moves N S).card ≤
+      (S.length.factorization 2 + 1) * N / (S.length.factorization 2 + 2) := by
+  set a := S.length.factorization 2
+  set t := S.length / 2 ^ a
+  have hdec : 2 ^ a * t = S.length := Nat.ordProj_mul_ordCompl_eq_self S.length 2
+  have hodd : ¬ 2 ∣ t := Nat.not_dvd_ordCompl Nat.prime_two h0
+  have ha : 1 ≤ a := by
+    rcases Nat.eq_zero_or_pos a with h | h
+    · rw [h, pow_zero, one_mul] at hdec
+      exfalso; apply hodd; rw [hdec]; omega
+    · exact h
+  have := card_moves_two_adic hnd hS ha hdec.symm (by omega)
+  rw [Nat.le_div_iff_mul_le (by omega)]
+  linarith
+
+/-- **Improved upper bound, even `N`** (2-adic levels).  `a(2h) ≤ ∏_{i < 2h} B_i` with
+`B_i = min(2h - i, h)` for odd `i`, `B_0 = 2h` and `B_i = min(2h - i, ⌊(a+1)·2h/(a+2)⌋)` for even
+`i ≥ 2`, `a = v₂(i)`.  This is `(2h)! · exp(-(0.1215… + o(1)) · 2h)`. -/
+theorem semiCount_even_le_prod_two_adic (h : Nat) :
+    semiCount (2 * h) ≤
+      ∏ i ∈ Finset.range (2 * h),
+        (if i % 2 = 1 then min (2 * h - i) h
+         else if i = 0 then 2 * h - i
+         else min (2 * h - i) ((i.factorization 2 + 1) * (2 * h) / (i.factorization 2 + 2))) := by
+  apply semiCount_le_prod
+  intro p _ hnd hb _
+  have c1 := card_moves_le hnd hb
+  split
+  · next hodd => exact le_min c1 (card_moves_odd_le hnd hb hodd)
+  · split
+    · exact c1
+    · next hodd h0 => exact le_min c1 (card_moves_le_two_adic hnd hb h0 (by omega))
+
+/-- **Improved upper bound, odd `N`** (2-adic levels).  As `semiCount_odd_le_prod_two_mod_four`
+with `⌊(a+1)N/(a+2)⌋` at every even level `i ≥ 2`, `a = v₂(i)`.
+This is `(2h+1)! · exp(-(0.0838… + o(1)) N)`. -/
+theorem semiCount_odd_le_prod_two_adic (h : Nat) :
+    semiCount (2 * h + 1) ≤
+      ∏ i ∈ Finset.range (2 * h + 1),
+        (if i % 2 = 1 then min (2 * h + 1 - i) (h + 1 + i / 2)
+         else if i = 0 then 2 * h + 1 - i
+         else min (2 * h + 1 - i)
+          ((i.factorization 2 + 1) * (2 * h + 1) / (i.factorization 2 + 2))) := by
+  apply semiCount_le_prod
+  intro p _ hnd hb _
+  have c1 := card_moves_le hnd hb
+  split
+  · next hodd => exact le_min c1 (card_moves_odd_odd_le hnd hb hodd)
+  · split
+    · exact c1
+    · next hodd h0 => exact le_min c1 (card_moves_le_two_adic hnd hb h0 (by omega))
 
 end Folds
