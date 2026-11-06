@@ -239,6 +239,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/symratio/PROOFS.txt` | 3-AP-free: locality, an O(n³) algorithm for θ(n), **new terms θ(201..300)** beyond the OEIS b-file (`data/theta_exact.txt`), the refined Conjecture R′ (4^{−j} convergence; super-geometric when 3 ∣ x) |
 | `experiments/thetaext/` | **exact A003407 θ(n) for all n ≤ 2000** (`b003407.txt`; the OEIS b-file stops at 200) via an O(n³) window/trie algorithm with 45-prime CRT; r(n) and the Conjecture R′ evidence |
 | `experiments/live3r/PROOFS.txt` | near-copy transfers; the only remaining 3-prefix family {1,2,c} and its halving-chain completions |
+| `experiments/fastalg/NOTES.txt` | no fundamentally faster algorithm for a(N): any time-ordered automaton needs one state per live set (proven); the exact bisimulation quotient only saves a constant factor; the trace lemma and normal form (≈16 GB for N = 39, not built) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
