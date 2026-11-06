@@ -1,0 +1,114 @@
+Live pairs, part 5: {1, N} for odd N, Beatty transfers, and the wide pairs
+==========================================================================
+
+Notation as in experiments/adjacent/PROOFS.txt (I_X(m) = |X n L(m)| - |X n R(m)|, Theorem G,
+CoReach).  "Lean" refers to Folds/Live5.lean (no sorry, no native_decide; `decide +kernel`
+only on two 13/11-panel witness lists).
+
+STATUS
+  * GOAL 1 DONE.  {1, N} is co-reachable for every odd N != 7 (Lean `coReach_one_N`; the
+    prefix [1, N] is live, `extends_one_N`).  With WindowRule.not_extends_one_N and
+    Live.not_extends_seven this settles the pairs {1, N} completely.
+  * New uniform rule: RIGHT-ALIGNED BEATTY COPIES X(N, p, h) = {floor((rN - h)/p)}, h <= 1,
+    are co-reachable (they satisfy Theorem G with the centre right of the strip), so
+    co-reachable sets of the p-strip transfer through them (`coReach_beatty_transfer`).
+  * Splits into two window copies (doubling splits N = (2j+1) n): transfer through either
+    part (`coReach_split`, `Cov5.oddRes`, `Cov5.evenRes`).
+  * Family `Cov5` = Cov3 + {1, N} + Beatty + split transfers, closed under res / mult /
+    mirror.  Coverage (cov5.py -r one,beatty,dbl, faithful to Lean):
+            non-dead   Cov3   Cov5
+      N = 20:   189     189    189
+      N = 40:   779     748    777
+      N = 60:  1769    1625   1767
+      N = 100: 4949    4409   4949
+      N = 130: 8384    7347   8384
+    For 13 <= N <= 130 Cov5 misses 175 pairs in total (Cov3: >13900 up to N = 100), all of
+    them "wide" mixed-parity pairs in the corners (u <= 10 or so, v >= N - 10), in a few
+    sparse families (section 4).
+  * Conjecture C is NOT proven in full: (a) the wide pairs of section 4 have no
+    construction yet, (b) a covering argument "every pair is reached by some rule" for all N
+    is missing (the family is only computed numerically).
+
+1. {1, N}, N odd
+----------------
+(a) N = 1 (mod 4).  The odd class is the Beatty copy X(N, (N+1)/2, 0) (floor(2rN/(N+1)) =
+    2r - 1), so {1, (N+1)/2} co-reachable => {1, N} co-reachable; (N+1)/2 is odd.
+(b) N = 3 (mod 4), N = 2n - 1, n even.  X_N = {1, 4, 6, ..., N-3, N} is a window copy of the
+    (n-1)-strip (chiX: 1 -> 1, y -> 2y, n-1 -> N; `winEmb_chiX`, by omega), and
+    {1, n-1} -> {1, N}; n - 1 = (N-1)/2 is odd.  It remains to show X_N co-reachable.
+    Its complement Y = {2, N-1} + {3, 5, ..., N-2} is the image of [n] under psiX
+    (1 -> 2, n -> N-1, y -> 2y - 1).  psiX preserves the window relation (Live4 `Agree`) for
+    every pair except (1, 2) and (n, n-1): the window of 2 in [N] is {1, 3} while panel 1 of
+    the n-strip has an empty window (and symmetrically); for interior y, 2 lies in the
+    window of 2y-1 exactly when 1 lies in the window of y (the left half).  Hence (Live4
+    `semiSymmetric_near`) every full semi-symmetric sequence rho of [n] with 1 before 2 and n
+    before n-1 maps to an ordering of Y from scratch.
+    Such rho: F = {2, 4, ..., n-4} + {n-1}.  I_F >= 0 everywhere (it is +1 at the odd panels
+    of (n/2, n-3], 0 elsewhere) and I_{[n] \ F} <= 0 everywhere (-1 at the even panels of
+    (n/2, n-4]), so both F and its complement are co-reachable by Theorem G
+    (`inward_fSet`, `inward_fSet_compl`); rho = tau ++ reverse(phi), tau ordering [n] \ F
+    and phi ordering F from scratch (Live4 `semiSymmetric_append_rev`), has 1, n in the first
+    part and 2, n-1 in the second.  (`coReach_X`, `coReach_one_X`.)
+(c) Induction.  N <= 12: base (Live2 `coReach_base`); the recursion N -> (N+-1)/2 meets the
+    dead {1, 7} only from N = 13 and N = 15, checked by explicit orderings (`wit13`,
+    `wit15`).  [Exploration: oneN.py builds the orderings for all odd N <= 141 and checks
+    them; three.py, fsearch.py, fsearch2.py found F; ghost1.py, xcopy.py, copies1N.c the
+    copy X_N.]
+
+2. Right-aligned Beatty copies
+------------------------------
+For 1 <= p, h + 2p <= N + 1 the Beatty set X = {floor((rN - h)/p)} has counting function
+c(t) = floor((pt + p + h - 1)/N) (Copies.lean).  For m outside X, c(m) = c(m-1) =: k, and
+the arm counts are c(m-1) - c(m-R-1) and c(m+R) - c(m).  With h <= 1, kN <= pm + h - 1 gives
+2kN <= 2pm + h - 1, hence c(2m-1) >= 2k (left half, R = m-1) and p + c(2m-N-1) >= 2k
+(right half, R = N-m): I_X(m) <= 0 for every m outside X.  So X satisfies Theorem G with the
+centre right of the strip (`inward_beatty`).  For other h the profile is "-|+" around every
+copy point (each point attracts its neighbours), not inward (beattyin.py); the left-aligned
+copies h = N-2p, N+1-2p are the mirrors of h = 1, 0.
+
+3. Doubling splits
+------------------
+If [N] = phi([p]) + psi([q]) with both parts window copies (Growth `Split`), the complement of
+phi([p]) is ordered from scratch by psi of any full sequence of [q] (`exists_full`, from
+Theorem G with B empty), so co-reachable sets transfer through both parts (`coReach_split`).
+Instance: N = (2j+1) n, oddRes / evenRes (Copies `split_res`); e.g. at N = 34 = 17 * 2 the
+copy {1, 3, ..., 17, 18, 20, ..., 34} takes (3, 32) to (2, 17) in [18].
+
+4. The wide pairs
+-----------------
+Characterisation (Cov3, covlean5.py, N <= 100): the pairs missing from Cov3 for N >= 31 are
+mixed-parity pairs that are not inward (v >= 2u + 2 and 2v >= N + u + 3) and whose odd
+divisors of v - u give no good class with a non-dead preimage; they sit in the corners
+(u small, v close to N).  Inward criterion for a pair (exact, adjacent/PROOFS 3): positives
+are the panels of (u, v/2], negatives those of ((N+u)/2, v).
+With Beatty + split transfers almost all are covered.  Still missing (13 <= N <= 130), up to
+the mirror, essentially:
+    (3, N-3)          N odd, 3 does not divide N (N >= 35)
+    (3, N-5)          N = 1 (mod 6)
+    (3, N-9), (5, N-7)  several N = +-1 (mod 6)
+    (1, N/2 + 2)      N = 0 (mod 4), N in {56, 60, 72, 80, 84, 92, 120}
+    (5, N-7)          N = 2 * prime (74, 86, 94, 110?)
+    and a few single pairs (e.g. (3, 32) at N = 53, (5, 120) at N = 128 ...).
+Full list per N: cov5.py 13 130 -m -r one,beatty,dbl.
+Exploration that did not lead to a uniform construction:
+  * Zero-set lemma (zeroset.py): a background prefix of 1-2 points followed by Theorem G
+    covers few corner pairs; shortest prefixes after which Theorem G or G' applies to {1, N}
+    are long and irregular (prefG.py).
+  * Ghost reductions (ghostpair.py, live2 6.1) work for many mixed pairs but not the corners.
+  * Simple greedy rules on {1, N} (greedyrules.py) fail for infinitely many N.
+  * Window copies containing a given pair are plentiful (copydfs.c: hundreds at N = 37);
+    many of them satisfy Theorem G (copyin.py: e.g. (3, 44) at N = 47 lies in the inward copy
+    {3, 7, 11, 15, 19, 23, 28, 32, 36, 40, 44} with preimage (1, 11) in [11]).  These are
+    not Beatty copies of [N]; describing a uniform inward family containing the remaining
+    corner pairs is the natural next step.
+  * Residue classes that satisfy Theorem G themselves (classin.py) add nothing beyond the
+    rules above (cov5.py rule 'cin').
+
+5. Programs (1 core, < 200 MB)
+  solver.c / lib.py   exact background-picture solver (ctypes), helpers
+  bg.c                the same as a command-line tool
+  oneN.py             explicit orderings for {1, N} by the recursion of section 1 (checked)
+  cov5.py             the family Cov5 (rules one, beatty, dbl, X, near, cin selectable)
+  beattyin.py, classin.py, copies*.c, copydfs.c, copyco.py, copyin.py   copies
+  ghost1.py, ghostpair.py, zeroset.py, prefG.py, peelg.py, greedyrules.py, look.py,
+  fwd.py, prof.py, three.py, fsearch*.py, xcopy.py   exploration of sections 1 and 4
