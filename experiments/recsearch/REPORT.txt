@@ -1,0 +1,209 @@
+SEARCH FOR A RECURSIVE FORMULA a(N) = F(a(1), ..., a(N-1), N)        (experiments/recsearch/)
+=========================================================================================
+
+Question: is there a recurrence for the semi-symmetric fold counts a(N) that uses only
+earlier terms of the sequence (and N)?  Data: a(1..37) (experiments/semi_counts.txt), and
+c(1..41), the reversal-mirror-fixed counts (experiments/arith/selfdual_out.txt).  All
+arithmetic is exact (Python integers/Fractions, python-flint for exact kernels and LLL).
+At most 1 core and < 2 GB were used.
+
+BOTTOM LINE
+-----------
+Nothing works.  None of about 5,600 linear ansatze (P-recursive in 20 transforms,
+divide-and-conquer, convolution, divisor-sum, algebraic and differentially-algebraic GFs)
+and none of ~10^6 expression trees (searched pairwise, ~10^12 combinations) reproduce the
+held-out terms.  There is not even a near miss: the largest "excess" is +2 (a fit that
+matches 2 more of the first equations than its free parameters allow), and every such
+case comes from the tiny initial terms.  The best expression tree matches N = 3..6 and
+then fails.
+  * PROVEN (unconditional): the OGF sum a(N) x^N is not algebraic, because
+    a(N) >= (N/512)^{N/22} grows faster than any exponential.
+  * PROVEN only conditionally: a(N) is not P-recursive (holonomic) if the asymptotic
+    conjecture holds.  The proven bounds alone do NOT exclude P-recursiveness (section T).
+  * EMPIRICAL (exact linear algebra): no P-recursive relation of order r and degree d with
+    (r+1)(d+1) <= 32 - r, i.e. up to 30 unknowns with >= 5 spare equations.  This uses all
+    37 terms and holds for each of the 20 sequences/transforms listed in section 1.
+    The lattice search adds: for every box with 32 - r < (r+1)(d+1) <= 64 there is no
+    relation whose coefficient vector has small norm (bounds in section 1b).
+  * a(N) mod p: for every prime 3 <= p <= 97 there is no linear recurrence over F_p of
+    order <= 16 valid for N = 1..37 (order <= 18 for p >= 5).  Even from N = 8 on there
+    is none of order <= 13.  a(N) is not ultimately periodic mod m for any 3 <= m <= 64.
+    The only modular structure is the known even-ness and a == c (mod 4).
+
+Notation for the table: K = number of unknown coefficients, E = number of exact equations,
+spare = E - K.  For linear ansatze the "fit / held-out" split is automatic: a fit must
+satisfy all E equations, and K of them determine it (the first K equations are the fit,
+the remaining E-K >= 5 are held out).  nfit = largest prefix of equations that still has
+a solution with non-zero target coefficient.  The generic value is Keff-1, and
+excess = nfit-(Keff-1).  Rank is certified mod two 61-bit primes (full rank mod p implies
+full rank over Q); every deficient case is recomputed over Q with flint.  Sanity check
+(selftest.py): the engine finds n! = n(n-1)!, the Motzkin recurrence, and flags a Motzkin
+sequence corrupted after n = 20 as a near miss (excess +12).
+
+RESULTS TABLE
+-------------
+ #   ansatz (script)                                   unknowns K     equations/held-out          result
+ --  ------------------------------------------------  -------------  --------------------------  ------------------------------
+ 1   P-recursive REC(r,d): sum_{i<=r,j<=d} c_ij n^j     all (r,d),     E = 37-r, spare >= 5        no relation; max excess +1
+     a(n-i) = 0, a(N), N<=37 (precursive.py)            r>=1, K<=32-r  (K <= 30)                   (r=1,d=0: small-N coincidence)
+ 1'  same, first 6 equations dropped (holds for         K <= 26-r      E = 31-r, spare >= 5        none
+     large n only)
+ 1'' ODE(r,d): sum c_ij x^j D^i F = 0 for the OGF       K<=32-r-d      E = 37-r-d, spare >= 5      none
+     (order r+d recurrences with sparse support)
+ 1a  same three shapes (146 boxes each) for:            K <= 30        spare >= 5                  none in any
+     a/N!, binomial and inverse binomial transform,
+     OGF log(1+A), exp(A), 1/(1+A), EGF log, exp, 1/(1+A),
+     (a+c)/4 (V4 orbits), (a-c)/4, a(2n), a(2n+1)
+     (a/2 is equivalent to a: homogeneous ansatz)
+ 1b  c(N), N <= 41; c(2n); c(4n); c(4n+1); c(4n+2)      K <= 34 (c)    spare >= 5                  none (r=0 gives only spurious
+                                                                                                   "p(n)c(n)=0" from the zeros of c)
+ 1c  LLL on kernel lattice, REC(r,d) with              33..64         E = 37-r < K                no short relation (section 1b);
+     32-r < K <= 64 (lll.py)                                                                       controls behave as expected
+ 2   a(2n) = P(a(n-1),a(n),a(n+1)) deg<=2, deg-2-hom,   3..14          17-18 eqs (N even)          none; max excess +1
+     a(2n)=P(a(n)) deg<=4, a(2n)=c a(n)^2;
+     a(2n+1) = Q(a(n),a(n+1)[,a(n-1),a(n+2)]) deg<=2;
+     coefficients from {1}, {1,N}, {1,N,N^2}, N^0..5, {1,2^n}, {1,4^n},
+     {1,N,2^n,N 2^n}, {1,2^n,4^n}, {1,2^N}; target coefficient 1 or same basis
+     (dandc.py, 314 ansatze, all with spare >= 3, most >= 5)
+ 2'  mixed: a(N) = al(N) a(N-1) + be(N) a(n)^2          3..~30         34-36 eqs (all N) or        none; max excess +1 (at N=2..4)
+     [+ ga(N) a(n)a(N-n)] [+ a(N-2)] [+ de a(N/4)^4],                  17-18 (one parity)
+     al,be,ga,de polynomials/exponentials as in 2,
+     also separately for even and odd N; a(N)a(N-1) quadratic form
+ 3   convolutions: a(N) = sum_k w(N,k) a(k)a(N-k)       3..34          35 eqs (N = 3..37)          none (1022 ansatze);
+     with w in {1, k(N-k), C(N,k), C(N-2,k-1), [k even],                                           max genuine excess +2
+     |N-2k|, 2^min(k,N-k)}; cubic sum a(i)a(j)a(k) with and without                              (spurious kernels from the identity
+     multinomials; divisor sums sum_{d|N} a(d), a(d)a(N/d)^d, a(N/d)^d,                           "k even" = conv/2 for odd N are
+     odd-split sums 2a(jn)a((j+1)n); each alone, + a(N-1), + a(N-1),a(N-2),                      recognized and excluded)
+     pairs, all together; coefficient bases {1},{1,N},{1,N,N^2},N^0..3,
+     parity (1,(-1)^N), (1,N,(-1)^N,N(-1)^N), {1,2^N} (conv.py)
+ 3b  OEIS transforms: Euler, inverse Euler, Moebius,    146 boxes      spare >= 5                  none simpler: same growth or faster,
+     binomial, inverse binomial, Stirling 1 and 2,      each, K<=30                                no smooth factorizations (20-40-digit
+     boustrophedon, invert, inverse invert, OGF/EGF log                                            cofactors free of primes < 10^4),
+     (oeis_transforms.py), each with the full P-rec search                                         no P-recursive relation
+ 4   algebraic P(x,F) = 0, deg_x <= dx, deg_F <= df,    (dx+1)(df+1)   38 coefficients,            none (90 shapes per GF)
+     OGF and EGF (Pade-Hermite; df=1 = rational/C-finite) <= 33        spare >= 5
+ 4'  D-algebraic: polynomial in x, F, F', ..., F^(ord)  <= 30          36-37 coefficients,         none (16 shapes per GF)
+     with ord <= 3, total degree <= 2,3,4, deg_x <= dx; OGF and EGF    spare >= 5
+     (algebraic.py)
+ 5   Berlekamp-Massey over F_p, p <= 97 (modp.py)       --             37 terms                    linear complexity 19 (= random) for
+                                                                                                   p >= 5, 17 for p = 3; tails N>=8: 15
+                                                                                                   (14 for p=3); c: 21/41; c(2n): 10/20
+ 5'  periodicity mod m <= 64; v_p for p<=13; Lucas      --             37 terms                    only "a even for N>=2"; divisibility
+     a(pn+k) == a(n)a(k) mod p                                                                     frequencies ~1/p; Lucas at chance level
+ 6   expression trees: leaves a(N-1), a(N-2), a(N-3),   no free consts 18 fit (N=3..20),           0 survive the fit in every form;
+     a(fl N/2), a(cl N/2), n=fl(N/2), 2^n, N, 2^N, N!,  (alpha*E: 1)   17 held out (N=21..37)      best near miss matches N=3..6 only
+     1, 2, 3; ops + - * /; all 941,260 distinct trees
+     with <= 4 leaves, and t = E, E1+E2, E1-E2, E1*E2, E1/E2, alpha*E
+     (top level up to 8 leaves) (exprsearch.py)
+
+1b. LATTICE SEARCH BEYOND THE EXACT RANGE  (lll.py, lll_out.txt, lll_compare_out.txt)
+------------------------------------------------------------------------------------------
+For 32-r < K = (r+1)(d+1) <= 64 (r = 1..12) there are fewer equations than unknowns,
+so rational relations always exist.  The test is whether one has a SMALL integer
+coefficient vector.  Embed: lattice of all (c, W*M c), with W = 10^60.  By the LLL
+guarantee |b1| <= 2^((K-1)/2) lambda_1, every relation c has
+   |c| >= B = |b1|/2^((K-1)/2)  when b1 is itself a relation,  and
+   |c| >= W/2^((K-1)/2) ~ 10^54  otherwise.
+This is a rigorous lower bound on the coefficient size of any recurrence in that box.
+  * Positive control (planted order-4, degree-3 recurrence with coefficients in [-3,3]
+    and n!-type growth): found exactly in every box containing it (K = 20..40),
+    |b1| ~ 10^0.9.
+  * a(N): no relation of norm < 10^54 for K <= 32-ish (where b1 is not a relation).  In
+    the larger boxes the shortest relations are huge: log10|b1| falls from ~54 (K ~ 33)
+    to 12.1 at K = 60 (r = 11, d = 4).  This is the generic decline as the kernel
+    dimension grows.  The lower bounds B are listed per box in lll_out.txt; the smallest
+    is 10^3.2 (r=11, d=4, K=60), and every box with K <= 48 has B >= 10^9.
+  * Size-matched negative controls (a(N) multiplied by random factors in [0.9,1.1] or
+    [0.99,1.01] for N >= 8, which surely have no relation): their |b1| are within about
+    1-3 orders of magnitude of those for a(N), with a(N) slightly smaller.  This is
+    consistent with a(N) being a smooth sequence, not with a hidden relation.  A real
+    relation shows up as a drop of ~50 orders, as in the positive control.
+    (lll_compare_out.txt has the box-by-box comparison.)
+
+T. THEORY: GROWTH VERSUS D-FINITENESS / ALGEBRAICITY
+------------------------------------------------------
+Proven facts used (README, experiments/growth/PROOFS.txt, Lean):
+   (N/512)^{N/22} <= a(N) <= N! exp(-(floor((N+1)/2)-1)/16),
+   liminf ln a/(N ln N) >= 1/22, limsup ln a/(N ln N) >= 1/6.
+Conjecture: a(N) = N!/(kappa_N ln N)^N, i.e. ln a(N) = N ln N - N ln ln N + O(N).
+
+(T1) The OGF is not algebraic, not rational and not C-finite.  PROVEN.  Algebraic power
+     series have coefficients O(rho^N).  a(N) >= (N/512)^{N/22} is super-exponential,
+     so sum a(N) x^N has radius of convergence 0.
+(T2) Classical fact (Perron's theorem for limsup, extended to Newton polygons by Perron
+     and Kreuser).  This is the form used, e.g., by Bell, Gerhold, Klazar and Luca,
+     "Non-holonomicity of sequences defined via elementary functions", Ann. Comb. 2008.
+     If a_n satisfies a linear recurrence with polynomial coefficients and is not
+     eventually 0, then there are a rational slope kappa of the recurrence's Newton
+     polygon and a non-zero algebraic lambda with
+         limsup_n | a_n / (n!)^kappa |^{1/n} = |lambda|,   0 < |lambda| < infinity.
+     In particular ln a_n <= kappa n ln n + O(n), with equality up to O(n) infinitely
+     often, so limsup ln a_n/(n ln n) = kappa is RATIONAL and the limsup of
+     (a_n/n!^kappa)^{1/n} is finite and NON-ZERO.
+(T3) Conditional non-holonomicity.  Assume the conjecture, or just
+         (i) ln a(N)/(N ln N) -> 1   and   (ii) (a(N)/N!)^{1/N} -> 0.
+     By (i) and T2, kappa = 1.  Then T2 forces limsup (a(N)/N!)^{1/N} = |lambda| > 0,
+     which contradicts (ii).  So a(N) is NOT P-recursive, the OGF is not D-finite, and
+     the EGF is not D-finite.  Equivalently: under the conjecture the EGF is entire of
+     infinite order, since a(N)/N! = (kappa ln N)^{-N}; D-finite entire functions have
+     finite order.  The conjecture's (ln N)^{-N} factor is exactly the kind of growth no
+     holonomic sequence can have, because holonomic growth is
+     n!^{p/q} rho^n exp(poly(n^{1/s})) n^alpha (ln n)^beta, with beta fixed.
+(T4) The PROVEN bounds alone do NOT rule out P-recursiveness.  The bounds only give
+     limsup ln a/(N ln N) in [1/6, 1] and (a/N!)^{1/N} <= e^{-1/32+o(1)}.  Both are
+     compatible with T2, for example with kappa = 1 and |lambda| <= e^{-1/32}, or with
+     any rational kappa in [1/6, 1).  Concretely, the P-recursive sequence
+     b(N) = N!/2^{N/2} (adjust to an integer, e.g. (2n)!/2^n at N = 2n) satisfies the
+     upper bound, the lower bound and the structural inequalities:
+       b(2n) >= 2 b(n)^2, because C(2n,n) >= 2;
+       b(qn) >= b(q) b(n)^q, because (qn)!/(n!)^q >= q!.
+     So none of the proven inequalities can separate a from holonomic sequences.  The
+     mod-4 congruence a == c and the mod-3 growth effect do not either: P-recursive
+     sequences can have any finite residue pattern and periodic fluctuations.  What is
+     missing for a proof is an UPPER bound of the form a(N) <= N! e^{-omega(N)}, i.e.
+     (a(N)/N!)^{1/N} -> 0, together with ln a/(N ln N) -> 1.  Alternatively, it would be
+     enough to show that limsup ln a/(N ln N) is irrational or that (a/N!^kappa)^{1/N}
+     tends to 0 or infinity for the right kappa.  Proving any of these is a growth
+     question, not a recurrence question.
+(T5) D-algebraic (algebraic ODE) GFs have no comparable growth obstruction: Maillet-type
+     bounds allow n!^c growth.  So family 4' is purely empirical.
+(T6) Related, already in the repo: the bivariate prefix GF sum T(N,k) t^N u^k is proven
+     non-D-finite (experiments/periods2/PROOFS.txt).  This is evidence that the counting
+     problem has no finite transfer structure, but it does not imply anything about
+     a(N) itself.
+
+NEAR MISSES (honest list)
+--------------------------
+* Linear families: the largest genuine excess anywhere is +2 (conv family, parity
+  basis).  It comes from N <= 5, where a(N) = 1, 2, 4, 10, 28 satisfy many small
+  identities, e.g. a(N) = 3a(N-1) - 2 for N = 3, 4, 5.  No fit survives past N = 6.
+* Expression trees: the best single tree, (1/3)(a(N-1)+a(N-3))(n+N), matches N = 3..6
+  and fails at N = 7.  No tree in any of the six forms matches N = 3..20 (the fit range).
+* The excess in prefix fits is 0 or 1 for nearly all of the ~5,600 linear ansatze.  For
+  comparison, the corrupted Motzkin sequence gives +12.
+
+WHAT THIS MEANS
+---------------
+The only exact recursion known stays the subset recursion of the README
+(a(N) = sum_{|S|=k} g(S) g(S^c)).  It recurses over 2^N subsets, not over earlier terms
+of the sequence.  The lower-bound constructions (parity blocks, composition, doubling
+splits) give inequalities only: their share of a(N) tends to 0 (e.g. the parity
+construction's share is 0.0016 at N = 20), so they cannot be the leading terms of an
+exact recurrence.  This explains why every family of type 2 fails.  A recurrence in
+the earlier terms alone would have to be of a type outside everything tested here.
+Under the growth conjecture it cannot be linear with polynomial coefficients of any
+order or degree (T3).
+
+FILES
+-----
+common.py          data loading, exact rank / prefix-rank / kernel engine (two 61-bit primes + flint)
+selftest.py        engine checks (n!, Motzkin, corrupted Motzkin)
+transforms.py      exact OGF/EGF log/exp/reciprocal, binomial, Euler, Moebius, Stirling, boustrophedon, invert
+precursive.py      family 1 (REC, REC-skip6, ODE shapes); precursive_out.txt summary, precursive_detail.txt every box
+lll.py             family 1b (LLL embedding, controls); lll_out.txt, lll_compare.py / lll_compare_out.txt
+dandc.py           family 2; dandc_out.txt
+conv.py            family 3a; conv_out.txt
+oeis_transforms.py family 3b; oeis_transforms_out.txt
+algebraic.py       family 4; algebraic_out.txt
+modp.py            family 5; modp_out.txt
+exprsearch.py      family 6 (argument: max leaves, default 4); exprsearch_out.txt
