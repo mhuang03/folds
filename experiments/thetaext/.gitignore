@@ -1,0 +1,5 @@
+# compiled binaries and scratch output (never commit)
+*.bin
+*.o
+a.out
+work/

@@ -1,0 +1,191 @@
+EXACT theta(n) = A003407(n) FOR n <= 2000                          (experiments/thetaext/)
+==========================================================================================
+theta(n) = number of permutations of [1,n] with no 3-term arithmetic progression
+(A003407).  The OEIS b-file stops at n = 200 (Heinz), Correll-Ho reached n = 90, and
+../symratio got to n = 300.  This directory has exact values for 0 <= n <= 2000
+(b003407.txt; theta(2000) has 714 digits), the exact ratios r(n), and a test of
+Conjecture R'.
+
+Files
+  theta.c          the algorithm (residues modulo K primes at once)
+  crt.py           primes below 2^61; CRT with redundancy check -> b-file
+  checkres.py      checks the residues against the b-file (n <= 200) and
+                   ../symratio/data/theta_exact.txt (n <= 300)
+  run.sh           full pipeline: sh run.sh 2000 3 15   (3 processes x 15 primes)
+  ratios.py        exact r(n), doubling table, chain test of R' (-> ratios_report.txt)
+  b003407.txt      "n theta(n)", n = 0..2000
+  ratios.txt       r(n) to 40 digits, 2 <= n <= 2000 (from the exact values)
+  ratios_report.txt   output of ratios.py
+  build: gcc -O3 -march=native -o theta.bin theta.c   (binaries are git-ignored)
+
+------------------------------------------------------------------------------------------
+1. METHOD
+------------------------------------------------------------------------------------------
+The starting point is Theorems W, S and J of ../symratio/PROOFS.txt.  Three changes turn the
+O(n^3)-per-value matrix recursion of window.c into something close to n^2 per value.
+
+(a) One window set and a symmetric J.  Let W_x be the set of heads (first 6 entries) of
+    Theta(x), which by reversal is also the set of reversed tails G = (a_x, ..., a_{x-5}).
+    Index J_x by (head, reversed tail).  J_x is then a SYMMETRIC W_x x W_x matrix, the
+    tail law equals the head law t_x = J_x 1, and Theorem J reads, for x >= 19:
+        W_x = lift_0 W_{floor x/2}  u  lift_1 W_{ceil x/2}          (lift_p g = 2g - p),
+        J_x(lift_q H, lift_{1-q} G) = [J_d Pi_{x,q} J_c](H, G),  d = (x+q)/2, c = (x+1-q)/2,
+        theta(x) = sum_q t_d^T Pi_{x,q} t_c,
+        t_x restricted to lift_{1-q} W_c = J_c (Pi_{x,q}^T t_d).
+    (W_x may contain windows that do not occur. They get weight 0, which is harmless.)
+
+(b) No J matrices above the base.  J_x is never formed for x > 18.  Instead
+    L_x(v) = J_x v is evaluated recursively:
+        L_x(v) | lift_{1-q} W_c = L_c( Pi_{x,q}^T L_d( v | lift_q W_d ) ),
+    and the recursion bottoms out in the enumerated sparse J_x, 9 <= x <= 18.  One
+    marginal t_x costs O(x^2 log x) Pi-applications instead of the O(x^3) matrix
+    products of window.c, which needed J for every size up to n/4, so O(n^4) in total
+    for all n <= N.
+
+(c) Pi by a double trie.  Let y'_k be the lifted reversed tail of sigma (y'_1 = last
+    entry) and u_i the lifted head of tau.  Theorem W's interleaving count is
+        Pi = #{Young diagrams lambda in the 6x6 box : no cell (i,k) of lambda has
+               y'_k, u_i linked},
+    where lambda_i is the number of y's after u_i (the c_j of window.c, complemented).
+    Let i0 be the first i with y'_1 linked to u_i, and k0 the first k with y'_k linked
+    to u_1.  Then lambda only uses rows < i0 and columns < k0, so Pi depends only on
+    y'_1..y'_{k0} and u_1..u_{i0}.  theta.c walks the prefix trie of W_d (rows) and of
+    W_c (columns) together and stops as soon as i0 and k0 are known.  Each stopped node
+    pair adds Pi * (sum of row weights in the subtree) to an accumulator on the column
+    node, and the accumulators are pushed down at the end.  For example, Pi = 1 exactly
+    when y'_1 and u_1 are linked, and that is decided by one pair of depth-1 nodes.  At
+    n = 1000 one application of Pi_{n,q} touches about 1e6 node pairs, against
+    w_d * w_c ~ 1.3e8 window pairs.
+
+Arithmetic.  The K primes are below 2^61 and are all handled in one process, so the tries
+are walked once for all of them.  Residues are kept in Montgomery form.  Pi * residue
+products are summed lazily in unsigned __int128 and reduced once per node.  "Mod 2^61"
+is never used: all moduli are true primes (checked by crt.py).
+
+Correctness argument.  theta.c implements Theorem J (proved in Lean for x >= 24, and on
+paper for 19 <= x <= 23) exactly, with the enumerated base 9 <= x <= 18.  The only new
+ingredients are:
+  - the reindexing in (a), which uses only reversal symmetry;
+  - the recursive evaluation in (b), which is associativity;
+  - the Young-diagram form of Pi and the truncation at i0, k0 in (c).
+The Young-diagram form is a restatement of "c_j >= every linked k", and the truncation
+holds because rows >= i0 and columns >= k0 are forced empty.  Validation is in section 3.
+
+------------------------------------------------------------------------------------------
+2. EXACTNESS (CRT)
+------------------------------------------------------------------------------------------
+The production run uses 45 primes just below 2^61 (the largest 45), so log2 M = 2745.0.
+They are split over 3 processes with 15 disjoint primes each.
+
+Proved bound.  For n >= 14, theta(n) <= B(n) := 2 * 924 * theta(floor n/2) *
+theta(ceil n/2).  This follows from Theorem M plus Theorem W, since Pi <= C(12,6); in Lean
+it is SymRatio.card_symSeqs_eq_win_sum.  The bound is computed inductively from the values
+already reconstructed.  (n! would need about 6.7x as many primes.  Sharma's
+2.7^n/21 would also do.)
+
+For every n, crt.py checks:
+  - M > 2^61 * B(n), so the reconstruction is unique.  The largest requirement is
+    2441.9 bits, at n = 2000, which leaves a 303-bit margin.
+  - The redundancy check x <= B(n).  A wrong residue would give a CRT value spread
+    uniformly over [0, M), so it would pass this check with probability < 2^-303 at
+    n = 2000 (and < 2^-61 in the worst case).
+  - The lower bound x >= 2 theta(floor n/2) theta(ceil n/2) (concatenate a lifted sigma
+    and a lifted tau).
+All three checks pass for every 19 <= n <= 2000.
+
+------------------------------------------------------------------------------------------
+3. VALIDATION
+------------------------------------------------------------------------------------------
+  * OEIS b-file: the exact values equal the b-file for every n <= 200.  This covers
+    192 values for 9 <= n <= 200 from the new code; n <= 8 are copied from the b-file.
+    checkres.py separately checks all 13140 residues (45 primes x 292 values,
+    9 <= n <= 300) and finds 0 mismatches.
+  * ../symratio/data/theta_exact.txt: all 282 values, 19 <= n <= 300, agree exactly.
+    That file came from different code (window.c) and different primes (just below 2^62).
+  * Independent floating-point check: r(n) from the exact values agrees with the
+    double-precision window.bin values for 513 n.  These are all 19 <= n <= 520 plus
+    the chain values 640, 768, ..., 1920 in ../symratio/data/chains.txt.  The maximum
+    difference is 5.0e-13, which is the double-precision error of that run.  This checks
+    the range beyond 300 against an independent implementation (dense matrices, no tries).
+  * Small runs used during development: one prime, n <= 200 in 1.1 s, matching the
+    b-file; three and six primes, n <= 400, matching both files.
+
+------------------------------------------------------------------------------------------
+4. TIMINGS (Intel Xeon 2.1 GHz, one core per process)
+------------------------------------------------------------------------------------------
+                                  CPU per process   peak RSS per process
+  n <= 200,  1 prime                     1.1 s            < 100 MB
+  n <= 600,  1 prime                     3.2 s
+  n <= 2040, 1 prime                    74 s
+  production: n <= 2000, 15 primes, 3 processes in parallel:
+     n <= 200     3.0 s      n <= 500   39 s      n <= 1000   306 s
+     n <= 2000  360 s total, 11 min wall clock for the whole pipeline, peak 1.38 GB
+     per process (4.1 GB for all three)
+For comparison, window_mod.bin needed 33 s for n <= 200 with one prime and is O(N^4) for
+all n <= N.  Most of the time goes to the marginals t_x for x <= N/2, through the
+recursive L_x.  The top-level theta(n) for N/2 < n <= N takes only about 55 s.
+Limits: window entries are packed in 10 bits, so n <= 2046 (MAXN).  Memory grows like
+K * N^2 (the live marginals), and time like about N^3 log N * K.  n = 4000 would need
+about 90 primes and roughly 8x the time and 16x the memory: possible, but not run.
+
+------------------------------------------------------------------------------------------
+5. RATIOS r(n) AND CONJECTURE R'  (ratios.txt, ratios_report.txt)
+------------------------------------------------------------------------------------------
+r(n) = theta(n) / (2 theta(floor n/2) theta(ceil n/2)), exact, for n <= 2000.
+  Over 16 <= n <= 2000:  min r = 1.248295628 (n = 27),  max r = 1.347334352 (n = 1024).
+  Octave ranges:  [256,512] 1.2569903 .. 1.3473277;  [512,1024] 1.2569924 .. 1.3473344.
+  So 2.4966 theta theta <= theta(n) <= 2.6947 theta theta for all 16 <= n <= 2000.
+Doubling contraction, maximum over each octave:
+   octave       max|r(2n)-r(n)|  ratio   max|r(2n+1)-(r(n)+r(n+1))/2|  ratio
+   [128, 256)      5.109e-04      3.93        2.422e-04                  3.90
+   [256, 512)      1.287e-04      3.97        6.083e-05                  3.98
+   [512,1000)      3.232e-05      3.98        1.496e-05                  4.07  (partial)
+
+CONJECTURE R' (../symratio/PROOFS.txt section 6).  For odd x,
+   r(x 2^j) = Phi(x) + A(x) 4^-j + o(4^-j),
+with A(x) = 0 and super-geometric convergence when 3 | x.
+All odd x <= 61 with at least 5 chain points up to n = 2000 were tested, using
+D_j = r(x 2^{j+1}) - r(x 2^j) computed EXACTLY.  Exactness matters here: the old double
+data could not see anything below about 1e-12.
+
+* 3 does not divide x (21 chains).  After a transient at small n, D_j / D_{j+1} -> 4,
+  and the last ratio lies in [3.987, 4.008] for every chain:
+    x = 1  (16..1024):   4.18 4.00 4.16 4.03 4.007
+    x = 5  (20..1280):   3.33 3.97 4.09 4.03 4.007
+    x = 7  (28..1792):   4.14 3.28 4.05 4.01 4.003
+    x = 11 (22..1408):   4.14 3.88 4.02 4.006
+    x = 13 (26..1664):   4.02 3.85 4.01 4.002
+    x = 31 (31..1984):   3.86 3.95 4.002
+  The deviation |ratio - 4| itself shrinks by about a factor 4 per doubling
+  (x = 1: 0.031 -> 0.007; x = 5: 0.027 -> 0.0066).  This fits a next-order term of
+  size 16^-j.  A(x) != 0: 4^j D_j settles to a nonzero constant, with the sign of D
+  positive in all 21 chains from n ~ 64 on.
+  Richardson estimates Phi(x) ~ r(last) + D_last/3:
+    Phi(1) = 1.3473366,   Phi(5) = 1.2997044,  Phi(7) = 1.2670692,  Phi(11) = 1.2780749,
+    Phi(13) = 1.2574778,  Phi(31) = 1.3144760.
+
+* 3 divides x (10 chains).  The convergence is super-geometric, which is now visible
+  far below double precision.  Values are log10|D_j|:
+    x = 3  (24..1536):  -2.85  -5.49  -9.13 -14.88 -23.86 -36.91
+    x = 9  (18..1152):  -1.64  -3.98  -6.70 -12.31 -18.40 -28.26
+    x = 15 (30..1920):  -1.64  -4.00  -7.12 -12.68 -21.35 -32.37
+    x = 21 (21..1344):  -1.62  -2.31  -5.44  -8.60 -16.42 -27.05
+    x = 27 (27..1728):  -1.82  -2.31  -5.43  -8.73 -16.46 -27.22
+    x = 33, 39, 45, 51, 57 (to ~1800): the last D is between 8e-21 and 7e-19.
+  The exponent grows by a factor of about 1.5-1.8 per doubling.  That is faster than
+  any geometric rate (ratio 1) and slower than clean quadratic convergence (ratio 2):
+    x = 3: log|D_{j+1}| / log|D_j| = 1.92, 1.67, 1.63, 1.60, 1.55.
+  The increments are roughly Fibonacci-like, log|D_{j+1}| ~ log|D_j| + log|D_{j-1}|
+  (x = 3: -9.13 - 14.88 = -24.0 vs -23.86).  The sign of D is irregular.  So
+  r(3 * 2^j) is known to 37 digits:
+     Phi(3) = r(1536) = 1.28690470866236...,  Phi(9) = r(1152) = 1.31695714576959...,
+     Phi(15) = r(1920) = 1.29284375314475...
+* The second clause of R' (|r(2m) - r(m)| / kappa(m) -> const) involves the head-tail
+  correlation kappa.  That needs J_m explicitly, which theta.c deliberately never forms,
+  so it is not tested here.
+VERDICT.  R' holds on all the new data.  The factor 4 holds to within 0.3% at n ~ 1000-2000
+for 3 not dividing x.  For 3 | x the convergence is super-geometric, with
+|D| down to 1e-37.  A refinement is suggested by the data: for 3 | x the log-defect grows
+by a factor of about 1.6 per doubling, i.e. D_{j+1} ~ D_j * D_{j-1} rather than D_j^2.
+Conjecture R itself (convergence of r along all chains) is still open; this is numerical
+evidence only.
