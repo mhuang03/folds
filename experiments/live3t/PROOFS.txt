@@ -151,6 +151,14 @@ The {1, 2, c} left for N <= 200 follow the patterns of live3s section 2:
     then c + 2: a chain of length ~log N on a dense, explicit background, which is the setting
     in which a chain lemma might be provable.  At N = 81, c = 74 needs > 5 steps; at N = 97 the
     search with <= 7 steps did not finish.  Not pursued further.
+(d) A fitted rule that is NOT formalized (even1.py, even1.txt): for N = 1 mod 4 and
+    c = 2 mod 4 with N + 7 <= 2c and 4c <= 3N + 9, phi12 with (c + 2)/2 -> c (Live3s's
+    phi12m, but into [2p - 1]) is regular outside {2, (c + 2)/2} and its image satisfies
+    Theorem G with the centre 1/2 after the steps 4, 3, c + 2, (N + 3)/2; the set of c for
+    which this works is EXACTLY that band for every N = 53..201.  These c are already settled
+    N by N by Covered3R (they are Live3r's hints), so the rule would only make them
+    parametric; it does not touch the residual.  A Lean proof needs four intermediate
+    counting functions (sums of the base count and step indicators) and was not written.
 Not formalized; the dense-top-structure lemma of live3s section 3(c) remains the missing piece.
 
 
@@ -169,6 +177,7 @@ Not formalized; the dense-top-structure lemma of live3s section 3(c) remains the
   verify.txt            output of one3N.py, oneBN2.py, one2N8.py
   top12.py, gk.c        {1, 2, N - 1} through zA, and the step search for its image
   explore12.py          {1, 2, c}, N = 1 mod 4, c even: phi12 with a moved panel + steps (4c)
+  even1.py, even1.txt   the fitted band rule of (4d), checked for N <= 201
   collect.py            merges the resid.py outputs into resid.txt
   bisect.py             compile one block of Live3t.lean (memory debugging)
   lean.sh, memtime.py   compile against the prebuilt oleans of the main checkout
