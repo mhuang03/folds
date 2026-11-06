@@ -22,30 +22,45 @@ SUMMARY
         A_above(1/D) = (-1)^(m+1) [(m - 7) D - (m - 9)] / (4D),    A_below(1/D) = (-1)^m/(2D),
         A(1 0^(n-1)) = (-1)^(m+1) [(m-7)/4 + 3/2^m],
         A(1^n)       = (-1)^(m+1) [(m+4)/8 + e_m/2^m],   e_m = -5 (m even), +1 (m odd).
-  2. THEOREM D2 (proved for 4 <= m <= 19 (odd) / 4 <= m <= 15 (2-power), and for all m given
-     closed forms that are verified on 6 held-out values each): c_2(N) of T(N, m+2) has
-     nonzero components of exact orders 2^(m-1) - 1 and 2^(m-1).  Exact two-free-point weight
+  2. THEOREM D2 (proved for 4 <= m <= 19 (odd part) and 4 <= m <= 15 (2-part); for ALL m if the
+     closed forms below hold -- they are fitted and verified on 6 resp. 3 held-out values):
+     c_2(N) of T(N, m+2) has nonzero components of exact orders 2^(m-1) - 1 and 2^(m-1).
         (-1)^(m+1) A_above(1/D) D^2 = [9 D^2 m^2 - 135 D^2 m + 22 D^2 - 6 D m^2 + 234 D m
                                         - 1012 D - 3 m^2 - 123 m + 1494] / 384,
-        (-1)^(m+1) A_below(1/D) D^2 = -(D m - 6 D - m + 16)/8.
+        (-1)^(m+1) A_below(1/D) D^2 = -(D m - 6 D - m + 16)/8,
+        (-1)^(m+1) A(1 0^(n-1)) = 3m^2/128 - 45m/128 + 11/192 + (3m/4 - 9/2)/2^m + (139/12)/4^m,
+        (-1)^(m+1) A(1^n) = 5m^2/512 + 11m/256 + 125/512 + (-m/4 - 5/4 + (-1)^m (149/24 - 3m/8))/2^m
+                            - (17/6 + 61(-1)^m/4)/4^m.
   3. STRUCTURE FOR FIXED f, m -> oo (section 6): the extreme weights are polynomials in m of
-     degree f (plus O(m^f/D)), with leading coefficient vol(V_f)/f! where V_f is the set of
-     valid configurations of a REDUCED problem (f points in (1/2, 1) after the limit orbit
-     0, 1/2, 1/4, 1/8, ...).  vol V_1 = 1/4, vol V_2 = 3/64 (matching 1/4 and 3/128 = 9/384
-     above).  Since vol V_f > 0, the odd top component of c_f(T(N, m+f)) is nonzero for all
-     m >= m_0(f) (Proposition E, proof outline).  The real danger is not the cotangent
-     identity but SIGN CHANGES of these polynomials in m: e.g. 9m^2 - 135m + 22 changes sign
-     between m = 14 and 15 (value 22 at m = 15), and the 2-power weight A1 + A3 at f = 2 nearly
-     vanishes at m = 8 (0.037 against terms of size 1.25).  No exact zero occurs in any case
-     computed; an exact zero would be a genuine exception to the period law.
-  4. PRIME POWERS (section 8): the top components carry only a few primes of B(m): e.g. for
-     m = 8, 127 and 2^7 only, while 3^2, 5, 7, 31 need cycles of length s < m - 1 (table
-     primes.log).  These lower-cycle components are certified nonzero only for k <= 7
-     (../prefix5); in general they remain OPEN, as does the survival of the multi-cycle
-     orders 93, 105 of m = 9 in c_{k-9} for k > 9.
-  5. Everything is checked against the exact Normaliz class series where available
-     (k <= 7, section 7).
-
+     degree f (plus exponentially small terms), with leading coefficient vol(V_f)/f! where V_f
+     is the valid set of a REDUCED problem (f points after the limit orbit 0, 1/2, 1/4, ...).
+     vol V_1 = 1/4, vol V_2 = 3/64, vol V_1^(3) = 1/8, vol V_2^(3) = 5/256 (for the chain 1^n)
+     reproduce all four leading coefficients above.  Since vol V_f > 0, the odd top component of
+     c_f(T(N, m+f)) is nonzero for all m >= m_0(f) (Proposition E, proof outline).  The real
+     danger is not the cotangent identity (the rotations carry no weight for n > f + 4, i > f)
+     but REAL ROOTS of these polynomials in m: 9m^2 - 135m + 22 (root 14.83: |Delta_0| = 0.058
+     at m = 15), 17m^2/512 - 79m/256 + ... (root 8.19: |A1 + A3| = 0.037 at m = 8 against
+     weights 1.25), 7m^2/512 - 101m/256 - ... (root 29.18: 0.13 at m = 29 against weights 10).
+     No integer root occurs for f <= 2; an integer root would be the mechanism of a genuine
+     exception to the period law (it would leave only exponentially small terms).
+  4. THE FULL PERIOD OF T(N, 8) AND T(N, 9) (section 8): the mixed orders 2^a(2^s - 1),
+     a + s = 7, are all nonzero in c_0(T(N, 8)) (vertex enumeration; the dominant carriers
+     are NON-SIMPLE "cycle + pendant chain" vertices such as (1/15, 8/15, 4/15, 2/15, 1/15,
+     1/30, 1/60, 1/120), handled by a new dependent-row version of the vertex formula, validated
+     against Normaliz at k = 5, 6).  So c_0(T(N,8)) and T(N,8) have period exactly B(8) =
+     158739840, and with D1 (m = 8), D2 (m = 7) and the order-93 two-cycle component of
+     ../periods2, T(N, 9) has period exactly B(9) = 5397154560 (both modulo the local formula,
+     validated wherever Normaliz series exist).  Previously certified: k <= 7.
+  5. PRIME POWERS IN GENERAL (section 8): the top components carry only a few primes of B(m)
+     (primes.log; e.g. m = 14: only 8191), the others need cycles of length s < m - 1 with
+     pendant structure.  For k >= 10 (full period) and for c_{k-m} with k > m beyond the top
+     orders, these remain OPEN; so does the survival of the two-cycle orders 93, 105 in
+     c_{k-9}, k > 9.
+  6. Validation: every local-formula number used here that can be compared with the exact
+     Normaliz class series (k <= 7) agrees to 10-12 digits (section 7).
+  7. Lean (Folds/PeriodLaw.lean): the bookkeeping sums of Lemmas 2.1, 2.3, 2.4 and the
+     nonvanishing of the closed forms (orbit, chain sum / difference, 9m^2 - 135m + 22),
+     no sorry, no native_decide.
 
 1. The face formula, Galois, and the dominance criterion
 --------------------------------------------------------
@@ -285,19 +300,34 @@ CHECKED on m = 14..19)
 so Delta_0 = (-1)^(m+1) [ (9 m^2 - 135 m + 22)/384 + O(m^2/D) ].  9m^2 - 135m + 22 is never 0
 for integer m (it is = 22 mod 9) but changes sign between m = 14 (-104) and m = 15 (22):
 |Delta_0| = 0.0575 at m = 15 while the summands are ~0.3.
-Chain weights with two free points (probe5.py, chainW_F2.txt): A1, A3 for m = 4..15.
-   [FILL: chain F2 closed forms]
+Chain weights with two free points (probe5.py, chainW_F2.txt, m = 4..15; fit2.py and thmD.py:
+9 coefficients each, 3 held-out values each), X = 2^m, s = (-1)^m:
+   (-1)^(m+1) A1 = 3m^2/128 - 45m/128 + 11/192 + (3m/4 - 9/2)/X + (139/12)/X^2,
+   (-1)^(m+1) A3 = 5m^2/512 + 11m/256 + 125/512 + (-m/4 - 5/4 + s(149/24 - 3m/8))/X
+                   - (17/6 + 61 s/4)/X^2.
+(A1 has exactly the leading polynomial of the orbit weight, as the reduced problem predicts;
+the leading 5/512 of A3 is vol V_2^(3)/2, found by the fit, not imposed.)  Hence
+   m even (n odd):  |A1 + A3| = |17m^2/512 - 79m/256 + 463/1536| + O(m/2^m), with real roots
+                    1.11 and 8.19: at m = 8 the two weights 1.249 and -1.212 nearly cancel
+                    (|A1 + A3| = 0.0367);
+   m odd (n even):  |A1 - A3| = |7m^2/512 - 101m/256 - 199/1536| + O(m/2^m), root 29.18:
+                    at m = 29, |A1 - A3| = 0.130 while A1, A3 ~ 10.
 
 THEOREM D2.  The coefficient c_2(N) of N^2 in T(N, m+2) has a nonzero Fourier component of
-exact order 2^(m-1) - 1 for 4 <= m <= 19, and of exact order 2^(m-1) for [FILL].
+exact order 2^(m-1) - 1 for 4 <= m <= 19, and of exact order 2^(m-1) for 4 <= m <= 15.
 Proof.  Odd, 7 <= m <= 19: Lemma 5.1, the exact Delta_0 (w1D_F2.txt) and Proposition 1.5(a)
 with W = C(m+2, 2) (thmD.log: margins from 5.6x at m = 8 to 10^6x; the closest case m = 15 has
 0.115 against 1.2e-6).  m = 4, 5, 6: full face sums -0.219451 - 0.059642i (= Normaliz),
 0.013704 + 0.873302i, 5.278416 + 0.174419i (face.py; ../periods2/face_table.log).
-2-part: [FILL]   []
-If the two closed forms above hold for all m (they are verified on 6 held-out values each),
-then Theorem D2's odd part holds for all m >= 4: |Delta_0| >= (9m^2 - 135m + 22)/384 - O(m^2/D)
-> 0.05 for m >= 15, against W R(n) <= C(m+2,2) Bo(m-1) -> 0.
+2-part: Proposition 1.5(b) with the exact A1, A3 for m = 7 and 9..15 (thmD.log; tightest m = 7:
+2.22 against 0.81).  m = 4: 0.0830494 (chainface.py 4 6 = Normaliz); m = 5: -1.2485702i (Normaliz
+k = 7, section 7); m = 6 and m = 8 (where dominance fails, |A1 + A3| = 0.0367 at m = 8): the full
+chain sums (chainface.py, chain_full_F2.log): m = 6: -1.2819075; m = 8: [FILL m8].   []
+CONDITIONAL EXTENSION.  If the closed forms of this section hold for all m (orbit: verified on
+6 held-out values, chain: on 3), Theorem D2 holds for ALL m >= 4: thmD.py checks Proposition 1.5
+from the formulas for 16 <= m <= 40 and m = 50, 60, 80, 100 (smallest margins: odd part m = 15
+already exact; 2-part m = 29: 0.130 against 2.0e-5), and beyond m = 100 the left sides grow like
+m^2 while W R(n), W Rc(n) <= C(m+2, 2) Bo/Bc(m-1) decrease.
 
 
 6. Fixed f, m -> infinity: the reduced problem
@@ -350,7 +380,7 @@ e(-N/q) in c_{7-m} times (7-m)!, against the local face formulas of this directo
    (4, 3)   7    -0.192900579578 - 0.238653041429i      (f = 3: not computable here)
    (4, 3)   8     0.0915932966412                       (f = 3)
    (5, 2)  15     0.0137037037037 + 0.873301738913i     face.py 5 7:  0.013704 + 0.873302i
-   (5, 2)  16    -1.24857016474i                        chainface.py 5 7: [FILL c57]
+   (5, 2)  16    -1.24857016474i                        chainface.py 5 7: -1.2485701647i
    (6, 1)  31     0.362440021995 + 0.0480699550536i     face.py 6 7:  0.362440 + 0.048070i
    (6, 1)  32     1.87315466973                         chainface.py 6 7: 1.8731546697
    (7, 0)  63    -0.907256420729 + 18.1786042622i       ../periods2 (Theorem C): same
@@ -434,25 +464,41 @@ question (Theorem B fails from m = 9 on).
 
 9. What remains open
 --------------------
-  * The odd/2-power top components for f >= 3 (only Proposition E, asymptotically in m), and for
-    f = 2 beyond m = 19 (conditional on the closed forms).
-  * All components of order 2^a (2^s - 1) with s < m - 1, hence the full period law for k >= 8
-    (and the 5-part of T(N, 8)).
-  * Whether the leading polynomials vol(V_f) m^f/f! + ... can have integer zeros (exceptions).
-  * Lean: not attempted for the polytope part; the arithmetic of the closed forms is trivial.
+  * The top components for f >= 3 free points (only Proposition E, asymptotically in m; k = 7,
+    m = 4 by Normaliz), and for f = 2 beyond m = 19 / 15 (conditional on the closed forms).
+    A proof of the closed forms would follow from a uniform-in-m version of the interval
+    analysis of section 2 (the configurations are self-similar along the doubling cascade);
+    not done.  The fixed-m, k -> oo regime is out of reach (it contains c_k-type volumes).
+  * All components of order 2^a (2^s - 1) with s < m - 1 in c_{k-m} for k > m; hence the
+    per-coefficient period law beyond the top orders, and the full period of T(N, k) for
+    k >= 10.  At the vertex level (k = m) the dominant carriers of 2^a (2^s - 1) are the
+    non-simple cycle + pendant-chain vertices when a, s are both moderate (k = 8: orders 120,
+    124), simple vertices for small s (96, 112), and the two kinds nearly cancel for a = 1
+    (126: 0.233 + 9.024i against 0.227 - 9.095i).  A general dominance theorem would need the
+    classification of the valid mixed vertices (analogue of ../periods2 Lemma 3.1).
+  * Whether the polynomials of section 6 can have integer roots (possible exceptions).
+  * Lean: only the arithmetic (Folds/PeriodLaw.lean); the polytope theory is not formalised.
 
 
 10. Files
 ---------
   chainface.py M K       chain face formula (order 2^(M-1) part of c_{K-M}), F <= 2 free points
+  nonsimple.py           vertex formula for vertices with one dependent tight row
+  vertsq.py K Q..        order-Q part of c_0(T(N,K)) for Q new at K, all vertices (vertsq8.log)
+  verts8q.py             the same for Q = 120, 40 at K = 8, saving the vertices (verts8_40.txt)
   probe1.py              Lemma 2.1 for m = 5..14 (theta = 1/D, f = 1)
   probe2.py M [A]        valid z-intervals per gap, orbit vertex A/D, f = 1
   probe3.py F M0 M1 [R]  weights of 1/D and its rotations (rot_F2.log)
   probe4.py F M0 M1      exact weights at 1/D -> w1D_F<F>.txt
   probe5.py F M0 M1      chain weights A1, A2, A3 -> chainW_F<F>.txt
   probe6.py M WORD       valid z-intervals per gap, chain vertex, f = 1
-  fit.py FILE F DEG      exact polynomial fits in (m, D) with held-out checks
+  fit.py / fit2.py       exact polynomial fits in (m, D) resp. (m, 2^m) with held-out checks
+  reduced_mc.py          Monte Carlo volumes of the reduced problems (reduced_mc.log)
   rest.py NMAX           R(n), Rc(n) numerically and the bounds Bo, Bc (rest.log)
-  thmD.py                the dominance inequalities of Theorems D1, D2 (thmD.log)
+  thmD.py                the dominance inequalities of Theorems D1, D2 and the closed-form checks
+                         (thmD.log)
   primes.py MMAX         prime powers of B(m) carried / not carried by the top component (primes.log)
-  queue.sh               the sequential job list used for the k = 7 Normaliz checks
+  queue.sh, queue2.sh    the sequential job lists (k = 7 Normaliz checks normaliz7.log, chain
+                         full sums chain_full_F2.log)
+  The k = 6, 7 class series (classes_6.json, classes_7.json) are regenerated with
+  python3 ../prefix5/ehrhart.py K in a scratch directory (not committed).

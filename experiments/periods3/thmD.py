@@ -83,9 +83,37 @@ def check(f, mrange, orbit, chain, mmin_orbit):
         print(s, flush=True)
 
 
+# ---- conditional part: the closed forms of section 5 (verified on held-out values) ----
+def orbit_f2_formula(m):
+    D = 2 ** (m - 1) - 1
+    s = (-1) ** (m + 1)
+    Aab = s * Fr(9 * D * D * m * m - 135 * D * D * m + 22 * D * D - 6 * D * m * m + 234 * D * m
+                 - 1012 * D - 3 * m * m - 123 * m + 1494, 384 * D * D)
+    Abe = s * Fr(-(D * m - 6 * D - m + 16), 8 * D * D)
+    return Aab, Abe
+
+
+def chain_f2_formula(m):
+    X = Fr(2) ** m
+    s = (-1) ** m
+    sg = (-1) ** (m + 1)
+    A1 = sg * (Fr(3 * m * m, 128) - Fr(45 * m, 128) + Fr(11, 192) + (Fr(3 * m, 4) - Fr(9, 2)) / X
+               + Fr(139, 12) / X ** 2)
+    A3 = sg * (Fr(5 * m * m, 512) + Fr(11 * m, 256) + Fr(125, 512)
+               + (-Fr(m, 4) - Fr(5, 4) + s * (-Fr(3 * m, 8) + Fr(149, 24))) / X
+               + (-Fr(17, 6) - s * Fr(61, 4)) / X ** 2)
+    return A1, A3
+
+
 if __name__ == '__main__':
     check(1, list(range(4, 31)) + [40, 60, 100], orbit_f1, chain_f1, 6)
     o2 = load('w1D_F2.txt')
     c2 = load('chainW_F2.txt')
     check(2, range(4, 21), lambda m: tuple(o2[m]) if m in o2 else None,
           lambda m: (c2[m][0], c2[m][2]) if m in c2 else None, 7)
+    bad = [m for m in o2 if m >= 5 and tuple(o2[m]) != orbit_f2_formula(m)]
+    bad += [m for m in c2 if (c2[m][0], c2[m][2]) != chain_f2_formula(m)]
+    print(f'closed forms vs exact data (orbit m = 5..{max(o2)}, chain m = 4..{max(c2)}): '
+          f'{"all agree" if not bad else "MISMATCH at " + str(bad)}')
+    print('conditional range (closed forms of section 5):')
+    check(2, list(range(16, 41)) + [50, 60, 80, 100], orbit_f2_formula, chain_f2_formula, 7)
