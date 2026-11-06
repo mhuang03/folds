@@ -114,6 +114,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Neutral` (M) | **classification of neutral sets** (`neutral_classification`: only the parity classes and E_d, E_dᶜ for odd d ∣ N); **identity (A)** in full (`identity_A`); J(k) universality and **identity (B)** (`identity_B`) |
 | `Upper` (M) | odd-N parity upper bound `semiCount_odd_le_prod` (a(N) ≤ N!·e^{−0.059N(1+o(1))}), so there is now an exponential saving for **all** N; the discrepancy transfer `disc_le_of_cycDefect_le` |
 | `PathLemma` (M) | the reduction `PathLemma.eventually_le` (Path Lemma ⇒ a(N) ≤ N!·e^{−ω(N)}); linear variant; the cyclic-defect step identity and the run bound on valid moves |
+| `Live6` (M) | swapped Beatty copies (`coReach_three`: {3,N−3} for N ≥ 37); the {1,4,6,…,N} copy (`coReach_one_half`); `Cov6`; **reduction** `extends_iff_not_dead`: the full liveness iff follows from one arithmetic covering lemma |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -157,8 +158,9 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
    valid prefixes for N ≤ 31). The Adjacent Lemma, co-reachability of every interval,
    and {1,N} for odd N ≠ 7 are now **proven** (Lean). The Lean family covers every
-   non-dead pair at N = 100 and 130. Still open: a few sparse corner families, e.g.
-   (3, N−3), and a uniform proof for all N. See `experiments/live5/PROOFS.txt`. See
+   non-dead pair at N = 100 and 130. Lean reduces the full iff to an arithmetic covering
+   lemma about Beatty sets (verified numerically to N = 520), plus the power-of-2
+   families (3, 2^k−2), (5, 2^k−4) and 19 small pairs. See `experiments/live6/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
    `experiments/live2/PROOFS.txt`.
 
 ## Where things are
@@ -194,6 +196,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/neutral/PROOFS.txt` | neutral-set classification, identities (A) and (B) |
 | `experiments/upper/PROOFS.txt` | upper-bound attempts; reduction of a(N) ≤ N!e^{−ω(N)} to a "Path Lemma" (numerically true); why state statistics cannot work |
 | `experiments/pathlemma/PROOFS.txt` | Path Lemma attempts: the potential identity, minimiser structure, open sub-problems |
+| `experiments/live6/PROOFS.txt` | swapped Beatty copies, the covering reduction for Conjecture C |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
