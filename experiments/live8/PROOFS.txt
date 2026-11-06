@@ -13,16 +13,18 @@ STATUS
   * Lean, for all N: Conjecture C follows from the mixed-parity statement for N > 300 alone
       `coReach_of_mixed_large`, `conjectureC_of_mixed`
     where `MixedCover N` = every mixed-parity wide pair with u + v <= N + 1 is settled
-    (Settled7) or its mirror is; and MixedCover N follows from two statements
-      `mixedCover_of_arith`, `conjectureC_of_arith`:
-      - `ArithCover N` (purely arithmetic, no copies): every mixed wide pair with u >= 4 passes
-        an "exact direct test" `dirAny` (section 3) in one of its orientations;
-      - `SmallCover N`: MixedCover for the pairs with u <= 3.
-    Both are verified by C programs faithful to the Lean definitions: ArithCover for every
-    61 <= N <= 3000 (dircheck.c; for 13 <= N <= 60 it fails only at (N, u, v) = (23, 6, 17),
-    (28, 5, 18), (44, 5, 26), (46, 11, 30), (60, 5, 34)), SmallCover for 65 <= N <= 3000
-    (smallcheck.c).  So the open part of Conjecture C is now the elementary
-    Diophantine statement ArithCover N for N > 300 (and the small family u <= 3).
+    (Settled7) or its mirror is; and, for N >= 65, MixedCover N follows from the purely
+    arithmetic statement (no copies, no co-reachability; floors only)
+      `ArithCover N`: every mixed wide pair (u, v), u + v <= N + 1, u >= 2, other than the
+      special pairs (2, N - 1), (2, N - 2), (3, N - 2), (3, N - 3), (3, (N + 6)/2), passes an
+      "exact direct test" `dirAny` (section 3) in one of its two orientations
+    (`mixedCover_of_arith`, `conjectureC_of_arith`).  The pairs (1, v) and the special pairs are
+    proven for all N >= 65 (section 3a).  ArithCover N is verified for every 65 <= N <= 3000 by
+    dircheck2.c (faithful to Lean's dirOK / dirAll / dirAny).  So the open part of Conjecture C
+    is exactly the elementary Diophantine statement ArithCover N for N > 300.
+    (Variants: dircheck.c checks the a >= 2, u >= 4 version, true for 61 <= N <= 3000, failing
+    only at (N, u, v) = (23, 6, 17), (28, 5, 18), (44, 5, 26), (46, 11, 30), (60, 5, 34) below;
+    smallcheck.c checks MixedCover for u <= 3 directly, 65 <= N <= 3000.)
   * Lean, proven families for ALL N (reducing what remains of MixedCover):
       - every same-parity pair (`samePar_settled`, N >= 65), in particular `coverAt_of_mixed`:
         CoverAt E7 N <== MixedCover N;
@@ -30,17 +32,20 @@ STATUS
       - the explicit "direct region" (`settled_directZ_region`, u >= 4, u <= u', u + u' <= N):
             (u - r) M (u + u' + 1) >= 2 (u + 1) (M u + 2 u u' + u)
             (u M - r M - 2u + 2)(u' + 1) >= 2u (u'^2 + M)            (r = u mod 2),
-        via the sliding-window lemma (`slide`, `settled_directZ`).
-    Residual (not covered by these families) at N = 1000: 22.7% of the mixed wide pairs; at
-    N = 1001: 43.6% (resid.py prints the map: the near-diagonal wedge u' < ~1.5u, the corner
-    u ~ u' ~ N/3, and small u near the inward boundary).
+        via the sliding-window lemma (`slide`, `settled_directZ`);
+      - every pair (1, v) (`settled7_one_v`) and the special pairs (2, N - 1), (2, N - 2),
+        (3, N - 2), (3, N - 3), (3, (N + 6)/2) (section 3a).
+    Pairs not covered by these unconditional families, at N = 1000: 22.7% of the mixed wide
+    pairs; at N = 1001: 43.6% (resid.py prints the map: the near-diagonal wedge u' < ~1.5u, the
+    corner u ~ u' ~ N/3, and small u near the inward boundary).  All of them pass an exact
+    direct test (ArithCover) for N <= 3000, but that is checked, not proven, beyond N = 300.
   * Computation: the full covering statement holds for 13 <= N <= 2665 (live7 cover7.c); the
     rotation certificates below cover every mixed wide pair except (1, *) and (2, N - 2) for
     every N tested (rot.c mode 1, N <= ~2000 sampled), and the position-free ones
     (rot2.c mode 0, Q <= 50) everything except u = 1, small odd u near the inward boundary,
     and a few near-boundary resonances.
-  * NOT proven: MixedCover N for N > 300 in the residual region.  See section 4 for the
-    proof strategy that the numerics support, and what is missing.
+  * NOT proven: ArithCover N (equivalently what is left of MixedCover N) for N > 300.  See
+    section 4 for the proof strategy that the numerics support, and what is missing.
 
 1. Same parity, and the reduction (Lean)
 ----------------------------------------
@@ -81,10 +86,22 @@ s in the copy range; the index constraints a >= 1, c >= 1, a + c < s are then au
   S2 = min(floor((aK - alpha)/L), smax), S1 = max(ceil((aK - alpha + 1)/(L + 1)), R, 2); pass iff
   S1 <= S2 and the union [S1 R + beta, S2 R + beta + S2 - 1] contains a multiple of K (no length
   condition).  dirAll tries Z (K = M, R = y, alpha = 0, beta = 1, smax = M/2), X(., ., 0)
-  (K = N, R = y - 2, 0, 1, (N+1)/2) and X(., ., 1) (K = N, R = y - 2, 1, 0, N/2); dirAny tries
-  a = 2 .. x + 1.  Numerically (resid2.py, dircheck.c) the six tests (3 families x 2
-  orientations) settle every mixed wide pair with u >= 4 for 61 <= N <= 3000; the pairs with
-  u <= 3 that fail are (1, *), (2, N - 2), (3, N - 3) and a few sporadic (3, *).
+  (K = N, R = y - 2, 0, 1, (N+1)/2) and X(., ., 1) (K = N, R = y - 2, 1, 0, N/2) for a >= 2, and
+  only X(., ., 0) for a = 1 (then c >= 1, so b < p and the preimage is not dead); dirAny tries
+  a = 1 .. x + 1.  Numerically (resid2.py, small.py, dircheck2.c) the tests settle every mixed
+  wide pair with u >= 2 except the five special families, for 65 <= N <= 3000.
+3a. The pairs with u = 1 and the special pairs (Lean, all N >= 65)
+  (1, v), v even: the mirror (u', N), u' = N + 1 - v, lies in X(N, p, 0) with the last element N:
+    u' = (N - 2)/2 (N = 0 mod 4): chiY;  u' in {2, 3}: index 1, p odd in (N/(u'+1), N/u'];
+    A (4 <= u', 3u' <= N): a = max(2, ceil(u'(u'+1)/N)), p = floor(aN/u')
+      (then p >= u' + 1, and 2p <= N + 1 from 2u'(u'+1) + 2N <= N u' on [4, N/3]);
+    B (3u' > N, g = N - 2u' >= 3): j = max(1, ceil(g(g-2)/N)), a = ceil(u'j/g), p = 2a + j
+      (then u'p <= aN < (u'+1)p from x j <= a g < x j + g and g(g-2) <= jN, and
+      2p <= N + 1 from (G - 3)(N - 3G) >= 0, G = g).   [one.py checks A, B for N <= 3000]
+  (2, N - 1): settled_evenEven; (2, N - 2) via its mirror (3, N - 1) = the corner (1, p) of
+  X(N, p, 1), 3p <= N - 1 < 4p, p odd; (3, N - 2) = Z-corner, 3(p+1) < N + 2 < 4(p+1);
+  (3, N - 3) via its mirror (4, N - 2) = the corner of the swapped copy of Live6;
+  (3, (N + 6)/2), N = 2 mod 4: X(N, 2r, 0), 6r <= N < 8r, indices 1 and r + 1.
   Why this is not yet a proof: the union is shorter than K for a positive proportion of the
   pairs, and then whether it meets a multiple of K depends on the position (a three-gap /
   continued-fraction question in a); see section 4.
@@ -117,13 +134,15 @@ are u = 1, odd u <= 29 ~ sqrt(N) with delta small, and (201, 397..399).
     u odd <= ~sqrt(N) and delta < u (about N/4 pairs per N), e.g. (3, (N - 4)/2): their
     witnesses (data: corner.py) have a = 1, sigma in [u, u + 1), and need a position-dependent
     argument (two alternating window positions with a slow drift).
-(e) u = 1: the mirror pair (u', N) needs one condition only (N is the last element of every
-    X(N, p, 0)); u' = N/2 - 1, N = 0 mod 4 is the chiY family.
-What is missing for a complete proof: the Lean formalisation of (b) (Dirichlet + the (Q,P)
-lemma + the inequality bookkeeping), (c), (d), (e), and a rigorous treatment of the finitely
-many shapes in (d) (or a finer sliding argument); the constants in (b) must be made explicit
-and the range below the asymptotic threshold covered by computation (the check of section 2
-up to the threshold).
+(e) u = 1: done in Lean (section 3a; one condition only, N is the last element of X(N, p, 0)).
+What is missing for a complete proof: a proof of ArithCover N for N > 300, e.g. by (a)-(d):
+the Lean formalisation of (b) (Dirichlet + the (Q,P) lemma + the inequality bookkeeping), (c),
+(d), and a rigorous treatment of the finitely many shapes in (d) (or a finer sliding argument);
+the constants in (b) must be made explicit and the range below the asymptotic threshold
+covered by computation (the check of section 2 up to the threshold).  Note that the exact
+direct tests alone (no (Q,P) lemma) already suffice numerically: ArithCover only asks that for
+each pair some index a puts a multiple of K into one union interval, a one-dimensional
+three-gap question per combo.
 
 5. Exploration (why the simple ideas fail)
 ------------------------------------------
@@ -145,6 +164,8 @@ up to the threshold).
   qpsim.py                                           a deterministic (Q,P) choice (too crude)
   regD.py, resid.py                                  the Lean direct region, the residual map
   resid2.py, dirk.c                                  exact direct tests (map; restricted a)
-  dircheck.c                                         ArithCover, faithful to Live8.dirAny
-  smallcheck.c                                       SmallCover (live7 cover7.c restricted to u <= 3)
+  dircheck2.c                                        ArithCover, faithful to Live8.dirAny
+  dircheck.c                                         the a >= 2, u >= 4 variant
+  smallcheck.c                                       MixedCover for u <= 3 (live7 cover7.c restricted)
+  one.py, small.py, small1.py, smallwit.py           the u = 1 constructions, the special pairs
   gencert.c, gen_cov8.py, trylean.py, memtime.py     the Lean certificate block, timing

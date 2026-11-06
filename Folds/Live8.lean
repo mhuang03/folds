@@ -14,11 +14,11 @@ import Folds.Live7
 * `slide`, `settled_directZ`, `settled_directZ_region`, `settled_evenEven`: sliding-window
   (rotation) lemmas and two infinite families of mixed pairs settled for all `N`.
 * `dirOK`, `dirAny`, `settled7_of_dirAny`: exact direct certificates;
-  `mixedCover_of_arith`: `MixedCover N` from the arithmetic statement `ArithCover N`
-  and the small family `SmallCover N` (`u ≤ 3`).
+  `settled7_one_v` and the special pairs with `u ≤ 3` (all `N ≥ 65`);
+  `mixedCover_of_arith`: `MixedCover N` from the purely arithmetic statement `ArithCover N`.
 * `conjectureC_of_mixed`, `conjectureC_of_arith`: Conjecture C for all `N`, modulo
-  `MixedCover N`, resp. `ArithCover N ∧ SmallCover N`, for `N > 300` (both verified
-  numerically for `N ≤ 3000`).
+  `MixedCover N`, resp. `ArithCover N`, for `N > 300` (`ArithCover N` is verified numerically
+  for `65 ≤ N ≤ 3000`).
 -/
 
 namespace Folds
@@ -660,7 +660,8 @@ theorem settled7_of_IZ {N x y a c s : Nat} (hx : 1 ≤ x) (ha : 2 ≤ a) (hxy : 
       omega
 
 /-- A witness in `X(N, s, h)`: `x = beatty N s h a`, `N + 1 - y = beatty N s h (s - c)`. -/
-theorem settled7_of_IX {N x y a c s h : Nat} (h1 : h ≤ 1) (hx : 1 ≤ x) (ha : 2 ≤ a)
+theorem settled7_of_IX {N x y a c s h : Nat} (h1 : h ≤ 1) (hx : 1 ≤ x) (ha : 1 ≤ a)
+    (hnd : 2 ≤ a ∨ h = 0)
     (hy : 2 ≤ y) (hxy : x + y ≤ N) (hs : 1 ≤ s) (hs2 : h + 2 * s ≤ N + 1)
     (hI1 : s * x + h ≤ a * N) (hI2 : a * N + 1 ≤ s * (x + 1) + h)
     (hc1 : s * (y - 2) + (1 - h) ≤ c * N) (hc2 : c * N + 1 ≤ s * (y - 2) + (1 - h) + s) :
@@ -675,8 +676,17 @@ theorem settled7_of_IX {N x y a c s h : Nat} (h1 : h ≤ 1) (hx : 1 ≤ x) (ha :
       have : x + y = (x + 1) + (y - 2) + 1 := by omega
       rw [this]; ring
     omega
+  have hdead : deadB s a (s - c) = false := by
+    rcases hnd with hnd | hnd
+    · exact deadB_false_of_lt hnd
+    · subst hnd
+      have hc0 : 1 ≤ c := by
+        rcases Nat.eq_zero_or_pos c with h0 | h0
+        · rw [h0, Nat.zero_mul] at hc1; omega
+        · exact h0
+      exact deadB_false_of_ne (by omega)
   refine settled7_beatty (p := s) (h := h) (a := a) (b := s - c) hs hs2 h1 (by omega) (by omega)
-    (by omega) (deadB_false_of_lt ha) ?_ ?_
+    (by omega) hdead ?_ ?_
   · unfold beatty
     apply Nat.div_eq_of_lt_le
     · rw [Nat.mul_comm]; omega
@@ -734,29 +744,39 @@ theorem dirOK_spec {K L R α β smax a : Nat} (hK : 0 < K) (hL : 1 ≤ L)
     have e : (L + 1) * (s + 1) = s * (L + 1) + L + 1 := by ring
     omega
 
-/-- The six exact direct tests for the pair `(x, N + 1 - y)` with left index `a`:
-`Z(N, ·)`, `X(N, ·, 0)`, `X(N, ·, 1)`. -/
+/-- The exact direct tests for the pair `(x, N + 1 - y)` with left index `a`:
+`Z(N, ·)`, `X(N, ·, 0)`, `X(N, ·, 1)` (for `a = 1` only `X(N, ·, 0)`, whose right index is then
+automatically `< p`, so that the preimage is not dead). -/
 def dirAll (N x y a : Nat) : Bool :=
-  dirOK (N + 2) x y 0 1 ((N + 2) / 2) a ||
+  if a = 1 then decide (2 ≤ y) && dirOK N x (y - 2) 0 1 ((N + 1) / 2) a
+  else dirOK (N + 2) x y 0 1 ((N + 2) / 2) a ||
     (decide (2 ≤ y) && dirOK N x (y - 2) 0 1 ((N + 1) / 2) a) ||
     (decide (2 ≤ y) && dirOK N x (y - 2) 1 0 (N / 2) a)
 
-theorem settled7_of_dirAll {N x y a : Nat} (hx : 1 ≤ x) (ha : 2 ≤ a) (hxy : x + y ≤ N)
+theorem settled7_of_dirAll {N x y a : Nat} (hx : 1 ≤ x) (ha : 1 ≤ a) (hxy : x + y ≤ N)
     (h : dirAll N x y a = true) : Settled7 N x (N + 1 - y) := by
   unfold dirAll at h
+  split_ifs at h with ha1
+  · simp only [Bool.and_eq_true, decide_eq_true_eq] at h
+    obtain ⟨hy, h⟩ := h
+    obtain ⟨s, c, hs, hs2, _, h1, h2, h3, h4⟩ := dirOK_spec (by omega) hx h
+    exact settled7_of_IX (s := s) (c := c) (h := 0) (by omega) hx ha (Or.inr rfl) hy hxy
+      (by omega) (by omega) (by omega) (by omega) (by omega) (by omega)
+  have ha2 : 2 ≤ a := by omega
   simp only [Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq] at h
   rcases h with (h | ⟨hy, h⟩) | ⟨hy, h⟩
   · obtain ⟨s, c, hs, hs2, _, h1, h2, h3, h4⟩ := dirOK_spec (by omega) hx h
-    exact settled7_of_IZ (s := s) (c := c) hx ha hxy hs (by omega) (by omega) (by omega) (by omega) (by omega)
+    exact settled7_of_IZ (s := s) (c := c) hx ha2 hxy hs (by omega) (by omega) (by omega)
+      (by omega) (by omega)
   · obtain ⟨s, c, hs, hs2, _, h1, h2, h3, h4⟩ := dirOK_spec (by omega) hx h
-    exact settled7_of_IX (s := s) (c := c) (h := 0) (by omega) hx ha hy hxy (by omega) (by omega) (by omega)
-      (by omega) (by omega) (by omega)
+    exact settled7_of_IX (s := s) (c := c) (h := 0) (by omega) hx ha (Or.inl ha2) hy hxy
+      (by omega) (by omega) (by omega) (by omega) (by omega) (by omega)
   · obtain ⟨s, c, hs, hs2, _, h1, h2, h3, h4⟩ := dirOK_spec (by omega) hx h
-    exact settled7_of_IX (s := s) (c := c) (h := 1) le_rfl hx ha hy hxy (by omega) (by omega) (by omega)
-      (by omega) (by omega) (by omega)
+    exact settled7_of_IX (s := s) (c := c) (h := 1) le_rfl hx ha (Or.inl ha2) hy hxy
+      (by omega) (by omega) (by omega) (by omega) (by omega) (by omega)
 
-/-- Some `a ∈ [2, x + 1]` passes an exact direct test. -/
-def dirAny (N x y : Nat) : Bool := (List.range' 2 x).any fun a => dirAll N x y a
+/-- Some `a ∈ [1, x + 1]` passes an exact direct test. -/
+def dirAny (N x y : Nat) : Bool := (List.range' 1 (x + 1)).any fun a => dirAll N x y a
 
 theorem settled7_of_dirAny {N x y : Nat} (hx : 1 ≤ x) (hxy : x + y ≤ N)
     (h : dirAny N x y = true) : Settled7 N x (N + 1 - y) := by
@@ -766,32 +786,331 @@ theorem settled7_of_dirAny {N x y : Nat} (hx : 1 ≤ x) (hxy : x + y ≤ N)
   rw [List.mem_range'_1] at ha
   exact settled7_of_dirAll hx ha.1 hxy h
 
+
+/-! ## The pairs `(1, v)` and the special pairs with `u ≤ 3`, for all `N ≥ 65` -/
+
+theorem settled7_swap {N p h c a b u v : Nat} (H : SwapHyp N p h c) (ha : 1 ≤ a) (hab : a < b)
+    (hb : b ≤ p) (hd : deadB p a b = false) (e1 : swapF N p h c a = u)
+    (e2 : swapF N p h c b = v) : Settled7 N u v :=
+  Or.inl (Or.inr (Or.inr (Or.inr (Or.inl ⟨p, h, c, a, b, H, ha, hab, hb, hd, e1, e2⟩))))
+
+theorem settled7_chiY {N a b u v : Nat} (h4 : N % 4 = 0) (h8 : 8 ≤ N) (ha : 1 ≤ a) (hab : a < b)
+    (hb : b ≤ N / 2) (hd : deadB (N / 2) a b = false) (e1 : chiY a = u) (e2 : chiY b = v) :
+    Settled7 N u v :=
+  Or.inl (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl ⟨a, b, h4, h8, ha, hab, hb, hd, e1, e2⟩)))))
+
+theorem beatty_last {N p : Nat} (hp : 1 ≤ p) : beatty N p 0 p = N := by
+  unfold beatty; rw [Nat.sub_zero, Nat.mul_comm]; exact Nat.mul_div_cancel _ (by omega)
+
+/-- The element `x` and the last element `N` of `X(N, p, 0)`. -/
+theorem settled7_left_N {N x a p : Nat} (ha : 1 ≤ a) (hap : a < p) (hp : 2 * p ≤ N + 1)
+    (hd : 2 ≤ a ∨ (p % 2 = 1 ∧ p ≠ 7)) (h1 : x * p ≤ a * N) (h2 : a * N < (x + 1) * p) :
+    Settled7 N x N := by
+  refine settled7_beatty (p := p) (h := 0) (a := a) (b := p) (by omega) (by omega) (by omega) ha
+    hap le_rfl ?_ ?_ (beatty_last (by omega))
+  · rcases hd with hd | ⟨hd1, hd2⟩
+    · exact deadB_false_of_lt hd
+    · exact deadB_false_odd hd1 hd2
+  · unfold beatty; rw [Nat.sub_zero]
+    exact Nat.div_eq_of_lt_le h1 h2
+
+/-- `(x, N)`, `x ∈ {2, 3}`: index `1` in `X(N, p, 0)`, `p` odd in `(N/(x + 1), N/x]`. -/
+theorem settled7_small_N {N x : Nat} (hN : 65 ≤ N) (hx : 2 ≤ x) (hx3 : x ≤ 3) :
+    Settled7 N x N := by
+  interval_cases x
+  · obtain ⟨p, h1, h2, h3⟩ : ∃ p, 2 * p ≤ N ∧ N < 3 * p ∧ p % 2 = 1 :=
+      if h : (N / 2) % 2 = 1 then ⟨N / 2, by omega, by omega, h⟩
+      else ⟨N / 2 - 1, by omega, by omega, by omega⟩
+    exact settled7_left_N (a := 1) (p := p) le_rfl (by omega) (by omega)
+      (Or.inr ⟨h3, by omega⟩) (by omega) (by omega)
+  · obtain ⟨p, h1, h2, h3⟩ : ∃ p, 3 * p ≤ N ∧ N < 4 * p ∧ p % 2 = 1 :=
+      if h : (N / 3) % 2 = 1 then ⟨N / 3, by omega, by omega, h⟩
+      else ⟨N / 3 - 1, by omega, by omega, by omega⟩
+    exact settled7_left_N (a := 1) (p := p) le_rfl (by omega) (by omega)
+      (Or.inr ⟨h3, by omega⟩) (by omega) (by omega)
+
+/-- **Construction A** for `(u', N)`: `4 ≤ u'`, `3u' ≤ N`,
+`a = max 2 ⌈u'(u'+1)/N⌉`, `p = ⌊aN/u'⌋`. -/
+theorem settled7_left_N_A {N x : Nat} (hN : 65 ≤ N) (hx : 4 ≤ x) (hx3 : 3 * x ≤ N) :
+    Settled7 N x N := by
+  set c := (x * (x + 1) + N - 1) / N with hc
+  set a := max 2 c with ha
+  set p := a * N / x with hp
+  have ha2 : 2 ≤ a := le_max_left _ _
+  have hca : c ≤ a := le_max_right _ _
+  have f1 : x * (x + 1) + N - 1 < N * (c + 1) := Nat.lt_mul_div_succ _ (by omega)
+  have f2 : N * c ≤ N * a := Nat.mul_le_mul_left _ hca
+  have hceil : x * (x + 1) ≤ a * N := by
+    have e : N * (c + 1) = N * c + N := by ring
+    have e2 : N * a = a * N := Nat.mul_comm _ _
+    omega
+  have hp1 : p * x ≤ a * N := Nat.div_mul_le_self _ _
+  have hp2 : a * N < x * (p + 1) := Nat.lt_mul_div_succ _ (by omega)
+  have hpx : x + 1 ≤ p := by
+    rw [hp, Nat.le_div_iff_mul_le (by omega)]
+    calc (x + 1) * x = x * (x + 1) := by ring
+      _ ≤ a * N := hceil
+  have hp3 : 2 * p ≤ N + 1 := by
+    by_cases hc3 : c ≤ 2
+    · have ha' : a = 2 := by rw [ha]; omega
+      have h4 : p * 4 ≤ p * x := Nat.mul_le_mul_left p hx
+      rw [ha'] at hp1
+      omega
+    · have ha' : a = c := by rw [ha]; omega
+      have h5 : c * N ≤ x * (x + 1) + N - 1 := Nat.div_mul_le_self _ _
+      have claim : 2 * (x * (x + 1)) + 2 * N ≤ N * x := by nlinarith
+      have h6 : 2 * p * x ≤ N * x := by
+        rw [ha'] at hp1
+        have : 2 * p * x = 2 * (p * x) := by ring
+        omega
+      have := Nat.le_of_mul_le_mul_right h6 (show 0 < x by omega)
+      omega
+  have hax : a ≤ x := by
+    by_cases hc3 : c ≤ 2
+    · rw [ha]; omega
+    · have ha' : a = c := by rw [ha]; omega
+      have h5 : c * N ≤ x * (x + 1) + N - 1 := Nat.div_mul_le_self _ _
+      have h6 : c * N < (x + 1) * N := by
+        have : x * (x + 1) + N - 1 < (x + 1) * N := by nlinarith
+        omega
+      have := Nat.lt_of_mul_lt_mul_right h6
+      omega
+  refine settled7_left_N (a := a) (p := p) (by omega) (by omega) hp3 (Or.inl ha2)
+    (by rw [Nat.mul_comm]; exact hp1) ?_
+  have e : x * (p + 1) = x * p + x := by ring
+  have e2 : (x + 1) * p = x * p + p := by ring
+  omega
+
+/-- **Construction B** for `(u', N)`: `3u' > N`, `g = N - 2u' ≥ 3`,
+`j = max 1 ⌈g(g - 2)/N⌉`, `a = ⌈u'j/g⌉`, `p = 2a + j`. -/
+theorem settled7_left_N_B {N x : Nat} (hN : 65 ≤ N) (hx3 : N < 3 * x) (hg : 2 * x + 3 ≤ N) :
+    Settled7 N x N := by
+  obtain ⟨g, hgN⟩ : ∃ g, N = 2 * x + g + 2 := ⟨N - 2 * x - 2, by omega⟩
+  have hg1 : 1 ≤ g := by omega
+  set c := ((g + 2) * g + N - 1) / N with hc
+  set j := max 1 c with hj
+  set a := (x * j + g + 1) / (g + 2) with ha
+  have hj1 : 1 ≤ j := le_max_left _ _
+  have hcj : c ≤ j := le_max_right _ _
+  -- F3: (g + 2) g ≤ j N
+  have F3 : (g + 2) * g ≤ j * N := by
+    have f1 : (g + 2) * g + N - 1 < N * (c + 1) := Nat.lt_mul_div_succ _ (by omega)
+    have f2 : N * c ≤ N * j := Nat.mul_le_mul_left _ hcj
+    have e : N * (c + 1) = N * c + N := by ring
+    have e2 : N * j = j * N := Nat.mul_comm _ _
+    omega
+  -- F4: j N ≤ (g + 2) g + N - 1, or j = 1
+  have F4 : j * N ≤ (g + 2) * g + N - 1 ∨ j = 1 := by
+    by_cases h : c ≤ 1
+    · right; rw [hj]; omega
+    · left
+      have : j = c := by rw [hj]; omega
+      rw [this]
+      exact Nat.div_mul_le_self _ _
+  -- F1, F2: ceiling facts for a
+  have F1 : x * j ≤ a * (g + 2) := by
+    have h1 := Nat.lt_mul_div_succ (x * j + g + 1) (show 0 < g + 2 by omega)
+    have e : (g + 2) * (a + 1) = a * (g + 2) + (g + 2) := by ring
+    rw [← ha] at h1
+    omega
+  have F2 : a * (g + 2) ≤ x * j + g + 1 := by
+    have h1 := Nat.div_mul_le_self (x * j + g + 1) (g + 2)
+    rw [← ha] at h1
+    exact h1
+  have hxg : g + 2 < x := by omega
+  have haa : 2 ≤ a := by
+    by_contra h; push Not at h
+    have h1 : a * (g + 2) ≤ 1 * (g + 2) := Nat.mul_le_mul_right _ (by omega)
+    have h2 : x * 1 ≤ x * j := Nat.mul_le_mul_left _ hj1
+    omega
+  set p := 2 * a + j with hp
+  have hjN : j * N = j * (2 * x + g + 2) := by rw [hgN]
+  have h1 : x * p ≤ a * N := by
+    have e1 : x * (2 * a + j) = 2 * (a * x) + x * j := by ring
+    have e2 : a * (2 * x + g + 2) = 2 * (a * x) + a * (g + 2) := by ring
+    rw [hp, hgN, e1, e2]; omega
+  have key : a * g < x * j + j := by
+    have h3 : g * (a * (g + 2)) ≤ g * (x * j + g + 1) := Nat.mul_le_mul_left _ F2
+    have e3 : (a * g) * (g + 2) = g * (a * (g + 2)) := by ring
+    have e4 : g * (x * j + g + 1) + g = g * (x * j) + (g + 2) * g := by ring
+    have e5 : (x * j + j) * (g + 2) = g * (x * j) + j * (2 * x + g + 2) := by ring
+    have h4 : (a * g) * (g + 2) < (x * j + j) * (g + 2) := by omega
+    exact Nat.lt_of_mul_lt_mul_right h4
+  have h2 : a * N < (x + 1) * p := by
+    have e1 : a * (2 * x + g + 2) = 2 * (a * x) + a * g + 2 * a := by ring
+    have e2 : (x + 1) * (2 * a + j) = 2 * (a * x) + 2 * a + (x * j + j) := by ring
+    rw [hp, hgN, e1, e2]; omega
+  have hp2 : 2 * p ≤ N + 1 := by
+    have h5 : p * (g + 2) ≤ j * N + 2 * g + 2 := by
+      have e1 : (2 * a + j) * (g + 2) = 2 * (a * (g + 2)) + j * (g + 2) := by ring
+      have e2 : j * (2 * x + g + 2) = 2 * (x * j) + j * (g + 2) := by ring
+      rw [hp, e1, hjN, e2]; omega
+    have hG : 3 * (g + 2) < N := by omega
+    have h6 : 2 * p * (g + 2) ≤ (N + 1) * (g + 2) := by
+      have hGN : 65 * (g + 2) ≤ N * (g + 2) := Nat.mul_le_mul_right _ hN
+      have hprod : 3 * ((g + 2) * (g + 2)) + 3 * N ≤ (g + 2) * N + 9 * (g + 2) := by
+        have : (g + 2 - 3) * (N - 3 * (g + 2)) + 3 * ((g + 2) * (g + 2)) + 3 * N =
+            (g + 2) * N + 9 * (g + 2) := by
+          zify [(by omega : 3 ≤ g + 2), (by omega : 3 * (g + 2) ≤ N)]
+          ring
+        omega
+      have e1 : 2 * p * (g + 2) = 2 * (p * (g + 2)) := by ring
+      have e2 : (N + 1) * (g + 2) = (g + 2) * N + (g + 2) := by ring
+      have e3 : (g + 2) * g + 2 * g + 2 + 2 = (g + 2) * (g + 2) := by ring
+      have e4 : N * (g + 2) = (g + 2) * N := Nat.mul_comm _ _
+      rcases F4 with F4 | F4
+      · omega
+      · rw [F4, Nat.one_mul] at h5
+        have h7 : 3 * N ≤ (g + 2) * N := Nat.mul_le_mul_right _ (by omega)
+        omega
+    exact Nat.le_of_mul_le_mul_right h6 (by omega)
+  exact settled7_left_N (a := a) (p := p) (by omega) (by omega) hp2 (Or.inl haa) h1 h2
+
+/-- **Every pair `(1, v)` with `v` even, `(N + 4)/2 ≤ v ≤ N - 1` is settled** (`N ≥ 65`): its
+mirror `(u', N)` by `X(N, p, 0)` (`u' = N + 1 - v`), or `(1, N/2 + 2)` by `chiY`. -/
+theorem settled7_one_v {N v : Nat} (hN : 65 ≤ N) (hv : v % 2 = 0) (hv1 : N + 4 ≤ 2 * v)
+    (hv2 : v + 1 ≤ N) : Settled7 N 1 v ∨ Settled7 N (N + 1 - v) (N + 1 - 1) := by
+  rw [show N + 1 - 1 = N by omega]
+  set x := N + 1 - v with hx
+  by_cases hg : 2 * x + 2 = N
+  · -- chiY: v = N/2 + 2, N = 0 mod 4
+    left
+    have h4 : N % 4 = 0 := by omega
+    refine settled7_chiY (a := 1) (b := N / 4 + 1) h4 (by omega) le_rfl (by omega) (by omega)
+      (deadB_false_of_ne (by omega)) (by simp [chiY]) ?_
+    simp only [chiY]
+    split_ifs <;> omega
+  right
+  by_cases h2 : x ≤ 3
+  · exact settled7_small_N hN (by omega) h2
+  by_cases h3 : 3 * x ≤ N
+  · exact settled7_left_N_A hN (by omega) h3
+  · exact settled7_left_N_B hN (by omega) (by omega)
+
+/-- `(3, N - 1)`, `N` odd: the corner `(1, p)` of `X(N, p, 1)`, `p` odd, `3p ≤ N - 1 < 4p`. -/
+theorem settled7_three_N1 {N : Nat} (hN : 65 ≤ N) : Settled7 N 3 (N - 1) := by
+  obtain ⟨p, hp1, hp2, hpo⟩ : ∃ p, 3 * p ≤ N - 1 ∧ N - 1 < 4 * p ∧ p % 2 = 1 :=
+    if h : ((N - 1) / 3) % 2 = 1 then ⟨(N - 1) / 3, by omega, by omega, h⟩
+    else ⟨(N - 1) / 3 - 1, by omega, by omega, by omega⟩
+  refine settled7_beatty (p := p) (h := 1) (a := 1) (b := p) (by omega) (by omega) le_rfl le_rfl
+    (by omega) le_rfl (deadB_false_odd hpo (by omega)) ?_ ?_
+  · unfold beatty; rw [Nat.one_mul]
+    exact Nat.div_eq_of_lt_le (by omega) (by omega)
+  · unfold beatty
+    apply Nat.div_eq_of_lt_le
+    · obtain ⟨m, rfl⟩ : ∃ m, N = m + 1 := ⟨N - 1, by omega⟩
+      have e : p * (m + 1) = m * p + p := by ring
+      rw [show m + 1 - 1 = m by omega]
+      omega
+    · obtain ⟨m, rfl⟩ : ∃ m, N = m + 1 := ⟨N - 1, by omega⟩
+      have e : p * (m + 1) = m * p + p := by ring
+      rw [show m + 1 - 1 = m by omega]
+      have e2 : (m + 1) * p = m * p + p := by ring
+      omega
+
+/-- `(3, N - 2)`, `N` even: the corner `(1, p)` of `Z(N, p)`, `3(p + 1) < N + 2 < 4(p + 1)`. -/
+theorem settled7_three_N2 {N : Nat} (hN : 65 ≤ N) : Settled7 N 3 (N - 2) := by
+  obtain ⟨p, hp1, hp2, hpo⟩ : ∃ p, 3 * (p + 1) < N + 2 ∧ N + 2 < 4 * (p + 1) ∧ p % 2 = 1 :=
+    if h : ((N - 2) / 3) % 2 = 1 then ⟨(N - 2) / 3, by omega, by omega, h⟩
+    else ⟨(N - 2) / 3 - 1, by omega, by omega, by omega⟩
+  obtain ⟨e1, e2⟩ := zF_corner (N := N) (p := p) (c := 3) hp1 hp2
+  refine settled7_z (p := p) (a := 1) (b := p) (by omega) (by omega) le_rfl (by omega) le_rfl
+    (deadB_false_odd hpo (by omega)) e1 ?_
+  rw [e2]; omega
+
+/-- `(4, N - 2)`, `N` odd: the corner of a swapped copy (Live6 `coReach_three`). -/
+theorem settled7_four_N2 {N : Nat} (hN : 65 ≤ N) : Settled7 N 4 (N - 2) := by
+  obtain ⟨p, hp⟩ : ∃ p, p = if (N - 1) / 4 % 2 = 1 then (N - 1) / 4 else (N - 1) / 4 - 1 :=
+    ⟨_, rfl⟩
+  have hp9 : 15 ≤ p ∧ p % 2 = 1 ∧ 4 * p ≤ N - 1 ∧ N - 1 < 5 * p := by
+    rw [hp]; split_ifs <;> omega
+  have H : SwapHyp N p 1 2 := ⟨by omega, hp9.2.1, le_rfl, le_rfl, by omega⟩
+  refine settled7_swap H (a := 1) (b := p) le_rfl (by omega) le_rfl
+    (deadB_false_odd hp9.2.1 (by omega)) ?_ swapF_top
+  rw [swapF_lt (by omega)]
+  unfold beatty; rw [Nat.one_mul]
+  exact Nat.div_eq_of_lt_le (by omega) (by omega)
+
+/-- `(3, (N + 6)/2)`, `N ≡ 2 mod 4`: `X(N, p, 0)`, `p` even, `3p ≤ N < 4p`, indices `1`,
+`p/2 + 1`. -/
+theorem settled7_three_half {N : Nat} (hN : 65 ≤ N) (h4 : N % 4 = 2) :
+    Settled7 N 3 ((N + 6) / 2) := by
+  obtain ⟨r, hr1, hr2⟩ : ∃ r, 3 * (2 * r) ≤ N ∧ N < 4 * (2 * r) :=
+    if h : (N / 3) % 2 = 0 then ⟨N / 6, by omega, by omega⟩
+    else ⟨N / 6, by omega, by omega⟩
+  refine settled7_beatty (p := 2 * r) (h := 0) (a := 1) (b := r + 1) (by omega) (by omega)
+    (by omega) le_rfl (by omega) (by omega) (deadB_false_of_ne (by omega)) ?_ ?_
+  · unfold beatty; rw [Nat.sub_zero, Nat.one_mul]
+    exact Nat.div_eq_of_lt_le (by omega) (by omega)
+  · unfold beatty; rw [Nat.sub_zero]
+    obtain ⟨n, rfl⟩ : ∃ n, N = 2 * n := ⟨N / 2, by omega⟩
+    apply Nat.div_eq_of_lt_le
+    · have e : (r + 1) * (2 * n) = 2 * r * n + 2 * n := by ring
+      have e2 : (2 * n + 6) / 2 = n + 3 := by omega
+      rw [e2]
+      have e3 : (n + 3) * (2 * r) = 2 * r * n + 6 * r := by ring
+      omega
+    · have e : (r + 1) * (2 * n) = 2 * r * n + 2 * n := by ring
+      have e2 : (2 * n + 6) / 2 = n + 3 := by omega
+      rw [e2]
+      have e3 : (n + 3 + 1) * (2 * r) = 2 * r * n + 8 * r := by ring
+      omega
+
+/-! ## The arithmetic covering statement -/
+
+/-- The special pairs `(u, u')` (`u' = N + 1 - v`) settled by the lemmas above. -/
+def Special (N u u' : Nat) : Prop :=
+  (u = 2 ∧ (u' = 2 ∨ u' = 3)) ∨ (u = 3 ∧ (u' = 3 ∨ u' = 4)) ∨ (u = 3 ∧ N % 4 = 2 ∧ 2 * u' + 4 = N)
+
 /-- **The arithmetic covering statement**: every mixed-parity wide pair `(u, v)`,
-`u + v ≤ N + 1`, with `u ≥ 4`, passes an exact direct test in one of its two orientations
-(`u' = N + 1 - v`).  (Numerically true for every `61 ≤ N ≤ 3000`, `dircheck.c`; for `u ≤ 3`
-see `SmallCover`, numerically true for `65 ≤ N ≤ 3000`, `smallcheck.c`.) -/
+`u + v ≤ N + 1`, `u ≥ 2`, other than the special pairs, passes an exact direct test (`dirAny`)
+in one of its two orientations (`u' = N + 1 - v`).  Purely arithmetic (floors and one
+multiple of `K` in an interval); verified for `65 ≤ N ≤ 3000` (`dircheck2.c`). -/
 def ArithCover (N : Nat) : Prop :=
-  ∀ u v, 4 ≤ u → u < v → u + v ≤ N + 1 → (u + v) % 2 = 1 → 2 * u + 2 ≤ v →
-    N + u + 3 ≤ 2 * v → dirAny N u (N + 1 - v) = true ∨ dirAny N (N + 1 - v) u = true
+  ∀ u v, 2 ≤ u → u < v → u + v ≤ N + 1 → (u + v) % 2 = 1 → 2 * u + 2 ≤ v →
+    N + u + 3 ≤ 2 * v → ¬ Special N u (N + 1 - v) →
+      dirAny N u (N + 1 - v) = true ∨ dirAny N (N + 1 - v) u = true
 
-/-- The mixed-parity statement for the pairs with `u ≤ 3`. -/
-def SmallCover (N : Nat) : Prop :=
-  ∀ u v, 1 ≤ u → u ≤ 3 → u < v → u + v ≤ N + 1 → (u + v) % 2 = 1 → 2 * u + 2 ≤ v →
-    N + u + 3 ≤ 2 * v → deadB N u v = false →
-      Settled7 N u v ∨ Settled7 N (N + 1 - v) (N + 1 - u)
-
-theorem mixedCover_of_arith {N : Nat} (hA : ArithCover N) (hS : SmallCover N) :
-    MixedCover N := by
+theorem mixedCover_of_arith {N : Nat} (hN : 65 ≤ N) (hA : ArithCover N) : MixedCover N := by
   intro u v hu huv hs hp h1 h2 hd
-  by_cases h3 : u ≤ 3
-  · exact hS u v hu h3 huv hs hp h1 h2 hd
-  rcases hA u v (by omega) huv hs hp h1 h2 with h | h
+  by_cases hu1 : u = 1
+  · subst hu1
+    have hvN : v + 1 ≤ N := by
+      by_contra h
+      have : v = N := by omega
+      subst this
+      unfold deadB at hd
+      simp at hd
+      omega
+    exact settled7_one_v hN (by omega) (by omega) hvN
+  by_cases hS : Special N u (N + 1 - v)
+  · rcases hS with ⟨rfl, h | h⟩ | ⟨rfl, h | h⟩ | ⟨rfl, h4, h⟩
+    · -- (2, N - 1), N even: settled_evenEven
+      left
+      exact settled_evenEven (by omega) (by omega) (by omega) (by omega) (by omega) (by omega)
+        (by omega) (by omega)
+    · -- (2, N - 2), N odd: mirror (3, N - 1)
+      right
+      rw [show N + 1 - v = 3 by omega, show N + 1 - 2 = N - 1 by omega]
+      exact settled7_three_N1 hN
+    · -- (3, N - 2), N even
+      left
+      rw [show v = N - 2 by omega]
+      exact settled7_three_N2 hN
+    · -- (3, N - 3), N odd: mirror (4, N - 2)
+      right
+      rw [show N + 1 - v = 4 by omega, show N + 1 - 3 = N - 2 by omega]
+      exact settled7_four_N2 hN
+    · -- (3, (N + 6)/2), N ≡ 2 mod 4
+      left
+      rw [show v = (N + 6) / 2 by omega]
+      exact settled7_three_half hN h4
+  rcases hA u v (by omega) huv hs hp h1 h2 hS with h | h
   · left
     have := settled7_of_dirAny (N := N) (x := u) (y := N + 1 - v) hu (by omega) h
     rwa [show N + 1 - (N + 1 - v) = v by omega] at this
   · right
     exact settled7_of_dirAny (N := N) (x := N + 1 - v) (y := u) (by omega) (by omega) h
-
 
 /-! ## The covering statement for `65 ≤ N ≤ 300`, by verified certificates
 
@@ -2262,14 +2581,13 @@ theorem conjectureC_of_mixed (h : ∀ N, 300 < N → MixedCover N) {N m₁ m₂ 
     Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false :=
   extends_iff_of_coReach (coReach_of_mixed_large h N) h1 h2 h12 hval
 
-/-- **Conjecture C (2-prefixes) for all `N`, modulo the arithmetic statement `ArithCover` and
-the small statement `SmallCover` for `N > 300`.** -/
-theorem conjectureC_of_arith (hA : ∀ N, 300 < N → ArithCover N)
-    (hS : ∀ N, 300 < N → SmallCover N) {N m₁ m₂ : Nat}
+/-- **Conjecture C (2-prefixes) for all `N`, modulo the arithmetic statement `ArithCover N`
+for `N > 300`** (a statement about floors only, verified for `65 ≤ N ≤ 3000`). -/
+theorem conjectureC_of_arith (hA : ∀ N, 300 < N → ArithCover N) {N m₁ m₂ : Nat}
     (h1 : 1 ≤ m₁ ∧ m₁ ≤ N) (h2 : 1 ≤ m₂ ∧ m₂ ≤ N) (h12 : m₁ ≠ m₂)
     (hval : SemiSymmetric N [m₁, m₂]) :
     Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false :=
-  conjectureC_of_mixed (fun N hN => mixedCover_of_arith (hA N hN) (hS N hN)) h1 h2 h12 hval
+  conjectureC_of_mixed (fun N hN => mixedCover_of_arith (by omega) (hA N hN)) h1 h2 h12 hval
 
 end Live8
 end Folds
