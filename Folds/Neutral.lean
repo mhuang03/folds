@@ -1,4 +1,5 @@
 import Folds.RecCount
+import Mathlib.Algebra.BigOperators.Ring.Finset
 
 namespace Folds
 namespace Neutral
@@ -860,6 +861,145 @@ theorem neutral_classification (hN : 2 ≤ N) (hX : X ⊆ Finset.Icc 1 N) :
       have p : 0 < j * n := Nat.mul_pos (by omega) (by omega)
       rw [card_compl_resE hj hjn]
       exact ⟨neutral_compl_resE hj hjn, by omega, by omega⟩
+
+/-! ## Identity (A) -/
+
+theorem g_resE {j n : Nat} (hj : 1 ≤ j) (h : (2 * j + 1) * n = N) :
+    g N (resE j n) = semiCount (j * n) := by
+  subst h; exact g_winEmb (split_res hj n).emb₁
+
+theorem g_compl_resE {j n : Nat} (hj : 1 ≤ j) (h : (2 * j + 1) * n = N) :
+    g N (Finset.Icc 1 N \ resE j n) = semiCount ((j + 1) * n) := by
+  subst h; unfold resE; rw [(split_res hj n).compl_image]; exact g_winEmb (split_res hj n).emb₂
+
+/-- Sizes of the members of `NFam`: `2|X| ∈ {N - N/d, N + N/d}` for the pair indexed by `d`. -/
+theorem pair_card {d : Nat} (hd : d ∈ oddDivs N) {X : Finset Nat}
+    (hX : X ∈ ({resE ((d - 1) / 2) (N / d), Finset.Icc 1 N \ resE ((d - 1) / 2) (N / d)} :
+      Finset (Finset Nat))) :
+    2 * X.card + N / d = N ∨ 2 * X.card = N + N / d := by
+  obtain ⟨hj, hn2, hjn⟩ := oddDivs_facts hd
+  rw [Finset.mem_insert, Finset.mem_singleton] at hX
+  generalize (d - 1) / 2 = j at hj hjn hX
+  generalize N / d = n at hn2 hjn hX ⊢
+  have e : (2 * j + 1) * n = 2 * (j * n) + n := by ring
+  have e' : (j + 1) * n = j * n + n := by ring
+  rcases hX with rfl | rfl
+  · rw [card_resE hj]; left; omega
+  · rw [card_compl_resE hj hjn]; right; omega
+
+theorem nfam_sub {X : Finset Nat} (hX : X ∈ NFam N) : X ⊆ Finset.Icc 1 N := by
+  rcases mem_NFam.1 hX with rfl | rfl | ⟨d, hd, rfl | rfl⟩
+  · exact parCls_sub N 1 le_rfl (by omega)
+  · exact parCls_sub N 2 (by omega) le_rfl
+  · obtain ⟨hj, -, hjn⟩ := oddDivs_facts hd; exact resE_sub hj hjn
+  · exact Finset.sdiff_subset
+
+/-- No proper prefix set of `a` (sizes `1, …, N - 1`) is neutral. -/
+def NoNeutralPrefix (N : Nat) (a : List Nat) : Prop :=
+  ∀ k ∈ Finset.Ioo 0 N, ¬ IsNeutral N (a.take k).toFinset
+
+instance (N : Nat) : DecidablePred (NoNeutralPrefix N) := fun a =>
+  inferInstanceAs (Decidable (∀ k ∈ Finset.Ioo 0 N, ¬ IsNeutral N (a.take k).toFinset))
+
+/-- **Identity (A).**  For `N ≥ 2`,
+`a(N) = 2 a(⌊N/2⌋) a(⌈N/2⌉) + 2 ∑_{d ∣ N odd, 3 ≤ d < N} a(jN/d) a((j+1)N/d) + I(N)`,
+`j = (d - 1)/2`, where `I(N)` counts the sequences none of whose proper prefix sets is neutral. -/
+theorem identity_A (hN : 2 ≤ N) :
+    semiCount N = 2 * (semiCount (N / 2) * semiCount ((N + 1) / 2)) +
+      2 * ∑ d ∈ oddDivs N,
+        semiCount ((d - 1) / 2 * (N / d)) * semiCount (((d - 1) / 2 + 1) * (N / d)) +
+      ((semiSeqs N).filter (NoNeutralPrefix N)).card := by
+  have hN0 : 0 < N := by omega
+  have hsub : ∀ X ∈ NFam N, X ⊆ Finset.Icc 1 N := fun X hX => nfam_sub hX
+  have hanti : ∀ X ∈ NFam N, ∀ Y ∈ NFam N, X ⊆ Y → X = Y := by
+    intro X hX Y hY hXY
+    obtain ⟨nX, pX, -⟩ := (neutral_classification hN (hsub X hX)).2 hX
+    obtain ⟨nY, -, pY⟩ := (neutral_classification hN (hsub Y hY)).2 hY
+    exact neutral_antichain hN0 (hsub X hX) (hsub Y hY) nX nY pX pY hXY
+  rw [semiCount_eq_sum_antichain (NFam N) hsub hanti]
+  congr 1
+  · -- the sum
+    have hP : parCls N 1 ≠ parCls N 2 := by
+      intro e
+      have h1 : 1 ∈ parCls N 1 := (mem_parCls le_rfl (by omega)).2 ⟨le_rfl, by omega, rfl⟩
+      rw [e, mem_parCls (by omega) le_rfl] at h1; omega
+    have hdisj : Disjoint ({parCls N 1, parCls N 2} : Finset (Finset Nat))
+        ((oddDivs N).biUnion (fun d =>
+          {resE ((d - 1) / 2) (N / d), Finset.Icc 1 N \ resE ((d - 1) / 2) (N / d)})) := by
+      rw [Finset.disjoint_left]
+      intro X hX hX'
+      obtain ⟨d, hd, hXd⟩ := Finset.mem_biUnion.1 hX'
+      have hc := pair_card hd hXd
+      have hn2 := (oddDivs_facts hd).2.1
+      rw [Finset.mem_insert, Finset.mem_singleton] at hX
+      rcases hX with rfl | rfl
+      · rw [card_parCls1 (by omega)] at hc; omega
+      · rw [card_parCls2 hN] at hc; omega
+    have hpw : (oddDivs N : Set Nat).PairwiseDisjoint (fun d =>
+        ({resE ((d - 1) / 2) (N / d), Finset.Icc 1 N \ resE ((d - 1) / 2) (N / d)} :
+          Finset (Finset Nat))) := by
+      intro d hd d' hd' hne
+      simp only [Function.onFun]
+      rw [Finset.disjoint_left]
+      intro X hX hX'
+      have c1 := pair_card hd hX
+      have c2 := pair_card hd' hX'
+      have f1 := oddDivs_facts hd
+      have f2 := oddDivs_facts hd'
+      have hnn : N / d = N / d' := by omega
+      apply hne
+      have dv1 : d ∣ N := by
+        simp only [oddDivs, Finset.coe_filter] at hd; exact hd.2.1
+      have dv2 : d' ∣ N := by
+        simp only [oddDivs, Finset.coe_filter] at hd'; exact hd'.2.1
+      rw [← Nat.div_div_self dv1 hN0.ne', hnn, Nat.div_div_self dv2 hN0.ne']
+    rw [NFam, Finset.sum_union hdisj, Finset.sum_pair hP, Finset.sum_biUnion hpw,
+      compl_parCls, compl_parCls2, g_parCls le_rfl (by omega) (by omega),
+      g_parCls (by omega) le_rfl hN, Finset.mul_sum]
+    have e1 : ccount 2 1 N = (N + 1) / 2 := by unfold ccount; omega
+    have e2 : ccount 2 2 N = N / 2 := by unfold ccount; omega
+    rw [e1, e2]
+    congr 1
+    · ring
+    · apply Finset.sum_congr rfl
+      intro d hd
+      obtain ⟨hj, hn2, hjn⟩ := oddDivs_facts hd
+      generalize (d - 1) / 2 = j at hj hjn ⊢
+      generalize N / d = n at hn2 hjn ⊢
+      have hne : resE j n ≠ Finset.Icc 1 N \ resE j n := by
+        intro e
+        have := congrArg Finset.card e
+        rw [card_resE hj, card_compl_resE hj hjn] at this
+        have e' : (j + 1) * n = j * n + n := by ring
+        omega
+      rw [Finset.sum_pair hne, Finset.sdiff_sdiff_eq_self (resE_sub hj hjn), g_resE hj hjn,
+        g_compl_resE hj hjn]
+      ring
+  · -- the remainder
+    apply congrArg Finset.card
+    apply Finset.filter_congr
+    intro a ha
+    unfold NoNeutralPrefix
+    rw [mem_semiSeqs] at ha
+    have hnd := nodup_of_foldSeq ha.1
+    have hlen : a.length = N := by rw [ha.1.length_eq]; simp
+    have hS : ∀ k, (a.take k).toFinset ⊆ Finset.Icc 1 N := by
+      intro k x hx
+      rw [List.mem_toFinset] at hx
+      exact Finset.mem_Icc.2 ((mem_range'_of_perm ha.1).1 (List.mem_of_mem_take hx))
+    have hcard : ∀ k, k ≤ N → (a.take k).toFinset.card = k := by
+      intro k hk
+      rw [List.toFinset_card_of_nodup (take_nodup hnd k), List.length_take]; omega
+    constructor
+    · intro h k hk hneu
+      obtain ⟨hk0, hkN⟩ := Finset.mem_Ioo.1 hk
+      have hmem : (a.take k).toFinset ∈ NFam N :=
+        (neutral_classification hN (hS k)).1 ⟨hneu, by rw [hcard k hkN.le]; exact hk0,
+          by rw [hcard k hkN.le]; exact hkN⟩
+      exact h _ hmem (by rw [hcard k hkN.le])
+    · intro h X hX e
+      obtain ⟨nX, p0, p1⟩ := (neutral_classification hN (hsub X hX)).2 hX
+      exact h X.card (Finset.mem_Ioo.2 ⟨p0, p1⟩) (by rw [e]; exact nX)
 
 end Neutral
 end Folds
