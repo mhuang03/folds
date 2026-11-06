@@ -1,0 +1,6 @@
+N=71: Live3q residual 326, left by Covered3R 30 (not {1,2,c}: []), left by Covered3T: {1,2,c} c in [39, 43, 51, 55, 59, 63, 67, 68, 69]
+N=72: Live3q residual 178, left by Covered3R 0 (not {1,2,c}: []), left by Covered3T: {1,2,c} c in []
+N=73: Live3q residual 350, left by Covered3R 8 (not {1,2,c}: [(73, 1, 3, 73), (73, 1, 71, 73)]), left by Covered3T: {1,2,c} c in [58, 62, 66, 68, 70, 71]
+N=74: Live3q residual 296, left by Covered3R 1 (not {1,2,c}: []), left by Covered3T: {1,2,c} c in [73]
+N=75: Live3q residual 266, left by Covered3R 2 (not {1,2,c}: []), left by Covered3T: {1,2,c} c in [72, 73]
+N=76: Live3q residual 203, left by Covered3R 0 (not {1,2,c}: []), left by Covered3T: {1,2,c} c in []
