@@ -561,5 +561,46 @@ theorem coReach_three {N : Nat} (hN : 37 ≤ N) : CoReach N {3, N - 3} := by
   have e : (N - 1) / p = 4 := Nat.div_eq_of_lt_le (by omega) (by omega)
   rwa [e, show N + 1 - 4 = N - 3 by omega] at this
 
+/-! ## The enlarged proven family -/
+
+/-- `Cov6`: `Cov5` closed under residue transfers, multiples of `q`, Beatty copies, splits,
+swapped Beatty copies, the copy `chiY` (`N ≡ 0 mod 4`) and the mirror. -/
+inductive Cov6 : Nat → Finset Nat → Prop
+  | cov5 {N : Nat} {D : Finset Nat} : Cov5 N D → Cov6 N D
+  | res {q N s : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ N → Good q (N % q) s →
+      D ⊆ Finset.Icc 1 (ccount q s N) → Cov6 (ccount q s N) D → Cov6 N (D.image (cls q s))
+  | mult {q N : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ N → (N + 1) % q = 0 →
+      D ⊆ Finset.Icc 1 (ccount q q N) → Cov6 (ccount q q N) D → Cov6 N (D.image (cls q q))
+  | beatty {N p h : Nat} {D : Finset Nat} : 1 ≤ p → h + 2 * p ≤ N + 1 → h ≤ 1 →
+      D ⊆ Finset.Icc 1 p → Cov6 p D → Cov6 N (D.image (beatty N p h))
+  | split {N p q : Nat} {φ ψ : Nat → Nat} {D : Finset Nat} : Split N p q φ ψ →
+      D ⊆ Finset.Icc 1 p → Cov6 p D → Cov6 N (D.image φ)
+  | swap {N p h c : Nat} {D : Finset Nat} : SwapHyp N p h c →
+      D ⊆ Finset.Icc 1 p → Cov6 p D → Cov6 N (D.image (swapF N p h c))
+  | chiY {n : Nat} {D : Finset Nat} : 4 ≤ n → n % 2 = 0 →
+      D ⊆ Finset.Icc 1 n → Cov6 n D → Cov6 (2 * n) (D.image chiY)
+  | mirror {N : Nat} {D : Finset Nat} : Cov6 N D → Cov6 N (D.image (N + 1 - ·))
+
+theorem Cov6.coReach {N : Nat} {D : Finset Nat} (h : Cov6 N D) : CoReach N D := by
+  induction h with
+  | cov5 h => exact h.coReach
+  | res hq2 hqN hg hDs _ ih => exact coReach_good (by omega) hqN hg hDs ih
+  | mult hq2 hqN hN hDs _ ih => exact coReach_mult_transfer (by omega) hqN hN hDs ih
+  | beatty hp hh h1 hDs _ ih => exact coReach_beatty_transfer hp hh h1 hDs ih
+  | split hs hDs _ ih => exact coReach_split hs hDs ih
+  | swap H hDs _ ih => exact coReach_swap_transfer H hDs ih
+  | chiY hn he hDs _ ih => exact coReach_chiY_transfer hn he hDs ih
+  | mirror _ ih => exact coReach_mirror ih
+
+/-- Every valid 2-prefix whose set is in the family is live. -/
+theorem Cov6.extends {N u v : Nat} (h : Cov6 N {u, v}) (hu : 1 ≤ u ∧ u ≤ N)
+    (hv : 1 ≤ v ∧ v ≤ N) (huv : u ≠ v) (hval : SemiSymmetric N [u, v]) :
+    Extends N [u, v] := by
+  rw [extends_iff_coReach (by simp [huv]) (by
+    intro x hx; simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
+    rcases hx with rfl | rfl <;> assumption) hval]
+  convert h.coReach using 2
+  ext x; simp
+
 end Live6
 end Folds
