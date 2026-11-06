@@ -30,3 +30,8 @@
 # N=37 checks: the CRT of the first 12 residues equals the CRT of all 13 (the mod-191 residue 89 is redundant and agrees); a(37) mod 4 = 2, as predicted by a = c (mod 4).
 # N=37 note: one anonymous-memory attempt at idx 3 was OOM-killed by the 14.3 GB tool cgroup (another job's lean used 13 GB at times) and was rerun with FOLDS_SPILL.
 # Per-run logs: results/n36_u8.log, results/n37_u8.log (stdout), *.log.err (per-layer progress and memory).
+38 15884954204816776206921874682 16614s 4 u8-CRT(13 moduli, stable, plus a 14th residue mod 181 = 168 that agrees; --sub 4 sub-blocks, global schedule, FOLDS_SPILL with FOLDS_ANON=3.5: sim. live peak 16.84e9 words = 3.5 GB anonymous + 13.4 GB spill file, peak RSS 3.98 GB; runs of 602-2003s each, sum of run times)
+# Residues for N=38 (mod 256 251 241 239 233 229 227 223 211 199 197 193 191 181): 250 62 117 138 68 155 7 140 102 79 54 57 6 168
+# N=38 checks: a(38) < product of the first 12 moduli, and the CRT of the first 12 residues equals the CRT of 13 (mod 191 redundant) and of 14 (mod 181 redundant); a(38) mod 4 = 2, as predicted by a = c (mod 4) with c(38) = 301305621655490.
+# N=38 path check: --sub reproduced a(36) mod 251 = 102 and a(37) mod 241 = 240 (spilled; results/n36_sub.log, n37_sub.log).
+# Per-run logs: results/n38_u8.log (stdout, start/exit lines), results/n38_u8.log.err (per-job progress).

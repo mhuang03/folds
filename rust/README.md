@@ -305,10 +305,14 @@ These are fitted to data, not proven.
 | 35 | 14916356465581456801127844 | 7 × 313–755 s | u16 CRT, 9.1 GB, machine under load |
 | 36 | 162918548122441960881265188 | 13 × 438–2137 s | u8 CRT, `--blocks`, 6.23 GB |
 | 37 | 1435459602925600924848243286 | 13 × 1055–1511 s | u8 CRT, `--blocks`, 11.2 GB, `FOLDS_SPILL` |
+| 38 | 15884954204816776206921874682 | 14 × 602–2003 s | u8 CRT, `--sub 4`, 3.5 GB anon + 13.4 GB file, RSS ≤ 3.98 GB |
 
-**Largest N reached: 37.** Both new terms have a redundant CRT modulus that agrees
-(N=36 also a second one, mod 181), and both satisfy the mod-4 law a ≡ c (mod 4):
-a(36) ≡ 0 and a(37) ≡ 2.
+**Largest N reached: 38.** All new terms have a redundant CRT modulus that agrees
+(N=36 also a second one, mod 181; N=38 has two: the 12 moduli up to 193 already give
+the value, and both mod 191 and mod 181 agree). All satisfy the mod-4 law
+a ≡ c (mod 4): a(36) ≡ 0, a(37) ≡ 2, a(38) ≡ 2 (c(38) = 301305621655490 ≡ 2).
+The `--sub` path also reproduced a(36) mod 251 = 102 and a(37) mod 241 = 240, both
+with spilling (`results/n36_sub.log`, `results/n37_sub.log`).
 
 The stats files `results/stats/semi_N.txt` (N = 2..24) also contain `alive_sets` /
 `doomed_sets` (`g>0` and `f=0`; the `doomed_total` column reproduces the "dead ends"
@@ -333,13 +337,18 @@ for every word size, because memory latency dominates it.
   with the I/O overlapped. 13 runs took about 4.5 h. During one run, another job's
   process grew to 13 GB. The spilled pages were evicted and re-read from disk, and
   the run finished normally.
-* **N=38**: the peak is 24.2e9 words (24 GB in u8). This needs a machine with
-  ≥ 32 GB, or the spill mode with ≥ 25 GB of free disk and a disk fast enough for
-  ~50 GB of writes per run. At 128 MB/s that is ≥ 7 min of pure I/O per run, for each
-  of 13 runs. Time per run is ≈ 2.2× N=37 (~45 min unloaded), so the u8 runs take
-  about 10 h in total.
-* Going lower in memory needs a finer granularity than blocks. No block order can go
-  below max over blocks of (block + the blocks it reads), about 0.6 × the middle
-  layer. Freeing sub-blocks (rows of the predecessor blocks that are read in
-  lock-step, see `block.rs`) would only take N=37 from 11.2e9 to ≈ 11.0e9 words. The
-  large blocks next to the diagonal dominate.
+* **N=38** (`--sub 4`, u8, `FOLDS_SPILL`, `FOLDS_ANON=3.5`): `--blocks` would peak at
+  24.2e9 words, more than RAM + free disk here. Sub-blocks bring the live set down to
+  16.8e9 words, about one layer (layer 18). Of this, 3.5 GB stays anonymous and up to
+  13.4 GB lives in the spill file (≈ 40 GB written per run). The process RSS stayed
+  at ≤ 3.98 GB. Each run took 10–33 min (load 4–6), which is faster than the old
+  N=37 runs thanks to the row kernel. That is 14 runs, 4.6 h of run time in total. The memory
+  guard waited only once. Runs interrupted by container restarts were simply rerun.
+* **N=39**: `--sub 4` peaks at 35.6e9 words (layer 19 is 34.5e9; `T = 3, 5, 6` are no
+  better). In u8 that is ≈ 36 GB live. With 3.5 GB anonymous memory it needs ≈ 32 GB of
+  spill disk plus a margin, i.e. ≥ 36 GB free (this VM has 18), and ≈ 114 GB written
+  per run. Alternatively, a ≥ 48 GB machine could hold it all in RAM. Expect ≈ 2.2×
+  the N=38 time per run (30–70 min here). a(39) ≈ 2^97 fits in the 13 u8 moduli
+  (101 bits), plus one redundant modulus, so 14 runs.
+* Going below one layer would need recomputation. Every non-recomputing order of
+  this DAG seems to need about one full layer live (see "Sub-blocks").
