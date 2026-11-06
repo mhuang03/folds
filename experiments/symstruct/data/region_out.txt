@@ -1,0 +1,4 @@
+c=1: violations of invariance for K<=600: 0 []
+c=2: violations of invariance for K<=600: 0 []
+c=3: violations of invariance for K<=600: 0 []
+max over N<3000 of 2|A(u)| - |D|: 1

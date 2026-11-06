@@ -1,0 +1,226 @@
+STRUCTURE OF 3-AP-FREE PERMUTATIONS (symmetric fold sequences, OEIS A003407)  (experiments/symstruct/)
+==================================================================================================
+Builds on ../symparity/PROOFS.txt (Lemma 1: first and last entries have different parity;
+Theorem C, the orientation theorem).  theta(n) = A003407(n).  A permutation a of [n] is
+3-AP-free if no i<j<k has a_i + a_k = 2 a_j.  For a fixed a, D = the parity class of a_1,
+C = the other class.  y in D and u in C are LINKED (in [n]) if they lie in a common 3-AP
+inside [n]:  2y-u in [1,n] or 2u-y in [1,n].
+
+Summary of new results
+  M  merge theorem: 3-AP-free  <=>  both parity subsequences 3-AP-free  +  D before C on
+     every linked pair.                                            [Lean, Folds/SymStructure]
+     Exact formula  theta(n) = sum_{p} sum_{sigma,tau} P(sigma,tau)  (lattice-path count P).
+  E  extendability of prefixes: a complete recursive criterion (polynomial test).   [paper]
+  F  exact halving recursion for the longest "top" prefix G(K,a); consequences:     [paper +
+     f(N) := min opening same-parity run  >=  floor(N/2) - 6 for ALL N (Sharma's      finite
+     bound, reproved), with equality for N = 26 and N = 48*2^j + 2 (j >= 0), so the   check]
+     constant 6 is BEST POSSIBLE; f(N) is computable in O(log N); exact table N <= 10^5:
+     floor(N/2) - f(N) in {4,5,6} for all N >= 22, in a dyadic pattern (Conj. F').
+  L  live k-prefixes: L_k(N) = L_k(ceil(N/2)) + L_k(floor(N/2)) for N >= 4k-1, so the
+     number of extendable k-prefixes is Theta(N) (piecewise linear, log-periodic). [paper]
+  R  theta(n)/(2 theta(floor n/2) theta(ceil n/2)) = mean of P lies in [1.248, 1.348] for
+     16 <= n <= 200 and is log-periodic: r(2n) - r(n) -> 0 geometrically (Conj. R).
+  T  T_sym(N,2) = floor(N^2/2); T_sym(N,3) = N^3/8 + N^2/4 - (1/2 | 3/8)N + (0,0,-1,-1/2)[N mod 4]
+     (period 4); T_sym(N,4) period 120 = 8*3*5; T_sym(N,5) period 5040 (exact, Ehrhart).
+
+--------------------------------------------------------------------------------------------------
+1. THEOREM M (merge theorem)                       [Lean: SymStructure.merge_iff, merge_iff_apFree]
+--------------------------------------------------------------------------------------------------
+Let a = w :: tl be a permutation of an interval [lo,hi] (Lean: of [1,N]); D = values = w mod 2.
+   a is 3-AP-free  <=>  (i) a|D and a|C (the two parity subsequences) are 3-AP-free, and
+                       (ii) for every linked pair y in D, u in C, y comes before u.
+Proof.  =>: (i) sublists.  (ii) is the "window" step of ../symparity Corollary D (Lean
+bef_of_window): the AP through y and u has odd difference; if y is its middle, the
+orientation theorem says the middle (parity of w) comes first; if u is its middle it is not
+first, hence (middle never between) last.  Either way y before u.
+<=: let x<y<z positions with x+z = 2y.  Same parity throughout -> inside a|D or a|C, excluded
+by (i).  Otherwise the middle y has the other parity than x, z.  If y in D: y is linked to x
+(2y - x = z in range) so y precedes x, contradicting x before y.  If y in C: z in D is linked
+to y (2y - z = x in range), so z precedes y, contradicting y before z.                  QED
+Corollaries.
+ * not_linked_of_bef [Lean]: if a C-entry u precedes a D-entry y then they are not linked.
+   For u <= n/2 this forces y > max((n+u)/2, 2u-1): late D-entries are far from early C's.
+ * parity_sort [Lean]: (a|D) ++ (a|C) is 3-AP-free.  So a -> (a|D, a|C) maps the 3-AP-free
+   permutations onto the parity-block permutations (the Davis-Entringer-Graham-Simmons
+   construction, 2 theta(floor n/2) theta(ceil n/2) of them, n >= 2).
+ * COUNTING.  Given sigma = a|D and tau = a|C, the admissible merges are exactly the
+   sequences 0 <= c_1 <= ... <= c_|C| <= |D| (c_j = number of D-entries before tau_j) with
+   c_j >= M_j := max_{i<=j} m(tau_i), m(u) = largest sigma-position of a D-value linked to u.
+   (Every u has a linked neighbour for n >= 3, so c_1 >= 1 and a_1 is in D automatically.)
+   Hence the EXACT identity
+        theta(n) = sum_{p in {even, odd}} sum_{sigma in Theta(D_p), tau in Theta(C_p)} P(sigma,tau),
+        P(sigma,tau) = #{such (c_j)} >= 1,
+   and r(n) := theta(n) / (2 theta(floor n/2) theta(ceil n/2)) is the MEAN of P over the pairs.
+   P depends only on the last few entries of sigma and the first few of tau (section 3: at most
+   6 D-entries can follow the first C-entry, n >= 32), so theta(n) is an exact bilinear form in
+   the tail-refined counts of size n/2: this is the "exact recursion with a correction";
+   the correction sum (P - 1) is concentrated on end configurations.
+ Check (merge.c): the identity recomputes theta(n) for all 3 <= n <= 44 (matches the b-file).
+ P distribution (data/merge_3_44.txt): about 60% of pairs have P = 1; P takes the values
+ 1..7, 10, 15, 20; max P = 20 (n = 14, 20, 26, 28, 38, 40) for n <= 44.  (A crude proven bound is
+ P <= C(12,6) from section 3, weaker than Sharma's 21 for the ratio.)
+
+--------------------------------------------------------------------------------------------------
+2. THEOREM E (which prefixes extend)                                       [paper; live.c "check"]
+--------------------------------------------------------------------------------------------------
+A list pi of distinct elements of [K] is a prefix of some 3-AP-free permutation of [K] iff
+(K <= 2 or pi empty) or, with D' = parity class of pi_1 and C' the other (linked in [K]):
+  (a) on every linked pair y in D', u in C' with both in pi, y comes first in pi;
+  (b) no u in C' occurring in pi is linked to a y in D' not occurring in pi;
+  (c) pi|D' rescaled (v -> rank of v in D') is an extendable prefix in [|D'|];
+  (d) pi|C' rescaled is an extendable prefix in [|C'|].
+(Ranks are affine images, 3-APs are preserved.)
+Proof.  =>: take a completion a; Theorem M gives (a), (b) (u in pi precedes every y not in pi),
+and a|D', a|C' are 3-AP-free completions of pi|D', pi|C'.  <=: let sigma, tau complete
+pi|D', pi|C'.  Form  pi ++ (rest of sigma) ++ (rest of tau).  Its parity subsequences are sigma
+and tau; on a linked pair (y,u): both in pi -> (a); y in pi, u not -> y first; y not in pi,
+u in pi -> impossible by (b); neither -> y in the sigma block, before the tau block.  Its first
+entry is pi_1 in D'.  By Theorem M it is 3-AP-free.                                    QED
+The test is recursive with depth log K and polynomial cost.  Checked against brute force for
+every stepwise-valid prefix (dead or alive) for K <= 14 (data/check_E.txt: 0 mismatches).
+(Contrast: for the semi-symmetric rule the analogous "Conjecture C" needed ~700 kernel checks.)
+
+--------------------------------------------------------------------------------------------------
+3. THE MINIMAL OPENING RUN f(N); SHARMA'S CONSTANT 6 IS SHARP
+--------------------------------------------------------------------------------------------------
+f(N) = min over 3-AP-free a of the length of the initial run of entries of a_1's parity
+(by reversal + Lemma 1 the same for the final run, of the other parity).
+REDUCTION.  The run length of a is c_1 = number of D-entries before tau_1 = u.  By Theorem M
+the run must contain all D linked to u, and conversely sigma-prefix, u, rest of sigma, rest
+of tau is valid whenever the D-entries after u are not linked to u.  Hence
+   f(N) = min_{p, u in C_p} ( |D_p| - G(|D_p|, |A(u)|) ),   A(u) = {y in D_p : not linked to u},
+where G(K,a) = max length of a SUFFIX of a 3-AP-free permutation of [K] inside a top (or,
+by the mirror, bottom) segment of a values; by reversal = the same for prefixes.  For
+u < n/2, A(u) = D ∩ (max((N+u)/2, 2u-1), N] is a top segment (mirror for u > n/2), largest
+for the extreme u.  (Every value can start a 3-AP-free permutation: by Theorem E, [u]
+extends iff its rank extends in its parity class, and so on down to K <= 2.)
+Elementary: 2|A(u)| <= |D_p| + 1 always (region.py checks N < 3000).
+
+THEOREM F.  Let R1 = {(K,a): 2a <= K+1}.  (1) R1 is invariant under the halving map
+(K,a) -> (ceil(K/2), #odd values in the top a of [K]) and (floor(K/2), #even values there).
+(2) G(K,a) <= 6 on R1 for K >= 16.  (3) For K >= 33 and (K,a) in R1
+         G(K,a) = max( G(ceil(K/2), a_odd), G(floor(K/2), a_even) ).
+Proof.  (1) If a is even both counts are a/2 and a <= floor((K+1)/2) <= floor(K/2) + 1.  If a
+is odd the class of K's parity gets (a+1)/2: for K odd it is the class of size (K+1)/2 and
+a+1 <= (K+1)/2 + 1 <=> 2a <= K+1; for K even 2a <= K+1 forces 2a <= K, the class has K/2
+elements and a+1 <= K/2 + 1.  The other class gets (a-1)/2.
+(3) and (2) together by induction on K.  ">=" in (3) holds for every K: an extendable prefix
+of a parity class (rescaled) inside its top segment followed by the parity-block completion
+is an extendable prefix of [K] (Theorem E with empty C'-part).  "<=": let pi be an extendable
+prefix inside the top a values and D' the class of pi_1.  By Theorem E(c) |pi|D'| <=
+G(|D'|, a_{D'}) <= 6 (induction, |D'| >= 16, (1)).  If some u in C' occurs in pi, by (b) every
+y in D' linked to u is in pi.  All y in D' with (u+1)/2 <= y <= (K+u)/2 are linked to u
+(2y-u in [1,K]); this integer interval has length l >= (K-1)/2, so at least floor(l/2) >=
+floor((K-1)/4) >= 8 > 6 of them lie in D' (K >= 33).  Contradiction, so pi lies in D' and
+|pi| <= G(|D'|, a_{D'}).  This proves (3), and (2) for K >= 33 follows from (2) at K' >= 16.
+Base: G(K,a) for K <= 70 and 2a <= K+3 was computed with the Theorem-E test (live.c "G",
+data/G_table.txt): max 6 on R1 for 16 <= K <= 32 (the value 7 occurs only at 2a = K+3:
+(13,8), (27,15), (55,29)), and the recursion holds already for all K >= 18 on 2a <= K+3.  QED
+(The base is a finite computation resting on Theorem E; the brute-force f of merge.c and
+../symparity/purity.c agrees with it for N <= 44.)
+COROLLARIES (all N).
+ (i)  f(N) >= floor(N/2) - 6, and at most 6 D-entries follow the first C-entry, for every N
+      (N >= 32 by Theorem F with |D_p| >= 16; N < 32 from the table).  This is Sharma's
+      ends theorem, here with an explicit proof from the orientation theorem.
+ (ii) The constant 6 is best possible: f(N) = floor(N/2) - 6 for N = 26 and N = 48*2^j + 2.
+      Proof: N = 48M+2, M = 2^j: D = evens, u = 1, K = 24M+1, |A(1)| = 12M+1, and the odd
+      branch maps (24M+1, 12M+1) -> (12M+1, 6M+1) = (24M'+1, 12M'+1), M' = M/2, down to
+      (25,13) with G = 6.  By ">=" in (3), G(24M+1, 12M+1) >= 6, so f(N) <= K - 6.
+ (iii) Middle structure: a = (run of >= |D|-6 D-entries) + middle + (run of >= |C|-6
+      C-entries), the middle holding at most 6 + 6 entries (N >= 32); the D-entries and
+      C-entries form 3-AP-free permutations of the two classes (rescaled copies), and the
+      interleaving is governed by Theorem M.  This answers the "structure theorem" question:
+      yes, with the runs = all but <= 6 entries of each scaled copy.
+EXACT VALUES (live.c "frec": the proven recursion with the DFS base; agrees with the
+independent brute force ../symparity/purity.c for N <= 35, with merge.c for N <= 44 and with
+the plain DFS "f" mode for N <= 300).  delta(N) := floor(N/2) - f(N):
+   N    3  4-5  6  7  8-9 10 11 12-13 14 15 16-18 19 20-21 22 23 24-25 26 27 28-35
+   d    0   1   2  1   2   3  2   3   4  3   4    3   4    5  4   5    6  4   5
+and for N >= 36, with M = 2^j and N in [36M, 72M)  (verified for all N <= 100000,
+data/f_intervals.txt):
+   delta = 4  on [36M, 40M+1] and at 40M+3
+   delta = 5  at 40M+2, on [40M+4, 48M+1], at 48M+3, and on [56M-1, 72M-1]
+   delta = 6  at 48M+2 and on [48M+4, 56M-2]
+CONJECTURE F'.  This pattern holds for all N (it is self-similar because G is; a proof needs
+only a bookkeeping induction on the recursion).  So liminf delta = 4, limsup delta = 6, and
+the fraction of N with delta = 6 is 2/9.  The minimiser is D = evens, u = 1 for all N <= 300
+(the run consists of evens and the first odd entry is 1).
+Comparison: the earlier bound floor((N+1)/4) (../symparity Corollary D) is exact only for
+N <= 17; the truth is floor(N/2) - {4,5,6}.
+
+--------------------------------------------------------------------------------------------------
+4. THEOREM L (live prefixes are linear in N)                         [paper; live.c "T", "Lk"]
+--------------------------------------------------------------------------------------------------
+L_k(N) = number of k-prefixes that extend to a 3-AP-free permutation of [N].
+   For N >= 4k-1:   L_k(N) = L_k(ceil(N/2)) + L_k(floor(N/2)).
+Proof: k <= floor((N+1)/4), so by ../symparity Corollary D an extendable k-prefix has one
+parity p; by Theorem E (empty C'-part) it extends iff its rescaling extends in [|D_p|].   QED
+So L_k(2N) = 2 L_k(N), L_k(2N+1) = L_k(N) + L_k(N+1): L_k is piecewise linear between dyadic
+points, L_k(N) = Theta(N), L_k(N)/N log-periodic.  Data (lrec.py, data/lrec_out.txt): the
+recursion fails exactly for N <= 4k-2 (k = 2,3,4).  L_2(N) = 2N-4 on [7,12] etc.
+c_k = L_k(2^j)/2^j (j large, data/Lk_128.txt), k = 1..16:
+   1, 3/2, 3, 25/4, 31/2, 95/4, 197/4, 133, 1623/4, 2345/4, 2279/2, 2345, 5920, 19231/2,
+   23916, 352833/4.
+Contrast: stepwise-valid prefixes T_sym(N,k) ~ c N^k, so almost all of them are dead.
+
+--------------------------------------------------------------------------------------------------
+5. THE RATIO r(n) AND LOG-PERIODICITY                                      [data; ratio*.py]
+--------------------------------------------------------------------------------------------------
+r(n) = theta(n)/(2 theta(floor n/2) theta(ceil n/2)) from the OEIS b-file (data/b003407.txt,
+n <= 200; data/ratio_out.txt has exact values).  n <= 60:
+  n:  8 1.4100  12 1.3299  16 1.3375  20 1.2923  24 1.2855  28 1.2639  32 1.3450  36 1.3171
+     40 1.2976  44 1.2762  48 1.2869  52 1.2567  56 1.2663  60 1.2929   (all values in file)
+  exact small: r(4)=r(5)=5/4, r(6)=3/2, r(7)=13/10, r(8)=141/100, r(9)=31/25, r(10)=533/400.
+ * 1.2483 (n = 27) <= r(n) <= 1.3472 (n = 128) for 16 <= n <= 200 (Sharma: r <= 10.5).
+ * Doubling: max |r(2n) - r(n)| over n in [8,16), [16,32), [32,64), [64,100):
+   1.0e-1, 2.4e-2, 8.1e-3, 2.0e-3;  max |r(2n+1) - (r(n)+r(n+1))/2|: 7.4e-2, 1.3e-2, 3.7e-3,
+   9.2e-4 (factor ~4 per doubling).  E.g. r(72) = r(144) = 1.316957, r(96) = r(192) = 1.286905.
+ CONJECTURE R.  Phi(x) = lim_j r(floor(x 2^j)) exists, is continuous on [1,2] with Phi(1) =
+   Phi(2) (about 1.3473 at powers of 2, minimum about 1.2565 near x = 1.64), and
+   r(n) = Phi(n/2^floor(log2 n)) + O(n^-2).
+ Mechanism: r(n) = E[P], and P depends only on the end configurations of sigma and tau,
+ whose distribution at size n is driven by that at size n/2 (Theorems M, F).  Consequence:
+ log theta(n)/n converges along every doubling chain x*2^j but to an x-dependent limit
+ (0.7956.. for x=3, 0.8209.. for x=4 at j=5), consistent with Ho's theorem (no growth rate).
+ No exact recursion in theta alone: the correction sum(P-1) depends on tail-refined counts.
+
+--------------------------------------------------------------------------------------------------
+6. PREFIX COUNTS T_sym(N,k) (stepwise-valid k-prefixes)            [ehrhart_sym.py, exact]
+--------------------------------------------------------------------------------------------------
+Classes (order type, and for each i<j: partner below 1 / above N / equal to x_l) are lattice
+points of rational polyhedra; Normaliz gives exact Hilbert series (classes: 2, 6, 24, 112 for
+k = 2..5).  Series agree with brute force (live.c "Tk") for N <= 400 (k=3), 260 (k=4), 40 (k=5).
+ T_sym(N,2) = floor(N^2/2)                       (same as the semi case: one earlier point)
+ T_sym(N,3) = N^3/8 + N^2/4 + c1 N + c0, c1 = -1/2 (N even), -3/8 (N odd), c0 = 0,0,-1,-1/2 by
+              N mod 4:   N(N^2+2N-4)/8, N(N-1)(N+3)/8, (N-2)(N+2)^2/8, (N+1)(N^2+N-4)/8.
+              Period 4 (semi: 6).
+ T_sym(N,4) = 13/768 N^4 + 13/80 N^3 + c2 N^2 + c1 N + c0, c2 = -77/480 | -143/1920 (period 2),
+              c1 period 4 (-1/30, -811/480, -8/15, -841/480), c0 period 120.  Period 120 = 8*3*5
+              (semi: 168 = 8*3*7).
+ T_sym(N,5): exact period 5040 = 16*9*5*7 (semi: 1680).
+ Coefficient of N^(k-m) has period 1,1,2,4,120 (k=4), the same divisibility pattern as the
+ semi period law (denominators 2^a(2^s - 1)), with 15 = 2^4-1 at k=4 and 63 = 2^6-1 at k=5.
+ So the symmetric counts are nicer only up to k = 4; the really nice symmetric objects are
+ the LIVE counts L_k (section 4).  The window rule's symmetric analogue is Theorem M.
+
+--------------------------------------------------------------------------------------------------
+7. LEAN (Folds/SymStructure.lean; no sorry, no native_decide; axioms propext, Classical.choice,
+   Quot.sound)
+--------------------------------------------------------------------------------------------------
+ Linked N y u          (u < 2y ∧ 2y ≤ N+u) ∨ (y < 2u ∧ 2u ≤ N+y)
+ merge_iff             Theorem M for a = w :: tl, Nodup, entries exactly [1,N]
+ merge_iff_apFree      the same for IsFoldSeq N a
+ not_linked_of_bef     a C-entry before a D-entry is not linked to it
+ parity_sort           (a|D) ++ (a|C) is 3-AP-free
+Not formalised: Theorems E, F, L (they need rescaling of parity classes), the computations.
+
+Files
+ merge.c        theta(n) via Theorem M, P distribution, f, late maximum   (data/merge_3_44.txt)
+ live.c         Theorem E test ("check"), f by DFS ("f"), G table ("G"), f by the recursion
+                ("frec"), T_sym and L_sym ("T", "Tk", "Lk")
+ region.py      invariance of 2a <= K+c, and 2|A(u)| <= |D|+1
+ ratio.py, ratio2.py   r(n) from the b-file; doubling behaviour
+ lrec.py        check of Theorem L
+ ehrhart_sym.py, qp_sym.py, period_sym.py   exact T_sym(N,k) (k <= 5) and periods
+ data/b003407.txt  OEIS A003407 b-file (n <= 200)
+ build: gcc -O2 -o merge.bin merge.c; gcc -O2 -o live.bin live.c (binaries git-ignored)

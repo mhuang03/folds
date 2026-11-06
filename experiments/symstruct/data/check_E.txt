@@ -1,0 +1,14 @@
+K=1 perms=1 prefixes tested=2 mismatches=0
+K=2 perms=2 prefixes tested=5 mismatches=0
+K=3 perms=4 prefixes tested=12 mismatches=0
+K=4 perms=10 prefixes tested=33 mismatches=0
+K=5 perms=20 prefixes tested=78 mismatches=0
+K=6 perms=48 prefixes tested=205 mismatches=0
+K=7 perms=104 prefixes tested=492 mismatches=0
+K=8 perms=282 prefixes tested=1321 mismatches=0
+K=9 perms=496 prefixes tested=2700 mismatches=0
+K=10 perms=1066 prefixes tested=5939 mismatches=0
+K=11 perms=2460 prefixes tested=13762 mismatches=0
+K=12 perms=6128 prefixes tested=33137 mismatches=0
+K=13 perms=12840 prefixes tested=70664 mismatches=0
+K=14 perms=29380 prefixes tested=161969 mismatches=0
