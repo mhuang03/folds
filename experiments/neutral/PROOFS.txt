@@ -38,7 +38,7 @@ below does not use the orbit structure at all: it works with P directly.
 Let h(t) = N·P(t) - s·t ∈ Z.  Then h(0) = 0, h(t + N) = h(t), h(t+1) - h(t) = N x_{t+1} - s,
 and (Lemma 1.1)  X neutral  <=>  h(2k+1) = h(k) + h(k+1) for all k.
 
-Lemma 2.1.  If X is neutral then |h(t)| <= min(s, N-s) for all t.               [h_bounds]
+Lemma 2.1.  If X is neutral then |h(t)| <= min(s, N-s) for all t.               [hd_bounds]
 Proof.  h is periodic, so it has a maximum value M >= h(0) = 0, attained at some t0 >= 1
 (shift by N).  From h(2t0+1) = h(t0) + h(t0+1) <= M we get h(t0+1) <= 0, so
 M = h(t0+1) - N x_{t0+1} + s <= s.  From h(2t0-1) = h(t0-1) + h(t0) <= M we get
@@ -53,7 +53,7 @@ then X = X'.                                                               [neut
 Proof.  h - h' = N(P - P'), and |h - h'| <= 2 min(s, N-s) < N.  So P = P', x = x'.          □
 
 Lemma 2.3 (sizes).  Let X be neutral with 0 < s < N.  Write g = gcd(s, N), s = g a, N = g d.
-Then  a >= ⌊d/2⌋  and  d - a >= ⌊d/2⌋.                                     [size_bound]
+Then  a >= ⌊d/2⌋  and  d - a >= ⌊d/2⌋.                                     [size_bound, size_ad]
 Proof.  By Bezout, s A ≡ g (mod N) for some A.  Put q = ⌊d/2⌋ and t ≡ -A q (mod N), t >= 0.
 Then h(t) ≡ -s t ≡ g q (mod N).  Since 2gq <= gd = N, every integer ≡ gq (mod N) is >= gq or
 <= gq - N <= -gq, so |h(t)| >= gq, and Lemma 2.1 gives gq <= min(s, N-s).                  □
@@ -83,7 +83,7 @@ For odd d | N, d >= 3, j = (d-1)/2:  E_d = {x ∈ [N] : x mod d ∈ {2, 4, ..., 
 |E_dᶜ| = (j+1)N/d.  E_d and E_dᶜ are copies (Copies.split_res), so both are neutral.  The parity
 classes are copies (Live2.winEmb_res), so they are neutral too.
 
-Theorem 4.1.  For N >= 1 the proper (nonempty, ≠ [N]) neutral subsets of [N] are exactly
+Theorem 4.1.  For N >= 2 the proper (nonempty, ≠ [N]) neutral subsets of [N] are exactly
    odds, evens, and E_d, E_dᶜ for every odd d | N with 3 <= d < N.          [neutral_classification]
 (For N odd the parity classes are E_N, E_Nᶜ.)
 Proof.  Let X be proper neutral.  If 2s = N, Lemma 3.1.  Otherwise Corollary 2.5 gives d.  If
@@ -119,7 +119,7 @@ J_N(X) = #{valid orderings l of X (from scratch, in the N-strip) with no prefix 
 2..|X|-1 whose set is a copy in [N]};  J(k) = J_k([k]).
 
 Lemma 6.1 (enumeration).  If X ⊆ [N] is a copy with |X| = k, its increasing enumeration
-φ : [k] -> [N] is a window embedding.                                 [copy_iff_winEmb]
+φ : [k] -> [N] is a window embedding.                                 [isCopy_iff_winEmb]
 Proof.  φ with counting function c(t) = |X ∩ [1, t]| (extended by c(t) = k + t - N past N)
 is a CountEmb, and CountEmb.winEmb_iff says: φ is a WinEmb iff X is balanced around each of
 its elements.  Conversely the image of a window embedding is a copy (WinEmb.balanced_self). □
@@ -131,14 +131,30 @@ Proof.  For y ∈ [k], φ(y) is in the left (right) arm of φ(j) iff y is in the
 arm of j (definition of WinEmb), and φ is injective, so the arm counts agree.              □
 
 Theorem 6.3 (universality).  If X is a copy of size k in [N] then J_N(X) = J(k).
-                                                                          [J_universal]
+                                                                          [J_universal, JN_winEmb]
 Proof.  σ ↦ σ.map φ is a bijection from valid k-sequences to valid orderings of X
 (RecCount.g_winEmb; validity transfers by WinEmb.semiSymmetric_iff), and prefix sets map to
 prefix sets: S_t(σ.map φ) = φ(S_t(σ)).  By 6.2 copy prefixes correspond.                   □
 
-Theorem 6.4 (identity (B)).                                               [identity_B]
+Theorem 6.4 (identity (B)).                                               [identity_B, card_firstCopy]
    a(N) = J(N) + Σ_{k=2}^{N-1} J(k) C_N(k),      C_N(k) = Σ_{X copy in [N], |X| = k} g([N] \ X).
 Proof.  Classify w by the least t ∈ [2, N-1] with S_t(w) a copy (none: counted by J(N)).  For
 fixed t = k and S_k(w) = X, w = u ++ v with u a valid ordering of X with no copy prefix of
 size 2..k-1, and v^R a valid ordering of [N] \ X (reversal, RecCount.card_prefix_eq).  So the
 class has J_N(X) g(Xᶜ) = J(k) g(Xᶜ) members.                                              □
+
+
+7. STATUS
+---------
+Everything above is proven on paper and in Lean (Folds/Neutral.lean; no sorry, no native_decide;
+`lake build` passes).  Statements as formalised:
+ * neutral_iff_dbl, neutral_iff_y      (X ⊆ [1,N], N >= 1)
+ * neutral_classification              (N >= 2):  (neutral ∧ 0 < |X| < N) <-> X ∈ NFam N, where
+                                         NFam N = {odds, evens} ∪ {E_d, E_dᶜ : d ∈ oddDivs N};
+                                         mem_resE: E_d = {x ∈ [1,N] : x mod d ≠ 0 and even}
+ * neutral_antichain                   (from the size bound and uniqueness; independent of 4.1)
+ * identity_A                          (N >= 2); remainder = #{w : NoNeutralPrefix N w}
+ * isCopy_iff_winEmb, isCopy_image_iff, J_universal
+ * identity_B                          (all N):  semiCount N = Jc N + Σ_{k ∈ [2, N)} Jc k * CN N k
+check_bound.py: brute-force check (N <= 16) of the doubling relation, the bound of Lemma 2.1 and
+Corollary 2.4 over all neutral sets.

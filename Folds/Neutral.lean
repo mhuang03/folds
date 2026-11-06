@@ -1,6 +1,37 @@
 import Folds.RecCount
 import Mathlib.Algebra.BigOperators.Ring.Finset
 
+/-!
+# Neutral sets, identity (A), and J(k) universality (identity (B))
+
+Paper proofs: `experiments/neutral/PROOFS.txt`.  `X ⊆ [1, N]` is *balanced around* `m` if the
+two window arms of `m` contain equally many elements of `X` (`BalF`); *neutral* if balanced
+around every panel (`IsNeutral`); a *copy* if balanced around each of its own elements
+(`IsCopy`).
+
+## Neutral sets
+* `neutral_iff_copy_compl`: neutral iff `X` and `[1, N] \ X` are both copies.
+* `neutral_iff_dbl`: with `P` the `N`-periodic counting function of `X`, `X` is neutral iff
+  `P(2k+1) = P(k) + P(k+1)` for all `k`.
+* `neutral_iff_y`: with `y_k = x_k + x_{k+1}` (`x` the periodic indicator), `X` is neutral iff
+  `y_{2k} = y_k` for all `k`.
+* `hd_bounds`: for neutral `X`, `|N P(t) - |X| t| ≤ min(|X|, N - |X|)`.
+* `neutral_unique`: neutral sets of equal size `s` with `2s ≠ N` coincide.
+* `size_bound`, `three_mul_card`, `size_odd`: sizes of proper neutral sets.
+* `neutral_half`: neutral sets of size `N/2` are parity classes.
+* `neutral_classification`: for `N ≥ 2` the proper neutral sets are exactly the parity classes
+  and `E_d`, `E_dᶜ` (`resE`, `mem_resE`) for odd `d ∣ N`, `3 ≤ d < N` (`NFam`, `mem_NFam`).
+* `neutral_antichain`: proper neutral sets never contain one another.
+* `identity_A`: `a(N) = 2 a(⌊N/2⌋) a(⌈N/2⌉) + 2 ∑_d a(jN/d) a((j+1)N/d) + I(N)`.
+
+## Copies, J(k) universality, identity (B)
+* `isCopy_iff_winEmb`: a set is a copy iff it is the image of a window embedding (its
+  increasing enumeration `enum` is one).
+* `isCopy_image_iff`: `φ(Y)` is a copy in `[1, N]` iff `Y` is a copy in `[1, p]`.
+* `J_universal`: `J_N(X) = J(|X|)` for every copy `X`.
+* `card_firstCopy`, `identity_B`: `a(N) = J(N) + ∑_{k=2}^{N-1} J(k) C_N(k)`.
+-/
+
 namespace Folds
 namespace Neutral
 
