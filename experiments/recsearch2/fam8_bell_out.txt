@@ -1,0 +1,276 @@
+
+ansatz                                               boxes  maxK  best excess (box)
+EGF A B1 p=0 inh=0 ke=1                                144    33  +0 (c=1 dz=0)
+EGF A B1 p=0 inh=1 ke=1                                 72    33  +0 (c=1 dz=0)
+EGF A B1 p=1 inh=0 ke=1                                 72    33  +0 (c=1 dz=0)
+EGF A B1 p=1 inh=1 ke=1                                 45    31  +0 (c=1 dz=0)
+EGF A B1 p=2 inh=0 ke=1                                 45    31  +0 (c=1 dz=0)
+EGF A B1 p=2 inh=1 ke=1                                 36    33  +0 (c=1 dz=0)
+EGF A B2 inh=0 ke=1                                     63    29  +0 (c=1 dz=0)
+EGF A B2 inh=1 ke=1                                     45    31  +0 (c=1 dz=0)
+EGF A B2alg deg<=2 ke=1                                  9    20  +0 (c=1)
+EGF A B1 p=0 inh=0 ke=2                                 90    31  +0 (c=1 dz=0)
+EGF A B1 p=0 inh=1 ke=2                                 45    31  +0 (c=1 dz=0)
+EGF A B1 p=1 inh=0 ke=2                                 45    31  +0 (c=1 dz=0)
+EGF A B1 p=1 inh=1 ke=2                                 27    28  +0 (c=1 dz=0)
+EGF A B1 p=2 inh=0 ke=2                                 27    28  +0 (c=1 dz=0)
+EGF A B1 p=2 inh=1 ke=2                                 18    25  +0 (c=1 dz=0)
+EGF A B2 inh=0 ke=2                                     45    31  +0 (c=1 dz=0)
+EGF A B2 inh=1 ke=2                                     27    28  +0 (c=1 dz=0)
+EGF A B2alg deg<=2 ke=2                                  9    30  +0 (c=1)
+EGF A_ev B1 p=0 inh=0 ke=1                             144    33  +0 (c=1 dz=0)
+EGF A_ev B1 p=0 inh=1 ke=1                              72    33  +0 (c=1 dz=0)
+EGF A_ev B1 p=1 inh=0 ke=1                              72    33  +0 (c=1 dz=0)
+EGF A_ev B1 p=1 inh=1 ke=1                              45    31  +0 (c=1 dz=0)
+EGF A_ev B1 p=2 inh=0 ke=1                              45    31  +0 (c=1 dz=0)
+EGF A_ev B1 p=2 inh=1 ke=1                              36    33  +0 (c=1 dz=0)
+EGF A_ev B2 inh=0 ke=1                                  63    29  +0 (c=1 dz=0)
+EGF A_ev B2 inh=1 ke=1                                  45    31  +0 (c=1 dz=0)
+EGF A_ev B2alg deg<=2 ke=1                               9    20  +0 (c=1)
+EGF A_ev B1 p=0 inh=0 ke=2                              90    31  +1 (c=3 dz=1)
+EGF A_ev B1 p=0 inh=1 ke=2                              45    31  +0 (c=1 dz=0)
+EGF A_ev B1 p=1 inh=0 ke=2                              45    31  +0 (c=1 dz=0)
+EGF A_ev B1 p=1 inh=1 ke=2                              27    28  +1 (c=1 dz=0)
+EGF A_ev B1 p=2 inh=0 ke=2                              27    28  +1 (c=1 dz=0)
+EGF A_ev B1 p=2 inh=1 ke=2                              18    25  +2 (c=1 dz=0)
+EGF A_ev B2 inh=0 ke=2                                  45    31  +0 (c=1 dz=0)
+EGF A_ev B2 inh=1 ke=2                                  27    28  +0 (c=1 dz=0)
+EGF A_ev B2alg deg<=2 ke=2                               9    30  +3 (c=1)
+EGF A_od B1 p=0 inh=0 ke=1                             144    33  +0 (c=1 dz=0)
+EGF A_od B1 p=0 inh=1 ke=1                              72    33  +1 (c=1 dz=0)
+EGF A_od B1 p=1 inh=0 ke=1                              72    33  +0 (c=1 dz=0)
+EGF A_od B1 p=1 inh=1 ke=1                              45    31  +0 (c=1 dz=0)
+EGF A_od B1 p=2 inh=0 ke=1                              45    31  +0 (c=1 dz=0)
+EGF A_od B1 p=2 inh=1 ke=1                              36    33  +0 (c=1 dz=0)
+EGF A_od B2 inh=0 ke=1                                  63    29  +0 (c=1 dz=0)
+EGF A_od B2 inh=1 ke=1                                  45    31  +0 (c=1 dz=0)
+EGF A_od B2alg deg<=2 ke=1                               9    20  +0 (c=1)
+EGF A_od B1 p=0 inh=0 ke=2                              90    31  +0 (c=1 dz=0)
+EGF A_od B1 p=0 inh=1 ke=2                              45    31  +0 (c=1 dz=0)
+EGF A_od B1 p=1 inh=0 ke=2                              45    31  +1 (c=1 dz=0)
+EGF A_od B1 p=1 inh=1 ke=2                              27    28  +0 (c=1 dz=0)
+EGF A_od B1 p=2 inh=0 ke=2                              27    28  +2 (c=1 dz=0)
+EGF A_od B1 p=2 inh=1 ke=2                              18    25  +1 (c=1 dz=0)
+EGF A_od B2 inh=0 ke=2                                  45    31  +0 (c=1 dz=0)
+EGF A_od B2 inh=1 ke=2                                  27    28  +0 (c=1 dz=0)
+EGF A_od B2alg deg<=2 ke=2                               9    30  +1 (c=1)
+EGF B_ev B1 p=0 inh=0 ke=1                              54    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=0 inh=1 ke=1                              27    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=1 inh=0 ke=1                              27    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=1 inh=1 ke=1                              18    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=2 inh=0 ke=1                              18    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=2 inh=1 ke=1                               9     9  +0 (c=1 dz=0)
+EGF B_ev B2 inh=0 ke=1                                  27    13  +0 (c=1 dz=0)
+EGF B_ev B2 inh=1 ke=1                                  18    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=0 inh=0 ke=2                              36    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=0 inh=1 ke=2                              18    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=1 inh=0 ke=2                              18    13  +0 (c=1 dz=0)
+EGF B_ev B1 p=1 inh=1 ke=2                               9    10  +0 (c=1 dz=0)
+EGF B_ev B1 p=2 inh=0 ke=2                               9    10  +0 (c=1 dz=0)
+EGF B_ev B1 p=2 inh=1 ke=2                               9    13  +0 (c=1 dz=0)
+EGF B_ev B2 inh=0 ke=2                                  18    13  +0 (c=1 dz=0)
+EGF B_ev B2 inh=1 ke=2                                   9    10  +0 (c=1 dz=0)
+EGF B_od B1 p=0 inh=0 ke=1                              54    13  +0 (c=1 dz=0)
+EGF B_od B1 p=0 inh=1 ke=1                              27    13  +0 (c=1 dz=0)
+EGF B_od B1 p=1 inh=0 ke=1                              27    13  +0 (c=1 dz=0)
+EGF B_od B1 p=1 inh=1 ke=1                              18    13  +0 (c=1 dz=0)
+EGF B_od B1 p=2 inh=0 ke=1                              18    13  +0 (c=1 dz=0)
+EGF B_od B1 p=2 inh=1 ke=1                               9     9  +0 (c=1 dz=0)
+EGF B_od B2 inh=0 ke=1                                  18     9  +0 (c=1 dz=0)
+EGF B_od B2 inh=1 ke=1                                   9     7  +0 (c=1 dz=0)
+EGF B_od B1 p=0 inh=0 ke=2                              36    13  +0 (c=1 dz=0)
+EGF B_od B1 p=0 inh=1 ke=2                              18    13  +0 (c=1 dz=0)
+EGF B_od B1 p=1 inh=0 ke=2                              18    13  +0 (c=1 dz=0)
+EGF B_od B1 p=1 inh=1 ke=2                               9    10  +0 (c=1 dz=0)
+EGF B_od B1 p=2 inh=0 ke=2                               9    10  +0 (c=1 dz=0)
+EGF B_od B1 p=2 inh=1 ke=2                               9    13  +0 (c=1 dz=0)
+EGF B_od B2 inh=0 ke=2                                   9     7  +0 (c=1 dz=0)
+EGF B_od B2 inh=1 ke=2                                   9    10  +0 (c=1 dz=0)
+OGF F B3 F(x/(1-cx)) inh=0                             153    34  +1 (c=1 d=0)
+OGF F B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0            198    33  +1 (c=1 d=0)
+OGF F B3 F(x/(1-cx)) inh=1                              99    33  +0 (c=1 d=0)
+OGF F_ev B3 F(x/(1-cx)) inh=0                          153    34  +1 (c=1 d=0)
+OGF F_ev B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0         198    33  +1 (c=1 d=0)
+OGF F_ev B3 F(x/(1-cx)) inh=1                           99    33  +0 (c=1 d=0)
+OGF F_od B3 F(x/(1-cx)) inh=0                          144    32  +0 (c=1 d=0)
+OGF F_od B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0         198    33  +0 (c=1 d=0)
+OGF F_od B3 F(x/(1-cx)) inh=1                           99    33  +0 (c=1 d=0)
+OGF Fe=sum a(2m)x^m B3 F(x/(1-cx)) inh=0                63    14  +1 (c=1 d=0)
+OGF Fe=sum a(2m)x^m B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0    90    15  +1 (c=1 d=0)
+OGF Fe=sum a(2m)x^m B3 F(x/(1-cx)) inh=1                45    15  +0 (c=1 d=0)
+OGF Fo=sum a(2m+1)x^m B3 F(x/(1-cx)) inh=0              63    14  +1 (c=1 d=0)
+OGF Fo=sum a(2m+1)x^m B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0    72    12  +1 (c=1 d=0)
+OGF Fo=sum a(2m+1)x^m B3 F(x/(1-cx)) inh=1              36    12  +0 (c=1 d=0)
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=0 K 3 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=1 K 5 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=2 K 7 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=3 K 9 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=4 K 11 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=5 K 13 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=6 K 15 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=7 K 17 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=8 K 19 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=9 K 21 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=10 K 23 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=11 K 25 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=12 K 27 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=13 K 29 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=14 K 31 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=1 c=1 dz=15 K 33 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=0 K 5 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=1 K 9 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=2 K 13 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=3 K 17 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=4 K 21 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=5 K 25 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=6 K 29 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=1 c=1 dz=7 K 33 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=0 K 5 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=1 K 9 E 38 dim 2
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=2 K 13 E 38 dim 3
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=3 K 17 E 38 dim 4
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=4 K 21 E 38 dim 5
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=5 K 25 E 38 dim 6
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=6 K 29 E 38 dim 7
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=1 c=1 dz=7 K 33 E 38 dim 8
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=1 c=1 dz=0 K 7 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=1 c=1 dz=1 K 13 E 38 dim 2
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=1 c=1 dz=2 K 19 E 38 dim 3
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=1 c=1 dz=3 K 25 E 38 dim 4
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=1 c=1 dz=4 K 31 E 38 dim 5
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=1 c=1 dz=0 K 7 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=1 c=1 dz=1 K 13 E 38 dim 3
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=1 c=1 dz=2 K 19 E 38 dim 5
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=1 c=1 dz=3 K 25 E 38 dim 7
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=1 c=1 dz=4 K 31 E 38 dim 9
+CONTROL-HIT CONTROL Bell B1 p=2 inh=1 ke=1 c=1 dz=0 K 9 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=2 inh=1 ke=1 c=1 dz=1 K 17 E 38 dim 3
+CONTROL-HIT CONTROL Bell B1 p=2 inh=1 ke=1 c=1 dz=2 K 25 E 38 dim 5
+CONTROL-HIT CONTROL Bell B1 p=2 inh=1 ke=1 c=1 dz=3 K 33 E 38 dim 7
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=1 c=1 dz=0 K 5 E 37 dim 2
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=1 c=1 dz=1 K 9 E 37 dim 3
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=1 c=1 dz=2 K 13 E 37 dim 4
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=1 c=1 dz=3 K 17 E 37 dim 5
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=1 c=1 dz=4 K 21 E 37 dim 6
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=1 c=1 dz=5 K 25 E 37 dim 7
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=1 c=1 dz=6 K 29 E 37 dim 8
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=1 c=1 dz=0 K 7 E 37 dim 2
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=1 c=1 dz=1 K 13 E 37 dim 3
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=1 c=1 dz=2 K 19 E 37 dim 4
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=1 c=1 dz=3 K 25 E 37 dim 5
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=1 c=1 dz=4 K 31 E 37 dim 6
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=0 K 4 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=1 K 7 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=2 K 10 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=3 K 13 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=4 K 16 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=5 K 19 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=6 K 22 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=7 K 25 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=8 K 28 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=0 ke=2 c=1 dz=9 K 31 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=2 c=1 dz=0 K 7 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=2 c=1 dz=1 K 13 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=2 c=1 dz=2 K 19 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=2 c=1 dz=3 K 25 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=0 inh=1 ke=2 c=1 dz=4 K 31 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=2 c=1 dz=0 K 7 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=2 c=1 dz=1 K 13 E 38 dim 3
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=2 c=1 dz=2 K 19 E 38 dim 5
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=2 c=1 dz=3 K 25 E 38 dim 7
+CONTROL-HIT CONTROL Bell B1 p=1 inh=0 ke=2 c=1 dz=4 K 31 E 38 dim 9
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=2 c=1 dz=0 K 10 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=2 c=1 dz=1 K 19 E 38 dim 3
+CONTROL-HIT CONTROL Bell B1 p=1 inh=1 ke=2 c=1 dz=2 K 28 E 38 dim 5
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=2 c=1 dz=0 K 10 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=2 c=1 dz=1 K 19 E 38 dim 5
+CONTROL-HIT CONTROL Bell B1 p=2 inh=0 ke=2 c=1 dz=2 K 28 E 38 dim 9
+CONTROL-HIT CONTROL Bell B1 p=2 inh=1 ke=2 c=1 dz=0 K 13 E 38 dim 1
+CONTROL-HIT CONTROL Bell B1 p=2 inh=1 ke=2 c=1 dz=1 K 25 E 38 dim 5
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=2 c=1 dz=0 K 7 E 37 dim 3
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=2 c=1 dz=1 K 13 E 37 dim 5
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=2 c=1 dz=2 K 19 E 37 dim 7
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=2 c=1 dz=3 K 25 E 37 dim 9
+CONTROL-HIT CONTROL Bell B2 inh=0 ke=2 c=1 dz=4 K 31 E 37 dim 11
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=2 c=1 dz=0 K 10 E 37 dim 3
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=2 c=1 dz=1 K 19 E 37 dim 5
+CONTROL-HIT CONTROL Bell B2 inh=1 ke=2 c=1 dz=2 K 28 E 37 dim 7
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=0 K 5 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=1 K 9 E 38 dim 2
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=2 K 13 E 38 dim 3
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=3 K 17 E 38 dim 4
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=4 K 21 E 38 dim 5
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=5 K 25 E 38 dim 6
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=6 K 29 E 38 dim 7
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=1 c=2 dz=7 K 33 E 38 dim 8
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=1 c=2 dz=0 K 7 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=1 c=2 dz=1 K 13 E 38 dim 2
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=1 c=2 dz=2 K 19 E 38 dim 3
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=1 c=2 dz=3 K 25 E 38 dim 4
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=1 c=2 dz=4 K 31 E 38 dim 5
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=1 c=2 dz=0 K 7 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=1 c=2 dz=1 K 13 E 38 dim 3
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=1 c=2 dz=2 K 19 E 38 dim 5
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=1 c=2 dz=3 K 25 E 38 dim 7
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=1 c=2 dz=4 K 31 E 38 dim 9
+CONTROL-HIT CONTROL weighted B1 p=2 inh=1 ke=1 c=2 dz=0 K 9 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=2 inh=1 ke=1 c=2 dz=1 K 17 E 38 dim 3
+CONTROL-HIT CONTROL weighted B1 p=2 inh=1 ke=1 c=2 dz=2 K 25 E 38 dim 5
+CONTROL-HIT CONTROL weighted B1 p=2 inh=1 ke=1 c=2 dz=3 K 33 E 38 dim 7
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=1 c=2 dz=1 K 9 E 37 dim 1
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=1 c=2 dz=2 K 13 E 37 dim 2
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=1 c=2 dz=3 K 17 E 37 dim 3
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=1 c=2 dz=4 K 21 E 37 dim 4
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=1 c=2 dz=5 K 25 E 37 dim 5
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=1 c=2 dz=6 K 29 E 37 dim 6
+CONTROL-HIT CONTROL weighted B2 inh=1 ke=1 c=2 dz=1 K 13 E 37 dim 1
+CONTROL-HIT CONTROL weighted B2 inh=1 ke=1 c=2 dz=2 K 19 E 37 dim 2
+CONTROL-HIT CONTROL weighted B2 inh=1 ke=1 c=2 dz=3 K 25 E 37 dim 3
+CONTROL-HIT CONTROL weighted B2 inh=1 ke=1 c=2 dz=4 K 31 E 37 dim 4
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=2 c=2 dz=0 K 7 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=2 c=2 dz=1 K 13 E 38 dim 3
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=2 c=2 dz=2 K 19 E 38 dim 5
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=2 c=2 dz=3 K 25 E 38 dim 7
+CONTROL-HIT CONTROL weighted B1 p=1 inh=0 ke=2 c=2 dz=4 K 31 E 38 dim 9
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=2 c=2 dz=0 K 10 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=2 c=2 dz=1 K 19 E 38 dim 3
+CONTROL-HIT CONTROL weighted B1 p=1 inh=1 ke=2 c=2 dz=2 K 28 E 38 dim 5
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=2 c=2 dz=0 K 10 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=2 c=2 dz=1 K 19 E 38 dim 5
+CONTROL-HIT CONTROL weighted B1 p=2 inh=0 ke=2 c=2 dz=2 K 28 E 38 dim 9
+CONTROL-HIT CONTROL weighted B1 p=2 inh=1 ke=2 c=2 dz=0 K 13 E 38 dim 1
+CONTROL-HIT CONTROL weighted B1 p=2 inh=1 ke=2 c=2 dz=1 K 25 E 38 dim 5
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=2 c=2 dz=1 K 13 E 37 dim 2
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=2 c=2 dz=2 K 19 E 37 dim 4
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=2 c=2 dz=3 K 25 E 37 dim 6
+CONTROL-HIT CONTROL weighted B2 inh=0 ke=2 c=2 dz=4 K 31 E 37 dim 8
+CONTROL-HIT CONTROL weighted B2 inh=1 ke=2 c=2 dz=1 K 19 E 37 dim 2
+CONTROL-HIT CONTROL weighted B2 inh=1 ke=2 c=2 dz=2 K 28 E 37 dim 4
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=2 K 9 E 39 dim 1
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=3 K 12 E 39 dim 2
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=4 K 15 E 39 dim 3
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=5 K 18 E 39 dim 4
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=6 K 21 E 39 dim 5
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=7 K 24 E 39 dim 6
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=8 K 27 E 39 dim 7
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=9 K 30 E 39 dim 8
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=10 K 33 E 39 dim 9
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=1 K 6 E 39 dim 1
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=2 K 9 E 39 dim 2
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=3 K 12 E 39 dim 3
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=4 K 15 E 39 dim 4
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=5 K 18 E 39 dim 5
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=6 K 21 E 39 dim 6
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=7 K 24 E 39 dim 7
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=8 K 27 E 39 dim 8
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=9 K 30 E 39 dim 9
+CONTROL-HIT CONTROL Bell OGF B3 F(x/(1-cx)) inh=1 c=1 d=10 K 33 E 39 dim 10
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=2 K 9 E 39 dim 1
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=3 K 12 E 39 dim 2
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=4 K 15 E 39 dim 3
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=5 K 18 E 39 dim 4
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=6 K 21 E 39 dim 5
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=7 K 24 E 39 dim 6
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=8 K 27 E 39 dim 7
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=9 K 30 E 39 dim 8
+CONTROL-HIT CONTROL Bell OGF B3 F, F(x/(1-cx)), F(x/(1-2cx)) inh=0 c=1 d=10 K 33 E 39 dim 9

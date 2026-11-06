@@ -1,0 +1,55 @@
+features                   kind rows     boxes   K range best excess  hits
+a0 a1 c0 c1                lin  all          7    4-28   +0          0
+a0 a1 c0 c1                lin  even         3    4-12   +0          0
+a0 a1 c0 c1                lin  odd          3    4-12   +0          0
+a0 a1 c0 c1 c2 cp1         lin  all          5    6-30   +0          0
+a0 a1 c0 c1 c2 cp1         lin  even         2    6-12   +0          0
+a0 a1 c0 c1 c2 cp1         lin  odd          2    6-12   +0          0
+a0 a1 a2 c0 c1 c2          lin  all          5    6-30   +0          0
+a0 a1 a2 c0 c1 c2          lin  even         2    6-12   +0          0
+a0 a1 a2 c0 c1 c2          lin  odd          2    6-12   +0          0
+a0 a1 J0 J1                lin  all          6    4-24   +0          0
+a0 a1 J0 J1                lin  even         2    4-8    +0          0
+a0 a1 J0 J1                lin  odd          2    4-8    +0          0
+a0 J0 J1 J2                lin  all          6    4-24   +0          0
+a0 J0 J1 J2                lin  even         2    4-8    +0          0
+a0 J0 J1 J2                lin  odd          2    4-8    +0          0
+a0 a1 J0 J1 c0 c1          lin  all          4    6-24   +0          0
+a0 a1 J0 J1 c0 c1          lin  even         1    6-6    +0          0
+a0 a1 J0 J1 c0 c1          lin  odd          1    6-6    +0          0
+a0 a1 I0 I1                lin  all          7    4-28   +0          0
+a0 a1 I0 I1                lin  even         3    4-12   +0          0
+a0 a1 I0 I1                lin  odd          3    4-12   +0          0
+a0 I0 I1                   lin  all         10    3-30   +0          0
+a0 I0 I1                   lin  even         4    3-12   +0          0
+a0 I0 I1                   lin  odd          4    3-12   +0          0
+a0 Tm2 Tm3                 lin  all          5    3-15   +0          0
+a0 Tm2 Tm3                 lin  even         2    3-6    +0          0
+a0 Tm2 Tm3                 lin  odd          2    3-6    +0          0
+a0 Tm2 Tm3 Tm4             lin  all          4    4-16   +0          0
+a0 Tm2 Tm3 Tm4             lin  even         1    4-4    +0          0
+a0 Tm2 Tm3 Tm4             lin  odd          1    4-4    +0          0
+a0 T1m1 T1m2 T1m3          lin  all          4    4-16   +0          0
+a0 T1m1 T1m2 T1m3          lin  even         1    4-4    +0          0
+a0 T1m1 T1m2 T1m3          lin  odd          1    4-4    +0          0
+a0 Th Th1                  lin  all          5    3-15   +0          0
+a0 Th Th1                  lin  even         2    3-6    +0          0
+a0 Th Th1                  lin  odd          2    3-6    +0          0
+a0 a1 Tm2 T1m2             lin  all          4    4-16   +0          0
+a0 a1 Tm2 T1m2             lin  even         1    4-4    +0          0
+a0 a1 Tm2 T1m2             lin  odd          1    4-4    +0          0
+a0 a1 c0 c1                quad all          3   10-30   +0          0
+a0 a1 c0 c1                quad even         1   10-10   +0          0
+a0 a1 c0 c1                quad odd          1   10-10   +0          0
+a0 a1 J0 J1                quad all          2   10-20   +0          0
+a0 a1 J0 J1                quad even         1   10-10   +0          0
+a0 a1 J0 J1                quad odd          1   10-10   +0          0
+a0 c0 J0                   quad all          4    6-24   +0          0
+a0 c0 J0                   quad even         1    6-6    +0          0
+a0 c0 J0                   quad odd          1    6-6    +0          0
+a0 a1 c0 J0                quad all          2   10-20   +0          0
+a0 a1 c0 J0                quad even         1   10-10   +0          0
+a0 a1 c0 J0                quad odd          1   10-10   +0          0
+a0 Tm2 T1m2                quad all          2    6-12   +0          0
+a0 Tm2 T1m2                quad even         1    6-6    +0          0
+a0 Tm2 T1m2                quad odd          1    6-6    +0          0
