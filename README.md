@@ -129,6 +129,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `ThinCover*` (M) | **Conjecture C for all N** (`ThinCover.conjectureC`): a valid 2-prefix extends to a full semi-symmetric sequence iff it is not one of the explicit dead pairs. Built from slice and parallelogram certificates (LP-certified polynomial inequalities) for N ≥ 1000, plus 699 kernel checks for 301 ≤ N < 1000 |
 | `SymParity` (M) | symmetric (3-AP-free) case: exactly half the sequences start with an odd panel (`two_mul_card_head_odd`; first and last panels always differ in parity); the same at step k when 4k ≤ N+1 (`two_mul_card_getElem_odd`, via the orientation theorem `orient`) |
 | `SymStructure` (M) | symmetric case: **merge theorem** (`merge_iff_apFree`): 3-AP-free ⇔ both parity subsequences are 3-AP-free and the D-entry comes first on every linked pair; `parity_sort` |
+| `Live3p` (M) | 3-prefix liveness: **iff for every N ≤ 30, N ≠ 7** (`extends3_iff_le_30`); dead 3-sets proven dead for all N; Theorem G for 3-sets in closed form (`F3S`, `coReach3_of_F`) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -170,8 +171,8 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    see `experiments/labelling/PROOFS.txt`.
 5. **Liveness (Conjecture C) — now a theorem (Lean, `Folds.ThinCover.conjectureC`).** A valid
    2-prefix [m₁, m₂] can be completed to a full semi-symmetric sequence iff it is not
-   {1,N} for even N ≥ 4 or {1,7} at N = 7. Open: the analogous statement for longer prefixes
-   (the dead 3-prefixes are classified for N ≤ 31).
+   {1,N} for even N ≥ 4 or {1,7} at N = 7. For 3-prefixes the classification is proven for
+   N ≤ 30 (Lean) and checked to N = 44; all N is open (`experiments/live3p/PROOFS.txt`).
 
 ## Where things are
 
@@ -222,6 +223,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/recsearch2/REPORT.txt` | niche recurrence search (all negative), with proofs that OGF-Mahler and 2-regular forms are impossible |
 | `experiments/thincover/PROOFS.txt` | the final thin-set certificates and kernel checks completing Conjecture C |
 | `experiments/symstruct/PROOFS.txt` | 3-AP-free structure: an exact merge-count identity for θ(n), the prefix-extension test, Sharma's ⌊N/2⌋−6 bound for all N (sharp), the dyadic pattern of the opening run, L_k(N) recursion, log-periodic ratio θ(n)/(2θθ) |
+| `experiments/live3p/PROOFS.txt` | 3-prefix liveness: the classification to N = 44, Theorem G for 3-sets, the route to all N |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
