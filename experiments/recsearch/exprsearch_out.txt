@@ -1,0 +1,41 @@
+Family 6: brute-force symbolic search over small expression trees.
+
+Leaves (functions of N): a(N-1), a(N-2), a(floor N/2), a(ceil N/2), a(N-3) (a(0)=1),
+n = floor(N/2), 2^n, N, 2^N, N!, 1, 2, 3.
+Binary operations: + - * /.  All expressions with <= LMAX leaves are enumerated
+bottom-up, values are kept mod p = 2^31-1 at N = 3..37 (35 positions) and expressions
+with identical value vectors are merged (observational equivalence; the first, i.e.
+smallest, representative is kept).  Then the target t(N) = a(N) is looked up as
+    t = E,  t = E1 + E2,  t = E1 - E2,  t = E1 * E2,  t = E1 / E2,  t = alpha * E
+(alpha a free rational constant, fitted at N = 3), so the top-level searches reach
+2*LMAX leaves.  FIT = agreement on N = 3..20; TEST = agreement on N = 21..37.  Every
+FIT survivor is re-evaluated exactly with Fractions; it is accepted only if it matches
+every held-out term exactly.  Near misses: longest initial run N = 3..k matched by any
+single expression E (or alpha*E).
+
+level 2: 451 distinct expressions (total 464)
+level 3: 19178 distinct expressions (total 19642)
+level 4: 921618 distinct expressions (total 941260)
+941260 distinct expressions with <= 4 leaves
+
+FIT (N = 3..20, mod p) survivors and exact held-out test (N = 21..37):
+  t = E         : 0 pass the fit mod p
+  t = E1 + E2   : 0 pass the fit mod p
+  t = E1 - E2   : 0 pass the fit mod p
+  t = E1 * E2   : 0 pass the fit mod p
+  t = E1 / E2   : 0 pass the fit mod p
+  t = alpha*E   : 0 pass the fit mod p
+
+Near misses (longest initial run N = 3..k matched exactly):
+  E        matches N=3.. 5 exactly  ((((N! / a(N-3)) - 2^fl(N/2)) / fl(N/2)))
+  E        matches N=3.. 5 exactly  ((((N! / a(N-3)) - 2^fl(N/2)) / a(fl(N/2))))
+  E        matches N=3.. 5 exactly  ((((N! / fl(N/2)) - a(cl(N/2))) / a(N-3)))
+  E        matches N=3.. 5 exactly  ((a(N-1) + ((a(N-2) * N) - a(fl(N/2)))))
+  E        matches N=3.. 5 exactly  ((a(N-1) + ((a(N-2) * N) - fl(N/2))))
+  alpha*E  matches N=3.. 6 exactly  (1/3 * ((a(N-1) + a(N-3)) * (fl(N/2) + N)))
+  alpha*E  matches N=3.. 5 exactly  (-9 * (((2 / 3) - a(N-1)) / 3))
+  alpha*E  matches N=3.. 5 exactly  (1 * (a(N-1) + (a(fl(N/2)) + (a(N-2) * a(N-2)))))
+  alpha*E  matches N=3.. 5 exactly  (-3 * ((2 / 3) - a(N-1)))
+  alpha*E  matches N=3.. 5 exactly  (2 * (a(N-1) + (a(N-1) - (a(N-2) + a(N-3)))))
+
+ACCEPTED formulas: none
