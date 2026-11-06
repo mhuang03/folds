@@ -1,0 +1,3 @@
+M=5 K=7 q=16: chain prediction, coefficient of e(-N/q) in c_2 (x (K-M)!) = (-4.56013782033156e-15-1.2485701647387488j)
+M=6 K=8 q=32: chain prediction, coefficient of e(-N/q) in c_2 (x (K-M)!) = (-1.2819075389797265+3.628641591754879e-14j)
+M=8 K=10 q=128: chain prediction, coefficient of e(-N/q) in c_2 (x (K-M)!) = (29.311402221856497-3.5811779674299673e-12j)

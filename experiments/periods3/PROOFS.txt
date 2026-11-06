@@ -1,0 +1,506 @@
+PERIODS III: THE TOP COMPONENTS OF c_{k-m} WITH FREE POINTS
+==========================================================
+(experiments/periods3/.  Notation of ../periods/PROOFS.txt (Theorem A, face lemma, B(m)) and
+../periods2/PROOFS.txt (local formula, column rule, orbit/chain vertices, Theorem C).
+Throughout: m = number of "structured" points of a face, n = m - 1, D = 2^n - 1,
+f = k - m = number of FREE points, c_f(N) = the coefficient of N^f in T(N, k) = T(N, m + f)
+(so c_f = c_{k-m}).  h(x) = 1/(1 - e(-x)), g(x) = 1/(1 - e(x)) = 1 - h(x), e(x) = exp(2 pi i x);
+h(x) = 1/2 - (i/2) cot(pi x),  g(x) = 1/2 + (i/2) cot(pi x),  |h(x)| = |g(x)| = 1/(2|sin pi x|).)
+
+SUMMARY
+  Question: is the period of c_{k-m} exactly B(m) for all k >= m?  The upper bound is Theorem A.
+  For the lower bound one needs, for every prime power p^v || B(m), a nonzero Fourier component
+  of c_{k-m} whose order is divisible by p^v.  Theorem C (../periods2) did this at k = m for the
+  two TOP components (orders 2^n and 2^n - 1).  Here:
+
+  1. THEOREM D1 (proved): for every m >= 4, c_1(N) of T(N, m+1) has nonzero Fourier
+     components of exact orders 2^(m-1) - 1 and 2^(m-1).  (k = m + 1, one free point.)
+     The proof is a closed-form computation of the one-free-point weights at the extreme
+     vertices (section 2, all m), a "rotation lemma" (the rotated orbit vertices that caused
+     the near-cancellation worry of ../periods2 section 6 carry NO weight for f <= 2), and a
+     rigorous dominance bound (section 3).
+        A_above(1/D) = (-1)^(m+1) [(m - 7) D - (m - 9)] / (4D),    A_below(1/D) = (-1)^m/(2D),
+        A(1 0^(n-1)) = (-1)^(m+1) [(m-7)/4 + 3/2^m],
+        A(1^n)       = (-1)^(m+1) [(m+4)/8 + e_m/2^m],   e_m = -5 (m even), +1 (m odd).
+  2. THEOREM D2 (proved for 4 <= m <= 19 (odd part) and 4 <= m <= 15 (2-part); for ALL m if the
+     closed forms below hold -- they are fitted and verified on 6 resp. 3 held-out values):
+     c_2(N) of T(N, m+2) has nonzero components of exact orders 2^(m-1) - 1 and 2^(m-1).
+        (-1)^(m+1) A_above(1/D) D^2 = [9 D^2 m^2 - 135 D^2 m + 22 D^2 - 6 D m^2 + 234 D m
+                                        - 1012 D - 3 m^2 - 123 m + 1494] / 384,
+        (-1)^(m+1) A_below(1/D) D^2 = -(D m - 6 D - m + 16)/8,
+        (-1)^(m+1) A(1 0^(n-1)) = 3m^2/128 - 45m/128 + 11/192 + (3m/4 - 9/2)/2^m + (139/12)/4^m,
+        (-1)^(m+1) A(1^n) = 5m^2/512 + 11m/256 + 125/512 + (-m/4 - 5/4 + (-1)^m (149/24 - 3m/8))/2^m
+                            - (17/6 + 61(-1)^m/4)/4^m.
+  3. STRUCTURE FOR FIXED f, m -> oo (section 6): the extreme weights are polynomials in m of
+     degree f (plus exponentially small terms), with leading coefficient vol(V_f)/f! where V_f
+     is the valid set of a REDUCED problem (f points after the limit orbit 0, 1/2, 1/4, ...).
+     vol V_1 = 1/4, vol V_2 = 3/64, vol V_1^(3) = 1/8, vol V_2^(3) = 5/256 (for the chain 1^n)
+     reproduce all four leading coefficients above.  Since vol V_f > 0, the odd top component of
+     c_f(T(N, m+f)) is nonzero for all m >= m_0(f) (Proposition E, proof outline).  The real
+     danger is not the cotangent identity (the rotations carry no weight for n > f + 4, i > f)
+     but REAL ROOTS of these polynomials in m: 9m^2 - 135m + 22 (root 14.83: |Delta_0| = 0.058
+     at m = 15), 17m^2/512 - 79m/256 + ... (root 8.19: |A1 + A3| = 0.037 at m = 8 against
+     weights 1.25), 7m^2/512 - 101m/256 - ... (root 29.18: 0.13 at m = 29 against weights 10).
+     No integer root occurs for f <= 2; an integer root would be the mechanism of a genuine
+     exception to the period law (it would leave only exponentially small terms).
+  4. THE FULL PERIOD OF T(N, 8) AND T(N, 9) (section 8): the mixed orders 2^a(2^s - 1),
+     a + s = 7, are all nonzero in c_0(T(N, 8)) (vertex enumeration; the dominant carriers
+     are NON-SIMPLE "cycle + pendant chain" vertices such as (1/15, 8/15, 4/15, 2/15, 1/15,
+     1/30, 1/60, 1/120), handled by a new dependent-row version of the vertex formula, validated
+     against Normaliz at k = 5, 6).  So c_0(T(N,8)) and T(N,8) have period exactly B(8) =
+     158739840, and with D1 (m = 8), D2 (m = 7) and the order-93 two-cycle component of
+     ../periods2, T(N, 9) has period exactly B(9) = 5397154560 (both modulo the local formula,
+     validated wherever Normaliz series exist).  Previously certified: k <= 7.
+  5. PRIME POWERS IN GENERAL (section 8): the top components carry only a few primes of B(m)
+     (primes.log; e.g. m = 14: only 8191), the others need cycles of length s < m - 1 with
+     pendant structure.  For k >= 10 (full period) and for c_{k-m} with k > m beyond the top
+     orders, these remain OPEN; so does the survival of the two-cycle orders 93, 105 in
+     c_{k-9}, k > 9.
+  6. Validation: every local-formula number used here that can be compared with the exact
+     Normaliz class series (k <= 7) agrees to 10-12 digits (section 7).
+  7. Lean (Folds/PeriodLaw.lean): the bookkeeping sums of Lemmas 2.1, 2.3, 2.4 and the
+     nonvanishing of the closed forms (orbit, chain sum / difference, 9m^2 - 135m + 22),
+     no sorry, no native_decide.
+
+1. The face formula, Galois, and the dominance criterion
+--------------------------------------------------------
+1.1 Carriers.  By the face lemma (../periods section 3) a Fourier mode of order q in c_{k-m}
+comes from codimension-m faces F with q | D_F.
+  * q = D = 2^n - 1 (n != 6; for n = 6 use the factor 9 | 63): a primitive prime divisor of D
+    divides 2^s - 1 only if n | s, so F has a single (U) component with s = n, e = m, a = 0: by
+    Lemma 5 of ../periods this is an n-cycle of halvings in time order closed by one equality:
+    the m structured points sit at an ORBIT VERTEX theta = a/D of the m-point problem
+    (x_1 = theta, x_(t+1) = (x_t + c_t)/2, x_m = x_1), and the f = k - m other points are FREE.
+  * q = 2^n: a single (R) component with a = n = e - 1 whose tree is a path (the denominator
+    of a tree solution is 2^(depth)): a CHAIN vertex x_1 in {0,1}, x_(t+1) = (x_t + c_t)/2,
+    exact denominator 2^n, plus f free points.
+1.2 The face formula (../periods2 section 1, face.py; chain version chainface.py, this dir).
+The coefficient of e(-N/q) in c_f(N), times f!, is
+   orbit (q = D):  Phi = (1/D) sum_{a in (Z/D)^*} P(l_a) [ -A_ab(a) g(l_a/D) - A_be(a) h(l_a/D) ],
+   chain (q = 2^n): Psi = (2/2^n) sum_{a odd} A(a) Pc(l_a) (-h(l_a/2^n)),
+with l_a = -a^(-1) (mod D, resp. 2^n), P(l) = prod_{j<n} h(2^j l/D), Pc(l) = prod_{j<n} h(2^j l/2^n),
+and the WEIGHTS
+   A_ab(a), A_be(a) = sum over the C(m+f, f) time placements of the cycle among the k points of
+                      the signed volume of the free configurations z in (0,1)^f for which the
+                      whole configuration is valid near the face, with x_m above (resp. below)
+                      x_1;  A(a) the same for the chain (x_1 = 0; the mirror x_1 = 1 gives the
+                      same function of N: factor 2).
+The sign of a configuration is prod over the structured columns of (+1 if the tight halving is
+on its "u <= 0" side, -1 otherwise); by the column rule (../periods2 2.2) every structured
+column has at most one valid side, so the sign is well defined.  Mirror vertices (theta <->
+1 - theta) give identical functions of N (the reflection x -> N + 1 - x maps class to class).
+Checks (this dir and ../periods2): face.py vs Normaliz at (m,k) = (4,5), (4,6), (5,6), (6,7),
+(5,7), (4,7) [section 7]; chainface.py vs Normaliz at (3,4), (3,5), (4,4), (4,5), (4,6), (5,5),
+(5,6), (6,6), and the k = 7 cases of section 7.  All agree to 10-12 digits.
+1.3 Galois.  Phi lies in Q(zeta_D) and the coefficient of e(-N r/D) is sigma_r(Phi) (A rational,
+P and g, h rational functions of zeta).  So the whole exact-order-D component vanishes iff Phi = 0;
+likewise for Psi.  Moreover the l_a for a in the cyclic group <2> share the same P (the product
+runs over the full doubling orbit): P(2l) = P(l).
+1.4 Sizes.  Put M(l) = |P(l)|/(2|sin(pi l/D)|), Mc(l) = |Pc(l)|/(2|sin(pi l/2^n)|) (= the
+modulus of one term per unit weight, since |g| = |h|), and
+   R(n)  = sum_{l in (Z/D)^*, l not in +-<2>} M(l)/M(1),   Rc(n) = sum_{l odd, l != +-1} Mc(l)/Mc(1).
+The weights satisfy |A_ab| + |A_be| <= W := C(m+f, f) and |A| <= W (each placement has measure
+at most 1).
+PROPOSITION 1.5 (dominance criterion).
+ (a) Orbit.  Suppose the rotations theta = 2^i/D and 1 - 2^i/D (1 <= i <= n-1) have zero weight.
+     Then Phi != 0 provided  2 cos(pi/D) |Delta_0| > W R(n),  Delta_0 := A_ab(1/D) - A_be(1/D).
+ (b) Chain.  Psi != 0 provided  |A1 + (-1)^(n+1) A3| > W Rc(n),  A1 = A(1 0^(n-1)) (x_m = 2^-n),
+     A3 = A(1^n) (x_m = 1 - 2^-n).
+Proof.  (a) theta = 1/D has l = -1 and its mirror l = +1; their two terms are equal, so the main
+term is -(2/D) P(-1) [A_ab h(1/D) + A_be g(1/D)] (g(-x) = h(x)), of modulus at least
+(2/D)|P(1)| |Im(...)| = (2/D)|P(1)| |Delta_0| cot(pi/D)/2 = (2/D) M(1) cos(pi/D) |Delta_0|.
+Every other a has l_a outside +-<2> (the rotations being weightless), and its term has modulus
+at most (1/D) M(l_a) (|A_ab| + |A_be|) <= (W/D) M(l_a); a -> l_a is a bijection, so the rest is
+at most (W/D) R(n) M(1).
+ (b) With h(x) = e(x/2 - 1/4)/(2 sin pi x) and angles 2^j/2^n (j < n) plus the box angle 1/2^n
+summing to 1, the unit term of 1 0^(n-1) is Z = (1/2^n) Pc(-1)(-h(-1/2^n)) = i^(n+1) Mc(1)/2^n
+(checked numerically, n = 3..9), and that of 1^n is conj(Z).  So the main term is
+2(A1 Z + A3 conj Z), of modulus exactly (2 Mc(1)/2^n) |A1 + (-1)^(n+1) A3| (Z real for n odd,
+imaginary for n even).  The rest is at most 2 (W/2^n) Rc(n) Mc(1).  []
+(For f = 0 this is Theorem C's argument: then A1 = A3 and the even-n cancellation is visible as
+A1 - A3 = 0.)
+
+
+2. One free point: closed forms
+-------------------------------
+Notation: z = the free point, inserted after p of the structured points (p = 0..m, "gap p");
+R(x) = (x, (1+x)/2), L(x) = (x/2, x) the right / left arm of an earlier point x; a later point c
+gets sign +1, -1, 0 from x if c is in R(x), L(x), neither; delta_t = sign of the structured
+point x_t relative to z (when z is earlier, p < t).  At an orbit/chain vertex with f = 0 every
+structured column t >= 2 has a fixed sum s_t from the other structured points and a forced side
+(column rule).  With z earlier, the column gets s_t + delta_t; for a bit-1 column the tight
+contribution is +1 (inside, sign +) or 0 (outside, sign -), for a bit-0 column 0 (sign +) or -1
+(sign -).
+
+LEMMA 2.1 (orbit 1/D, f = 1).  For every m >= 4,
+     A_above(1/D) = (-1)^(m+1) [(m - 7) D - (m - 9)] / (4D),     A_below(1/D) = (-1)^m / (2D),
+so  Delta_0 = (-1)^(m+1) [ (m - 7)/4 - (m - 11)/(4D) ]  (= 1/63 at m = 7, ~ (m-7)/4 in general).
+Proof.  theta = 1/D, v_1 = theta, v_2 = (1 + theta)/2 = 2^(n-1)/D, v_t = 2^(m-t)/D (t = 3..m),
+v_m = theta; values v_1 = v_m < v_(m-1) = 2 theta < ... < v_3 < 1/2 < v_2.  At f = 0 (../periods2
+Lemma 3.1): column 2 has s = 0, columns 3..m-1 have s = +1 (from theta; v_2's left arm is
+(v_3, v_2), the arms of v_3, ..., v_(t-2) miss v_t), column m has s = 0 plus the equality with
+x_1.  Hence for each column t >= 2 later than z:
+     delta_t = 0  -> side as at f = 0 (sign -1);     delta_t = -1 -> the other side (sign +1);
+     delta_t = +1 -> invalid, except at the closing column t = m: (u <= 0, x_m BELOW x_1), sign +1.
+So weight = (-1)^(m-1) (-1)^#{t > p : delta_t != 0}, above unless delta_m = +1.
+The own column of z is S(z) = sum_{t <= p} sign(v_t -> z) and must vanish; for p = 0 the column
+of x_1 needs sign(z -> theta) = 0.  Going through the z-intervals (all endpoints are among
+v_t, v_t/2, (1+v_t)/2):
+  p = 0, 1:  z in (v_2, 1) is the only valid set (z < theta, theta < z < v_2: v_3 or v_2 lies in
+             R(z), delta = +1 at a halving column; p = 1, z in (theta/2, v_2): S != 0);
+             delta_2 = -1 (v_2 in L(z) as z < 1 < 2 v_2), others 0: weight (-1)^m, above,
+             measure 1 - v_2 = (2^(n-1) - 1)/D.
+  p >= 2:  (i)   z > (1 + v_2)/2: all signs 0, no later point in an arm of z (z/2 > v_3):
+                 weight (-1)^(m-1), above, measure (2^(n-1) - 1)/(2D), for every p = 2..m.
+           (ii)  v_2 < z < (1 + v_2)/2: S >= 1 (v_2 and, if p >= 3, v_3 contribute +1). Invalid.
+           (iii) v_3 < z < v_2: S = (+1 from theta) + (-1 from v_2) + (p - 2) (z in R(v_t), t = 3..p)
+                 = p - 2: only p = 2; then delta_3 = -1: weight (-1)^m, above, measure v_3.
+           (iv)  v_(j+1) < z < v_j, 3 <= j <= m-1: S = 1 for p < j, S = p - j for p >= j: only
+                 p = j; then delta_(p+1) = -1 (also for p + 1 = m, the closing column, side
+                 (u <= 0, above)): weight (-1)^m, above, measure v_(p+1) = 2^(m-p-1)/D.
+           (v)   theta/2 < z < theta: S = -1 - [p = m] != 0.  Invalid.
+           (vi)  z < theta/2: S = 0; every v_t (3 <= t <= m-1) later than z lies in R(z) (delta = +1),
+                 so p >= m - 1.  p = m - 1: delta_m = +1 -> (u <= 0, BELOW), weight (-1)^m;
+                 p = m: weight (-1)^(m-1), above.  Measure theta/2 = 1/(2D) each.
+Summing (D A_above (-1)^m): 2(2^(n-1) - 1) + sum_{p=2}^{m-1} 2^(m-p-1) - (n - 1)(2^(n-1) - 1)/2
+ - (2^(n-1) - 1)/2 - 1/2 = (2^(n-1) - 1)(7 - n)/2 - 2^(n-2) = -[(m - 7) D - (m - 9)]/4, and
+D A_below = (-1)^m/2.  (probe2.py prints the intervals; probe1.py: the formula holds for m = 4..14.) []
+
+LEMMA 2.2 (rotations, f = 1).  For m >= 6 the orbit vertices theta = 2^i/D, 1 <= i <= n-1 (and
+their mirrors) admit NO valid configuration with one free point.
+Proof.  The points are x_1 = 2^i/D, ..., x_(i+1) = 1/D (halvings), x_(i+2) = b := 2^(n-1)/D =
+(1 + x_(i+1))/2, then halvings down to x_m = 2^i/D.
+ * 2 <= i <= n - 2: column i + 2 (placing b, bit 1, tight with x_(i+1)) has the i earlier points
+   x_1..x_i in R(x_s) (b < (1 + x_s)/2 since x_s > 1/D): s = i.  A single free point changes the
+   sum by at most 1, and validity needs s + delta in {0, -1}: impossible for i >= 2.
+ * i = n - 1: column i + 2 = m is the closing column (b = x_1), with the n - 2 points x_2..x_(n-1)
+   in R: s = n - 2, and delta + (tight) + (equality) >= -1 + 0 - 1 = -2: impossible for n >= 5.
+ * i = 1: column 3 has s = 1 (x_1 = 2/D) and needs delta_3 = -1, i.e. z in (b, 1) earlier than
+   x_3; then column 4 (b/2, bit 0, not closing as m >= 5) has s = 2 (x_1, x_2), z contributes 0
+   (b/2 < z/2), and s + (tight in {0,-1}) >= 1.  Invalid.  []
+(The m = 5 exception: theta = 8/15 does carry weight, A_below = -14/15; ../periods2 section 6.)
+
+LEMMA 2.3 (chain 1 0^(n-1), f = 1).  For m >= 4,  A1 = (-1)^(m+1) [ (m - 7)/4 + 3/2^m ].
+Proof.  Same as Lemma 2.1 with theta -> 0+ (x_1 = 0 at the box), x_2 = 1/2, x_t = 2^(1-t) (t >= 2)
+and NO closing equality: column m is an ordinary bit-0 column with s = +1 (from x_1), so the
+f = 0 sign is (-1)^n and the rule "delta = 0: unchanged, -1: flip, +1: invalid" holds for all
+columns 2..m.  Valid sets: p = 0, 1: z in (1/2, 1), weight (-1)^(n+1), measure 1/2;  p = 2..m:
+z in (3/4, 1), weight (-1)^n, measure 1/4;  p = 2..m-1: z in (x_(p+1), x_p), weight (-1)^(n+1),
+measure 2^(-p);  p = m: z in (x_m/2, x_m) (own column: +1 from x_1, -1 from L(x_m)), weight (-1)^n,
+measure 2^(-m).  (The orbit regions (v), (vi) have measure 0 here.)  Sum: (-1)^n [-1 + (m-1)/4
+- (1/2 - 2^(1-m)) + 2^(-m)].  []
+
+LEMMA 2.4 (chain 1^n, f = 1).  For m >= 4,  A3 = (-1)^(m+1) [ (m + 4)/8 + e_m/2^m ], e_m = -5 for
+m even, +1 for m odd.
+Proof.  x_t = 1 - 2^(1-t) (t = 1..m), increasing; every column t >= 2 has s = 0 (the arm R(x_i)
+ends at x_(i+1)), bit 1, side "outside", f = 0 sign (-1)^n; again delta = 0: unchanged, -1: flip,
++1: invalid.  For z in (x_j, x_(j+1)) (x_(m+1) := 1): R(z) contains only x_(j+1) and L(z) contains
+x_2..x_j.  The own column: +1 from x_j (if j <= p), -1 from each x_t, j < t <= p (z in L(x_t),
+z > 1/2); for z < 1/2, +1 from x_1 and -1 from each x_t (2 <= t <= p) with z > x_t/2 = 1/2 - 2^-t.
+Valid sets:  z in (x_j, x_(j+1)) with p = j + 1 (j = 2..m-1): weight (-1)^n, measure 2^-j;
+z in (1/4, 1/2) with p = 2 and z in (1/4, 3/8) with p = 3..m: weight (-1)^n, measures 1/4, 1/8;
+z in (x_m, 1) with p <= m - 1: every later x_t (t >= max(p,1)+1) is in L(z): weight
+(-1)^n (-1)^(m - max(p,1)), measure 2^-n; z in ((1 + x_m)/2, 1) with p = m: weight (-1)^n,
+measure 2^-m.  (Everything else fails its own column or has delta = +1 at x_2 or x_(j+1).)
+Sum: (-1)^n [ (1/2 - 2^-n) + 1/4 + (m-2)/8 + 2^-n (2(-1)^(m-1) + sum_{i=1}^{m-2} (-1)^i) + 2^-m ].  []
+(probe6.py prints the intervals; probe5.py: Lemmas 2.3, 2.4 hold for m = 4..18.)
+
+Consequently, in Proposition 1.5:
+   orbit:  |Delta_0| = (m - 7)/4 - (m - 11)/(4D)  (m >= 7);
+   chain:  |A1 + A3| = (3m - 10)/8 - 2/2^m  (m even),   |A1 - A3| = |(m - 18)/8 + 2/2^m|  (m odd).
+(Note the near-cancellations: Delta_0 = 1/63 at m = 7 although the terms are O(1); |A1 - A3| =
+1/8 - 2^-16 at m = 17, 1/8 + 2^-18 at m = 19; neither vanishes for any m.)
+
+
+3. The rest bounds
+------------------
+Numerically (rest.py, float64 log-sums over all l; rest.log):
+     n     5        6        7        8        9        10       12       16       20       24
+   R(n)  0.127    5.4e-3   9.8e-3   7.8e-5   8.6e-4   6.5e-6   3.1e-10  9.1e-12  3.8e-15  6.9e-23
+   Rc(n) 0.082    0.023    5.9e-3   1.7e-3   5.0e-4   1.6e-4   1.6e-5   1.9e-7   2.3e-9   2.8e-11
+(R(n) is much smaller for even n because then 3 | D and l = 3, the second-largest orbit, drops out.)
+PROPOSITION 3.1 (rigorous, all n >= 3).
+  R(n)  <= Bo(n) := sum_{lam odd, 3 <= lam < 2^9} (pi/2)^(n+1) 4^b lam^-(n-b) . 2(2/lam + 2^(b+2)/D)
+                    + 2^n (pi/2)^(n+1) 2^(-3n),                     (b = bit length of lam)
+  Rc(n) <= Bc(n) := 2 G (pi/2) sum_{lam odd, 3 <= lam < 2^(n-1)} lam^-(n-b+1),
+                    G = prod_{k>=1} (pi/2^k)/sin(pi/2^k) = 1.8090...
+  Values: Bo(26) = 1.5e-5, Bo(30) = 1.1e-6, Bo(40) = 1.7e-9;  Bc(10) = 5.9e-3, Bc(26) = 1.7e-7;
+  both decrease in n (every term does).
+Proof (orbit).  For l in (Z/D)^* let d_j = min(c_j, D - c_j), c_j = 2^j l mod D, and N(O) =
+prod_j d_j (depends only on the orbit pair O u -O).  sin(pi t) <= pi t and sin(pi t) >= 2t
+(0 <= t <= 1/2) give M(l)/M(1) <= (pi/2)^(n+1) N(1)/(N(O) d_0(l)), with
+N(1) = 2^((n-1)(n-2)/2) (2^(n-1) - 1) < 2^(n(n-1)/2).  Let lam = min of the d_j over O u -O.
+lam is odd (else lam/2 = 2^-1 lam is smaller), and the binary word of lam/D is the n-bit
+expansion of lam: n - b zeros, then the b bits of lam (first and last = 1).  For j < n - b,
+d_j = 2^j lam (< D/2); for the b shifts starting inside lam's bits the leading run has length
+<= b - i, and a binary expansion starting with a run of length r has distance >= 2^-(r+1) to Z,
+so d_j >= D 2^-(b-i+1).  Hence N(O) >= lam^(n-b) 2^((n-b)(n-b-1)/2) D^b 2^-(b(b+3)/2), and with
+D >= 2^(n-1) a short computation gives N(1)/N(O) < 4^b lam^-(n-b).  Summing 1/d_0(l) over the
+<= 2n elements of O u -O gives <= 2(2/lam + 2^(b+2)/D).  For b >= 10 use instead: lam minimal
+forces every run of the cyclic word to have length <= n - b, so log2 N(O) >= n log2 D -
+sum_runs r(r+3)/2 >= n(n-1) - n(n-b)/2 - 3n/2, i.e. N(1)/N(O) < 2^(n(4-b)/2) <= 2^-3n; there are
+fewer than 2^n such l and d_0 >= 1.
+(chain).  t_i(l) = ||l/2^i|| (i = 1..n; the n factors and the box factor use t_n).  For lam odd,
+t_i(lam) >= 2^-i = t_i(1), and 1/(2 sin pi t) decreases on (0, 1/2]: the factors with i <= b are
+at most those of l = 1.  For i >= b + 1, t_i(lam) = lam/2^i and
+sin(pi/2^i)/sin(pi lam/2^i) <= gamma(lam/2^i)/lam, gamma(y) = pi y/sin(pi y) increasing; the
+product of the gamma's over i >= b+1 is at most G (lam/2^(b+1) < 1/2), and the box factor
+contributes <= (pi/2)/lam.  So Mc(+-lam)/Mc(1) <= G (pi/2) lam^-(n-b+1).  []
+
+
+4. Theorem D1
+-------------
+THEOREM D1.  For every m >= 4 the coefficient c_1(N) of N in T(N, m+1) has a nonzero Fourier
+component of exact order 2^(m-1) - 1 and a nonzero component of exact order 2^(m-1).
+Proof.  Odd part, m >= 8: Lemmas 2.1, 2.2 and Proposition 1.5(a) with W = m + 1: the inequality
+2 cos(pi/D)|Delta_0| > (m+1) R(m-1) holds for 8 <= m <= 25 with the numerical R (margin >= 5.8x,
+thmD.log) and for m >= 26 with Bo (LHS >= 9.5, RHS <= 7.7e-4 and decreasing).  m = 4..7: the full
+face sums (all orbit vertices, exact weights, face.py; ../periods2/face_table.log):
+     m = 4: -0.054279 + 0.042425i   m = 5: -0.093333 - 0.014297i   m = 6: 0.362440 + 0.048070i
+     m = 7:  0.003976 + 0.290809i
+(m = 4, 5, 6 equal the Normaliz values; m = 7 is the validated local formula.)
+2-part, m >= 5: Lemmas 2.3, 2.4 and Proposition 1.5(b): (m+1) Rc(m-1) < |A1 +- A3| for 5 <= m <= 25
+numerically (thmD.log; tightest m = 5: 1.36 < 1.56) and for m >= 26 by Bc.  m = 4: Psi =
+-0.038277 (chainface.py 4 5 = Normaliz).  For completeness the full chain sums (chainface.py),
+coefficient of e(-N/2^(m-1)) in c_1 x 1!:
+     m = 4: -0.038277  5: -0.622385i  6: 1.873155  7: 26.631935i  8: -695.3475  9: -18230.66i
+     m = 10: 3310191.3.   []
+COROLLARY.  For every m >= 4: 2^(m-1) (2^(m-1) - 1) divides the period of c_1(T(N, m+1)), i.e.
+the coefficient of N in T(N,k) has period divisible by 2^(k-2)(2^(k-2) - 1) for all k >= 5.
+How good the main term is (main term of Proposition 1.5 vs the full face sum):
+   orbit m = 8:  97.644 + 2.342i   vs  97.625 + 2.333i;   m = 9: 97.19 - 7950.578i vs 97.19 - 7950.577i;
+         m = 10: -979579.6 - 6006.8i vs -979581.9 - 6006.6i (face.py 10 11);
+   chain m = 5: -0.5926i vs -0.6224i;  m = 6: 1.8653 vs 1.8732;  m = 8: -695.384 vs -695.348;
+         m = 10: 3310191.29 vs 3310191.29.
+(At m = 4 the chain main term is only half of the total: there the other chains are not small.)
+
+
+5. Two free points
+------------------
+LEMMA 5.1 (rotations, f = 2).  For m >= 7 the rotations 2^i/D (1 <= i <= n-1) admit no valid
+configuration with two free points.
+Proof.  Column i + 2 has s = i (as in 2.2): impossible for 3 <= i <= n - 2 (two free points
+change the sum by at most 2); i = n - 1: closing column, s = n - 2 >= 4 while the free points,
+the tight halving and the equality can contribute at least -2 + 0 - 1 = -3.  i = 2: column 4
+(placing b) has s = 2 and needs both free points earlier with b in L(z), i.e. z in (b, 1); column 5
+(b/2) has s = 3 and these z contribute 0: invalid (m >= 6).  i = 1: column 3 needs a free z_c in
+(b, 1) before x_3; column 4 (s = 2, sig in {0,-1}) needs a z_a in (b/2, b) before x_4, and z_a
+cannot be before x_3 (it would add +1 to column 3), so z_a sits between x_3 and x_4 (its own
+column is then 0 iff z_a > z_c/2); column 5 (b/4) has s = 2 from x_1, x_2 and neither z_a nor z_c
+reaches b/4: invalid (m >= 6).  []
+(Checked: rot_F2.log, m = 7, 8, 9, all rotations zero.  For m = 6, theta = 16/31 (i = n - 1)
+carries weight.)
+
+Exact weights at theta = 1/D with two free points (probe4.py, exact rational integration,
+m = 4..19, w1D_F2.txt).  For m >= 5 they satisfy (fit.py: 9 coefficients fitted on m = 5..13,
+CHECKED on m = 14..19)
+   (-1)^(m+1) D^2 A_above = [9 D^2 m^2 - 135 D^2 m + 22 D^2 - 6 D m^2 + 234 D m - 1012 D
+                             - 3 m^2 - 123 m + 1494]/384,
+   (-1)^(m+1) D^2 A_below = -(D m - 6 D - m + 16)/8,
+so Delta_0 = (-1)^(m+1) [ (9 m^2 - 135 m + 22)/384 + O(m^2/D) ].  9m^2 - 135m + 22 is never 0
+for integer m (it is = 22 mod 9) but changes sign between m = 14 (-104) and m = 15 (22):
+|Delta_0| = 0.0575 at m = 15 while the summands are ~0.3.
+Chain weights with two free points (probe5.py, chainW_F2.txt, m = 4..15; fit2.py and thmD.py:
+9 coefficients each, 3 held-out values each), X = 2^m, s = (-1)^m:
+   (-1)^(m+1) A1 = 3m^2/128 - 45m/128 + 11/192 + (3m/4 - 9/2)/X + (139/12)/X^2,
+   (-1)^(m+1) A3 = 5m^2/512 + 11m/256 + 125/512 + (-m/4 - 5/4 + s(149/24 - 3m/8))/X
+                   - (17/6 + 61 s/4)/X^2.
+(A1 has exactly the leading polynomial of the orbit weight, as the reduced problem predicts;
+the leading 5/512 of A3 is vol V_2^(3)/2, found by the fit, not imposed.)  Hence
+   m even (n odd):  |A1 + A3| = |17m^2/512 - 79m/256 + 463/1536| + O(m/2^m), with real roots
+                    1.11 and 8.19: at m = 8 the two weights 1.249 and -1.212 nearly cancel
+                    (|A1 + A3| = 0.0367);
+   m odd (n even):  |A1 - A3| = |7m^2/512 - 101m/256 - 199/1536| + O(m/2^m), root 29.18:
+                    at m = 29, |A1 - A3| = 0.130 while A1, A3 ~ 10.
+
+THEOREM D2.  The coefficient c_2(N) of N^2 in T(N, m+2) has a nonzero Fourier component of
+exact order 2^(m-1) - 1 for 4 <= m <= 19, and of exact order 2^(m-1) for 4 <= m <= 15.
+Proof.  Odd, 7 <= m <= 19: Lemma 5.1, the exact Delta_0 (w1D_F2.txt) and Proposition 1.5(a)
+with W = C(m+2, 2) (thmD.log: margins from 5.6x at m = 8 to 10^6x; the closest case m = 15 has
+0.115 against 1.2e-6).  m = 4, 5, 6: full face sums -0.219451 - 0.059642i (= Normaliz),
+0.013704 + 0.873302i, 5.278416 + 0.174419i (face.py; ../periods2/face_table.log).
+2-part: Proposition 1.5(b) with the exact A1, A3 for m = 7 and 9..15 (thmD.log; tightest m = 7:
+2.22 against 0.81).  m = 4: 0.0830494 (chainface.py 4 6 = Normaliz); m = 5: -1.2485702i (Normaliz
+k = 7, section 7); m = 6 and m = 8 (where dominance fails, |A1 + A3| = 0.0367 at m = 8): the full
+chain sums (chainface.py, chain_full_F2.log): m = 6: -1.2819075; m = 8: 29.311402 (here the
+main term 2(A1 Z + A3 conj Z) is only 14.65 and the rest is of the same size, as the failed
+inequality said, but the total is far from 0).   []
+CONDITIONAL EXTENSION.  If the closed forms of this section hold for all m (orbit: verified on
+6 held-out values, chain: on 3), Theorem D2 holds for ALL m >= 4: thmD.py checks Proposition 1.5
+from the formulas for 16 <= m <= 40 and m = 50, 60, 80, 100 (smallest margins: odd part m = 15
+already exact; 2-part m = 29: 0.130 against 2.0e-5), and beyond m = 100 the left sides grow like
+m^2 while W R(n), W Rc(n) <= C(m+2, 2) Bo/Bc(m-1) decrease.
+
+
+6. Fixed f, m -> infinity: the reduced problem
+----------------------------------------------
+Why the weights are polynomials in m.  Fix f and consider theta = 1/D (or the chain 1 0^(n-1)).
+Its structured points are theta ~ 0, v_2 ~ 1/2, v_3 ~ 1/4, ..., a doubling-scale cascade towards 0,
+of length m.  A free point z is "time-free" if its validity and its effect do not depend on
+where in the long cascade it is inserted: this happens exactly for z > 1/2 inserted after the
+first few structured points (z is then in no arm of the tiny v_t, and no tiny v_t is in an arm of
+z; z interacts only with v_2, ..., v_j where v_j > 2z - 1).  Each time-free free point has
+~m admissible gaps; every other free point has O(1) admissible gaps (Lemma 2.1 (iii)-(vi): a
+point inside the cascade is tied to its own scale, a point below theta needs gap >= m - O(f)),
+or lies in a set of measure O(1/D).  Time-free configurations change no structured column
+(no flips), so they all carry the sign (-1)^(m+1) and are "above".  This gives:
+PROPOSITION E (outline; constants not made explicit).  For fixed f,
+   Delta_0(m, f) = (-1)^(m+1) [ vol(V_f)/f! . m^f + O_f(m^(f-1)) ],
+where V_f = { (z_1..z_f) in (1/2,1)^f (time order) : for every i,
+                c(z_i) + sum_{j<i} sign(z_j -> z_i) = 0 },   c(z) = floor(log2 1/(2z - 1)),
+is the valid set of the REDUCED problem: f points placed after the limit orbit 0, 1/2, 1/4, ...
+(c(z) = number of limit points 2^-j with z in R(2^-j)).  V_f has nonempty interior (e.g.
+z_1 > 3/4, z_(i+1) > (1 + z_i)/2), so vol V_f > 0.  Together with the rotation argument (for
+n > f + 4 only the rotations i <= f can carry weight; their cotangent factors are O(2^f) instead of
+cot(pi/D) ~ D/pi) and R(n) -> 0, Proposition 1.5(a) gives: the order-(2^(m-1) - 1) component of
+c_f(T(N, m+f)) is nonzero for all m >= m_0(f).
+Checks:  vol V_1 = 1/4 (V_1 = (3/4, 1)): leading coefficient 1/4 of Lemma 2.1.
+         vol V_2 = 1/64 (z_2 > 3/4: z_2 > (1+z_1)/2) + 1/32 (z_2 in (5/8, 3/4): c = 1, z_2 in L(z_1))
+                 = 3/64: leading coefficient 3/128 = 9/384 of the f = 2 closed form.
+For the increasing chain 1^n the reduced problem lives in (0, 1/2) with field
+c3(z) = 1 - #{t >= 2 : z > 1/2 - 2^-t}: vol V_1^(3) = 1/8 (Lemma 2.4: (m+4)/8), vol V_2^(3) = 3/256
++ 1/128 = 5/256.  So for the 2-part the leading coefficient of A1 - A3 (n even) is
+(vol V_f - vol V_f^(3))/f!: 1/8 at f = 1, 7/512 at f = 2 -- nonzero, but not obviously for all f.
+Monte Carlo (reduced_mc.py, 2.10^6 samples; reduced_mc.log):
+     f              1          2          3          4
+   vol V_f        0.24994    0.046857   0.008851   0.001474     (exact 1/4, 3/64 = 0.046875)
+   vol V_f^(3)    0.12485    0.019547   0.002709   0.000290     (exact 1/8, 5/256 = 0.019531)
+so the predicted leading coefficients at f = 3 are 0.001475 m^3 (odd part, A_above(1/D)) and
+(0.001475 -+ 0.000451) m^3 for A1 -+ A3: all nonzero.
+WHAT FAILS for a proof for all k >= m: (i) uniformity in f (m_0(f) grows; the fixed-m, k -> oo
+regime is a continuum problem as hard as c_k itself, cf. ../periods section 6); (ii) the
+polynomials in m can change sign (f = 2: between m = 14 and 15), and an integer zero of the
+leading part would leave only O(m^f/D)-size terms -- the mechanism by which an exception to the
+period law could occur.  No zero has been found.
+
+
+7. Validation against Normaliz (k = 7, classes_7.json regenerated; normaliz7.log)
+---------------------------------------------------------------------------------
+fourier2.py with EXACT=1 (numerators divided exactly by Phi_q^(p-r) over Z), coefficient of
+e(-N/q) in c_{7-m} times (7-m)!, against the local face formulas of this directory:
+   (m, f)   q     Normaliz (k = 7)                     local formula
+   (4, 3)   7    -0.192900579578 - 0.238653041429i      (f = 3: not computable here)
+   (4, 3)   8     0.0915932966412                       (f = 3)
+   (5, 2)  15     0.0137037037037 + 0.873301738913i     face.py 5 7:  0.013704 + 0.873302i
+   (5, 2)  16    -1.24857016474i                        chainface.py 5 7: -1.2485701647i
+   (6, 1)  31     0.362440021995 + 0.0480699550536i     face.py 6 7:  0.362440 + 0.048070i
+   (6, 1)  32     1.87315466973                         chainface.py 6 7: 1.8731546697
+   (7, 0)  63    -0.907256420729 + 18.1786042622i       ../periods2 (Theorem C): same
+   (7, 0)  64    -0.000692729552077i                    ../periods2 (Theorem C): same
+   (3, 4)   3     0.439909351729 - 0.0368242173181i     (m = 3: lcm(4, 3) = 12 = B(3))
+   (3, 4)   4    -0.0694160688491i
+So the order-7 and order-8 components of c_3(T(N,7)) (three free points) are nonzero as well.
+
+
+8. The other prime powers of B(m); multi-cycle components
+---------------------------------------------------------
+8.1 Reduction.  period(c_{k-m}) = B(m) iff for every prime power p^v || B(m) some nonzero Fourier
+component of c_{k-m} has order divisible by p^v (the period is the lcm of the orders of the
+nonzero exact-order components).  The 2-part 2^(m-1): order-2^(m-1) component (Theorem C at
+f = 0, D1 at f = 1, D2 at f = 2).  An odd prime p has v_p(B(m)) = max_{s<=m-1} v_p(2^s - 1) =
+v_p(2^o - 1) + J, o = ord_p(2), J = max{j : o p^j <= m-1} (lifting the exponent).  The top odd
+component 2^(m-1) - 1 carries the full p-part iff o p^J | m - 1.  primes.py lists the rest:
+   m = 4: 3 (needs s = 2);  m = 5: 7 (s = 3);  m = 6: 3, 5 (s = 4), 7 (s = 3);
+   m = 7: 5 (s = 4), 31 (s = 5);  m = 8: 3^2, 7 (s = 6), 5 (s = 4), 31 (s = 5);  ...
+   m = 14: everything except 8191.
+So for most m almost all odd primes of B(m) need components carried by a CYCLE OF LENGTH
+s < m - 1 together with m - 1 - s further equations (a pendant halving tree on the cycle, giving
+the order 2^(m-1-s)(2^s - 1), or a box chain / marks, giving 2^a'(2^s - 1) with a' < m - 1 - s).
+Theorems C, D1, D2 do not touch these.  They are certified nonzero for k <= 7 (../prefix5: every
+divisor of every 2^a(2^s - 1), a + s = m - 1, occurs as an exact order in c_{k-m}).
+8.2 The vertex level for the mixed orders (vertsq.py, nonsimple.py).  An order q is NEW at m if
+no face of codimension < m has an index divisible by q; for such q the exact-order-q part of
+c_0(T(N, m)) is the sum of the vertex formula over the distinct vertices with q | index (only
+characters with all w_r != 0 carry exact order q).  The orders 2^a (2^s - 1), a + s = m - 1, are
+new at m.  vertsq.py enumerates all vertices of all class polytopes (Normaliz extreme rays,
+../periods/types_K.txt) and sums the vertex formula.  NEW INGREDIENT: the natural "cycle + pendant
+chain" vertices (theta, ..., theta, theta/2, theta/4, ...) are NOT SIMPLE: x_(s+2) = theta/2 is a
+halving of both copies of theta, so k + 1 rows are tight with one dependency u_a - u_b = u_e.
+nonsimple.py handles them: each class's tangent cone is one consistent sign pattern, which is an
+orthant in the basis obtained by dropping the row whose sign the others imply; the lattice points
+then satisfy the dropped row with its strictness automatically.
+Validation against Normaliz (c_0, k = 5, 6; vertex sum = simple + non-simple):
+   k = 5, q = 12:  0.212420 + 0.231757i  +  0.056918 - 0.032861i  =  0.269338 + 0.198896i  (Normaliz same)
+   k = 5, q = 14: -0.092996 - 0.250070i  + -0.065642 - 0.026997i  = -0.158638 - 0.277067i  (same)
+   k = 6, q = 24: -2.228302 + 0.915594i;  q = 28: 1.953846 - 0.569874i;  q = 10: 0.878710 - 0.960037i;
+   k = 6, q = 30:  0.048511 - 0.158573i  + -0.016667 + 0.158573i  =  0.031844 (real!)          (same)
+(the q = 30 case is another exact cancellation of the imaginary parts between the two kinds).
+8.3 T(N, 8) (B(8) = 2^7 3^2 5 7 31 127).  Order 120 = 2^3 (2^4 - 1) in c_0 (k = 8): 340 vertices
+with 120 | index, two of them non-simple ((1/15, 8/15, 4/15, 2/15, 1/15, 1/30, 1/60, 1/120) and
+its mirror):
+     simple vertices: -0.087278 + 0.005290i,   non-simple: -18.149653 - 8.080746i,
+     coefficient of e(-N/120) in c_0(T(N,8)) = -18.236931 - 8.075456i  != 0.
+(The non-simple cycle + pendant-chain vertices dominate by a factor 200.)  Also order 40:
+-755.40 + 89.00i.  All mixed orders new at m = 8 (vertsq8.log; 1290 vertices, none with more
+than k + 1 tight rows):
+     q    simple vertices        non-simple            total (coefficient of e(-N/q) in c_0)
+     96   728.650 - 51.368i     -55.825 -  7.349i      672.825 - 58.717i
+    112  -668.172 + 37.487i      32.880 +  7.505i     -635.293 + 44.992i
+    120    -0.087 +  0.005i     -18.150 -  8.081i      -18.237 -  8.075i
+    124    -0.016 -  0.041i       8.219 +  8.647i        8.204 +  8.606i
+    126     0.233 +  9.024i       0.227 -  9.095i        0.460 -  0.071i   (near-cancellation)
+With Theorem C (orders 128, 127): c_0(T(N, 8)) has nonzero components of EVERY order
+2^a (2^s - 1), a + s = 7, so the constant term of T(N, 8) has period exactly
+lcm(128, 96, 112, 120, 124, 126, 127) = B(8).
+Independently, Theorem C (2^7, 127 in c_0), Theorem D1 at m = 7 (order 63 in c_1: 3^2, 7) and
+the (6, 8) value of Theorem D2 (order 31 in c_2) carry every prime power except 5, which order
+120 supplies.  Either way:
+     the period of T(N, 8) (and of its constant term) is exactly B(8) = 158739840
+(modulo the local formula, which is validated in every case where Normaliz series exist).
+8.4 T(N, 9) (B(9) = 2^8 3^2 5 7 17 31 127).  2^8 and 255 = 3.5.17: Theorem C (c_0); 127: Theorem
+D1 at m = 8 (order 127 in c_1); 3^2 and 7: Theorem D2 at m = 7 (order 63 in c_2); 31: the
+two-cycle order 93 = 3.31 in c_0 (../periods2 section 7.4: -0.344148 + 0.288140i).  Hence
+     the period of T(N, 9) is exactly B(9) = 5397154560
+(same proviso).  For T(N, 10) the parts 3^2 (s = 6) and 31 (s = 5) would need components with
+three free points or k = 10 vertex enumerations; not done.
+Per coefficient (period of c_{k-m} = B(m) for k > m): established only for c_0 at k = 8; e.g.
+c_1(T(N, 8)) has the orders 64 and 63 (Theorem D1) but the 5- and 31-parts of B(7) would need
+mixed (s < 6) faces with a free point.
+8.5 Multi-cycle components (m = 9: orders 93 = 3.31 and 105 = 3.5.7 in c_0 of T(N, 9),
+../periods2 section 7).  These are vertex-level (f = 0) facts; whether they survive in c_{k-9}
+for k > 9 needs the two-cycle face formula with free points (not done).  They are irrelevant for
+the period of c_{k-9} as long as the prime powers 3, 31 resp. 5, 7 are carried elsewhere (both are
+divisors of B(9) through single cycles), so they matter only for the finer "single modulus"
+question (Theorem B fails from m = 9 on).
+
+
+9. What remains open
+--------------------
+  * The top components for f >= 3 free points (only Proposition E, asymptotically in m; k = 7,
+    m = 4 by Normaliz), and for f = 2 beyond m = 19 / 15 (conditional on the closed forms).
+    A proof of the closed forms would follow from a uniform-in-m version of the interval
+    analysis of section 2 (the configurations are self-similar along the doubling cascade);
+    not done.  The fixed-m, k -> oo regime is out of reach (it contains c_k-type volumes).
+  * All components of order 2^a (2^s - 1) with s < m - 1 in c_{k-m} for k > m; hence the
+    per-coefficient period law beyond the top orders, and the full period of T(N, k) for
+    k >= 10.  At the vertex level (k = m) the dominant carriers of 2^a (2^s - 1) are the
+    non-simple cycle + pendant-chain vertices when a, s are both moderate (k = 8: orders 120,
+    124), simple vertices for small s (96, 112), and the two kinds nearly cancel for a = 1
+    (126: 0.233 + 9.024i against 0.227 - 9.095i).  A general dominance theorem would need the
+    classification of the valid mixed vertices (analogue of ../periods2 Lemma 3.1).
+  * Whether the polynomials of section 6 can have integer roots (possible exceptions).
+  * Lean: only the arithmetic (Folds/PeriodLaw.lean); the polytope theory is not formalised.
+
+
+10. Files
+---------
+  chainface.py M K       chain face formula (order 2^(M-1) part of c_{K-M}), F <= 2 free points
+  nonsimple.py           vertex formula for vertices with one dependent tight row
+  vertsq.py K Q..        order-Q part of c_0(T(N,K)) for Q new at K, all vertices (vertsq8.log)
+  verts8q.py             the same for Q = 120, 40 at K = 8, saving the vertices (verts8_40.txt)
+  probe1.py              Lemma 2.1 for m = 5..14 (theta = 1/D, f = 1)
+  probe2.py M [A]        valid z-intervals per gap, orbit vertex A/D, f = 1
+  probe3.py F M0 M1 [R]  weights of 1/D and its rotations (rot_F2.log)
+  probe4.py F M0 M1      exact weights at 1/D -> w1D_F<F>.txt
+  probe5.py F M0 M1      chain weights A1, A2, A3 -> chainW_F<F>.txt
+  probe6.py M WORD       valid z-intervals per gap, chain vertex, f = 1
+  fit.py / fit2.py       exact polynomial fits in (m, D) resp. (m, 2^m) with held-out checks
+  reduced_mc.py          Monte Carlo volumes of the reduced problems (reduced_mc.log)
+  rest.py NMAX           R(n), Rc(n) numerically and the bounds Bo, Bc (rest.log)
+  thmD.py                the dominance inequalities of Theorems D1, D2 and the closed-form checks
+                         (thmD.log)
+  primes.py MMAX         prime powers of B(m) carried / not carried by the top component (primes.log)
+  queue.sh, queue2.sh    the sequential job lists (k = 7 Normaliz checks normaliz7.log, chain
+                         full sums chain_full_F2.log)
+  The k = 6, 7 class series (classes_6.json, classes_7.json) are regenerated with
+  python3 ../prefix5/ehrhart.py K in a scratch directory (not committed).

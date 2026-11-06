@@ -66,3 +66,4 @@ import Folds.SymParity
 import Folds.SymStructure
 import Folds.Live3p
 import Folds.SymStructure2
+import Folds.PeriodLaw
