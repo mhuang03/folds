@@ -4,6 +4,7 @@ mod dp;
 mod layout;
 mod rule;
 mod stats;
+mod sub;
 
 use rule::{Checker, Rule};
 use std::time::Instant;
@@ -41,8 +42,30 @@ fn moduli(w: usize) -> &'static [u64] {
 }
 
 /// One residue (or the exact value for `w = 64`) with the chosen code path.
+/// `--sub T`: use the sub-block path (`sub.rs`) with `T` high bits (stored as `T+1`).
+static SUB: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// `T` of `--sub T` (default 4).
+fn sub_t() -> usize {
+    match SUB.load(std::sync::atomic::Ordering::Relaxed) {
+        0 => 4,
+        st => st - 1,
+    }
+}
+
 fn one(n: usize, chk: &Checker, w: usize, m: u64, blocks: bool, verbose: bool) -> u128 {
     let ring = dp::Ring::new(m);
+    let st = SUB.load(std::sync::atomic::Ordering::Relaxed);
+    if st > 0 {
+        let t = st - 1;
+        return match w {
+            64 => sub::count::<u64>(n, t, chk, ring, verbose),
+            32 => sub::count::<u32>(n, t, chk, ring, verbose),
+            16 => sub::count::<u16>(n, t, chk, ring, verbose),
+            8 => sub::count::<u8>(n, t, chk, ring, verbose),
+            _ => panic!("bad width"),
+        };
+    }
     match (w, blocks) {
         (64, false) => dp::count::<u64>(n, chk, ring, verbose),
         (64, true) => block::count::<u64>(n, chk, ring, verbose),
@@ -149,7 +172,12 @@ options:
               store the middle layer; see block.rs)
   folds residue <rule> N <8|16|32|64> IDX [--blocks]   one residue (IDX into the moduli table)
   folds crt <8|16|32> r0 r1 ...                       CRT of residues for moduli 0, 1, ...
-  folds peak N                                         simulated peak memory (words) of --blocks
+  --sub T     sub-blocks: blocks split by the T panels next to the middle on each side
+              (see sub.rs), scheduled across layers; with FOLDS_SPILL=<dir> the
+              long-lived sub-blocks go to a file there, keeping FOLDS_ANON GB (default 7)
+              in anonymous memory
+  folds peak N [--sub T]                               simulated peak memory (words) of --blocks and --sub
+  folds subpeak N T [global] [caps in GB ...]          schedule experiments
   --threads   worker threads (default 3)"
     );
     std::process::exit(2)
@@ -179,6 +207,12 @@ fn main() {
             "--mod8" => {
                 mode = Mode::M8(args[i + 1].parse().unwrap());
                 args.drain(i..i + 2);
+            }
+            "--sub" => {
+                let t: usize = args[i + 1].parse().unwrap();
+                SUB.store(t + 1, std::sync::atomic::Ordering::Relaxed);
+                args.drain(i..i + 2);
+                continue;
             }
             "--blocks" => {
                 blocks = true;
@@ -232,7 +266,31 @@ fn main() {
             for a in &args[1..] {
                 let n: usize = a.parse().unwrap();
                 let w = block::predicted_peak(n);
-                println!("N={} peak {} words = {:.2} GB (u8) {:.2} GB (u16) {:.2} GB (u32)", n, w, w as f64 / 1e9, 2.0 * w as f64 / 1e9, 4.0 * w as f64 / 1e9);
+                println!("N={} --blocks peak {} words = {:.2} GB (u8) {:.2} GB (u16) {:.2} GB (u32)", n, w, w as f64 / 1e9, 2.0 * w as f64 / 1e9, 4.0 * w as f64 / 1e9);
+                let t = sub_t().min(n / 2);
+                let sl = sub::SubLayout::new(n, t);
+                let p = sub::plan(&sl, true);
+                let cap: f64 = std::env::var("FOLDS_ANON").ok().and_then(|v| v.parse().ok()).unwrap_or(7.0);
+                let (f, ap, fp) = sub::assign(&sl, &p, (cap * 1e9) as usize);
+                println!(
+                    "N={} --sub {} peak {} words = {:.2} GB (u8); with FOLDS_SPILL and FOLDS_ANON={}: anonymous {:.2} GB + file {:.2} GB (u8), {:.1} GB written to the file",
+                    n, t, p.peak, p.peak as f64 / 1e9, cap, ap as f64 / 1e9, fp as f64 / 1e9, sub::file_words(&sl, &f) as f64 / 1e9
+                );
+            }
+        }
+        "subpeak" => {
+            // folds subpeak N T [global]
+            let n: usize = args[1].parse().unwrap();
+            let t: usize = args[2].parse().unwrap();
+            let global = args.get(3).is_some_and(|s| s == "global");
+            let ts = Instant::now();
+            let sl = sub::SubLayout::new(n, t);
+            let p = sub::plan(&sl, global);
+            let nsb: usize = sl.shapes.iter().map(|s| s.sbs.len()).sum();
+            println!("N={} t={} {} sub-blocks, {} jobs, peak {} words = {:.2} GB (u8) [{:.1}s]", n, t, nsb, p.jobs.len(), p.peak, p.peak as f64 / 1e9, ts.elapsed().as_secs_f64());
+            for cap in args[4..].iter().map(|s| (s.parse::<f64>().unwrap() * 1e9) as usize) {
+                let (f, ap, fp) = sub::assign(&sl, &p, cap);
+                println!("  anon cap {:.2}e9: anon peak {:.2}e9, file peak {:.2}e9, file writes {:.1}e9", cap as f64 / 1e9, ap as f64 / 1e9, fp as f64 / 1e9, sub::file_words(&sl, &f) as f64 / 1e9);
             }
         }
         "stats" => {
@@ -279,6 +337,16 @@ fn check() {
                 vals.push(("direct", dp::count_direct::<u64>(n, &chk, dp::Ring::EXACT)));
             }
             vals.push(("blocks64", block::count::<u64>(n, &chk, dp::Ring::EXACT, false)));
+            for t in [0, 1, 4] {
+                vals.push((["sub64t0", "sub64t1", "", "", "sub64t4"][t], sub::count::<u64>(n, t, &chk, dp::Ring::EXACT, false)));
+            }
+            if n <= 18 {
+                // sub-block path with u8 and u16 residues, plus a spilled run
+                let r8: Vec<u64> = MOD8[..12].iter().map(|&m| sub::count::<u8>(n, 3, &chk, dp::Ring::new(m), false) as u64).collect();
+                vals.push(("sub8crt", crt(&r8, &MOD8[..12])));
+                let r16: Vec<u64> = MOD16[..6].iter().map(|&m| sub::count::<u16>(n, 2, &chk, dp::Ring::new(m), false) as u64).collect();
+                vals.push(("sub16crt", crt(&r16, &MOD16[..6])));
+            }
             if n <= 18 {
                 vals.push(("crt32", count(n, rule, Mode::M32(3), false, false).0));
                 vals.push(("crt16", count(n, rule, Mode::M16(6), false, false).0));

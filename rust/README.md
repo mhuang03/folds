@@ -12,8 +12,10 @@ cargo run --release -- semi 35 --mod16 7      # u16 residues (quarter memory)
 cargo run --release -- semi 34 --blocks -v     # block-streamed layers (see below), u64
 cargo run --release -- residue semi 36 8 3 --blocks   # one u8 residue (index 3 in the moduli table)
 cargo run --release -- crt 8 r0 r1 ... r12     # CRT of u8 residues (checks the redundant one)
-cargo run --release -- peak 36 37              # simulated peak memory of --blocks
+cargo run --release -- peak 36 37              # simulated peak memory of --blocks and --sub
 FOLDS_SPILL=/scratch/dir folds residue semi 37 8 0 --blocks   # layers >= 1 GB file-backed
+FOLDS_SPILL=/scratch/dir FOLDS_ANON=3.5 folds residue semi 38 8 0 --sub 4 -v   # sub-blocks (below)
+results/run_sub.sh 38 results/n38_u8.log 0 1 2      # chain of --sub residue runs, with logs
 cargo run --release -- stats semi 26          # refined statistics (see below)
 cargo run --release -- check                  # validation (brute force + known terms)
 cargo test --release                          # unit tests (rule & indexing bijection)
@@ -155,6 +157,102 @@ count.
 `folds check` runs the block path (`u64`, `u16`, `u8`) against all the other paths
 for N ≤ 24. Debug builds also assert the direct complement indices.
 
+## Sub-blocks (`--sub T`, `sub.rs`)
+
+Block streaming cannot go below about 1.4 layers, because single blocks next to
+the diagonal are half a layer. `--sub T` splits every block further and schedules
+the pieces across layers.
+
+**Layout.** Let `a = h - T`. `L` is split into `Llo` (panels `0..a`) and `HL` (the `T`
+panels next to the middle), and `R` likewise into `Rlo` and `HR`. A *sub-block*
+`(c, HL, HR, il = |Llo|, jl = |Rlo|)` holds all sets with these exact high parts and
+these low popcounts, as a `C(a,il) × C(a,jl)` matrix (row = colex rank of `Llo`,
+column = colex rank of `Rlo`). The mirror swaps `(il, HL) ↔ (jl, HR)`. The stored
+representative has `(il, HL) ≤ (jl, HR)`, and when they are equal it is a triangle.
+`T = 0` is exactly the block layout. Sub-blocks start on page boundaries, so freeing
+one returns all of its pages. For N=38 and `T = 4` there are 32896 sub-blocks of at
+most `C(15,7)² = 41 MB`.
+
+**Dependencies.** The pull into sub-block `X` reads at most `2T + 3` sub-blocks of the
+previous layer: `(il-1)` (remove a low left panel: row `rank(Llo\x)`), `(jl-1)`
+(remove a low right panel: column `rank(Rlo\y)`), `HL\x` and `HR\y` (remove a high
+panel: *same* row and column), and `c = 0` (remove the middle panel). Any of them
+may be stored transposed or as a triangle. A small accessor handles this, and the
+kernel walks 32-row tiles column by column, so every orientation reads consecutive
+or row-local words.
+
+**Final step.** For even `N`, the complement of sub-block `X` of the middle layer is
+the sub-block `Y = (0, ~HR, ~HL, a-jl, a-il)` (canonicalized), and entry
+`(rank Llo, rank Rlo)` maps to `(C-1-rank Llo, C-1-rank Rlo)`. One final job computes
+`X` and `Y` from layer `h-1` into scratch buffers, adds `Σ w g(S) g(S^c)` (twice if
+`X ≠ Y`), and drops both. For odd `N` the fused form is used as before: sub-block `U`
+of layer `h+1` is computed in a buffer and multiplied with the stored complement
+sub-block of layer `h`.
+
+**Schedule.** The jobs form a DAG over all layers. A greedy list schedule
+(`sub::plan`) runs, at each step, the ready job that minimizes (words written) −
+(words freed right after it) − ¼ of each input it partly uses up. It interleaves
+layers freely: final jobs start long before the last stored layer is finished. A
+sub-block is freed right after its last reader. `folds peak N` prints the simulated
+peak in words, and `folds subpeak N T [global] [caps]` compares variants:
+
+| N | `--blocks` | `--sub 4` | largest stored layer |
+|---|---|---|---|
+| 33 | 0.74e9 | 0.63e9 | 0.58e9 |
+| 34 | 1.58e9 | 1.11e9 | 1.10e9 |
+| 35 | 2.88e9 | 2.36e9 | 2.27e9 |
+| 36 | 6.22e9 | 4.54e9 | 4.30e9 |
+| 37 | 11.2e9 | 9.77e9 | 8.84e9 |
+| 38 | 24.2e9 | 16.8e9 | 16.8e9 |
+| 39 | 43.6e9 | 35.6e9 | 34.5e9 |
+| 40 | 94.8e9 | 66.7e9 | 65.6e9 |
+
+The peak is now about one layer, the largest one stored (`h-1` for even N, `h` for
+odd N). `T = 2..6`, layered or global, and three greedy variants all give
+16.8–17.6e9 for N=38. One layer seems to be the floor for any order that never
+recomputes: the final step pairs every set with its complement, and a schedule
+reaches the two ends of each pair at opposite ends of its sweep. Measured RSS matches
+the simulation: N=33 u8 0.70 GB against 0.63e9 words plus tables.
+
+**Spilling with a fixed memory budget.** With `FOLDS_SPILL=<dir>`, each layer has an
+anonymous region and a sparse file region. `sub::assign` places each sub-block in one
+of them so that the anonymous total stays `≤ FOLDS_ANON` GB (default 7) at every
+step. It first covers the steps whose live total is above a target file peak `F`,
+choosing the live sub-blocks freed soonest. It then adds the rest by increasing
+lifetime while they fit, to cut I/O. The smallest feasible `F` is found by bisection,
+which gives `F ≈ peak − cap`. For N=38 with `FOLDS_ANON=3.5`, the result is 3.5 GB
+anonymous + 13.4 GB file, with 40 GB written to the file per run.
+* After a file-backed sub-block is written, it gets `sync_file_range` (start
+  writeback) and `MADV_DONTNEED` (drop our mapping; the data stays in the page cache).
+  So the process RSS is about the anonymous part, and the cached pages are clean and
+  cheap for the kernel to drop.
+* File-backed inputs get `MADV_WILLNEED` before each job.
+* Freed sub-blocks are hole-punched, so disk use follows the live file set.
+
+**Guards** (for a memory cgroup shared with other jobs):
+* Before a job that grows anonymous memory, the run waits while `total_rss` of the
+  cgroup (all anonymous memory of all its processes) + the growth +
+  `FOLDS_HEADROOM` GB (default 1.5) is above the cgroup limit.
+* Before writing to the spill file, it waits while the free disk space is below the
+  write + `FOLDS_DISK_MIN` GB (default 2). A full disk would `SIGBUS` the mapping.
+
+Waits are logged (`guard: ...`).
+
+**Fast kernel.** Removing a low panel `x ≤ x0 = ⌊(N-1-a)/2⌋` has a window `(x, 2x]`
+(resp. its mirror) that meets the other side only in high panels, which are fixed for
+the sub-block. So its validity depends on the row alone (left) or the column alone
+(right). Rows of `pa` (the `(il-1)` sub-block) for valid `x ≤ x0` are added with a
+vectorized `u32` row add. For right removals `y ≤ x0`, only the valid ones are read,
+and validity is tested per entry only for the rest (N=38, `T=4`: 3 of 15 low panels per
+side, plus the high panels and the middle panel). This is 1.7× faster than the
+entry-by-entry kernel, and 32-row tiles gain another 13%. The fast kernel runs for
+words of ≤ 16 bits (`FOLDS_SLOW=1` turns it off). Triangle sub-blocks (0.8% of the
+entries) use the generic kernel.
+
+`folds check` runs `--sub` with `T = 0, 1, 4` (u64), `T = 3` (u8 CRT) and `T = 2`
+(u16 CRT) against all other paths for N ≤ 24. A spilled run with a tiny anonymous
+cap reproduces N = 2..27 with 12 u8 moduli.
+
 ## Validation (`folds check`)
 
 For both rules: permutation brute force from the literal definition (N ≤ 9), plain
@@ -207,10 +305,14 @@ These are fitted to data, not proven.
 | 35 | 14916356465581456801127844 | 7 × 313–755 s | u16 CRT, 9.1 GB, machine under load |
 | 36 | 162918548122441960881265188 | 13 × 438–2137 s | u8 CRT, `--blocks`, 6.23 GB |
 | 37 | 1435459602925600924848243286 | 13 × 1055–1511 s | u8 CRT, `--blocks`, 11.2 GB, `FOLDS_SPILL` |
+| 38 | 15884954204816776206921874682 | 14 × 602–2003 s | u8 CRT, `--sub 4`, 3.5 GB anon + 13.4 GB file, RSS ≤ 3.98 GB |
 
-**Largest N reached: 37.** Both new terms have a redundant CRT modulus that agrees
-(N=36 also a second one, mod 181), and both satisfy the mod-4 law a ≡ c (mod 4):
-a(36) ≡ 0 and a(37) ≡ 2.
+**Largest N reached: 38.** All new terms have a redundant CRT modulus that agrees
+(N=36 also a second one, mod 181; N=38 has two: the 12 moduli up to 193 already give
+the value, and both mod 191 and mod 181 agree). All satisfy the mod-4 law
+a ≡ c (mod 4): a(36) ≡ 0, a(37) ≡ 2, a(38) ≡ 2 (c(38) = 301305621655490 ≡ 2).
+The `--sub` path also reproduced a(36) mod 251 = 102 and a(37) mod 241 = 240, both
+with spilling (`results/n36_sub.log`, `results/n37_sub.log`).
 
 The stats files `results/stats/semi_N.txt` (N = 2..24) also contain `alive_sets` /
 `doomed_sets` (`g>0` and `f=0`; the `doomed_total` column reproduces the "dead ends"
@@ -235,13 +337,18 @@ for every word size, because memory latency dominates it.
   with the I/O overlapped. 13 runs took about 4.5 h. During one run, another job's
   process grew to 13 GB. The spilled pages were evicted and re-read from disk, and
   the run finished normally.
-* **N=38**: the peak is 24.2e9 words (24 GB in u8). This needs a machine with
-  ≥ 32 GB, or the spill mode with ≥ 25 GB of free disk and a disk fast enough for
-  ~50 GB of writes per run. At 128 MB/s that is ≥ 7 min of pure I/O per run, for each
-  of 13 runs. Time per run is ≈ 2.2× N=37 (~45 min unloaded), so the u8 runs take
-  about 10 h in total.
-* Going lower in memory needs a finer granularity than blocks. No block order can go
-  below max over blocks of (block + the blocks it reads), about 0.6 × the middle
-  layer. Freeing sub-blocks (rows of the predecessor blocks that are read in
-  lock-step, see `block.rs`) would only take N=37 from 11.2e9 to ≈ 11.0e9 words. The
-  large blocks next to the diagonal dominate.
+* **N=38** (`--sub 4`, u8, `FOLDS_SPILL`, `FOLDS_ANON=3.5`): `--blocks` would peak at
+  24.2e9 words, more than RAM + free disk here. Sub-blocks bring the live set down to
+  16.8e9 words, about one layer (layer 18). Of this, 3.5 GB stays anonymous and up to
+  13.4 GB lives in the spill file (≈ 40 GB written per run). The process RSS stayed
+  at ≤ 3.98 GB. Each run took 10–33 min (load 4–6), which is faster than the old
+  N=37 runs thanks to the row kernel. That is 14 runs, 4.6 h of run time in total. The memory
+  guard waited only once. Runs interrupted by container restarts were simply rerun.
+* **N=39**: `--sub 4` peaks at 35.6e9 words (layer 19 is 34.5e9; `T = 3, 5, 6` are no
+  better). In u8 that is ≈ 36 GB live. With 3.5 GB anonymous memory it needs ≈ 32 GB of
+  spill disk plus a margin, i.e. ≥ 36 GB free (this VM has 18), and ≈ 114 GB written
+  per run. Alternatively, a ≥ 48 GB machine could hold it all in RAM. Expect ≈ 2.2×
+  the N=38 time per run (30–70 min here). a(39) ≈ 2^97 fits in the 13 u8 moduli
+  (101 bits), plus one redundant modulus, so 14 runs.
+* Going below one layer would need recomputation. Every non-recomputing order of
+  this DAG seems to need about one full layer live (see "Sub-blocks").
