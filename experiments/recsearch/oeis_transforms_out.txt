@@ -1,0 +1,95 @@
+Family 3b: standard OEIS-style transforms of a(N).
+
+For each transform b we report: integrality, sign pattern, growth (log b(N)/b(N-1) at the
+end), the unfactored part after removing primes < 10^4 (as a smoothness indicator), and
+the outcome of the full P-recursive search of precursive.py (all (r,d) with K <= E-5).
+'Simpler' would mean: much slower growth, smooth factorizations, or a recurrence.
+
+a itself
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '2', '4', '10', '28', '96', '256', '1120', '4256', '17878']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.14, 2.3, 2.16, 2.39, 2.18]
+   digits of the part free of primes<1e4 (last 6 terms): [19, 22, 19, 20, 21, 23]
+   P-rec search: itself               L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=0
+Euler transform
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '3', '7', '20', '56', '186', '550', '2084', '7716', '31022']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.15, 2.28, 2.18, 2.37, 2.2]
+   digits of the part free of primes<1e4 (last 6 terms): [17, 24, 24, 22, 25, 27]
+   P-rec search: transform        L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+inverse Euler transform
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '1', '2', '5', '16', '59', '132', '749', '2774', '12048']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.12, 2.32, 2.15, 2.42, 2.15]
+   digits of the part free of primes<1e4 (last 6 terms): [21, 23, 23, 19, 25, 26]
+   P-rec search: Euler transform L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+Moebius transform
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '1', '3', '8', '27', '91', '255', '1110', '4252', '17849']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.14, 2.3, 2.16, 2.39, 2.18]
+   digits of the part free of primes<1e4 (last 6 terms): [16, 12, 19, 23, 21, 26]
+   P-rec search: transform      L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+binomial transform (a0=1)
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['2', '5', '14', '43', '144', '531', '2056', '8413', '36822', '171455']
+   numerator digits of last 3: [27, 28, 29];  log-ratios at end: [2.25, 2.27, 2.29, 2.31, 2.32]
+   digits of the part free of primes<1e4 (last 6 terms): [21, 15, 20, 20, 27, 25]
+   P-rec search: transform (a0=1) L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+inverse binomial (a0=1)
+   integral=True  signs=0+0+++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+   first terms: ['0', '1', '0', '3', '2', '23', '-74', '717', '-2132', '9803']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.26, 2.28, 2.21, 2.3, 2.31]
+   digits of the part free of primes<1e4 (last 6 terms): [17, 24, 21, 26, 26, 26]
+   P-rec search: binomial (a0=1) L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=2
+Stirling-2 transform
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '3', '11', '49', '259', '1589', '11023', '84353', '701803', '6316163']
+   numerator digits of last 3: [38, 39, 41];  log-ratios at end: [3.17, 3.19, 3.22, 3.24, 3.27]
+   digits of the part free of primes<1e4 (last 6 terms): [27, 26, 33, 34, 38, 40]
+   P-rec search: transform   L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+Stirling-1 transform
+   integral=True  signs=++0+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+   first terms: ['1', '1', '0', '2', '-8', '54', '-522', '6242', '-82364', '1150938']
+   numerator digits of last 3: [41, 43, 45];  log-ratios at end: [3.59, 3.61, 3.64, 3.67, 3.7]
+   digits of the part free of primes<1e4 (last 6 terms): [34, 33, 33, 33, 40, 41]
+   P-rec search: transform   L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+boustrophedon (a0=1)
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['2', '5', '15', '51', '199', '881', '4287', '23053', '137961', '899165']
+   numerator digits of last 3: [35, 36, 38];  log-ratios at end: [3.04, 3.07, 3.1, 3.13, 3.16]
+   digits of the part free of primes<1e4 (last 6 terms): [24, 29, 31, 35, 30, 35]
+   P-rec search: (a0=1)   L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+invert transform
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '3', '9', '29', '97', '345', '1181', '4465', '16997', '67399']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.16, 2.27, 2.19, 2.34, 2.21]
+   digits of the part free of primes<1e4 (last 6 terms): [20, 18, 25, 23, 26, 28]
+   P-rec search: transform       L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=0
+inverse invert transform
+   integral=True  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '1', '1', '3', '9', '39', '53', '543', '1805', '8213']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.1, 2.35, 2.13, 2.45, 2.12]
+   digits of the part free of primes<1e4 (last 6 terms): [22, 23, 21, 21, 25, 26]
+   P-rec search: invert transform L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=0
+OGF log(1+A)
+   integral=False  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '3/2', '7/3', '23/4', '81/5', '121/2', '925/7', '6015/8', '24973/9', '120563/10']
+   numerator digits of last 3: [26, 28, 29];  log-ratios at end: [2.12, 2.32, 2.15, 2.42, 2.15]
+   P-rec search: log(1+A)           L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+EGF log(1+A) (connected)
+   integral=True  signs=++00++-++--+--++-++--++-++--+--++-++-
+   first terms: ['1', '1', '0', '0', '2', '8', '-116', '388', '1288', '-14146']
+   numerator digits of last 3: [32, 35, 36];  log-ratios at end: [2.58, 3.85, 0.18, 6.08, 2.65]
+   digits of the part free of primes<1e4 (last 6 terms): [21, 27, 29, 23, 26, 32]
+   P-rec search: log(1+A) (connected) L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=1
+a(N)/a(N-1) numerators? -> a(N) - N a(N-1)
+   integral=True  signs=+0-----------------------------------
+   first terms: ['1', '0', '-2', '-6', '-22', '-72', '-416', '-928', '-5824', '-24682']
+   numerator digits of last 3: [26, 27, 28];  log-ratios at end: [2.4, 2.12, 2.39, 2.12, 2.51]
+   digits of the part free of primes<1e4 (last 6 terms): [20, 16, 23, 25, 19, 27]
+   P-rec search: numerators? -> a(N) - N a(N-1) L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+a(N)/2^(N-1) (vs recursive parity family)
+   integral=False  signs=+++++++++++++++++++++++++++++++++++++
+   first terms: ['1', '1', '1', '5/4', '7/4', '3', '4', '35/4', '133/8', '8939/256']
+   numerator digits of last 3: [25, 26, 27];  log-ratios at end: [1.45, 1.61, 1.47, 1.7, 1.48]
+   P-rec search: (vs recursive parity family) L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=0

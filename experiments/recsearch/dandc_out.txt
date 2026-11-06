@@ -1,0 +1,326 @@
+a(2n)=P(a(n-1),a(n),a(n+1)) deg<=2                             B=1             TB=1    K= 11 E= 17 spare=  6 rank= 11 Keff=11 nfit= 10 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1             TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,N           TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,N           TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,2^n         TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,2^n         TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,4^n         TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,4^n         TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,2^N         TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n),a(n+1)) deg<=2                                    B=1,2^N         TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1             TB=1    K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  1 excess=-2
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,N           TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,N           TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,N,N^2       TB=1    K= 10 E= 18 spare=  8 rank= 10 Keff=10 nfit=  9 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,N,N^2       TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=N^0..3        TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,2^n         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,2^n         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,4^n         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,4^n         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,N,2^n,N2^n  TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,2^n,4^n     TB=1    K= 10 E= 18 spare=  8 rank= 10 Keff=10 nfit=  9 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,2^n,4^n     TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,2^N         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n)=P(a(n),a(n+1)) deg 2 hom                                 B=1,2^N         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1             TB=1    K=  7 E= 17 spare= 10 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,N           TB=1    K= 13 E= 17 spare=  4 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,N           TB=same K= 14 E= 17 spare=  3 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,2^n         TB=1    K= 13 E= 17 spare=  4 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,2^n         TB=same K= 14 E= 17 spare=  3 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,4^n         TB=1    K= 13 E= 17 spare=  4 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,4^n         TB=same K= 14 E= 17 spare=  3 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,2^N         TB=1    K= 13 E= 17 spare=  4 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n)=P(a(n-1),a(n),a(n+1)) deg 2 hom                          B=1,2^N         TB=same K= 14 E= 17 spare=  3 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1             TB=1    K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,N           TB=1    K= 11 E= 18 spare=  7 rank= 11 Keff=11 nfit= 10 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,N           TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,2^n         TB=1    K= 11 E= 18 spare=  7 rank= 11 Keff=11 nfit= 10 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,2^n         TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,4^n         TB=1    K= 11 E= 18 spare=  7 rank= 11 Keff=11 nfit= 10 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,4^n         TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,2^N         TB=1    K= 11 E= 18 spare=  7 rank= 11 Keff=11 nfit= 10 excess=+0
+a(2n)=P(a(n)) deg<=4                                           B=1,2^N         TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n)=c a(n)^2                                                 B=1             TB=1    K=  2 E= 18 spare= 16 rank=  2 Keff=2 nfit=  1 excess=+0
+a(2n)=c a(n)^2                                                 B=1,N           TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n)=c a(n)^2                                                 B=1,N           TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n)=c a(n)^2                                                 B=1,N,N^2       TB=1    K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n)=c a(n)^2                                                 B=1,N,N^2       TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(2n)=c a(n)^2                                                 B=N^0..3        TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(2n)=c a(n)^2                                                 B=N^0..3        TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n)=c a(n)^2                                                 B=N^0..5        TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n)=c a(n)^2                                                 B=N^0..5        TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n)=c a(n)^2                                                 B=1,2^n         TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n)=c a(n)^2                                                 B=1,2^n         TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n)=c a(n)^2                                                 B=1,4^n         TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n)=c a(n)^2                                                 B=1,4^n         TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n)=c a(n)^2                                                 B=1,N,2^n,N2^n  TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(2n)=c a(n)^2                                                 B=1,N,2^n,N2^n  TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n)=c a(n)^2                                                 B=1,2^n,4^n     TB=1    K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n)=c a(n)^2                                                 B=1,2^n,4^n     TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(2n)=c a(n)^2                                                 B=1,2^N         TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n)=c a(n)^2                                                 B=1,2^N         TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1             TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,N           TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,N           TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,2^n         TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,2^n         TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,4^n         TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,4^n         TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,2^N         TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg<=2                                  B=1,2^N         TB=same K= 14 E= 18 spare=  4 rank= 14 Keff=14 nfit= 13 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1             TB=1    K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  1 excess=-2
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,N           TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,N           TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,N,N^2       TB=1    K= 10 E= 18 spare=  8 rank= 10 Keff=10 nfit=  9 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,N,N^2       TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=N^0..3        TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,2^n         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,2^n         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,4^n         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,4^n         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,N,2^n,N2^n  TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,2^n,4^n     TB=1    K= 10 E= 18 spare=  8 rank= 10 Keff=10 nfit=  9 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,2^n,4^n     TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,2^N         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n+1)=Q(a(n),a(n+1)) deg 2 hom                               B=1,2^N         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n+1)=Q(a(n-1),a(n),a(n+1),a(n+2)) deg 2 hom                 B=1             TB=1    K= 11 E= 17 spare=  6 rank= 11 Keff=11 nfit= 10 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1             TB=1    K=  2 E= 18 spare= 16 rank=  2 Keff=2 nfit=  1 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,N           TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,N           TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,N,N^2       TB=1    K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,N,N^2       TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=N^0..3        TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=N^0..3        TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=N^0..5        TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=N^0..5        TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,2^n         TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,2^n         TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,4^n         TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,4^n         TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,N,2^n,N2^n  TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,N,2^n,N2^n  TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,2^n,4^n     TB=1    K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,2^n,4^n     TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,2^N         TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(2n+1)=c a(n)a(n+1)                                           B=1,2^N         TB=same K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1             TB=1    K=  3 E= 36 spare= 33 rank=  3 Keff=3 nfit=  2 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,N           TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,N           TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,N,N^2       TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,N,N^2       TB=same K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=N^0..3        TB=1    K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=N^0..3        TB=same K= 12 E= 36 spare= 24 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=N^0..5        TB=1    K= 13 E= 36 spare= 23 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=N^0..5        TB=same K= 18 E= 36 spare= 18 rank= 18 Keff=18 nfit= 17 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,2^n         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,2^n         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,4^n         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,4^n         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,N,2^n,N2^n  TB=1    K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,N,2^n,N2^n  TB=same K= 12 E= 36 spare= 24 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,2^n,4^n     TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,2^n,4^n     TB=same K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,2^N         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)^2                                       B=1,2^N         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1             TB=1    K=  3 E= 36 spare= 33 rank=  3 Keff=3 nfit=  2 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,N           TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  2 excess=-2
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,N           TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,N,N^2       TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,N,N^2       TB=same K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=N^0..3        TB=1    K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=N^0..3        TB=same K= 12 E= 36 spare= 24 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=N^0..5        TB=1    K= 13 E= 36 spare= 23 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=N^0..5        TB=same K= 18 E= 36 spare= 18 rank= 18 Keff=18 nfit= 17 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  5 excess=+1
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  6 excess=+1
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,4^n         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  5 excess=+1
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,4^n         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  6 excess=+1
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,N,2^n,N2^n  TB=1    K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,N,2^n,N2^n  TB=same K= 12 E= 36 spare= 24 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n,4^n     TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  7 excess=+1
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n,4^n     TB=same K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  9 excess=+1
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^N         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  2 excess=-2
+a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^N         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1             TB=1    K=  4 E= 36 spare= 32 rank=  4 Keff=4 nfit=  2 excess=-1
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,N           TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,N           TB=same K=  8 E= 36 spare= 28 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,N,N^2       TB=1    K= 10 E= 36 spare= 26 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,N,N^2       TB=same K= 12 E= 36 spare= 24 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=N^0..3        TB=1    K= 13 E= 36 spare= 23 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=N^0..3        TB=same K= 16 E= 36 spare= 20 rank= 16 Keff=16 nfit= 15 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=N^0..5        TB=1    K= 19 E= 36 spare= 17 rank= 19 Keff=19 nfit= 18 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=N^0..5        TB=same K= 24 E= 36 spare= 12 rank= 24 Keff=24 nfit= 23 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,2^n         TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,2^n         TB=same K=  8 E= 36 spare= 28 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,4^n         TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,4^n         TB=same K=  8 E= 36 spare= 28 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,N,2^n,N2^n  TB=1    K= 13 E= 36 spare= 23 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,N,2^n,N2^n  TB=same K= 16 E= 36 spare= 20 rank= 16 Keff=16 nfit= 15 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,2^n,4^n     TB=1    K= 10 E= 36 spare= 26 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,2^n,4^n     TB=same K= 12 E= 36 spare= 24 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,2^N         TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2+ga a(n)a(N-n)                         B=1,2^N         TB=same K=  8 E= 36 spare= 28 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1             TB=1    K=  4 E= 35 spare= 31 rank=  4 Keff=4 nfit=  1 excess=-2
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,N           TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,N           TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,N,N^2       TB=1    K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,N,N^2       TB=same K= 12 E= 35 spare= 23 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=N^0..3        TB=1    K= 13 E= 35 spare= 22 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=N^0..3        TB=same K= 16 E= 35 spare= 19 rank= 16 Keff=16 nfit= 15 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=N^0..5        TB=1    K= 19 E= 35 spare= 16 rank= 19 Keff=19 nfit= 18 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=N^0..5        TB=same K= 24 E= 35 spare= 11 rank= 24 Keff=24 nfit= 23 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,2^n         TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,2^n         TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,4^n         TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,4^n         TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,N,2^n,N2^n  TB=1    K= 13 E= 35 spare= 22 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,N,2^n,N2^n  TB=same K= 16 E= 35 spare= 19 rank= 16 Keff=16 nfit= 15 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,2^n,4^n     TB=1    K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,2^n,4^n     TB=same K= 12 E= 35 spare= 23 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,2^N         TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)                         B=1,2^N         TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1             TB=1    K=  5 E= 35 spare= 30 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,N           TB=1    K=  9 E= 35 spare= 26 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,N           TB=same K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,N,N^2       TB=1    K= 13 E= 35 spare= 22 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,N,N^2       TB=same K= 15 E= 35 spare= 20 rank= 15 Keff=15 nfit= 14 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=N^0..3        TB=1    K= 17 E= 35 spare= 18 rank= 17 Keff=17 nfit= 16 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=N^0..3        TB=same K= 20 E= 35 spare= 15 rank= 20 Keff=20 nfit= 19 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=N^0..5        TB=1    K= 25 E= 35 spare= 10 rank= 25 Keff=25 nfit= 24 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=N^0..5        TB=same K= 30 E= 35 spare=  5 rank= 30 Keff=30 nfit= 29 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,2^n         TB=1    K=  9 E= 35 spare= 26 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,2^n         TB=same K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,4^n         TB=1    K=  9 E= 35 spare= 26 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,4^n         TB=same K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,N,2^n,N2^n  TB=1    K= 17 E= 35 spare= 18 rank= 17 Keff=17 nfit= 16 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,N,2^n,N2^n  TB=same K= 20 E= 35 spare= 15 rank= 20 Keff=20 nfit= 19 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,2^n,4^n     TB=1    K= 13 E= 35 spare= 22 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,2^n,4^n     TB=same K= 15 E= 35 spare= 20 rank= 15 Keff=15 nfit= 14 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,2^N         TB=1    K=  9 E= 35 spare= 26 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(n)^2               B=1,2^N         TB=same K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1             TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  1 excess=-1
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,N           TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,N           TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,N,N^2       TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,N,N^2       TB=same K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=N^0..3        TB=1    K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=N^0..3        TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=N^0..5        TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,2^n         TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,2^n         TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,4^n         TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,4^n         TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,N,2^n,N2^n  TB=1    K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,N,2^n,N2^n  TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,2^n,4^n     TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,2^n,4^n     TB=same K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,2^N         TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [even]                            B=1,2^N         TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1             TB=1    K=  3 E= 18 spare= 15 rank=  3 Keff=3 nfit=  2 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,N           TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,N           TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,N,N^2       TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,N,N^2       TB=same K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=N^0..3        TB=1    K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=N^0..3        TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=N^0..5        TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,2^n         TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,2^n         TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,4^n         TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,4^n         TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,N,2^n,N2^n  TB=1    K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,N,2^n,N2^n  TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,2^n,4^n     TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,2^n,4^n     TB=same K=  9 E= 18 spare=  9 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,2^N         TB=1    K=  5 E= 18 spare= 13 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=1,2^N         TB=same K=  6 E= 18 spare= 12 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1             TB=1    K=  4 E= 17 spare= 13 rank=  4 Keff=4 nfit=  3 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,N           TB=1    K=  7 E= 17 spare= 10 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,N           TB=same K=  8 E= 17 spare=  9 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,N,N^2       TB=1    K= 10 E= 17 spare=  7 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,N,N^2       TB=same K= 12 E= 17 spare=  5 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=N^0..3        TB=1    K= 13 E= 17 spare=  4 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,2^n         TB=1    K=  7 E= 17 spare= 10 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,2^n         TB=same K=  8 E= 17 spare=  9 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,4^n         TB=1    K=  7 E= 17 spare= 10 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,4^n         TB=same K=  8 E= 17 spare=  9 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,N,2^n,N2^n  TB=1    K= 13 E= 17 spare=  4 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,2^n,4^n     TB=1    K= 10 E= 17 spare=  7 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,2^n,4^n     TB=same K= 12 E= 17 spare=  5 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,2^N         TB=1    K=  7 E= 17 spare= 10 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [even]                  B=1,2^N         TB=same K=  8 E= 17 spare=  9 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1             TB=1    K=  4 E= 18 spare= 14 rank=  4 Keff=4 nfit=  3 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,N           TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,N           TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,N,N^2       TB=1    K= 10 E= 18 spare=  8 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,N,N^2       TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=N^0..3        TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,2^n         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,2^n         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,4^n         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,4^n         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,N,2^n,N2^n  TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,2^n,4^n     TB=1    K= 10 E= 18 spare=  8 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,2^n,4^n     TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,2^N         TB=1    K=  7 E= 18 spare= 11 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n) [odd]                   B=1,2^N         TB=same K=  8 E= 18 spare= 10 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1             TB=1    K=  4 E= 35 spare= 31 rank=  4 Keff=4 nfit=  1 excess=-2
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,N           TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,N           TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,N,N^2       TB=1    K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,N,N^2       TB=same K= 12 E= 35 spare= 23 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=N^0..3        TB=1    K= 13 E= 35 spare= 22 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=N^0..3        TB=same K= 16 E= 35 spare= 19 rank= 16 Keff=16 nfit= 15 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=N^0..5        TB=1    K= 19 E= 35 spare= 16 rank= 19 Keff=19 nfit= 18 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=N^0..5        TB=same K= 24 E= 35 spare= 11 rank= 24 Keff=24 nfit= 23 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,2^n         TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,2^n         TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,4^n         TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,4^n         TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,N,2^n,N2^n  TB=1    K= 13 E= 35 spare= 22 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,N,2^n,N2^n  TB=same K= 16 E= 35 spare= 19 rank= 16 Keff=16 nfit= 15 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,2^n,4^n     TB=1    K= 10 E= 35 spare= 25 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,2^n,4^n     TB=same K= 12 E= 35 spare= 23 rank= 12 Keff=12 nfit= 11 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,2^N         TB=1    K=  7 E= 35 spare= 28 rank=  7 Keff=7 nfit=  6 excess=+0
+a(N)=al a(N-1)+be a(n)^2 a(N-n)^2/a(N-1) style: a(N)a(N-1)=al a(N-1)^2+be (a(n)a(N-n))^2 B=1,2^N         TB=same K=  8 E= 35 spare= 27 rank=  8 Keff=8 nfit=  7 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1             TB=1    K=  3 E=  9 spare=  6 rank=  3 Keff=3 nfit=  2 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,N           TB=1    K=  5 E=  9 spare=  4 rank=  5 Keff=5 nfit=  4 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,N           TB=same K=  6 E=  9 spare=  3 rank=  6 Keff=6 nfit=  5 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,2^n         TB=1    K=  5 E=  9 spare=  4 rank=  5 Keff=5 nfit=  4 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,2^n         TB=same K=  6 E=  9 spare=  3 rank=  6 Keff=6 nfit=  5 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,4^n         TB=1    K=  5 E=  9 spare=  4 rank=  5 Keff=5 nfit=  4 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,4^n         TB=same K=  6 E=  9 spare=  3 rank=  6 Keff=6 nfit=  5 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,2^N         TB=1    K=  5 E=  9 spare=  4 rank=  5 Keff=5 nfit=  4 excess=+0
+a(4m)=P(a(m)) deg 4 hom + a(2m)^2                              B=1,2^N         TB=same K=  6 E=  9 spare=  3 rank=  6 Keff=6 nfit=  5 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1             TB=1    K=  5 E= 34 spare= 29 rank=  5 Keff=5 nfit=  4 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,N           TB=1    K=  9 E= 34 spare= 25 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,N           TB=same K= 10 E= 34 spare= 24 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,N,N^2       TB=1    K= 13 E= 34 spare= 21 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,N,N^2       TB=same K= 15 E= 34 spare= 19 rank= 15 Keff=15 nfit= 14 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=N^0..3        TB=1    K= 17 E= 34 spare= 17 rank= 17 Keff=17 nfit= 16 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=N^0..3        TB=same K= 20 E= 34 spare= 14 rank= 20 Keff=20 nfit= 19 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=N^0..5        TB=1    K= 25 E= 34 spare=  9 rank= 25 Keff=25 nfit= 24 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=N^0..5        TB=same K= 30 E= 34 spare=  4 rank= 30 Keff=30 nfit= 29 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,2^n         TB=1    K=  9 E= 34 spare= 25 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,2^n         TB=same K= 10 E= 34 spare= 24 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,4^n         TB=1    K=  9 E= 34 spare= 25 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,4^n         TB=same K= 10 E= 34 spare= 24 rank= 10 Keff=10 nfit=  9 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,N,2^n,N2^n  TB=1    K= 17 E= 34 spare= 17 rank= 17 Keff=17 nfit= 16 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,N,2^n,N2^n  TB=same K= 20 E= 34 spare= 14 rank= 20 Keff=20 nfit= 19 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,2^n,4^n     TB=1    K= 13 E= 34 spare= 21 rank= 13 Keff=13 nfit= 12 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,2^n,4^n     TB=same K= 15 E= 34 spare= 19 rank= 15 Keff=15 nfit= 14 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,2^N         TB=1    K=  9 E= 34 spare= 25 rank=  9 Keff=9 nfit=  8 excess=+0
+a(N)=al a(N-1)+be a(N-2)+ga a(n)a(N-n)+de a(q)^4               B=1,2^N         TB=same K= 10 E= 34 spare= 24 rank= 10 Keff=10 nfit=  9 excess=+0
+
+largest excesses:
+  a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,4^n         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  6 excess=+1
+  a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,4^n         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  5 excess=+1
+  a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n,4^n     TB=same K=  9 E= 36 spare= 27 rank=  9 Keff=9 nfit=  9 excess=+1
+  a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n,4^n     TB=1    K=  7 E= 36 spare= 29 rank=  7 Keff=7 nfit=  7 excess=+1
+  a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n         TB=same K=  6 E= 36 spare= 30 rank=  6 Keff=6 nfit=  6 excess=+1
+  a(N)=al a(N-1)+be a(n)a(N-n)                                   B=1,2^n         TB=1    K=  5 E= 36 spare= 31 rank=  5 Keff=5 nfit=  5 excess=+1
+  a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=N^0..5        TB=1    K= 13 E= 18 spare=  5 rank= 13 Keff=13 nfit= 12 excess=+0
+  a(N)=al a(N-1)+be a(n)a(N-n) [odd]                             B=N^0..3        TB=same K= 12 E= 18 spare=  6 rank= 12 Keff=12 nfit= 11 excess=+0
+
+314 ansatze run; genuine relations: see GENUINE lines (none if absent)
