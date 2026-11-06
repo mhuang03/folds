@@ -1,0 +1,165 @@
+Live 3-prefixes: the 3-prefix analogue of Conjecture C
+=====================================================
+
+Notation as in experiments/live2 and experiments/adjacent.  Panels [N] = {1..N},
+reach(m) = min(m-1, N-m), arms L(m) = [m-reach, m-1], R(m) = [m+1, m+reach].  A step (S, m) is
+valid iff |S n L(m)| = |S n R(m)|.  A set D is CO-REACHABLE if [N] \ D has a semi-symmetric
+ordering from scratch (Lean `Live2.CoReach`); a valid prefix is live iff its set is
+co-reachable (`extends_iff_coReach`).  I_X(m) = |X n L(m)| - |X n R(m)|.
+"Lean" refers to Folds/Live3p.lean (no sorry, no native_decide; kernel checks by
+`decide +kernel` only).
+
+STATUS
+  CLAIM (3-prefix Conjecture C).  For N = 6 and N >= 8 a valid 3-prefix is live iff its set is
+  not one of the DEAD 3-SETS
+      D_j = {1, 2j, 2j+1},  its mirror  {N-2j, N+1-2j, N}       (2 <= j, 4j <= N+3),
+      and, for odd N >= 7, the four 3-subsets of {1, 2, N-1, N}.
+  (Lean: `Dead3 N S`.  For N <= 5 the same list is exact as well; for N = 7 the set {1,4,7}
+  through the sporadic dead pair {1,7} is dead in addition.)
+
+  * Dead direction: PROVEN for every N (Lean `not_extends_of_dead3`, `not_extends3_of_dead`,
+    from Live.lean's `not_extends_block(_mirror)`, `not_extends_corner`).
+  * Full iff: PROVEN for every N <= 30, N != 7 (Lean `extends3_iff_le_30`), by Theorem G in
+    closed form plus kernel-checked witness orderings for the remaining sets.
+  * All N: PROVEN for the sets satisfying the closed form F3S of Theorem G (section 2; Lean
+    `coReach3_of_F`, `extends3_of_F`): about 36% of the valid non-dead 3-sets at N = 30-44.
+  * Numerically: the claim holds for every N <= 44 (section 4; classify.txt).
+  * OPEN for N > 30: the "wide" 3-sets (section 5).  About half of them reduce to smaller
+    strips through copies whose transfers are already proven in Lean for arbitrary sets
+    (transfer.txt), the rest needs new ideas, as the wide pairs did for Conjecture C.
+
+
+1. Valid 3-prefixes
+-------------------
+(x, y) is valid iff x is not in the window of y, i.e. (y in the left half) x >= 2y, or the
+mirror image.  With y in the left half (reach y - 1, window [1, 2y-1]) the third panel z is
+valid after {x, y} in exactly these cases (I_{x,y}(z) = 0):
+   A  z <= y/2 (neither x nor y in the window of z);
+   B  y < z < x <= 2z - 1, z in the left half (one panel on each arm);
+   D  z in the right half, z < x, 2z - N <= y (y on the left arm, x on the right arm);
+   E  z in the right half, 2z - N > x (both left of the window).
+So valid 3-sets are 2-parameter families inside the O(N^3) triples: N = 30: 2790 sets
+(5900 prefixes), N = 44: 8890 sets.
+
+
+2. Theorem G for 3-sets in closed form
+--------------------------------------
+THEOREM G (Adjacent.lean `coReach_of_inward`).  If, for some centre c, every panel m outside
+B satisfies  m < c -> I_B(m) <= 0  and  m > c -> I_B(m) >= 0,  then B is co-reachable.
+Equivalently: every "negative" panel (I_B < 0) outside B lies left of every "positive" one.
+
+For B = {a < b < c}, the imbalance is (left half 2m <= N+1: L = [1, m-1], R = [m+1, 2m-1];
+right half: L = [2m-N, m-1], R = [m+1, N]):
+   left half :  m < a: -#{B <= 2m-1} <= 0;   a < m < b: 1 - [b <= 2m-1] - [c <= 2m-1];
+                b < m < c: 2 - [c <= 2m-1] > 0;   m > c: 3.
+   right half:  m < a: -3;   a < m < b: [a >= 2m-N] - 2 < 0;
+                b < m < c: [a >= 2m-N] + [b >= 2m-N] - 1;   m > c: #{B >= 2m-N} >= 0.
+Assume 2b <= N + 1 (b in the left half; otherwise apply everything to the mirror image, which
+swaps negative and positive and reverses the order, so the criterion is mirror invariant).
+Then the negative panels are
+   N1 = [ceil((a+1)/2), a-1]                (always left of every positive panel, which are > a),
+   N2 = [max(a+1, ceil((c+1)/2)), b-1]      (nonempty iff a + 2 <= b and c + 3 <= 2b),
+   N3 = {m in (b, c) : 2m >= N + b + 1}     (nonempty iff b + 2 <= c and 2c >= N + b + 3),
+and the positive panels are
+   P1 = [a+1, floor(b/2)]                   (nonempty iff 2a + 2 <= b),
+   P2 = (b, c) n (left half  or  2m <= N + a)   (nonempty iff b + 2 <= c and 2b + 2 <= N + a),
+   P3 = {m > c : 2m - N <= c}.
+The only possible inversions are N2 > P1, N3 > P1 and N3 > P2 (P3 > c > everything negative).
+Hence:
+
+THEOREM 1 (closed form).  For a < b < c, 2b <= N + 1, B = {a, b, c} satisfies the criterion
+of Theorem G iff
+   F3(N,a,b,c):  not (2a + 2 <= b and c + 3 <= 2b)
+             and not (b + 2 <= c and N + b + 3 <= 2c and (2a + 2 <= b or 2b + 2 <= N + a)).
+A centre that works: c if N3 is nonempty, else b if N2 is nonempty, else a.
+For 2b > N + 1 the criterion is F3 of the mirror image (N+1-c, N+1-b, N+1-a): `F3S`.
+[Lean: `inward3` (with the three centres, by omega on explicit arm counts `leftCount3`,
+`rightCount3`), `coReach3_of_F` (both orientations, via `coReach_mirror`).  inward3.py checks
+F3S <-> criterion for some centre, and the centre choice, for all 3-sets, N <= 50.]
+
+Coverage: F3S holds for 1000 of the 2778 non-dead valid sets at N = 30, 2146 of 6646 at
+N = 40, 2786 of 8870 at N = 44 (classify.txt, column inwardG): about a third, slowly
+decreasing.  So "most 3-sets are inward" is false; Theorem G is only the start.
+
+THEOREM 2 (Theorem G after valid steps).  If m is a valid step after the background D (i.e.
+I_D(m) = 0) and D u {m} is co-reachable, then D is co-reachable.  (Order [N] \ (D u {m}) from
+scratch, then m: in the full sequence  l, m, D  the step m is valid after l iff after D,
+Live4 `semiStep_compl`.)  [Lean: `coReach_of_step`.]
+With Theorem G for D u {m}: of the valid non-dead sets failing F3S, a single extra step makes
+the criterion hold for about 60% (N = 40: 2604 of 4500 non-inward sets; two or three steps:
+another 1016; live3k.c, region.txt).  The panels 1 and N (reach 0) are always valid steps,
+but adding them helps only ~30% of those sets (endstep.py).
+
+
+3. Dead sets (all N)
+--------------------
+D_j (Live.lean `dead_block`): the first panel m of G = [2, 2j-1] to be bisected sees exactly
+one bisected panel (1) on its left arm and 0 (m <= j) or >= 2 (2j, 2j+1; m > j) on its right
+arm; this kills every prefix containing 1, 2j, 2j+1 and nothing of G, when 4j <= N + 3.
+Corners (odd N >= 7): {1,2,N}, {1,N-1,N} admit no step; {1,2,N-1} only N, then only the middle
+panel, then nothing; {2,N-1,N} is the mirror.  [Lean: `Dead3`, `not_extends_of_dead3`,
+`dead3B` / `dead3_of_dead3B` (Boolean form), `not_extends3_of_dead`.]
+
+
+4. Computation (C, 1 core, < 200 MB)
+------------------------------------
+live3.c N: enumerates valid 3-prefixes and their sets, marks the dead list, the Theorem G
+criterion, and for every other set searches a completion after the background B (DFS with
+memo of failed states, five centre-ordered candidate orders); no full 2^N DP is needed, since
+the dead sets are proven dead.  classify.sh 4 44 > classify.txt (about 10 minutes):
+   * for every N in 4..44 every valid non-dead 3-set has a completion ("unresolved=0"),
+     except N = 7, {1,4,7} (dead, through the dead pair {1,7});
+   * the number of dead 3-prefixes matches FINDINGS.txt for N <= 31 and continues the formula
+     N/2, (N-6)/2, (N+19)/2, (N+25)/2 for N = 0, 2, 1, 3 mod 4 up to N = 44.
+So the dead list is confirmed (and complete) for N <= 44.
+
+Certificates (Lean `extends3_iff_le_30`).  gen.c N prints, for every valid non-dead set
+failing F3S, one ordering of [N] \ B from scratch (the DFS completion read backwards,
+re-verified), one per mirror pair; mklean.py packs it into a table of
+(a + 32b + 1024c, base-64 packed ordering).  Lean checks
+   tblOK N tbl : every entry is a semi-symmetric ordering of [N] \ {a,b,c} (`witB3`, the
+                 bitmask checker of Live7);
+   coverX N M x: for every valid prefix (x, y, z) (validity in closed form, `step2B`) the sorted
+                 set is dead (`dead3B`), satisfies F3S (`f3SB`), or it or its mirror image is a
+                 table key (bit of M);
+split into small `decide +kernel` goals (chunks of 60 entries; one goal per x), because one
+big goal exceeds 3 GB in the kernel; the section is elaborated with Elab.async false
+(sequential kernel checks), which keeps the whole file under 3 GB.  Soundness: `cert_sound`, `extends3_iff_of_cert`.
+Sizes: N = 30: 948 orderings; N <= 30 in total about 9,000.  Checking time grows like N^3.6
+(N = 24: 50 s, N = 30: 113 s), which is why the bound stops at 30.
+
+
+5. The wide 3-sets (what remains for all N)
+-------------------------------------------
+The sets that are not inward even after <= 3 valid extra steps are "wide": for N = 20..40
+they all have a <= N/5 and c >= N + 1 - N/5 (region.txt: a <= 3, 4, 5, 6, 7, 8 and
+N + 1 - c <= the same, for N = 20, 24, ..., 40), e.g. {1, 2, c} with c >= (N+6)/2,
+{1, b, c} with c close to N.  They are the 3-set analogue of the wide mixed-parity pairs of
+Conjecture C (which needed ThinCover: Beatty and centred copies, LP-certified slices).
+
+Transfers already proven in Lean for ARBITRARY sets D: centred Beatty copies Z(N, p)
+(Live7 `coReach_z_transfer`), residue classes with a chain (Live2 `coReach_mod`, q <= 12),
+multiples of q when q | N + 1 (Adjacent `coReach_mult_transfer`), the mirror.
+transfer.py: of the canonical (a + c <= N + 1) valid non-dead sets failing F3S, the fraction
+whose image under one of these copies has a co-reachable preimage:
+   N = 12: 15 of 43;  N = 20: 110 of 255;  N = 30: 501 of 948;  N = 34: 763 of 1415.
+The families {1, 2, c} and {1, 3, c} (c large) never lie in a copy (1 and 2 are adjacent and
+both in Z(N, p) only for p >= N/2), so the corner of the triangle needs another argument, as
+the corner pairs {1, N}, {3, N-2}, {5, N-4} did for 2-sets.
+
+ROUTE to all N (not done): (i) Theorem 1 + Theorem 2 with explicit one-step families (one
+extra step covers most of the non-inward sets, but the extra step depends on the set);
+(ii) copy transfers for the bulk, by induction on N, as in Live8/CoverAll for pairs;
+(iii) a separate argument for the corner families {1, 2, c}, {1, 3, c}, {2, 4, c}, ... with
+c > N - O(N).
+
+
+Files
+-----
+  live3.c       classification check (classify.sh -> classify.txt, N = 4..44)
+  live3k.c      (from mkk.py) also: Theorem G after <= k extra valid steps (region.sh -> region.txt)
+  inward3.py    Theorem 1 (closed form of Theorem G for 3-sets) checked, N <= 50
+  endstep.py    Theorem G after adding the end panels 1 and/or N
+  transfer.py   reduction through Z copies / residue classes (transfer.txt)
+  gen.c, mklean.py   certificates for Folds/Live3p.lean (N <= 30)
+  trylean.sh, tryfile.sh, cut.py   timing / memory tests of the certificates
