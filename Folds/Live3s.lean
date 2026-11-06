@@ -472,5 +472,77 @@ theorem coReach_one_two_odd3 {N c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good
     (by simp [phiEm, phiE]; omega) (by omega) (by omega) hD (fun j _ _ hj => by
       simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hj; exact ⟨by omega, hj.2.2⟩)
 
+/-! ## The enlarged rules and the reduction -/
+
+/-- The closed-form families of `{1, 2, c}` (Live3r's `coReach_one_two_odd` and the four
+above). -/
+def OneTwo (N c : Nat) : Prop :=
+  (N % 4 = 1 ∧ 17 ≤ N ∧ c % 2 = 1 ∧ 7 ≤ c ∧ c + 4 ≤ N) ∨
+  (N % 2 = 0 ∧ 16 ≤ N ∧ c % 2 = 1 ∧ 7 ≤ c ∧ c < N ∧ (N % 4 = 0 ∨ c + 5 ≤ N)) ∨
+  (N % 2 = 0 ∧ 16 ≤ N ∧ c % 2 = 0 ∧ 8 ≤ c ∧ c + 2 ≤ N ∧ (N % 4 = 0 ∨ c + 6 ≤ N)) ∨
+  (N % 4 = 3 ∧ 19 ≤ N ∧ c % 2 = 0 ∧ 8 ≤ c ∧ c + 5 ≤ N) ∨
+  (N % 4 = 3 ∧ c % 4 = 1 ∧ 13 ≤ c ∧ c + 6 ≤ N)
+
+theorem coReach_oneTwo {N c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q) (h : OneTwo N c) :
+    CoReach N {1, 2, c} := by
+  rcases h with ⟨h1, h2, h3, h4, h5⟩ | ⟨h1, h2, h3, h4, h5, h6⟩ | ⟨h1, h2, h3, h4, h5, h6⟩ |
+    ⟨h1, h2, h3, h4, h5⟩ | ⟨h1, h2, h3, h4⟩
+  · exact coReach_one_two_odd IH h1 h2 h3 h4 h5
+  · exact coReach_one_two_evenN IH h1 h2 h3 h4 h5 h6
+  · exact coReach_one_two_evenN_even IH h1 h2 h3 h4 h5 h6
+  · exact coReach_one_two_even3 IH h1 h2 h3 h4 h5
+  · exact coReach_one_two_odd3 IH h1 h2 h3 h4
+
+/-- `Covered3R` (Live3r), or `{1, 2, c}` in a closed-form family, or its mirror image
+`{a, N - 1, N}` with `{1, 2, N + 1 - a}` in a closed-form family. -/
+def Covered3T (N a b c : Nat) : Prop :=
+  Covered3R N a b c ∨ (a = 1 ∧ b = 2 ∧ OneTwo N c) ∨ (b = N - 1 ∧ c = N ∧ OneTwo N (N + 1 - a))
+
+theorem coReach_of_covered3T {N a b c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
+    (ha : 1 ≤ a) (hab : a < b) (hbc : b < c) (hcN : c ≤ N) (h : Covered3T N a b c) :
+    CoReach N {a, b, c} := by
+  rcases h with h | ⟨rfl, rfl, h⟩ | ⟨hb, hc, h⟩
+  · exact coReach_of_covered3R IH ha hab hbc hcN h
+  · exact coReach_oneTwo IH h
+  · rw [hb, hc]
+    refine coReach3_of_mirror (by omega) (by omega) le_rfl ?_
+    rw [show N + 1 - N = 1 by omega, show N + 1 - (N - 1) = 2 by omega]
+    exact coReach_oneTwo IH h
+
+/-- **The residual statement with the closed-form families removed**: every valid, non-dead
+sorted triple of `[N]` not settled by `Covered3T` is co-reachable. -/
+def Residual3T (N : Nat) : Prop :=
+  ∀ a b c, 1 ≤ a → a < b → b < c → c ≤ N → valid3B N a b c = true → dead3B N a b c = false →
+    ¬ Covered3T N a b c → CoReach N {a, b, c}
+
+/-- Given the smaller strips, `Residual3T N` implies `Residual3R N`. -/
+theorem residual3R_of_residual3T {N : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
+    (h : Residual3T N) : Residual3R N := by
+  intro a b c ha hab hbc hcN hv hd _
+  by_cases hc : Covered3T N a b c
+  · exact coReach_of_covered3T IH ha hab hbc hcN hc
+  · exact h a b c ha hab hbc hcN hv hd hc
+
+/-- **Reduction**: the 3-prefix property for all `N ≠ 7` from the base strips and
+`Residual3T` above them. -/
+theorem good3_of_residual3T {M : Nat} (hbase : ∀ N, N ≤ M → N ≠ 7 → Good3 N)
+    (hres : ∀ N, M < N → Residual3T N) : ∀ N, N ≠ 7 → Good3 N := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro h7
+    by_cases hN : N ≤ M
+    · exact hbase N hN h7
+    intro a b c ha hab hbc hcN hv hd
+    by_cases hc : Covered3T N a b c
+    · exact coReach_of_covered3T ih ha hab hbc hcN hc
+    · exact hres N (by omega) a b c ha hab hbc hcN hv hd hc
+
+/-- `Residual3R N` for all `N > M` (the hypothesis of `Live3r.residual3_all_of_residual3R`)
+from the base strips and `Residual3T N` for all `N > M`. -/
+theorem residual3R_all_of_residual3T {M : Nat} (hbase : ∀ N, N ≤ M → N ≠ 7 → Good3 N)
+    (hres : ∀ N, M < N → Residual3T N) : ∀ N, M < N → Residual3R N := fun N hN =>
+  residual3R_of_residual3T (fun q _ hq7 => good3_of_residual3T hbase hres q hq7) (hres N hN)
+
 end Live3s
 end Folds
