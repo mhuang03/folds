@@ -22,7 +22,7 @@ SUMMARY
     Only the first three panels at each edge deviate strongly (ratio to Wallis 0.60, 0.91,
     0.86 at m = 1, 2, 3; N = 30).  N*F(N,1)/a(N) -> 0 slowly (0.37 at N = 12, 0.20 at N = 30).
  3. SYMMETRIC CASE (A003407): exactly half of the 3-AP-free sequences start with an odd panel,
-    for EVERY N <= 28, odd N included.  [conj, data N <= 28]  For odd N the k-th panel is
+    for EVERY N <= 30, odd N included.  [conj, data N <= 30]  For odd N the k-th panel is
     parity-balanced for every step k <= (N+1)/4 (N <= 11, brute force).  In the semi case
     this balance fails for every odd N >= 7.  sym F(N,1) and F(N,ceil(N/2)) are OEIS
     A296530, A296531 (consistency check of the sym data).
@@ -43,7 +43,7 @@ SUMMARY
 Files
  common.py      loaders: a, s (semi_counts.txt), c (../arith), `folds stats` outputs
  runstats.sh    `folds stats semi|sym N` -> data/stats_N.txt (semi 25..30), data/symstats_N.txt
-                (sym 2..28).  semi N <= 24 are in ../../rust/results/stats/.  N = 30 takes ~1 min.
+                (sym 2..30).  semi N <= 24 are in ../../rust/results/stats/.  N = 30 takes ~1 min.
  triangles.py   tables of section 1 (data/tri_semi.txt, data/tri_sym.txt)
  firstlaw.py    the first-panel law vs the Wallis heuristic (data/firstlaw_out.txt)
  parity_pos.py  brute force: parity balance of the k-th panel, sym and semi, N <= 11
@@ -113,7 +113,7 @@ Files
 
 1.4 Symmetric analogue (data/tri_sym.txt; sym F rows in data/symstats_N.txt).
  * Exactly half of all 3-AP-free sequences start with an odd panel, for every N <= 28
-   (odd N included).  [conj]
+   (odd N included; sym stats for N = 29, 30 also checked).  [conj]
    Brute force (parity_pos.py) for the k-th panel: at odd N the odd-even difference is 0 for
    k <= (N+1)/4 and k >= N+1-(N+1)/4 and nonzero in the middle, e.g. N = 11:
    [0,0,0,44,416,1540,416,44,0,0,0].  For the semi rule it is nonzero already at k = 1
@@ -251,7 +251,7 @@ Files
 -------------------------------------------------
  transfers: reversal/mirror identities; F2 support rules for (1,x) (in the sym case (1,x) is
    valid iff 2x >= N+2 as well); the first-panel law has a bulk-plus-boundary shape.
- does not transfer: the parity balance of the first panel at odd N holds for sym (N <= 28) but
+ does not transfer: the parity balance of the first panel at odd N holds for sym (N <= 30) but
    not for semi; R log-concavity holds for semi (N <= 30) but not for sym; sym F rows show
    power-of-2 plateaus and many exact coincidences, semi rows are smooth.
  Neither has any column/diagonal recurrence or OEIS match except the two known sym columns.
