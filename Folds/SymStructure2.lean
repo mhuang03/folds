@@ -1,4 +1,6 @@
 import Folds.SymStructure
+import Mathlib.Order.Interval.Finset.Nat
+import Mathlib.Tactic.IntervalCases
 
 /-!
 # Symmetric (3-AP-free) fold sequences II: extendable prefixes, live counts, the merge
@@ -545,6 +547,207 @@ theorem le_six_of_noLong {K a : ℕ} (h : noLong K a 7 [] = true) {π : List ℕ
     (fun v hv => htop v (List.mem_of_mem_take hv)) ?_
   exact hE.of_prefix (by simpa using List.take_prefix 7 π)
 
+
+/-! ## Theorem F: prefixes inside a top segment have length at most 6 -/
+
+/-! ### The finite base `13 ≤ K ≤ 27` (kernel checks of the Theorem-E search) -/
+
+theorem base_13 : noLong 13 7 7 [] = true := by decide +kernel
+theorem base_14 : noLong 14 7 7 [] = true := by decide +kernel
+theorem base_15 : noLong 15 8 7 [] = true := by decide +kernel
+theorem base_16 : noLong 16 8 7 [] = true := by decide +kernel
+theorem base_17 : noLong 17 9 7 [] = true := by decide +kernel
+theorem base_18 : noLong 18 9 7 [] = true := by decide +kernel
+theorem base_19 : noLong 19 10 7 [] = true := by decide +kernel
+theorem base_20 : noLong 20 10 7 [] = true := by decide +kernel
+theorem base_21 : noLong 21 11 7 [] = true := by decide +kernel
+theorem base_22 : noLong 22 11 7 [] = true := by decide +kernel
+theorem base_23 : noLong 23 12 7 [] = true := by decide +kernel
+theorem base_24 : noLong 24 12 7 [] = true := by decide +kernel
+theorem base_25 : noLong 25 13 7 [] = true := by decide +kernel
+theorem base_26 : noLong 26 13 7 [] = true := by decide +kernel
+theorem base_27 : noLong 27 14 7 [] = true := by decide +kernel
+
+theorem le_six_base {K a : ℕ} (hK1 : 13 ≤ K) (hK2 : K ≤ 27) (ha : 2 * a ≤ K + 1) {π : List ℕ}
+    (hE : Ext K π) (htop : ∀ v ∈ π, K < v + a) : π.length ≤ 6 := by
+  have ht : ∀ v ∈ π, K < v + (K + 1) / 2 := fun v hv => by have := htop v hv; omega
+  interval_cases K
+  · exact le_six_of_noLong base_13 hE ht
+  · exact le_six_of_noLong base_14 hE ht
+  · exact le_six_of_noLong base_15 hE ht
+  · exact le_six_of_noLong base_16 hE ht
+  · exact le_six_of_noLong base_17 hE ht
+  · exact le_six_of_noLong base_18 hE ht
+  · exact le_six_of_noLong base_19 hE ht
+  · exact le_six_of_noLong base_20 hE ht
+  · exact le_six_of_noLong base_21 hE ht
+  · exact le_six_of_noLong base_22 hE ht
+  · exact le_six_of_noLong base_23 hE ht
+  · exact le_six_of_noLong base_24 hE ht
+  · exact le_six_of_noLong base_25 hE ht
+  · exact le_six_of_noLong base_26 hE ht
+  · exact le_six_of_noLong base_27 hE ht
+
+/-- **Theorem F (2).**  If `2a ≤ K + 1`, every extendable prefix of `[1, K]` whose entries
+all lie in the top segment `(K - a, K]` has length at most `6`.  (Proof: strong induction
+on `K`; for `K ≥ 28` a `C`-entry would force seven linked `D`-entries into the prefix by
+Theorem E(b), contradicting the bound for the rescaled class; otherwise the prefix lies in
+one class and Theorem E(c) reduces to `⌊(K + p)/2⌋`.  Base `K ≤ 27`: trivial for
+`K ≤ 12`, kernel-checked search for `13 ≤ K ≤ 27`.) -/
+theorem le_six_top : ∀ K a, 2 * a ≤ K + 1 → ∀ π, Ext K π → (∀ v ∈ π, K < v + a) →
+    π.length ≤ 6 := by
+  intro K
+  induction K using Nat.strong_induction_on with
+  | _ K ih =>
+  intro a ha π hE htop
+  by_cases hK : K ≤ 12
+  · have hsub : π.toFinset ⊆ Finset.Ioc (K - a) K := by
+      intro v hv
+      rw [List.mem_toFinset] at hv
+      have := htop v hv; have := hE.range v hv
+      rw [Finset.mem_Ioc]; omega
+    have := Finset.card_le_card hsub
+    rw [List.toFinset_card_of_nodup hE.nodup, Nat.card_Ioc] at this
+    omega
+  by_cases hK2 : K ≤ 27
+  · exact le_six_base (by omega) hK2 ha hE htop
+  rcases π with _ | ⟨w, t⟩
+  · simp
+  obtain ⟨-, hB, hD, -⟩ := ext_imp rfl hE
+  have hlen := ih ((K + w % 2) / 2) (by omega) ((K + w % 2) / 2 - (K - a + w % 2) / 2)
+    (by omega) _ hD (by
+      intro r hr
+      obtain ⟨v, hv, hvp, rfl⟩ := mem_cls.1 hr
+      have := htop v hv; have := hE.range v hv
+      simp only [half]; omega)
+  have hall : ∀ u ∈ w :: t, u % 2 = w % 2 := by
+    by_contra hc
+    push Not at hc
+    obtain ⟨u, hu, hup⟩ := hc
+    have hu1 := hE.range u hu
+    have hy : ∀ j < 7, (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j) ∈ w :: t := by
+      intro j hj
+      by_contra hyπ
+      exact hB u hu _ (List.mem_range'_1.2 ⟨by omega, by omega⟩) hyπ (by omega) hup
+        (Or.inl ⟨by omega, by omega⟩)
+    have hsub : (Finset.range 7).image (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))
+        ⊆ (cls (w % 2) (w :: t)).toFinset := by
+      intro r hr
+      simp only [Finset.mem_image, Finset.mem_range] at hr
+      obtain ⟨j, hj, rfl⟩ := hr
+      rw [List.mem_toFinset]
+      exact mem_cls.2 ⟨_, hy j hj, by omega, rfl⟩
+    have hcard : ((Finset.range 7).image
+        (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))).card = 7 := by
+      rw [Finset.card_image_of_injOn, Finset.card_range]
+      intro i _ j _ e
+      simp only [half] at e; omega
+    have h1 := Finset.card_le_card hsub
+    have h2 := List.toFinset_card_le (cls (w % 2) (w :: t))
+    omega
+  have : (cls (w % 2) (w :: t)).length = (w :: t).length := by
+    rw [cls, List.length_map, List.filter_eq_self.2]
+    intro v hv; simpa using hall v hv
+  omega
+
+/-- Mirror image `v ↦ K + 1 - v` of an extendable prefix is extendable. -/
+theorem Ext.mirror {K : ℕ} {π : List ℕ} (h : Ext K π) : Ext K (π.map (fun v => K + 1 - v)) := by
+  obtain ⟨s, ⟨hnd, hI⟩, hap⟩ := h
+  refine ⟨s.map (fun v => K + 1 - v), ?_, ?_⟩
+  · rw [← List.map_append]
+    refine ⟨hnd.map_on fun x hx y hy e => ?_, fun v => ?_⟩
+    · have := (hI x).1 hx; have := (hI y).1 hy; omega
+    · rw [List.mem_map]
+      constructor
+      · rintro ⟨x, hx, rfl⟩; have := (hI x).1 hx; omega
+      · intro hv; exact ⟨K + 1 - v, (hI _).2 (by omega), by omega⟩
+  · rw [← List.map_append]
+    refine apf_map (fun x hx y hy z hz e => ?_) hap
+    have := (hI x).1 hx; have := (hI y).1 hy; have := (hI z).1 hz; omega
+
+/-- **Theorem F (2), bottom segments** (by the mirror). -/
+theorem le_six_bot {K a : ℕ} (ha : 2 * a ≤ K + 1) {π : List ℕ} (hE : Ext K π)
+    (hb : ∀ v ∈ π, v ≤ a) : π.length ≤ 6 := by
+  have := le_six_top K a ha _ hE.mirror (by
+    intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    have := hb x hx; have := hE.range x hx; omega)
+  simpa using this
+
+/-! ## Sharma's ends theorem -/
+
+/-- In a 3-AP-free permutation of `[1, N]`, at most `6` entries of the parity of the first
+entry come after any entry of the other parity. -/
+theorem D_after_le_six {N w : ℕ} {a tl : List ℕ} (ha : a = w :: tl) (hP : IsPermOf N a)
+    (hap : APF a) {k : ℕ} (hk : k < a.length) (hu : a[k] % 2 ≠ w % 2) :
+    ((a.drop (k + 1)).filter (fun v => decide (v % 2 = w % 2))).length ≤ 6 := by
+  have hsplit : a = (a.take k ++ [a[k]]) ++ a.drop (k + 1) := by
+    rw [List.append_assoc, List.singleton_append, ← List.drop_eq_getElem_cons hk,
+      List.take_append_drop]
+  have hu1 := (hP.2 a[k]).1 (List.getElem_mem hk)
+  have hnl : ∀ y ∈ a.drop (k + 1), y % 2 = w % 2 → ¬ Linked N y a[k] := by
+    intro y hy hyw
+    refine not_linked_of_bef ha hP.1 hP.2 hap hyw hu ?_
+    have : Bef ((a.take k ++ [a[k]]) ++ a.drop (k + 1)) a[k] y := by
+      rw [List.append_assoc]; exact bef_append_right (bef_head hy)
+    rwa [← hsplit] at this
+  have hσ : IsPermOf ((N + w % 2) / 2) (cls (w % 2) a) := cls_isPermOf (by omega) hP
+  have hσa : APF (cls (w % 2) a) := cls_apf hap
+  rw [hsplit, cls_append] at hσ hσa
+  have hE : Ext ((N + w % 2) / 2) (cls (w % 2) (a.drop (k + 1))).reverse := by
+    refine ⟨(cls (w % 2) (a.take k ++ [a[k]])).reverse, ?_, ?_⟩
+    · rw [← List.reverse_append]
+      exact ⟨List.nodup_reverse.2 hσ.1, fun v => by rw [List.mem_reverse]; exact hσ.2 v⟩
+    · rw [← List.reverse_append]; exact hσa.reverse
+  have hlen : (cls (w % 2) (a.drop (k + 1))).reverse.length =
+      ((a.drop (k + 1)).filter (fun v => decide (v % 2 = w % 2))).length := by
+    simp [cls]
+  rw [← hlen]
+  by_cases h2u : 2 * a[k] ≤ N + 1
+  · refine le_six_top _ ((N + w % 2) / 2 - (N / 2 + w % 2) / 2) (by omega) _ hE ?_
+    intro r hr
+    rw [List.mem_reverse] at hr
+    obtain ⟨y, hy, hyw, rfl⟩ := mem_cls.1 hr
+    have hl := hnl y hy hyw
+    have := (hP.2 y).1 (List.mem_of_mem_drop hy)
+    simp only [Linked] at hl
+    simp only [half]; omega
+  · refine le_six_bot (a := (N / 2 + w % 2) / 2) (by omega) hE ?_
+    intro r hr
+    rw [List.mem_reverse] at hr
+    obtain ⟨y, hy, hyw, rfl⟩ := mem_cls.1 hr
+    have hl := hnl y hy hyw
+    have := (hP.2 y).1 (List.mem_of_mem_drop hy)
+    simp only [Linked] at hl
+    simp only [half]; omega
+
+/-- **Sharma's ends theorem, `f(N) ≥ ⌊N/2⌋ - 6`.**  In every 3-AP-free permutation of
+`[1, N]` (symmetric fold sequence), the first `⌊N/2⌋ - 6` entries all have the parity of
+the first entry. -/
+theorem ends_parity {N : ℕ} {a : List ℕ} (ha : a ∈ symSeqs N) {k : ℕ} (hk : k < a.length)
+    (hkN : k + 6 < N / 2) : a[k] % 2 = a[0]'(by omega) % 2 := by
+  obtain ⟨hP, hap⟩ := mem_symSeqs_iff.1 ha
+  obtain ⟨w, tl, rfl⟩ : ∃ w tl, a = w :: tl := by
+    cases a with
+    | nil => simp at hk
+    | cons w tl => exact ⟨w, tl, rfl⟩
+  show (w :: tl)[k] % 2 = w % 2
+  by_contra hu
+  have h6 := D_after_le_six rfl hP hap hk hu
+  have hσ := (cls_isPermOf (p := w % 2) (by omega) hP).length
+  have hsplit : w :: tl = ((w :: tl).take k ++ [(w :: tl)[k]]) ++ (w :: tl).drop (k + 1) := by
+    rw [List.append_assoc, List.singleton_append, ← List.drop_eq_getElem_cons hk,
+      List.take_append_drop]
+  rw [hsplit, cls_append, cls_append, List.length_append, List.length_append] at hσ
+  have h1 : (cls (w % 2) ((w :: tl).take k)).length ≤ k := by
+    rw [cls, List.length_map]
+    exact (List.length_filter_le _ _).trans (by simp)
+  have h2 : (cls (w % 2) [(w :: tl)[k]]).length = 0 := by
+    simp [cls, hu]
+  have h3 : (cls (w % 2) ((w :: tl).drop (k + 1))).length =
+      (((w :: tl).drop (k + 1)).filter (fun v => decide (v % 2 = w % 2))).length := by
+    simp [cls]
+  omega
 
 end SymStructure2
 end Folds
