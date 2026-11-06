@@ -8,7 +8,21 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 # Symmetric (3-AP-free) fold sequences II: extendable prefixes, live counts, the merge
 count and Sharma's ends bound
 
-See `experiments/symstruct2/NOTES.txt` and `experiments/symstruct/PROOFS.txt`.
+See `experiments/symstruct2/NOTES.txt` and `experiments/symstruct/PROOFS.txt`.  Parity
+classes are rescaled by `half v = (v+1)/2` (inverse `lift p r = 2r - p`); the class of
+parity `p` in `[1, N]` becomes `[1, ⌊(N+p)/2⌋]`.  `Ext N π`: `π` is a prefix of a 3-AP-free
+permutation of `[1, N]`.
+
+* `ext_iff_cond` (**Theorem E**): `w :: t` extends iff (a) `CondA`, (b) `CondB`, and the two
+  rescaled parity parts extend in their own classes.  `extB_iff`: the resulting recursive
+  Boolean test decides extendability.
+* `live_rec` (**Theorem L**): `L_k(N) = L_k(⌈N/2⌉) + L_k(⌊N/2⌋)` for `k ≥ 1`, `N ≥ 4k - 1`;
+  `live_linear`: `L_k(N) = O(N)`.
+* `card_symSeqs_eq_sum`: `θ(N) = Σ_p Σ_σ Σ_τ P(σ, τ)` with `P = (shuffles N p σ τ).card`.
+* `le_six_top` (**Theorem F (2)**), `top_rec` (**Theorem F (3)**), `ends_parity`
+  (**Sharma's bound** `f(N) ≥ ⌊N/2⌋ - 6`, all `N`), `sharp_26` (equality at `N = 26`).
+  The base `13 ≤ K ≤ 27` of Theorem F is fifteen small `decide +kernel` checks
+  (`base_13` … `base_27`) of a pruned search driven by `extB`.
 -/
 
 namespace Folds
@@ -796,6 +810,37 @@ theorem le_six_base {K a : ℕ} (hK1 : 13 ≤ K) (hK2 : K ≤ 27) (ha : 2 * a �
   · exact le_six_of_noLong base_26 hE ht
   · exact le_six_of_noLong base_27 hE ht
 
+/-- For `K ≥ 28`, a `C`-entry in an extendable prefix forces seven linked `D`-entries into
+it (Theorem E(b)); so if the rescaled `D`-part has length `≤ 6` the prefix lies in one
+parity class. -/
+theorem one_class_of_le_six {K w : ℕ} {t : List ℕ} (hK : 28 ≤ K) (hE : Ext K (w :: t))
+    (h6 : (cls (w % 2) (w :: t)).length ≤ 6) : ∀ u ∈ w :: t, u % 2 = w % 2 := by
+  obtain ⟨-, hB, -, -⟩ := ext_imp rfl hE
+  by_contra hc
+  push Not at hc
+  obtain ⟨u, hu, hup⟩ := hc
+  have hu1 := hE.range u hu
+  have hy : ∀ j < 7, (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j) ∈ w :: t := by
+    intro j hj
+    by_contra hyπ
+    exact hB u hu _ (List.mem_range'_1.2 ⟨by omega, by omega⟩) hyπ (by omega) hup
+      (Or.inl ⟨by omega, by omega⟩)
+  have hsub : (Finset.range 7).image (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))
+      ⊆ (cls (w % 2) (w :: t)).toFinset := by
+    intro r hr
+    simp only [Finset.mem_image, Finset.mem_range] at hr
+    obtain ⟨j, hj, rfl⟩ := hr
+    rw [List.mem_toFinset]
+    exact mem_cls.2 ⟨_, hy j hj, by omega, rfl⟩
+  have hcard : ((Finset.range 7).image
+      (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))).card = 7 := by
+    rw [Finset.card_image_of_injOn, Finset.card_range]
+    intro i _ j _ e
+    simp only [half] at e; omega
+  have h1 := Finset.card_le_card hsub
+  have h2 := List.toFinset_card_le (cls (w % 2) (w :: t))
+  omega
+
 /-- **Theorem F (2).**  If `2a ≤ K + 1`, every extendable prefix of `[1, K]` whose entries
 all lie in the top segment `(K - a, K]` has length at most `6`.  (Proof: strong induction
 on `K`; for `K ≥ 28` a `C`-entry would force seven linked `D`-entries into the prefix by
@@ -821,38 +866,14 @@ theorem le_six_top : ∀ K a, 2 * a ≤ K + 1 → ∀ π, Ext K π → (∀ v �
   · exact le_six_base (by omega) hK2 ha hE htop
   rcases π with _ | ⟨w, t⟩
   · simp
-  obtain ⟨-, hB, hD, -⟩ := ext_imp rfl hE
+  obtain ⟨-, -, hD, -⟩ := ext_imp rfl hE
   have hlen := ih ((K + w % 2) / 2) (by omega) ((K + w % 2) / 2 - (K - a + w % 2) / 2)
     (by omega) _ hD (by
       intro r hr
       obtain ⟨v, hv, hvp, rfl⟩ := mem_cls.1 hr
       have := htop v hv; have := hE.range v hv
       simp only [half]; omega)
-  have hall : ∀ u ∈ w :: t, u % 2 = w % 2 := by
-    by_contra hc
-    push Not at hc
-    obtain ⟨u, hu, hup⟩ := hc
-    have hu1 := hE.range u hu
-    have hy : ∀ j < 7, (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j) ∈ w :: t := by
-      intro j hj
-      by_contra hyπ
-      exact hB u hu _ (List.mem_range'_1.2 ⟨by omega, by omega⟩) hyπ (by omega) hup
-        (Or.inl ⟨by omega, by omega⟩)
-    have hsub : (Finset.range 7).image (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))
-        ⊆ (cls (w % 2) (w :: t)).toFinset := by
-      intro r hr
-      simp only [Finset.mem_image, Finset.mem_range] at hr
-      obtain ⟨j, hj, rfl⟩ := hr
-      rw [List.mem_toFinset]
-      exact mem_cls.2 ⟨_, hy j hj, by omega, rfl⟩
-    have hcard : ((Finset.range 7).image
-        (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))).card = 7 := by
-      rw [Finset.card_image_of_injOn, Finset.card_range]
-      intro i _ j _ e
-      simp only [half] at e; omega
-    have h1 := Finset.card_le_card hsub
-    have h2 := List.toFinset_card_le (cls (w % 2) (w :: t))
-    omega
+  have hall := one_class_of_le_six (by omega) hE hlen
   have : (cls (w % 2) (w :: t)).length = (w :: t).length := by
     rw [cls, List.length_map, List.filter_eq_self.2]
     intro v hv; simpa using hall v hv
@@ -956,6 +977,48 @@ theorem ends_parity {N : ℕ} {a : List ℕ} (ha : a ∈ symSeqs N) {k : ℕ} (h
       (((w :: tl).drop (k + 1)).filter (fun v => decide (v % 2 = w % 2))).length := by
     simp [cls]
   omega
+
+/-- **Theorem F (3), the halving recursion.**  For `K ≥ 28` and `2a ≤ K + 1`: an extendable
+prefix of length `m` inside the top `a` values of `[1, K]` exists iff, for some parity `p`,
+one exists inside the top `a_p` values of the rescaled class `[1, ⌊(K+p)/2⌋]`, where
+`a_p = ⌊(K+p)/2⌋ - ⌊(K-a+p)/2⌋` is the number of parity-`p` values among the top `a`.
+So `G(K, a) = max (G(⌈K/2⌉, a_odd), G(⌊K/2⌋, a_even))`. -/
+theorem top_rec {K a m : ℕ} (hK : 28 ≤ K) (ha : 2 * a ≤ K + 1) :
+    (∃ π : List ℕ, π.length = m ∧ Ext K π ∧ ∀ v ∈ π, K < v + a) ↔
+      ∃ p ≤ 1, ∃ ρ : List ℕ, ρ.length = m ∧ Ext ((K + p) / 2) ρ ∧
+        ∀ r ∈ ρ, (K + p) / 2 < r + ((K + p) / 2 - (K - a + p) / 2) := by
+  constructor
+  · rintro ⟨π, hl, hE, htop⟩
+    rcases π with _ | ⟨w, t⟩
+    · exact ⟨0, by omega, [], hl, ext_nil _, by simp⟩
+    have hD := (ext_imp rfl hE).2.2.1
+    have htop' : ∀ r ∈ cls (w % 2) (w :: t),
+        (K + w % 2) / 2 < r + ((K + w % 2) / 2 - (K - a + w % 2) / 2) := by
+      intro r hr
+      obtain ⟨v, hv, hvp, rfl⟩ := mem_cls.1 hr
+      have := htop v hv; have := hE.range v hv
+      simp only [half]; omega
+    have h6 := le_six_top _ _ (by omega) _ hD htop'
+    have hall := one_class_of_le_six hK hE h6
+    have hc : cls (w % 2) (w :: t) = (w :: t).map half := by
+      rw [cls, List.filter_eq_self.2]; intro v hv; simpa using hall v hv
+    refine ⟨w % 2, by omega, (w :: t).map half, by simpa using hl, (ext_half hE hall).1,
+      hc ▸ htop'⟩
+  · rintro ⟨p, hp, ρ, hl, hE, htop⟩
+    rcases ρ with _ | ⟨r, ρ'⟩
+    · exact ⟨[], hl, ext_nil _, by simp⟩
+    refine ⟨(r :: ρ').map (lift p), by simpa using hl, ext_lift hp hE (by simp), ?_⟩
+    intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    have := htop x hx
+    simp only [lift]; omega
+
+/-- **Sharpness at `N = 26`**: a 3-AP-free permutation of `[1, 26]` whose entry at index
+`7 = ⌊26/2⌋ - 6` changes parity, so `f(26) = ⌊26/2⌋ - 6` and `ends_parity` is optimal
+there. -/
+theorem sharp_26 : ∃ a ∈ symSeqs 26, ∃ h : 7 < a.length, a[7] % 2 ≠ a[0] % 2 := by
+  refine ⟨[16, 8, 12, 4, 10, 2, 6, 1, 24, 20, 26, 18, 22, 14, 17, 9, 5, 25, 21, 13, 3, 19, 11,
+    7, 23, 15], mem_symSeqs.2 ⟨by decide +kernel, by decide +kernel⟩, by decide, by decide⟩
 
 end SymStructure2
 end Folds

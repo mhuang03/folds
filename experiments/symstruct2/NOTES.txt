@@ -1,0 +1,62 @@
+SYMMETRIC (3-AP-FREE) FOLD SEQUENCES II: LEAN FORMALISATION OF THEOREMS E, L, F
+=============================================================================
+Lean: Folds/SymStructure2.lean (no sorry, no native_decide; axioms propext,
+Classical.choice, Quot.sound).  Mathematics: ../symstruct/PROOFS.txt, sections 1-4.
+
+Conventions
+  half v = (v+1)/2, lift p r = 2r - p.  The parity-p class of [1,N] is rescaled onto
+  [1, (N+p)/2] (integer division); cls p l = (parity-p entries of l).map half.
+  Ext N pi   : pi is a prefix of a 3-AP-free permutation of [1,N] (APF, sublist form).
+  CondA N w pi: on linked pairs (y in D, u in C, both in pi) y comes first in pi.
+  CondB N w pi: no C-entry of pi is linked to a D-value of [1,N] outside pi.
+  (D = parity of w = head of pi; Linked from Folds/SymStructure.)
+
+Proven statements
+  ext_iff_cond      THEOREM E.  For pi = w :: t nodup inside [1,N]:
+                      Ext N pi <-> CondA /\ CondB /\ Ext ((N+w%2)/2) (cls (w%2) pi)
+                                                  /\ Ext ((N+(1-w%2))/2) (cls (1-w%2) pi)
+                    ("if": explicit completion pi ++ lift(rest of sigma) ++ lift(rest of tau),
+                    verified by merge_iff).  Valid for every N (no N >= 3 needed).
+  ext_nil           every N has a 3-AP-free permutation (also one starting with 1).
+  extB_iff          the recursive Boolean test extB (fuel >= N) decides Ext.
+  live_rec          THEOREM L.  liveSet N k = distinct k-prefixes of symSeqs N;
+                      1 <= k, 4k <= N+1  ->  L_k(N) = L_k((N+1)/2) + L_k(N/2).
+                    (k = 0 must be excluded: L_0 = 1.)  Uses prefix_parity (SymParity).
+  live_linear       exists C, L_k(N) <= C*N for all N >= 1.
+  card_symSeqs_eq_sum   COUNTING IDENTITY.  For N >= 1,
+                      #symSeqs N = sum_{p<2} sum_{sigma in symSeqs((N+p)/2)}
+                                   sum_{tau in symSeqs((N+1-p)/2)} #(shuffles N p sigma tau),
+                    shuffles = permutations a of [1,N] with head parity p, parity-p
+                    subsequence = lift sigma, other = lift tau, D before C on linked pairs.
+  le_six_top        THEOREM F(2), for ALL K (not only K >= 16): 2a <= K+1, pi extendable in
+                    [1,K] with entries in the top a values -> |pi| <= 6.
+                    Induction step for K >= 28 (one_class_of_le_six: a C-entry forces 7
+                    linked D-entries; part (1) invariance is the omega step
+                    a' = (K+p)/2 - (K-a+p)/2, 2a' <= (K+p)/2 + 1).
+                    Base: K <= 12 trivial (a <= 6); 13 <= K <= 27: base_13..base_27,
+                    each `noLong K ((K+1)/2) 7 [] = true` by decide +kernel (pruned DFS of
+                    extendable prefixes in the top segment; total ~15 s, whole file peaks
+                    ~3.0 GB RSS of which ~2.5 GB is the mmapped Mathlib imports).
+  le_six_bot        the same for bottom segments (mirror, Ext.mirror).
+  top_rec           THEOREM F(3) in existential form, K >= 28, 2a <= K+1: a length-m
+                    extendable prefix in the top a exists iff one exists in the top a_p of
+                    the rescaled class [(K+p)/2] for some p.
+  D_after_le_six    in a 3-AP-free permutation, <= 6 D-entries follow any C-entry.
+  ends_parity       SHARMA'S BOUND f(N) >= floor(N/2) - 6, all N: for a in symSeqs N and
+                    k + 6 < N/2, a[k] has the parity of a[0].
+  sharp_26          equality at N = 26 (witness from sharp.py, checked by decide +kernel).
+
+Sanity checks done while writing: noLong 13 8 7 [] = false and noLong 27 15 7 [] = false
+(#eval), matching G(13,8) = G(27,15) = 7 at 2a = K+3 (PROOFS.txt); all K in 13..32 at
+a = (K+1)/2 return true.
+
+Not formalised / remains
+  * Exactness f(N) = floor(N/2) - 6 for N = 48*2^j + 2 (only N = 26 is checked), and the
+    dyadic pattern of Conjecture F'.
+  * Theorem L's lower bound (L_k(N) = Theta(N)) and the constants c_k.
+  * Section 5 (ratio r(n)) and section 6 (Ehrhart counts T_sym) of PROOFS.txt.
+  * The lattice-path description of P(sigma, tau) (monotone sequences c_j >= M_j); the
+    Lean identity uses the set of allowed shuffles directly.
+
+Files
+  sharp.py   constructs the N = 26 witness via Theorem M (D = evens, first C-entry 1).
