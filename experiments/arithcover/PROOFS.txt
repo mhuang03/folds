@@ -1,0 +1,185 @@
+ArithCover: witnesses, class slides, proven regions, and what remains
+====================================================================
+
+Lean: Folds/ArithCover.lean (imports Folds.Live8; no sorry, no native_decide).
+Notation as in experiments/live8/PROOFS.txt: a mixed-parity wide pair (u, v), u + v <= N + 1,
+u' = N + 1 - v >= u, delta = N - 1 - u - 2u' >= 0, d = u' - u, M = N + 2.  "Covered" means
+dirAny N u u' = true or dirAny N u' u = true (the disjunction in Live8.ArithCover).
+
+STATUS
+  * NOT proven: ArithCover N for all N > 300.  What is proven (Lean, for ALL N):
+      - Theorem B (two-class slide) and its region form RegionB, and Corollary B'
+          `dirAny_nearBoundary`: N >= 301, 3 <= u, u^2 <= N, u + 2u' <= N - 1, 8u' >= 3N + 2,
+          (u, 2u' + 4) != (3, N)  ==>  dirAny N u' u = true.
+        This contains the whole residual family of Live8 section 4(d) (u odd <= sqrt N,
+        delta < u; indeed every delta <= N/4 - u), which was the stated crux.
+      - five polynomial regions RegionB, RegionB2, RegionD, RegionD0, RegionW (Proven N u u'),
+        each with a Lean proof that its pairs are covered (`covered_of_proven`);
+      - the reduction `arithCover_of_residual : Residual N -> ArithCover N` and
+        `conjectureC_of_residual : (forall N > 300, Residual N) -> Conjecture C (all N)`,
+        where `Residual N` is ArithCover N restricted to the pairs outside `Proven`.
+      - tools: `dirOK_of_wit`, `dirOK_of_slide`, `dirOK_of_cover`, `dirOK_direct`,
+        `parity_slide`, `dirAny_twoClass`, `slideE`, `dirAny_diff` (difference lemma, Q = P = 1).
+  * Size of the residual (regions.c, which is faithful to the Lean hypotheses and re-checks
+    every region pair with an exact dirAny): N = 1001: 16824 of 41332 mixed wide pairs (41%);
+    N = 3001: 150871 of 373999 (40%).  Among the residual pairs with u <= sqrt N only a
+    handful of shapes occur (section 7); everything else in the residual has u > ~sqrt N and
+    lies in the near-diagonal wedge (u' < ~1.5u) or the "corner" (u > ~M/8).  There every
+    family has only a few denominators s per index a, so whether a multiple of K is hit
+    depends on the position (fractional parts), and no position-free lemma of the kinds
+    below covers it; see section 8.
+
+1. The witness form of dirAny (Lean: Live8.dirOK_spec and dirOK_of_wit)
+------------------------------------------------------------------------
+For a combo (K, L, R, alpha, beta, smax) and index a, dirOK K L R alpha beta smax a = true iff
+there are s, c with
+     2 <= s <= smax,  R <= s,  sL + alpha <= aK <= s(L + 1) + alpha - 1,
+     sR + beta <= cK <= sR + beta + s - 1.
+(=>: Live8.dirOK_spec.  <=: dirOK_of_wit: s lies between S1 and S2, and cK lies in the union.)
+So `dirAny N x y` holds iff one of the three families has such a witness (s, a, c), with
+a >= 2 for Z and X(., ., 1), a >= 1 for X(., ., 0); the constraint a <= x + 1 is automatic
+(dirAny_of_witZ).  In particular ArithCover is a pure "find a denominator s" statement:
+s(x, R) mod K must lie in a box of side about s, with s in [max(R, 2), smax].
+Position-free sufficient forms: dirOK_of_slide (an s-range [s1, s2] inside the true range,
+union of windows of length >= K), dirOK_of_cover (a given multiple cK inside the union).
+
+2. Theorem B: the two-class slide (Lean: parity_slide, dirAny_twoClass, dirAny_regionB)
+-------------------------------------------------------------------------------------
+Orientation (x, y) = (u', u), family Z, K = M.  Put n = M - 2u' (so n = u + delta + 3 >= u + 3).
+Key identity.  For a denominator s and index a put t = s - 2a.  Then
+     2(aM - s u') = (s - t)M - s(M - n) = s n - t M.
+Hence (for t = s mod 2, a = (s - t)/2) the left condition aM - su' in [0, s - 1] is
+     t M in W(s) := [s(n - 2) + 2, s n].                                            (*)
+Lemma (parity slide).  Let n >= 3, s1 >= n - 1, s1 + 1 <= s2, and T an integer with
+     (s1 + 1)(n - 2) + 2 <= T <= (s2 - 1) n.
+For every parity class there is s = t (mod 2) in [s1, s2] with T in W(s).
+Proof.  Let s be the largest s' <= s2, s' = t (mod 2), with s'(n - 2) + 2 <= T (the element of
+{s1, s1 + 1} in the class qualifies).  If s >= s2 - 1 then sn >= (s2 - 1)n >= T.  Otherwise
+(s + 2)(n - 2) + 2 > T, so T <= sn - 2s + 2n - 3 <= sn as s >= n - 1.  []
+(In words: for s of one parity the windows W(s) move by 2(n - 2) and 2n and overlap since
+s >= n - 1; the unions for the two parities share [(s1 + 1)(n - 2) + 2, (s2 - 1)n], so a
+multiple tM there is caught whatever the parity of t.  Fixing one parity, as in Live8 4(d),
+needs a union of length 2M; using both needs only M.)
+Theorem B (abstract, dirAny_twoClass).  Let 2u' + n = M, n >= 3, c >= 1 and s1, s2, t with
+     n <= s1 + 1, u <= s1, s1 + 1 <= s2, 2 s2 <= M,
+     cM <= s1(u + 1), s2 u + 1 <= cM                      (every s in [s1, s2] has u at
+                                                            distance c from the end of Z(N, s - 1)),
+     (s1 + 1)(n - 2) + 2 <= tM <= (s2 - 1) n,  2M <= s1 u'.
+Then dirAny N u' u = true.
+Proof.  The lemma gives s = t (mod 2) in [s1, s2] with tM in W(s); a = (s - t)/2 satisfies the
+left condition by (*), and a >= 2 because tM <= sn = sM - 2su' <= (s - 4)M (su' >= 2M).
+The right condition su + 1 <= cM <= s(u + 1) holds for s in [s1, s2].  Witness -> dirAny. []
+Region B (dirAny_regionB).  c = floor(u/2), s1 = ceil(cM/(u + 1)), s2 = floor((cM - 1)/u),
+t = ceil(((s1 + 1)(n - 2) + 2)/M).  Using s1(u + 1) <= cM + u and s2 u >= cM - u, sufficient:
+  B1 (u + 1)(n - 1) <= cM          (s1 >= n - 1)
+  B2 u(u + 1) <= cM                (s1 >= u)
+  B3 u((2u + 1)n - 2u) + u(u + 1)(2n + M - 1) <= cM(n + 2u)
+                                   (u(u + 1)[s2 n - s1(n - 2)] >= cM(n + 2u) - u[(2u + 1)n - 2u],
+                                    which gives (s2 - 1)n - (s1 + 1)(n - 2) - 2 >= M - 1)
+  B4 2(u + 1) <= c u'              (2M <= s1 u')
+(s1 + 1 <= s2 and 2 s2 <= M follow.)
+Corollary B' (regionB_of_small, dirAny_nearBoundary).  N >= 301, 3 <= u, u^2 <= N,
+u + 2u' <= N - 1, 8u' >= 3N + 2, not (u = 3 and 2u' + 4 = N)  ==>  region B.
+Proof.  4c >= 2u - 2 >= u + 1 (u >= 3).  B1: 4(n - 1) <= M is 8u' >= 3N + 2, so
+(u + 1)(n - 1) <= c * 4(n - 1) <= cM.  B2: 4u <= M (u^2 <= N, N >= 16), so u(u + 1) <= 4cu <= cM.
+B4: u' >= 8.  B3: with 2c >= u - 1 it suffices that
+   F := M[(u - 1)n - 4u] - n(8u^2 + 6u) + 6u^2 + 2u >= 0
+(2 B3-slack >= F, an identity).  Write n = u + 3 + e (e = delta >= 0); then
+   F = [M(u - 3)(u + 1) - (8u^3 + 24u^2 + 16u)] + e [M(u - 1) - 8u^2 - 6u].
+The e-bracket is >= 0: for u <= 9 by M >= 303, for u >= 10 by M >= u^2 + 2.  The first bracket
+is >= 0 for 4 <= u <= 12 by M >= 303 and for u >= 13 by M >= u^2 + 2; for u = 3 it is -480,
+and then e >= 1 (the excluded pair is e = 0) and the e-bracket is 2M - 90 >= 516.  (Lean B3_int.) []
+The excluded pair (3, (N + 6)/2) is one of Live8's special pairs (N = 2 mod 4; for other N it
+is not mixed).  Corollary B' covers every pair with 3 <= u <= sqrt N and delta <= N/4 - u, in
+particular all of Live8 4(d) (u odd <= sqrt N, delta < u).  Numerically (crux.c, crux2.c):
+region B contains every non-special mixed wide pair with 3 <= u <= 2 sqrt N, delta < 3u for
+301 <= N <= 3000 except 59 pairs near N = 301, u = 33; crux2.c confirms Corollary B' on
+8.1e7 instances (301 <= N <= 5000) and 3.0e9 more (N = 100000 .. 2000000, sampled).
+
+3. Region B2 (dirAny_regionB2)
+------------------------------
+Theorem B with s1 = n - 1 (contiguity automatic), s2 = floor((cM - 1)/u), c = floor(u/2):
+  cM <= (n - 1)(u + 1),  u(n(n - 2) + M + 1) <= (cM - 2u) n,  2M <= (n - 1)u',  n >= u + 3.
+This extends B away from the boundary down to u' ~ M(u + 1)/(4u) (u odd) resp. ~ M/4 + O(M/u).
+
+4. The direct lemma with polynomial hypotheses; regions D and D0
+-----------------------------------------------------------------
+dirOK_direct (alpha = 0, index a, T = aK): if L <= T + 1, T/L <= smax <= K, R >= 2 and
+  hA  L(T + 1 + L)R + L(L + 1)K <= (L + 1)(T + 1 - L)(R + 1)
+  hB  L(R^2 + K) <= (T + 1 - L)(R + 1)
+then dirOK (s1 = max(ceil((T + 1)/(L + 1)), R), s2 = floor(T/L); hA covers the first branch,
+hB the second; both use only s1(L + 1) <= T + 1 + L and s2 L >= T + 1 - L).
+Region D (dirAny_regionD; = Live8.settled_directZ_region as a dirAny statement): orientation
+(u, u'), Z, a = floor(u/2).  Region D0 (dirAny_regionD0): orientation (u, u'), X(N, s, 0),
+a = 1, R = u' - 2 (this handles the columns u = 2, 3, where Z has no index a >= 2 with s <= M/2
+large enough): u(N + 1 + u)(u' - 2) + u(u + 1)N <= (u + 1)(N + 1 - u)(u' - 1) and
+u((u' - 2)^2 + N) <= (N + 1 - u)(u' - 1).
+
+5. Region W: the near-diagonal pairs with small d (dirAny_regionW)
+------------------------------------------------------------------
+Orientation (x, y) = (u', u), X(N, s, 0), R = u - 2, index a, right distance c = a - 1.  In
+units of N the union is about [aR/(u' + 1), a(R + 1)/u'] and contains c = a - 1 iff
+a(d + 3) >~ u' + 2 and a(d + 1) <~ u' - 1; exactly (s1 = ceil((aN + 1)/(u' + 1)), s2 = floor(aN/u')):
+  2 <= a, 2a <= u' <= N, 2u'^2 + u' <= aN + 1, (u - 2)(u' + 1) <= aN,
+  W1 (aN + u' + 1)(u - 2) + (u' + 1) <= (a - 1)N(u' + 1),
+  W2 (a - 1)N u' <= (aN + 1 - u')(u - 1).
+With a = ceil((u' + 2)/(d + 3)) this holds when 2u' >= d^2 + 7d + 8 and N >~ u'(u + d) (so it
+covers the diagonal for u <~ sqrt N).
+
+6. The difference lemma (dirAny_diff; no region in Lean)
+--------------------------------------------------------
+Orientation (x, y), y = x + d, Z.  Fix j = c - a: Y - X = jM - sd - 1 =: D(s) (X = aM - sx,
+Y = cM - sy - 1).  If jM <= s1 d + 1 + Delta, s2 d + 1 <= jM + Delta (|D| <= Delta on
+[s1, s2]), x + 2 Delta <= s1, y <= s1, 2 s2 <= M and aM in [s1 x + Delta, s2 x + s2 - 1 - Delta]
+(windows of length s - 2 Delta sliding by x: slideE), then (s, a, a + j) is a witness.
+qp1.c: on top of B, D, the exact-floor version of this lemma (all j, Delta) reduces the residual
+at N = 1001 from 17601 to 10865 pairs; it cannot reach d = 1, 2 (s ~ jM/d > M/2) nor the
+corner where s must be >= u' ~ M/3 and the range |D| <= Delta is short.
+
+7. The residual (Lean `Residual N`) and its small-u part
+---------------------------------------------------------
+`Residual N` = ArithCover N for the non-special pairs with not Proven N u u'.
+arithCover_of_residual and conjectureC_of_residual reduce Conjecture C (all N) to
+forall N > 300, Residual N.
+Numerics (regions.c 301 3000 1): over all 301 <= N <= 3000, 3.73e8 mixed wide non-special
+pairs, 1.51e8 (40%) residual, and no region pair fails dirAny ("bad 0").  Residual pairs with
+u <= sqrt N: 25930 in total (about 10 per N), of three kinds:
+  - fixed shapes with u' < 30, present for every N: (u, u') = (2,4), (2,5), (3,5), (3,6), (3,7),
+    (3,8), (3,9), (3,10), (5,5), (5,8), (5,9), (7,9), (9,12), plus near-diagonal shapes such as
+    (11,15), (9,13), (19,24), (13,18), ... at smaller N (W needs N >~ u'(u + d));
+  - u = 3 with u' ~ N/3 (the resonance 3u' ~ M between regions D0 and B2): 3600;
+  - near-diagonal pairs (d < 0.6u) with u' >= 30: 1634.
+Everything else in the residual has u > sqrt N (wedge and corner).
+
+8. What is missing, and why
+---------------------------
+The residual is the wedge u' < ~1.5u and the corner u > ~M/8 with u >~ sqrt N.  For an index a
+the s-range I_a = (aK/(x + 1), aK/x] has length aK/x^2 ~ K/(2x) <= ~4 there, so the union of
+windows has length ~ (S2 - S1)R + S2 with S2 - S1 in {floor, ceil} of a number below 4 and an
+error of one window (~R ~ K/3) from the floors: whether a multiple of K is hit depends on the
+fractional parts of aK/x and aK/(x + 1).  Every position-free lemma tried has the same shape:
+fix one integer linear combination of (a, c, s, t) (a short vector of the dual of the lattice
+{(s, sx - aK, sR - cK)}) and slide along it:
+  - direct (fix a), FC (fix c and use x ~ pK/q with all q classes; Theorem B is q = 2),
+  - FA (fix a, R ~ pK/q), difference / (Q, P) lemma (fix Qc - Pa).
+qslide.c (FC/FA, q <= 3) + rot2r.c ((Q, P) <= 5) + direct, all position-free: at N = 1001 only
+42 pairs remain (resonant columns like u ~ 157..165, u' ~ 1.5u, i.e. 2u' ~ 3u with
+u + u' ~ 2M/5, and d = 1 near the corner), and they pass dirAny only by position.  So a proof
+for all N needs either (i) a genuinely position-dependent argument in the corner/wedge (a
+three-gap / continued-fraction analysis of the fractional parts {aK/x}, {aK/R} over the few
+admissible a), or (ii) a lattice-width (flatness) argument for the 3-dimensional lattice
+above: the body {s in [R, smax], 0 <= aK - sx - alpha <= s - 1, 0 <= cK - sR - beta <= s - 1} has
+volume ~ (smax^3 - R^3)/3, i.e. ~ K/24 lattice cells in orientation (u', u) (R small), and only a
+short dual vector (an approximate relation i x + j R ~ k K with small i, j) can make it miss
+the lattice; each such relation is then one more class slide.  The constants of (ii) and the
+number of relations to treat are the open part.
+
+9. Programs (1 core, small memory; binaries are .gitignored)
+  pf.c           residual of the position-free direct test (all a, all combos)
+  wit.c          all s-witnesses (s, a, c) of one pair (faithful to dirOK, s >= R)
+  bz.c           orientation (u', u), Z, c = floor(u/2): exact test near the boundary
+  crux.c, crux2.c  Theorem B / Corollary B' coverage checks
+  qslide.c       class-slide lemmas FC/FA (fix c resp. a, x or R ~ pK/q), position-free/exact
+  rot2r.c        Live8's rot2.c ((Q, P) lemma) with the constraint s >= R
+  qp1.c          difference lemma on top of B and D
+  regions.c      the Lean regions B, B2, D, D0, W (faithful), sanity dirAny check, residual

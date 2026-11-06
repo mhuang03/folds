@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         if (d) { nd++; if (!dirAny(N, u, up)) { bad++; printf("BAD-D N=%lld u=%lld u'=%lld\n", N, u, up); } }
         if (!b && !d) {
           res++;
-          if (verbose) printf("R N=%lld u=%lld u'=%lld d=%lld delta=%lld\n", N, u, up, up - u, N - 1 - u - 2 * up);
+          if (verbose && (verbose > 1 || u * u <= N)) printf("R N=%lld u=%lld u'=%lld d=%lld delta=%lld\n", N, u, up, up - u, N - 1 - u - 2 * up);
         }
       }
     GT += tot; GB += nb; GD += nd; GR += res;

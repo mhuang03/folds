@@ -4,6 +4,18 @@ import Folds.Live8
 # The arithmetic covering statement `ArithCover`: witnesses, sliding lemmas, proven regions
 
 `experiments/arithcover/PROOFS.txt`.
+
+* `dirOK_of_wit`, `dirOK_of_slide`, `dirOK_of_cover`, `dirOK_direct`: sufficient conditions for
+  `Live8.dirOK` (with `Live8.dirOK_spec`: `dirOK` is exactly the existence of a witness `s`).
+* `parity_slide`, `dirAny_twoClass`, `dirAny_regionB`: **Theorem B** (two-class slide near the
+  inward boundary, orientation `(u', u)`, family `Z`, right distance `c = ⌊u/2⌋`).
+* `dirAny_nearBoundary`: every pair with `3 ≤ u ≤ √N`, `8u' ≥ 3N + 2` (`N ≥ 301`, not special)
+  passes `dirAny` — this contains the residual family of `Live8` section 4(d).
+* Regions `RegionB`, `RegionB2`, `RegionD`, `RegionD0`, `RegionW` (`Proven`), `covered_of_proven`;
+  `dirAny_diff` (difference lemma, `Q = P = 1`).
+* `arithCover_of_residual`, `conjectureC_of_residual`: Conjecture C for all `N` follows from
+  `Residual N` (`ArithCover N` for the pairs outside `Proven`) for `N > 300`.  `Residual` is
+  **not** proven (about 40% of the mixed wide pairs: the wedge and corner with `u ≳ √N`).
 -/
 
 namespace Folds
