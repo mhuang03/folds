@@ -1,0 +1,60 @@
+7a  k-kernel collapse  (elements, distinct) at depths 0..2; control = shuffled residues
+   a mod 4    k=2: [(1, 1), (3, 3), (7, 7)]   control distinct at depth 2: mean 6.9 min 6
+   a mod 4    k=3: [(1, 1), (4, 4), (13, 10)]   control distinct at depth 2: mean 10.0 min 8
+   a mod 8    k=2: [(1, 1), (3, 3), (7, 7)]   control distinct at depth 2: mean 7.0 min 7
+   a mod 8    k=3: [(1, 1), (4, 4), (13, 13)]   control distinct at depth 2: mean 12.8 min 11
+   a mod 16   k=2: [(1, 1), (3, 3), (7, 7)]   control distinct at depth 2: mean 7.0 min 7
+   a mod 16   k=3: [(1, 1), (4, 4), (13, 13)]   control distinct at depth 2: mean 13.0 min 13
+   a/2 mod 2  k=2: [(1, 1), (3, 3), (7, 6)]   control distinct at depth 2: mean 6.9 min 5
+   a/2 mod 2  k=3: [(1, 1), (4, 4), (13, 10)]   control distinct at depth 2: mean 8.9 min 7
+   a/2 mod 4  k=2: [(1, 1), (3, 3), (7, 7)]   control distinct at depth 2: mean 7.0 min 7
+   a/2 mod 4  k=3: [(1, 1), (4, 4), (13, 13)]   control distinct at depth 2: mean 12.7 min 11
+   a mod 3    k=2: [(1, 1), (3, 3), (7, 7)]   control distinct at depth 2: mean 7.0 min 7
+   a mod 3    k=3: [(1, 1), (4, 4), (13, 12)]   control distinct at depth 2: mean 12.2 min 11
+   a mod 9    k=2: [(1, 1), (3, 3), (7, 7)]   control distinct at depth 2: mean 7.0 min 7
+   a mod 9    k=3: [(1, 1), (4, 4), (13, 13)]   control distinct at depth 2: mean 12.9 min 12
+   c mod 8    k=2: [(1, 1), (3, 3), (7, 7)]   control distinct at depth 2: mean 7.0 min 7
+   c mod 8    k=3: [(1, 1), (4, 4), (13, 13)]   control distinct at depth 2: mean 12.8 min 11
+   CONTROL Thue-Morse k=2: [(1, 1), (3, 2), (7, 3)]
+
+7b  is v_2(a(n)) / a(n) mod 8 a function of these digit statistics?  (#conflicting classes / #classes with >= 2 members)
+   v_2(a(n)), n=2..38: [1, 2, 1, 2, 5, 8, 5, 5, 1, 4, 2, 3, 2, 4, 3, 2, 1, 3, 1, 1, 1, 2, 1, 2, 2, 3, 1, 7, 1, 4, 1, 5, 2, 2, 2, 1, 1]
+   v_2(a(n))        n mod 2: 2/2; n mod 4: 4/4; n mod 8: 8/8; n mod 16: 15/16; popcount(n): 4/4; (popcount, n mod 4): 8/8; v_2(n): 4/4; (v_2(n), n mod 8): 8/8; (popcount(n-1)): 4/4; bitlength: 5/5
+   a(n) mod 8       n mod 2: 2/2; n mod 4: 4/4; n mod 8: 8/8; n mod 16: 13/16; popcount(n): 4/4; (popcount, n mod 4): 8/8; v_2(n): 4/4; (v_2(n), n mod 8): 8/8; (popcount(n-1)): 4/4; bitlength: 5/5
+   v_2(a(n)-c(n))   n mod 2: 2/2; n mod 4: 4/4; n mod 8: 7/8; n mod 16: 11/16; popcount(n): 4/4; (popcount, n mod 4): 7/8; v_2(n): 3/4; (v_2(n), n mod 8): 7/8; (popcount(n-1)): 4/4; bitlength: 5/5
+
+7c  Gessel/Dwork-type congruences: successes / tests
+   a p=2: s(np)==s(n) mod p^1: 18/19 (chance ~9.5)
+   a p=2: s(np)==s(n) mod p^2: 8/19 (chance ~4.8);  s(np^2)==s(np) mod p^2: 4/9
+   a p=3: s(np)==s(n) mod p^1: 3/12 (chance ~4.0)
+   a p=3: s(np)==s(n) mod p^2: 0/12 (chance ~1.3);  s(np^2)==s(np) mod p^2: 0/4
+   a p=5: s(np)==s(n) mod p^1: 2/7 (chance ~1.4)
+   a p=5: s(np)==s(n) mod p^2: 0/7 (chance ~0.3);  s(np^2)==s(np) mod p^2: 0/1
+   a p=7: s(np)==s(n) mod p^1: 1/5 (chance ~0.7)
+   a p=7: s(np)==s(n) mod p^2: 0/5 (chance ~0.1);  s(np^2)==s(np) mod p^2: 0/0
+   c p=2: s(np)==s(n) mod p^1: 19/20 (chance ~10.0)
+   c p=2: s(np)==s(n) mod p^2: 8/20 (chance ~5.0);  s(np^2)==s(np) mod p^2: 4/10
+   c p=3: s(np)==s(n) mod p^1: 2/13 (chance ~4.3)
+   c p=3: s(np)==s(n) mod p^2: 0/13 (chance ~1.4);  s(np^2)==s(np) mod p^2: 0/4
+   c p=5: s(np)==s(n) mod p^1: 3/8 (chance ~1.6)
+   c p=5: s(np)==s(n) mod p^2: 2/8 (chance ~0.3);  s(np^2)==s(np) mod p^2: 0/1
+   c p=7: s(np)==s(n) mod p^1: 0/5 (chance ~0.7)
+   c p=7: s(np)==s(n) mod p^2: 0/5 (chance ~0.1);  s(np^2)==s(np) mod p^2: 0/0
+   J p=2: s(np)==s(n) mod p^1: 15/16 (chance ~8.0)
+   J p=2: s(np)==s(n) mod p^2: 6/16 (chance ~4.0);  s(np^2)==s(np) mod p^2: 4/8
+   J p=3: s(np)==s(n) mod p^1: 3/11 (chance ~3.7)
+   J p=3: s(np)==s(n) mod p^2: 2/11 (chance ~1.2);  s(np^2)==s(np) mod p^2: 0/3
+   J p=5: s(np)==s(n) mod p^1: 0/6 (chance ~1.2)
+   J p=5: s(np)==s(n) mod p^2: 0/6 (chance ~0.2);  s(np^2)==s(np) mod p^2: 0/1
+   J p=7: s(np)==s(n) mod p^1: 0/4 (chance ~0.6)
+   J p=7: s(np)==s(n) mod p^2: 0/4 (chance ~0.1);  s(np^2)==s(np) mod p^2: 0/0
+
+7d  (a - c) mod 16 by N mod 8 (a == c mod 4 proven)
+   N==0 mod 8: [4, 12, 12, 12]
+   N==1 mod 8: [0, 0, 4, 8, 0]
+   N==2 mod 8: [0, 4, 0, 8, 8]
+   N==3 mod 8: [4, 0, 8, 8, 4]
+   N==4 mod 8: [4, 4, 12, 0, 0]
+   N==5 mod 8: [8, 4, 8, 12, 8]
+   N==6 mod 8: [4, 4, 8, 8, 8]
+   N==7 mod 8: [0, 0, 4, 0]

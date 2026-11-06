@@ -1,0 +1,117 @@
+== moments a(k+1): 38 terms, H^(0)_1..19, H^(1)_1..19
+  H0 signs: +0-+++--+++--+---++
+    n=1: 1 x [1-digit cofactor]
+    n=2: 0 x [1-digit cofactor]
+    n=3: 2^2 x [1-digit cofactor]
+    n=4: 2^4*5^2 x [1-digit cofactor]
+    n=5: 2^9*23*89 x [1-digit cofactor]
+    n=6: 2^6*47 x [7-digit cofactor]
+    n=7: 2^6*23 x [13-digit cofactor]
+    n=8: 2^11 x [20-digit cofactor]
+    n=9: 2^8*3*11*463 x [25-digit cofactor]
+    n=10: 2^10*23 x [37-digit cofactor]
+    n=11: 2^11*23*181*2531 x [42-digit cofactor]
+    n=12: 2^11*17*257*709*60413 x [51-digit cofactor]
+  H0: contains zero determinants -> linear and Somos searches skipped
+  H1 signs: +++----+++-----++--
+    n=1: 2 x [1-digit cofactor]
+    n=2: 2^2 x [1-digit cofactor]
+    n=3: 2^3*7 x [1-digit cofactor]
+    n=4: 2^9*23 x [1-digit cofactor]
+    n=5: 2^10*23*19507 x [1-digit cofactor]
+    n=6: 2^6*3*653*3083*78713 x [1-digit cofactor]
+    n=7: 2^7*167*2819*3169 x [9-digit cofactor]
+    n=8: 2^8*7*691 x [21-digit cofactor]
+    n=9: 2^10*19 x [32-digit cofactor]
+    n=10: 2^13*3*23*163*4519 x [36-digit cofactor]
+    n=11: 2^12*11*17*17189 x [49-digit cofactor]
+    n=12: 2^12*3^2*5*17*1123 x [64-digit cofactor]
+  H1 P-rec: boxes=16 best excess +0 hits=0
+  H1 C-fin: boxes=6 best excess +0 hits=0
+  H1 Somos-k (k=4..7, all pairs, poly coeffs): boxes=9 best excess +0 hits=0
+  zero Hankel determinant: S-fraction undefined
+
+== moments a(k), a(0)=1: 39 terms, H^(0)_1..20, H^(1)_1..19
+  H0 signs: ++++----+++-----++--
+    n=1: 1 x [1-digit cofactor]
+    n=2: 1 x [1-digit cofactor]
+    n=3: 2 x [1-digit cofactor]
+    n=4: 2^3*3 x [1-digit cofactor]
+    n=5: 2^5*13*19 x [1-digit cofactor]
+    n=6: 2^6*3*5*449*499 x [1-digit cofactor]
+    n=7: 2^6*211 x [9-digit cofactor]
+    n=8: 2^6*3^2*41*1423*13613 x [8-digit cofactor]
+    n=9: 2^7*11*11399 x [20-digit cofactor]
+    n=10: 2^8*11*83 x [31-digit cofactor]
+    n=11: 2^10*23*113 x [41-digit cofactor]
+    n=12: 2^10*137 x [54-digit cofactor]
+  H0 P-rec: boxes=19 best excess +0 hits=0
+  H0 C-fin: boxes=7 best excess +0 hits=0
+  H0 Somos-k (k=4..7, all pairs, poly coeffs): boxes=10 best excess +0 hits=0
+  H1 signs: +0-+++--+++--+---++
+    n=1: 1 x [1-digit cofactor]
+    n=2: 0 x [1-digit cofactor]
+    n=3: 2^2 x [1-digit cofactor]
+    n=4: 2^4*5^2 x [1-digit cofactor]
+    n=5: 2^9*23*89 x [1-digit cofactor]
+    n=6: 2^6*47 x [7-digit cofactor]
+    n=7: 2^6*23 x [13-digit cofactor]
+    n=8: 2^11 x [20-digit cofactor]
+    n=9: 2^8*3*11*463 x [25-digit cofactor]
+    n=10: 2^10*23 x [37-digit cofactor]
+    n=11: 2^11*23*181*2531 x [42-digit cofactor]
+    n=12: 2^11*17*257*709*60413 x [51-digit cofactor]
+  H1: contains zero determinants -> linear and Somos searches skipped
+  zero Hankel determinant: S-fraction undefined
+
+== moments a(k+2): 37 terms, H^(0)_1..19, H^(1)_1..18
+  H0 signs: +++----+++-----++--
+    n=1: 2 x [1-digit cofactor]
+    n=2: 2^2 x [1-digit cofactor]
+    n=3: 2^3*7 x [1-digit cofactor]
+    n=4: 2^9*23 x [1-digit cofactor]
+    n=5: 2^10*23*19507 x [1-digit cofactor]
+    n=6: 2^6*3*653*3083*78713 x [1-digit cofactor]
+    n=7: 2^7*167*2819*3169 x [9-digit cofactor]
+    n=8: 2^8*7*691 x [21-digit cofactor]
+    n=9: 2^10*19 x [32-digit cofactor]
+    n=10: 2^13*3*23*163*4519 x [36-digit cofactor]
+    n=11: 2^12*11*17*17189 x [49-digit cofactor]
+    n=12: 2^12*3^2*5*17*1123 x [64-digit cofactor]
+  H0 P-rec: boxes=16 best excess +0 hits=0
+  H0 C-fin: boxes=6 best excess +0 hits=0
+  H0 Somos-k (k=4..7, all pairs, poly coeffs): boxes=9 best excess +0 hits=0
+  H1 signs: ++--++-+++--++---+
+    n=1: 2^2 x [1-digit cofactor]
+    n=2: 2^2*3 x [1-digit cofactor]
+    n=3: 2^6*31 x [1-digit cofactor]
+    n=4: 2^11*23*103 x [1-digit cofactor]
+    n=5: 2^8*12953*28607 x [1-digit cofactor]
+    n=6: 2^6*59 x [13-digit cofactor]
+    n=7: 2^8*3*4799 x [17-digit cofactor]
+    n=8: 2^8*149*50893 x [21-digit cofactor]
+    n=9: 2^10*7*11*157*1889 x [31-digit cofactor]
+    n=10: 2^11*5*13*1321*29753 x [41-digit cofactor]
+    n=11: 2^11*3*17*2161 x [58-digit cofactor]
+    n=12: 2^12*3*7 x [77-digit cofactor]
+  H1 P-rec: boxes=14 best excess +0 hits=0
+  H1 C-fin: boxes=6 best excess +0 hits=0
+  H1 Somos-k (k=4..7, all pairs, poly coeffs): boxes=7 best excess +0 hits=0
+  S-fraction alpha_1..36: integral=False  signs=++++-+-+--++-++-+++-+-++--++-+-++-+-
+    first: 2, 0.5, 1.5, 4.667, -11.81, 1.272, -11.63, 15.95, -0.5011, -3.387, 4.155, 4.806
+  J-fraction lambda_1..18: integral=False  first: 1, 7, -15.02, -185.5, 1.697, 19.97, -9.451, -138.8, 50.8, -16.2
+  alpha P-rec: boxes=55 best excess +0 hits=0
+  alpha C-fin: boxes=14 best excess +0 hits=0
+  lambda P-rec: boxes=14 best excess +0 hits=0
+  lambda C-fin: boxes=6 best excess +0 hits=0
+
+== moments a(k)/k!, a(0)=1: 39 terms, H^(0)_1..20, H^(1)_1..19
+  H0 signs: +0--++--+---+--++---
+  H0: contains zero determinants -> linear and Somos searches skipped
+  H1 signs: +-+----++--++--++--
+  H1 P-rec: boxes=16 best excess +0 hits=0
+  H1 C-fin: boxes=6 best excess +0 hits=0
+  H1 Somos-k (k=4..7, all pairs, poly coeffs): boxes=9 best excess +0 hits=0
+  zero Hankel determinant: S-fraction undefined
+
+CONTROL k!: alpha = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]  P-rec hits on alpha: 37
