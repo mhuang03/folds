@@ -32,3 +32,6 @@ semi N=38 mod 199 = 79 885.2s peak_rss 3.98 GB
 # exit idx 9 code 0 2026-11-06T03:13:18Z load 4.92 5.13 4.64
 # start idx 10 2026-11-06T03:13:18Z load 4.92 5.13 4.64 avail 15765280 kB disk_avail 16674 MB anon_cap 3.5 spill /home/user/spill38
 # run interrupted by a container restart (no exit line); rerun
+# start idx 10 2026-11-06T03:17:29Z load 0.56 0.16 0.06 avail 15989552 kB disk_avail 16684 MB anon_cap 3.5 spill /home/user/spill38
+semi N=38 mod 197 = 54 727.2s peak_rss 3.98 GB
+# exit idx 10 code 0 2026-11-06T03:29:36Z load 3.70 3.85 2.43
