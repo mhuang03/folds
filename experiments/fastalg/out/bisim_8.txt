@@ -1,0 +1,12 @@
+# N=8 a(N)=1120 (check f(0)=g(full): ok)
+# k C(N,k) live orbits fvals gfvals bisimF bisimG defFibres defBad
+ 0          1          1          1          1          1          1          1          1      0
+ 1          8          8          4          4          4          4          1          8      0
+ 2         28         20         11         11         11         11          2         20      0
+ 3         56         44         22         13         18         18          4         44      0
+ 4         70         46         24          9         20         12         12         45      0
+ 5         56         44         22          4         18          4         18         44      0
+ 6         28         20         11          2         11          2         11         20      0
+ 7          8          8          4          1          4          1          4          8      0
+ 8          1          1          1          1          1          1          1          1      0
+TOTAL N=8 sets=256 live=192 orbits=100 fvals=46 gfvals=88 bisimF=54 bisimG=54 defFibres=191 defBad=0

@@ -1,0 +1,291 @@
+IS THERE A FUNDAMENTALLY FASTER ALGORITHM FOR a(N)?                (experiments/fastalg/)
+==========================================================================================
+Question: can the semi-symmetric count a(N) be computed in 2^{cN} with c < 1, by a transfer
+matrix on a smaller state, or in quasi-polynomial time, instead of the mirror-orbit MITM
+subset DP of rust/ (~N 2^N / 8 work, memory ~ one layer C(N, N/2)/2 words)?
+
+SHORT ANSWER
+  * No exponential improvement was found, and every route tested has a measured state
+    count that grows like 2^N (up to a constant factor or a small power of N):
+      - time-ordered automata: the minimum is the number of live sets, ~0.66 * 2^N
+        (rigorous, section 1);
+      - exact lumpings of the subset DP (counting bisimulation): about 0.33 of the live
+        mirror orbits, a ratio that has stopped falling at N = 22..24 (section 2);
+      - spatial (panel-sweep) transfer matrices with time summed out: the cut matrices
+        have FULL rank, and the middle-cut rank grows faster than 2^N (section 3);
+      - inclusion-exclusion / cluster expansion over constraints: exact on connected
+        clusters, but about 71% of all constraint sets are connected, and each term
+        costs a 2^N DP (section 6).
+    There are no long parity runs, and the cut sizes above do not shrink with N, so the
+    locality mechanism behind theta(n) (symratio, thetaext) has no analogue here.
+  * Positive, proven, and verified: the TRACE LEMMA.  g(T) depends only on the trace of
+    T (for each element, the numbers of elements of T in its two arms).  A
+    trace-preserving left-shift rewriting gives a computable NORMAL FORM NF(T) with
+    g(T) = g(NF(T)), and the pull DP closes on normal-form sets.  Only 16-22% of the sets
+    of the layer that the MITM stores are in normal form at N = 30..35, and the fraction
+    keeps falling slowly.  This is a constant-factor (~3-4x, growing slowly) MEMORY
+    reduction of the stored layer (section 4), verified end to end by nf.bin dp
+    (a(8..20) exact).  It is not an exponential gain: the number of normal-form sets is
+    still ~2^N / poly(N), and enumerating them still means looking at all sets.
+  * Recomputation instead (splitting the pairing by the pattern on q panels, plus a
+    checkpoint layer) cuts memory only at a steep time cost: 0.74 of a layer at 6.6x the
+    work, 0.35 at 20x for N = 39 (section 5).
+  * No new terms: a(39) is not computed here.  Section 7 gives the memory estimate of an
+    NF-compressed sub-block run for N = 39, 40.
+
+Files (build: g++ -O3 -march=native [-pthread] -o X.bin X.cpp; binaries are git-ignored)
+  bisim.cpp      g, f for all sets (N <= 24): live sets, mirror orbits, distinct f, distinct
+                 (g,f), counting bisimulation classes (forward and backward), and a
+                 test of the window-imbalance key.  out/bisim_N.txt
+  trace.cpp      distinct traces per layer, and a check that g is constant on trace
+                 fibres.  out/trace_N.txt
+  tracemoves.py, tracenf.py   trace classes versus shift/swap closures; confluence of the
+                 greedy left-shift normal form (Python, N <= 17)
+  nf.cpp         normal forms: `count`/`count2` (NF density per layer, any N <= ~36),
+                 `dp` (a(N) with g stored on NF sets only), `bench` (cost of one NF call).
+                 Env NF_SUB=T restricts the shifts so that NF keeps the (sub-)block of
+                 rust/src/layout.rs / sub.rs; NF_HALF=1 counts only stored mirror blocks.
+                 out/nfcount*.txt
+  nfblocks.py    how far NF moves elements, and how often it leaves the block
+  spatial.py     panel-sweep transfer matrices (rows, distinct rows, rank)
+  cluster.c      log-cumulants over constraint sets; incompatibility-graph test
+  qsplit_model.py   memory/work model of recomputation schemes (pattern and count splits)
+  summarize.py   -> out/summary.txt (tables of sections 2 and 4)
+  common.py, dumpcls.py, clsdiff.py   helpers / class inspection
+  run_nfcount.sh    driver for the NF-density table
+
+
+------------------------------------------------------------------------------------------
+1. TIME-ORDERED AUTOMATA NEED ONE STATE PER LIVE SET (rigorous)
+------------------------------------------------------------------------------------------
+Let H_k[u, v] = 1 iff the word u v (u of length k, v of length N - k) is a valid sequence.
+Any automaton, even a weighted one over a field, that reads the sequence in time order
+and gives weight 1 exactly to the valid sequences has at least rank H_k states at time k
+(Fliess / Carlyle-Paz: rank of the Hankel block).  Row u depends only on S = set(u) (when
+u is a valid prefix).  Its support is {v valid after S}, and every such v has set(v) =
+S^c.  So the rows of distinct live S (g(S) > 0, f(S) > 0) have DISJOINT nonempty supports
+and are linearly independent:
+      rank H_k = #{live k-sets}.
+On the data, live/2^N = 0.663 (N = 20..24, bisim.cpp).  So a "profile" or "frontier"
+state that is updated as panels are placed in time order (prefix counts at a bounded set
+of positions, binary-digit trees, ...) cannot recognise the valid sequences with fewer
+states, whatever the processing order of the panels inside a time step.  This is the
+precise form of "time matters only through S", and it holds for linear (transfer-matrix)
+states too, not only for deterministic ones.
+
+To COUNT, one may merge states with identical futures, giving up recognition: section 2.
+
+
+------------------------------------------------------------------------------------------
+2. EXACT LUMPING: COUNTING BISIMULATION OF THE SUBSET DAG (bisim.cpp)
+------------------------------------------------------------------------------------------
+S ~ S' (same size, both live) iff the multisets of classes of their valid live
+successors agree, computed top-down.  This is the coarsest partition on which the
+backward DP f(class) = sum mult * f(successor class) is well defined.  So it is a lower
+bound for ANY exact DP whose state is a function of S (any profile of P, any
+"relevant-positions" key, any symmetry quotient).  The forward version (predecessor
+multisets, bottom-up) has the same class counts layer by layer, mirrored k <-> N-k,
+because f(S) = g(S^c).
+
+   N   live/2^N  bisim/orbits   max-layer bisim/orbits  middle bisim/orbits  middle fvals/orbits
+  10   0.705      0.486          0.698                   0.360               0.221
+  14   0.676      0.440          0.572                   0.369               0.121
+  18   0.669      0.385          0.459                   0.341               0.085
+  20   0.664      0.366          0.450                   0.323               0.079
+  22   0.664      0.331          0.393                   0.282               0.068
+  23   0.661      0.325          0.402                   0.335               0.109
+  24   0.663      0.330          0.391                   0.287               0.070
+(orbits = live mirror orbits; full table in out/summary.txt.)  The total class count grows
+by 3.98x from N = 22 to 24 (live orbits: 4.00x), and the max-layer ratio is flat at
+0.39-0.40 for N = 22..24.  So the minimal exact lumped DAG is about a third of the
+mirror-reduced DP, with growth rate 2 per step on the data: a constant factor, not
+2^{cN} with c < 1.  The distinct f VALUES are fewer (7% of orbits at the middle), but a
+value class is not a congruence, so it cannot drive a DP.  The "|S| + imbalance vector
+J_S(m) over all m" key is injective on live sets up to 1-2 exceptions per N (column
+defFibres), and the FINDINGS.md claim ("no coarser statistic predicts f") holds for it.
+
+Where the merging comes from (dumpcls.py, clsdiff.py): bisimilar sets differ at panels
+spread evenly over [1, N] (it is not an end effect), mostly by local transpositions
+x. <-> .x.  That is the trace mechanism of section 4.
+
+
+------------------------------------------------------------------------------------------
+3. SPATIAL TRANSFER (sweeping panels, time summed out) IS WORSE (spatial.py)
+------------------------------------------------------------------------------------------
+Cut the panels into A and B.  M[sigma, tau] = number of valid sequences whose restriction
+to A has relative time order sigma and whose restriction to B has order tau.  A sweep
+over the panels whose state after A is a function of the A-part needs >= rank M states
+(linear) and >= #distinct rows (exact merging).
+   prefix cut A = [1..k]:
+     N = 10:  rank = 1 2 4 14 32 14 4 2 1          (k = 1..9)
+     N = 12:  rank = 1 2 4 14 32 142 32 14 4 2 1
+   The rank is always the FULL rank min(#distinct rows, #distinct cols).  The middle-cut
+   rank is 32 (N = 10) and 142 (N = 12); the nonzero rows R(k) = 1, 2, 4, 14, 38, 186, 626,
+   3628, ... (realisable relative orders of [1..k]) grow superexponentially, roughly like
+   k! times a Wallis-type product (the constraints of the panels m <= (k+1)/2 live inside
+   A).
+   odd/even (doubling-tree) cut, N = 12: rank 672 of 684 rows (|A|! = 720): full.
+A panel-ordered DP must remember relative TIME orders, not sets, and that costs more
+than 2^N already for moderate N.  Processing panels "by binary digits" (the doubling-map
+tree) is the worst cut of all.
+
+
+------------------------------------------------------------------------------------------
+4. THE TRACE LEMMA AND TRACE NORMAL FORMS (trace.cpp, tracenf.py, nf.cpp)
+------------------------------------------------------------------------------------------
+TRACE.  For T = {t_1 < ... < t_j} put
+      tau(T) = ( (|T cap leftarm(t_l)|, |T cap rightarm(t_l)|) )_{l = 1..j}.
+In prefix language: for a left-half element t the left arm is all of [1, t-1] and the
+right arm count is P_T(2t-1) - P_T(t); symmetrically on the right.  So tau(T) is P_T read
+at the DOUBLED positions of T's own elements (the doubling form of the step rule).
+
+LEMMA (trace).  g(T) depends only on tau(T).
+Proof.  An ordering of T is valid iff at each step the element t_l being placed has
+equally many earlier elements among the indices of its left arm, {a_l .. l-1}, and of its
+right arm, {l+1 .. b_l}.  These index sets are given by tau(T), so the set of valid
+orderings, viewed as orderings of the indices 1..j, is a function of tau(T).          QED
+Also tau(T - t_i) is a function of tau(T) and i (delete index i and reindex).  So the
+trace recursion G(tau) = sum_{i : i - a_i = b_i - i} G(tau - i) is a DP on traces.
+(Checked: g is constant on every trace fibre, N <= 24, trace.cpp.)
+
+Trace counts (sets with g > 0, mirror-identified) against live-g orbits:
+   middle layer h: 0.36 (N = 20), 0.30 (22), 0.32 (24); odd N: 0.29, 0.25 (21, 23).
+   layer h-1:      0.25 (20), 0.20 (22), 0.22 (24); odd N: 0.19, 0.17 (21, 23).
+The traces account for most of the bisimulation (at N = 22 the middle layer has 87752
+traces against 67804 live bisimulation classes).
+
+NORMAL FORM.  A left shift moves an element p of T to p-1 (p-1 not in T).  It keeps the
+trace iff
+   (i)  the moved element keeps both arm counts, and
+   (ii) no OTHER element of T has an arm that contains exactly one of p-1, p
+        (that arm's count would change by +-1; elements keep their positions and order).
+NF(T) applies the leftmost admissible shift until none applies.  Then tau(NF(T)) =
+tau(T), so g(T) = g(NF(T)) for EVERY set T, including g = 0 ones.  Hence
+      g(T) = sum_{p in T, (T - p, p) valid} g(NF(T - p))      (T in normal form)
+is a closed DP that stores g on normal-form sets only.  This is proven by the lemma; no
+confluence is needed.
+ * Leftmost-first and rightmost-first rewriting gave the same normal form on every set
+   (all j-sets, N = 12..17, tracenf.py): the rewriting looks confluent.
+ * Adjacent shifts generate almost all trace merging: at N = 16, j = 8 there are 4621
+   traces, 4873 shift-closure classes and 4780 swap-closure classes.
+ * nf.bin dp N reproduces a(8..20) exactly with g stored on NF sets only (hash tables).
+
+NF DENSITY (fraction of ALL j-sets that are in normal form; out/nfcount.txt).  The MITM
+stores layer h-1 for even N (h = N/2) and layer h for odd N (N = 2h+1, fused pairing):
+   N     stored layer   NF fraction        N     stored layer   NF fraction
+  18     8              0.310             19     9              0.336
+  20     9              0.282             21    10              0.354
+  22    10              0.238             23    11              0.288
+  24    11              0.251             25    12              0.268
+  26    12              0.197             27    13              0.277
+  28    13              0.196             29    14              0.227
+  30    14              0.172             31    15              0.210
+  32    15              0.163             33    16              0.218
+  34    16              0.133             35    17              0.183
+(multiples of 3 sit high, the same arithmetic effect as in a(N) itself.)  On this range
+the fraction falls roughly like N^{-1.3} (even N: 0.282 -> 0.133 from N = 20 to 34).  It falls, but polynomially:
+#NF ~ 2^N / N^{~1.7}, still growth rate 2.
+
+Restricting the shifts so that NF keeps the storage blocks (NF_SUB):
+   NF_SUB=0 keeps the (|L|, |R|, c) block of layout.rs/block.rs: no shift across the middle
+   panel or the middle boundary.  NF_SUB=4 keeps the sub-block of sub.rs with T = 4: no
+   shift touches the 2T high panels or the middle panel.  Fractions over the stored
+   mirror blocks (|L| <= |R|), out/nfcount_sub.txt:
+       N    layer   blocks (T=0)   sub-blocks (T=4)   unrestricted
+      28    13      0.224          0.360              0.196
+      29    14      0.259          0.408              0.227
+      30    14      0.179          0.315              0.172
+      31    15      0.236          0.348              0.210
+      32    15      0.188          0.302              0.163
+      33    16      0.247          0.353              0.218
+   Keeping blocks costs little for even N.  Keeping sub-blocks (8 frozen high panels)
+   costs about +0.12; the frozen panels are a smaller share at larger N.
+   nfblocks.py: unrestricted NF moves elements by at most 4 places, and it leaves the
+   block for 5-12% of the sets (N = 16..18).  The restricted NF keeps the block by
+   construction, and nf.bin dp with NF_SUB=0, 2, 4 reproduces a(16), a(17).
+
+Cost (nf.bin bench, machine shared): one NF(T - p) call takes 200-300 ns at N = 38-39,
+and 84-92% of the calls move at least one element.
+
+
+------------------------------------------------------------------------------------------
+5. RECOMPUTATION INSTEAD OF STORAGE (qsplit_model.py)
+------------------------------------------------------------------------------------------
+The pairing sum split by the pattern sigma = S cap Q on q panels needs g only on the
+down-set of its targets {S cap Q = sigma} and {S cap Q = Q - sigma}, which is closed
+under the pull DP.  Run: DP for all sets up to a checkpoint layer j0 (kept), then one
+restricted DP per pattern on layers > j0.  Optimistic one-layer accounting, as achieved
+by sub.rs.  N = 39, relative to the current scheme (one layer, ~sum_j j C(N,j) work):
+     peak 0.905  work x 4.4  (q = 3)      peak 0.457  work x 13.8 (q = 6)
+     peak 0.740  work x 6.6  (q = 4)      peak 0.346  work x 19.7 (q = 7)
+     peak 0.580  work x 9.6  (q = 5)      peak 0.250  work x 27.9 (q = 8)
+The work grows like (3/2)^q: a set with u Q-elements lies in the down-set of 2^{q-u}
+patterns.  Splitting by COUNTS |S cap Q| (Q = left half gives rectangles in the (i,j)
+block grid) never gets below 0.80 of a layer.  The checkpoint layer hardly matters,
+because the layers below the middle are not small (C(39,16)/C(39,19) = 0.55).
+Verdict: memory x work stays roughly constant or gets worse, so on this VM disk spill
+remains the better trade.
+
+
+------------------------------------------------------------------------------------------
+6. INCLUSION-EXCLUSION / CLUSTER EXPANSION (cluster.c)
+------------------------------------------------------------------------------------------
+Z(A) = number of permutations satisfying the constraints of the panels in A (exact, a
+2^N DP each), kappa = Moebius transform of ln Z, ln a(N) = ln N! + sum_A kappa(A).
+ * EXACT FACT (N <= 14, every set): kappa(A) = 0 whenever A is disconnected in the
+   incompatibility graph (windows neither disjoint nor nested in an arm).  So the
+   cluster expansion runs over connected clusters only, extending the proven pairwise
+   and chain independence of Independence.lean.  (A handful of incompatible PAIRS also
+   have kappa = 0: 33 nonzero of 39 at N = 14, the one-outside-element cases of
+   Independence2.)
+ * But the connected clusters are 2912 of 4095 at N = 14 (71%; 72% at N = 12, 13), and
+   2898 of them have kappa != 0.  Each needs its own Z(B).  So the expansion has
+   ~0.7 * 2^{N-2} terms costing 2^N each: 4^N in total, worse than the DP.
+ * Truncating at small clusters is not exact, and the Wallis/independence model is off by
+   e^{0.09N} (structure/FINDINGS.md).
+
+
+------------------------------------------------------------------------------------------
+7. WHAT AN NF-COMPRESSED RUST KERNEL WOULD GIVE (estimate, not implemented)
+------------------------------------------------------------------------------------------
+Storage per stored block: the values of its NF sets (dense, u8 per CRT run) plus a
+membership bitmap over the block's dense index with a rank directory (~1.1 bit per
+entry, ~0.14 byte; Elias-Fano would be about the same at these densities).  The block
+locality of sub.rs/block.rs survives with the restricted NF.  Extrapolating the tables
+(odd N = 39: about 0.21 unrestricted, 0.23 blocks, 0.32 sub-blocks; even N = 40: about
+0.12, 0.15, 0.27):
+   N = 39:  --sub 4 peak 35.6e9 words x (0.32 + 0.14) ~ 16 GB;
+            --blocks peak 43.6e9 x (0.23 + 0.14) ~ 16 GB      (today: ~36 GB)
+   N = 40:  --sub 4 66.7e9 x (0.27 + 0.14) ~ 27 GB; --blocks 94.8e9 x (0.15+0.14) ~ 27 GB
+So N = 39 would fit in the existing spill design (3.5 GB anonymous + ~13 GB file), but
+it does not fit in RAM alone, and N = 40 does not fit on this VM either way.
+Price: the kernel loses its streaming row adds.  Every valid predecessor needs an NF
+computation, a dense index, a rank lookup and a random read.  nf.bin bench measures
+200-300 ns per NF call at N = 38-39 (machine shared), against roughly one cache-friendly
+word per predecessor today.  The DP touches only NF entries (~1/4 of them), but the net
+effect is still an estimated 5-10x more time per CRT run.  For N = 39 that is several
+hours per u8 run, 14 runs, i.e. days on this VM.  This is a real constant-factor memory
+gain (about 2.2x at N = 39, growing slowly with N), but it costs a large rewrite of
+sub.rs kernels and a large amount of time.  It was NOT implemented in rust/: it could
+not be run here within the budget (<= 8 GB, 3 cores), and an untested kernel would not
+be an improvement.
+
+
+------------------------------------------------------------------------------------------
+8. CONCLUSIONS
+------------------------------------------------------------------------------------------
+1. No fundamentally faster (2^{cN}, c < 1, or quasi-polynomial) algorithm along the
+   suggested lines.  Every exact state notion measured grows with rate 2 per step:
+   recognisers need ~0.66 * 2^N states (proof), exact lumpings ~0.33 of the orbits
+   (flat at N = 22..24), and spatial sweeps need superexponential rank.  The obstacles
+   listed in the task are confirmed, sharpened by section 1, and made quantitative.
+2. The semi condition's two-prefix-count locality is real, but it is a statement about
+   the trace: g(T) is a function of P_T at T's doubled positions.  That gives an exact
+   normal form and a provable memory saving that grows polynomially (NF density ~ N^{-1.3}
+   on N <= 35), not exponentially.  It cannot be pushed into a sub-2^N enumeration,
+   because NF sets are recognised by local tests on whole sets, not generated by a small
+   automaton (section 1 forbids that for time-ordered generation).
+3. Recomputation and cluster expansions are strictly worse than the present DP.
+4. No new terms.  The best concrete lever for N = 39 on this VM remains disk (README:
+   ~36 GB RAM+disk).  An NF-compressed sub-block kernel would bring that to ~16 GB at
+   several times the run time.

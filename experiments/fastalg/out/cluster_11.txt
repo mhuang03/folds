@@ -1,0 +1,13 @@
+# N=11 a(N)=70960 N!=39916800
+# size  #sets  #connected(incompat.)  #nonzero kappa
+ 1        9        9        9
+ 2       36       22       22
+ 3       84       52       52
+ 4      126       86       86
+ 5      126       96       96
+ 6       84       72       72
+ 7       36       34       34
+ 8        9        9        9
+ 9        1        1        1
+TOTAL N=11 constraint-sets=511 connected=381 nonzero=381 nonzero-but-disconnected=0 (max 0.000e+00)
+check: ln N! + sum kappa = 11.169871616983, ln a(N) = 11.169871616983

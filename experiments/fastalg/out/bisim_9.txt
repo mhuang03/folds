@@ -1,0 +1,13 @@
+# N=9 a(N)=4256 (check f(0)=g(full): ok)
+# k C(N,k) live orbits fvals gfvals bisimF bisimG defFibres defBad
+ 0          1          1          1          1          1          1          1          1      0
+ 1          9          9          5          5          5          5          1          9      0
+ 2         36         27         15         15         15         15          2         27      0
+ 3         84         63         33         25         30         30          4         63      0
+ 4        126         89         46         18         38         27         12         89      0
+ 5        126         89         46          9         38         12         27         89      0
+ 6         84         63         33          4         30          4         30         63      0
+ 7         36         27         15          2         15          2         15         27      0
+ 8          9          9          5          1          5          1          5          9      0
+ 9          1          1          1          1          1          1          1          1      0
+TOTAL N=9 sets=512 live=378 orbits=200 fvals=81 gfvals=178 bisimF=98 bisimG=98 defFibres=378 defBad=0

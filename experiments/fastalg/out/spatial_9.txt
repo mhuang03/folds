@@ -1,0 +1,11 @@
+N=9  a(N)=4256
+prefix     |A|= 1  rows(nonzero)=     1  distinct rows=     1  rank=    1   |A|!=1  2^|A|=2
+prefix     |A|= 2  rows(nonzero)=     2  distinct rows=     2  rank=    2   |A|!=2  2^|A|=4
+prefix     |A|= 3  rows(nonzero)=     4  distinct rows=     3  rank=    3   |A|!=6  2^|A|=8
+prefix     |A|= 4  rows(nonzero)=    14  distinct rows=    10  rank=   10   |A|!=24  2^|A|=16
+prefix     |A|= 5  rows(nonzero)=    38  distinct rows=    30  rank=   10   |A|!=120  2^|A|=32
+prefix     |A|= 6  rows(nonzero)=   178  distinct rows=    55  rank=    3   |A|!=720  2^|A|=64
+prefix     |A|= 7  rows(nonzero)=   592  distinct rows=    25  rank=    2   |A|!=5040  2^|A|=128
+prefix     |A|= 8  rows(nonzero)=  1898  distinct rows=     5  rank=    1   |A|!=40320  2^|A|=256
+odd panels |A|= 5  rows(nonzero)=   114  distinct rows=   114  rank=   24   |A|!=120  2^|A|=32
+left half  |A|= 4  rows(nonzero)=    14  distinct rows=    10  rank=   10   |A|!=24  2^|A|=16

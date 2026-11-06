@@ -1,0 +1,16 @@
+N=26 j=12 sub=0 half=1 sets=6301178 nf=1288792 ratio=0.2045
+N=26 j=12 sub=4 half=1 sets=6301178 nf=2406680 ratio=0.3819
+N=27 j=13 sub=0 half=1 sets=11501478 nf=3566721 ratio=0.3101
+N=27 j=13 sub=4 half=1 sets=11501478 nf=5078264 ratio=0.4415
+N=28 j=13 sub=0 half=1 sets=18721080 nf=4184516 ratio=0.2235
+N=28 j=13 sub=4 half=1 sets=18721080 nf=6737980 ratio=0.3599
+N=29 j=14 sub=0 half=1 sets=44668692 nf=11551642 ratio=0.2586
+N=29 j=14 sub=4 half=1 sets=44668692 nf=18213832 ratio=0.4078
+N=30 j=14 sub=0 half=1 sets=93415950 nf=16697057 ratio=0.1787
+N=30 j=14 sub=4 half=1 sets=93415950 nf=29464354 ratio=0.3154
+N=31 j=15 sub=0 half=1 sets=170974710 nf=40363765 ratio=0.2361
+N=31 j=15 sub=4 half=1 sets=170974710 nf=59541757 ratio=0.3482
+N=32 j=15 sub=0 half=1 sets=282861360 nf=53235985 ratio=0.1882
+N=32 j=15 sub=4 half=1 sets=282861360 nf=85435996 ratio=0.3020
+N=33 j=16 sub=0 half=1 sets=666220005 nf=164486894 ratio=0.2469
+N=33 j=16 sub=4 half=1 sets=666220005 nf=235172092 ratio=0.3530

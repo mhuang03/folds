@@ -1,0 +1,9 @@
+# N=7 a(N)=256 N!=5040
+# size  #sets  #connected(incompat.)  #nonzero kappa
+ 1        5        5        5
+ 2       10        7        7
+ 3       10        9        9
+ 4        5        5        5
+ 5        1        1        1
+TOTAL N=7 constraint-sets=31 connected=27 nonzero=27 nonzero-but-disconnected=0 (max 0.000e+00)
+check: ln N! + sum kappa = 5.545177444480, ln a(N) = 5.545177444480

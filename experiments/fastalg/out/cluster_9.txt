@@ -1,0 +1,11 @@
+# N=9 a(N)=4256 N!=362880
+# size  #sets  #connected(incompat.)  #nonzero kappa
+ 1        7        7        7
+ 2       21       14       14
+ 3       35       24       24
+ 4       35       27       27
+ 5       21       19       19
+ 6        7        7        7
+ 7        1        1        1
+TOTAL N=9 constraint-sets=127 connected=99 nonzero=99 nonzero-but-disconnected=0 (max 0.000e+00)
+check: ln N! + sum kappa = 8.356085031021, ln a(N) = 8.356085031021
