@@ -1,0 +1,8 @@
+# N=10  j  C(N,j)  g>0  orbits(g>0)  traces(g>0, mirror-identified)  ratio  gfibre_ok
+ 0          1          1          1          1 1.0000 ok
+ 1         10         10          5          1 0.2000 ok
+ 2         45         33         18          2 0.1111 ok
+ 3        120         94         47          8 0.1702 ok
+ 4        210        158         82         23 0.2805 ok
+ 5        252        208        104         57 0.5481 ok
+TOTAL N=10 layers<=5 orbits=257 traces=92 ratio=0.3580

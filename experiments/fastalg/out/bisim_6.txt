@@ -1,0 +1,10 @@
+# N=6 a(N)=96 (check f(0)=g(full): ok)
+# k C(N,k) live orbits fvals gfvals bisimF bisimG defFibres defBad
+ 0          1          1          1          1          1          1          1          1      0
+ 1          6          6          3          3          3          3          1          6      0
+ 2         15         11          6          5          5          6          2         11      0
+ 3         20         18          9          4          6          4          4         17      0
+ 4         15         11          6          2          5          2          6         11      0
+ 5          6          6          3          1          3          1          3          6      0
+ 6          1          1          1          1          1          1          1          1      0
+TOTAL N=6 sets=64 live=54 orbits=29 fvals=17 gfvals=24 bisimF=18 bisimG=18 defFibres=53 defBad=0

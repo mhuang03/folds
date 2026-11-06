@@ -1,0 +1,8 @@
+# N=4 a(N)=10 (check f(0)=g(full): ok)
+# k C(N,k) live orbits fvals gfvals bisimF bisimG defFibres defBad
+ 0          1          1          1          1          1          1          1          1      0
+ 1          4          4          2          2          2          2          1          4      0
+ 2          6          4          2          2          2          2          2          3      0
+ 3          4          4          2          1          2          1          2          4      0
+ 4          1          1          1          1          1          1          1          1      0
+TOTAL N=4 sets=16 live=14 orbits=8 fvals=7 gfvals=8 bisimF=7 bisimG=7 defFibres=13 defBad=0

@@ -1,0 +1,15 @@
+# N=13 a(N)=1620328 N!=6227020800
+# size  #sets  #connected(incompat.)  #nonzero kappa
+ 1       11       11       11
+ 2       55       33       33
+ 3      165       93       93
+ 4      330      197      197
+ 5      462      305      305
+ 6      462      343      343
+ 7      330      273      273
+ 8      165      149      149
+ 9       55       53       53
+10       11       11       11
+11        1        1        1
+TOTAL N=13 constraint-sets=2047 connected=1469 nonzero=1469 nonzero-but-disconnected=0 (max 0.000e+00)
+check: ln N! + sum kappa = 14.298139155850, ln a(N) = 14.298139155850

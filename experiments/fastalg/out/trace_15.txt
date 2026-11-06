@@ -1,0 +1,10 @@
+# N=15  j  C(N,j)  g>0  orbits(g>0)  traces(g>0, mirror-identified)  ratio  gfibre_ok
+ 0          1          1          1          1 1.0000 ok
+ 1         15         15          8          1 0.1250 ok
+ 2        105         75         40          2 0.0500 ok
+ 3        455        337        171          8 0.0468 ok
+ 4       1365        924        468         35 0.0748 ok
+ 5       3003       2204       1109        136 0.1226 ok
+ 6       5005       3716       1871        392 0.2095 ok
+ 7       6435       5261       2644        936 0.3540 ok
+TOTAL N=15 layers<=7 orbits=6312 traces=1511 ratio=0.2394

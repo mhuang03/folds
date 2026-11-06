@@ -1,0 +1,14 @@
+N=12  a(N)=383476
+prefix     |A|= 1  rows(nonzero)=     1  distinct rows=     1  rank=    1   |A|!=1  2^|A|=2
+prefix     |A|= 2  rows(nonzero)=     2  distinct rows=     2  rank=    2   |A|!=2  2^|A|=4
+prefix     |A|= 3  rows(nonzero)=     4  distinct rows=     4  rank=    4   |A|!=6  2^|A|=8
+prefix     |A|= 4  rows(nonzero)=    14  distinct rows=    14  rank=   14   |A|!=24  2^|A|=16
+prefix     |A|= 5  rows(nonzero)=    38  distinct rows=    32  rank=   32   |A|!=120  2^|A|=32
+prefix     |A|= 6  rows(nonzero)=   186  distinct rows=   142  rank=  142   |A|!=720  2^|A|=64
+prefix     |A|= 7  rows(nonzero)=   626  distinct rows=   388  rank=   32   |A|!=5040  2^|A|=128
+prefix     |A|= 8  rows(nonzero)=  3628  distinct rows=  1168  rank=   14   |A|!=40320  2^|A|=256
+prefix     |A|= 9  rows(nonzero)= 13918  distinct rows=   470  rank=    4   |A|!=362880  2^|A|=512
+prefix     |A|=10  rows(nonzero)= 59084  distinct rows=    94  rank=    2   |A|!=3628800  2^|A|=1024
+prefix     |A|=11  rows(nonzero)=155320  distinct rows=     7  rank=    1   |A|!=39916800  2^|A|=2048
+odd panels |A|= 6  rows(nonzero)=   684  distinct rows=   682  rank=  672   |A|!=720  2^|A|=64
+left half  |A|= 6  rows(nonzero)=   186  distinct rows=   142  rank=  142   |A|!=720  2^|A|=64

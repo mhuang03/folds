@@ -1,0 +1,9 @@
+# N=5 a(N)=28 (check f(0)=g(full): ok)
+# k C(N,k) live orbits fvals gfvals bisimF bisimG defFibres defBad
+ 0          1          1          1          1          1          1          1          1      0
+ 1          5          5          3          3          3          3          1          5      0
+ 2         10          8          5          4          4          4          2          8      0
+ 3         10          8          5          2          4          2          4          8      0
+ 4          5          5          3          1          3          1          3          5      0
+ 5          1          1          1          1          1          1          1          1      0
+TOTAL N=5 sets=32 live=28 orbits=18 fvals=12 gfvals=16 bisimF=12 bisimG=12 defFibres=28 defBad=0

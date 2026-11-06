@@ -1,0 +1,16 @@
+# N=14 a(N)=9167908 N!=87178291200
+# size  #sets  #connected(incompat.)  #nonzero kappa
+ 1       12       12       12
+ 2       66       39       33
+ 3      220      120      114
+ 4      495      282      280
+ 5      792      496      496
+ 6      924      646      646
+ 7      792      616      616
+ 8      495      422      422
+ 9      220      202      202
+10       66       64       64
+11       12       12       12
+12        1        1        1
+TOTAL N=14 constraint-sets=4095 connected=2912 nonzero=2898 nonzero-but-disconnected=0 (max 0.000e+00)
+check: ln N! + sum kappa = 16.031219682982, ln a(N) = 16.031219682982
