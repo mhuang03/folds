@@ -1,0 +1,9 @@
+*.o
+*.so
+*.bin
+*.json
+__pycache__/
+*.pyc
+.lake/
+build/
+a.out
