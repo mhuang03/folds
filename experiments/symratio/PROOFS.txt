@@ -1,0 +1,240 @@
+THE RATIO theta(n) / (2 theta(floor n/2) theta(ceil n/2)): WINDOWS, AN EXACT RECURSION,
+AND CONJECTURE R                                                       (experiments/symratio/)
+==========================================================================================
+Builds on ../symstruct/PROOFS.txt (Theorem M, the identity theta(n) = sum P(sigma,tau),
+Conjecture R) and ../symrun/PROOFS.txt (opening runs).  theta(n) = A003407(n) = number of
+3-AP-free permutations of [1,n].  Lean: Folds/SymRatio.lean (no sorry, no native_decide;
+axioms propext, Classical.choice, Quot.sound).
+
+Notation.  N >= 2, p in {0,1}; D = values of parity p in [1,N] (d = floor((N+p)/2) of them),
+C = the others (c = floor((N+1-p)/2)); lift_p(r) = 2r - p maps [1,d] onto D.  For sigma in
+Theta(d), tau in Theta(c), P(sigma,tau) = number of 3-AP-free permutations of [1,N] starting
+in D whose D-subsequence is lift(sigma) and whose C-subsequence is lift(tau) (Lean
+SymStructure2.shuffles).  theta(N) = sum_p sum_{sigma,tau} P(sigma,tau) (Theorem M), so
+r(N) := theta(N)/(2 theta(floor N/2) theta(ceil N/2)) = (E_0 + E_1)/2, E_p = mean of P over
+independent uniform sigma, tau.
+Windows: head(a) = first 6 entries, tail(a) = last 6 entries (as lists).
+
+SUMMARY
+  W  (locality) P(sigma,tau) = Pi_{N,p}(tail sigma, head tau): it depends only on the last 6
+     entries of sigma and the first 6 of tau.  Pi counts the interleavings of the two
+     lifted 6-windows with the D-entry first on every linked pair.             [Lean, N >= 14]
+  S  r(N) = (1/2) sum_p sum_{S,T} t_d(S) h_c(T) Pi_{N,p}(S,T), t_m / h_m = laws of the tail /
+     head window of a uniform element of Theta(m) (h_m = t_m reversed): r(N) is a fixed
+     bilinear form in the boundary statistics at sizes floor(N/2), ceil(N/2).   [Lean]
+  J  the joint head/tail law J_m satisfies an EXACT closed recursion under halving
+     (m >= 19; Lean m >= 24).  Consequence: theta(n) in O(n^3) time and O(n^2) memory.
+     Checked: equals the b-file for all 19 <= n <= 200; new values theta(201..300).
+  Q  exact algebra: the head-tail correlation of J_m is QUADRATIC in those of the halves
+     (an identity for J - h x t).
+  N  numerics: r(n) for all n <= 520 and along doubling chains to n ~ 1800; the doubling
+     defect contracts by a factor -> 4.00 per doubling for x not divisible by 3 and
+     super-geometrically for 3 | x (a new dichotomy).  Conjecture R: still open.
+
+------------------------------------------------------------------------------------------
+1. THEOREM W (the window / locality theorem)          [Lean SymRatio.card_shuffles_eq_win]
+------------------------------------------------------------------------------------------
+LEMMA 1.1 (sharp opening run, Lean run_prefix / run_take).  Let a be a 3-AP-free
+permutation of [1,N] whose first entry has parity q, K = floor((N+q)/2) (the size of its
+class).  Then the first K - 6 entries of a have parity q.
+Proof.  If a[k] has the other parity and k < K - 6, at most k entries of parity q precede
+it, so at least K - k > 6 follow it, contradicting Sharma's ends theorem in the form
+SymStructure2.D_after_le_six (at most 6 entries of the first parity follow any entry of
+the other parity).                                                                    QED
+LEMMA 1.2 (closing run).  The last c - 6 entries have parity 1 - q (c = size of the other
+class).  Proof: reverse(a) is 3-AP-free and starts with the last entry of a, which has
+parity 1 - q (first and last entries differ in parity, SymParity.head_last_parity);
+apply 1.1.                                                                            QED
+THEOREM W.  Let d >= 7, c >= 6 (true for both p when N >= 14), sigma in Theta(d), tau in
+Theta(c), k = d - 6, S = sigma.drop k (last 6), T = tau.take 6 (first 6), X = lift_p of
+sigma.take k, Y = lift_{1-p} of tau.drop 6.  Then
+   a  |->  w = the 12 entries of a after position k
+is a bijection from the shuffles of (sigma,tau) onto
+   Win_{N,p}(S,T) = { interleavings w of lift_p(S) and lift_{1-p}(T) (each in its order)
+                      such that y precedes u for every linked pair y in D, u in C },
+with inverse w |-> X ++ w ++ Y.  Hence P(sigma,tau) = Pi_{N,p}(S,T) := |Win_{N,p}(S,T)|.
+Proof.  (a = X ++ w ++ Y.)  By 1.1 the first k entries of a are D-entries; the D-subsequence
+of a is lift(sigma), so they are X.  By 1.2 the last c - 6 entries are C-entries, hence
+equal to Y (Lean: through the reversal, filter_take_of_forall).  The middle w has
+D-subsequence lift(S) and C-subsequence lift(T) (cancel X, Y in the filters), so it is an
+interleaving; inside a contiguous block the order is that of a, so linked pairs in w are
+in D-before-C order (Lean bef_of_infix).  (X ++ w ++ Y is a shuffle.)  Its D- and
+C-subsequences are lift(sigma), lift(tau), so it is a permutation of [1,N] starting with
+X_1 in D (Lean lift_union_isPermOf).  For a linked pair (y,u): y in X precedes everything
+after X; y in w and u in Y: y first; y, u in w: by the hypothesis on w; y in Y or u in X
+is impossible (parities).  By Theorem M (Lean shuffle_key, inside mem_shuffles) it is
+3-AP-free.  The two maps are mutually inverse (|X| = k, |w| = 12).                     QED
+Explicit form.  With y_1..y_6 = lift(S), u_1..u_6 = lift(T) and c_j = number of y's before
+u_j:   Pi = #{ 0 <= c_1 <= ... <= c_6 <= 6 : c_j >= M_j },
+       M_j = max_{i <= j} max{ k : Linked(N, y_k, u_i) }  (0 if none).
+So Pi <= C(12,6) = 924, and Pi = 1 iff M_1 = 6, i.e. u_1 is linked to y_6 (the last entry
+of sigma).  Since c_1 >= d - 6 is forced in the full shuffle, every pair occurring has
+M_1 >= 1 [Sharma].  Lean corollary card_shuffles_congr: equal windows => equal P.
+The window is optimal in general: 6 = Sharma's constant is sharp (../symrun, f(48*2^j+2)).
+
+------------------------------------------------------------------------------------------
+2. THEOREM S (r(N) is a bilinear form in boundary statistics) [Lean card_symSeqs_eq_stat_sum]
+------------------------------------------------------------------------------------------
+For N >= 14,
+   theta(N) = sum_p sum_S sum_T alpha_p(S) beta_p(T) Pi_{N,p}(S,T),
+   alpha_p(S) = #{sigma in Theta(d) : tail sigma = S},  beta_p(T) = #{tau in Theta(c) : head = T}.
+Dividing by theta(d) theta(c):  r(N) = (1/2) sum_p <t_d, Pi_{N,p} h_c>.  By reversal
+h_m(T) = t_m(reverse T), so r(N) is determined by the two tail laws t_{floor N/2},
+t_{ceil N/2}.  This is Goal 2(a), with "boundary statistics" = the law of the 6-window.
+Their support is finite for each m but grows linearly: the head windows are exactly the
+live 6-prefixes of ../symstruct Theorem L, L_6(m) ~ (95/4) m; measured 24.2 m (nh column).
+Why not fewer statistics: Pi depends on the exact linkage pattern of 6 x 6 values, i.e. on
+comparisons like 2y <= N + u at resolution 1; no finite quotient of the windows is
+invariant under all N (the scaled positions y/N matter), see section 5.
+
+------------------------------------------------------------------------------------------
+3. THEOREM J (exact propagation of the window statistics)  [Lean card_window_eq_sum, N >= 24]
+------------------------------------------------------------------------------------------
+J_m(H,T) = #{a in Theta(m) : head a = H, tail a = T}.  For m >= 19,
+   J_m(lift_p H', lift_{1-p} T') = sum_{S,T''} J_d(H',S) Pi_{m,p}(S,T'') J_c(T'',T'),
+and J_m vanishes off these (p = parity of the first entry).
+Proof.  By Theorem W, a shuffle is X ++ w ++ Y.  Its head is lift(head sigma) when its
+opening run has length >= 6, and its tail is lift(tail tau) when its closing run (= the
+opening run of the reversal) has length >= 6.  For m >= 24 both hold because d, c >= 12
+(Lemma 1.1/1.2; Lean shuffle_head, shuffle_tail).  For 19 <= m <= 23 use the exact minimal
+run f(m) = 6,6,6,6,7 (../symstruct section 3, table; f(18) = 5, so 19 is optimal).  Sum
+the window identity over the shuffles with the prescribed windows (Lean
+card_filter_symSeqs_eq_sum refines card_symSeqs_eq_sum by any predicate).          QED
+ALGORITHM (window.c).  Enumerate Theta(m) for 9 <= m <= 18 (the base, theta(18) = 659296),
+then apply Theorem J upward; theta(m) = sum of J_m.  Blocks: J_m splits by the parity p of
+the first entry, J_{m,p} = blockdiag(J_d) Pi_{m,p} blockdiag(J_c) (dense matrix products of
+size ~ 12m).  For theta(n) one needs J only at the O(log n) sizes floor/ceil(n/2^i),
+i >= 2, the marginals t, h at n/2, and theta(n) = sum_p <t_d, Pi h_c>:
+     time O(n^3), memory O(n^2)    (window lists have length L_6(m) = O(m)).
+So A003407 is computable in polynomial time.  (The methods in docs/LITERATURE.md are
+memoised DP over subsets, Correll-Ho, n <= 90; the b-file stops at n = 200.  We have not
+checked whether Ho's 2026 code uses a similar decomposition.)
+VERIFICATION.  window_mod.bin (exact, Montgomery arithmetic mod a prime) reproduces the
+b-file modulo 2^61 - 1 for every 19 <= n <= 200 (checkmod.py: 182 values, 0 mismatches);
+the double-precision version gives r(n) with max error 4.9e-13 against the b-file.
+Cost: all n <= 200 in 33 s (exact) / 22 s (double); all n <= 520 in ~7 min, 1.3 GB.
+NEW VALUES theta(201..300): data/theta_exact.txt (six primes below 2^62 + CRT, crt.py;
+each value checked to have the size predicted by the double run, and the same pipeline
+reproduces the b-file for n <= 200).  E.g.
+  theta(201) = 3383905518357857089058139118713453640432689933076556312709062600132976
+  theta(300) = 14840420149612708267174144112383534676549534420051088153063780091670236256
+               071672633234926114555982499328      (104 digits)
+
+------------------------------------------------------------------------------------------
+4. THEOREM Q (head-tail decoupling is quadratic)                          [paper; algebra]
+------------------------------------------------------------------------------------------
+For a nonnegative matrix M of total mass 1 write m_r = M 1, m_c = 1^T M and
+M' = M - m_r m_c^T (so M' 1 = 0, 1^T M' = 0), kappa(M) = ||M'||_1.
+IDENTITY.  Let A (heads x S) and B (T x tails) have mass 1, Pi >= 0, J = A Pi B and
+X = 1^T J 1 = alpha^T Pi b (alpha = 1^T A, b = B 1).  With u = A' Pi b, v = alpha^T Pi B',
+       J - (J 1)(1^T J)/X  =  A' Pi B'  -  u v^T / X.
+Proof.  A = a alpha^T + A', B = b beta^T + B'.  Expanding, J = X a beta^T + a v^T + u beta^T
++ A' Pi B', J 1 = X a + u, 1^T J = X beta^T + v^T (cross terms vanish by A'1 = 0, 1^T A' = 0,
+B'1 = 0), and (X a + u)(X beta + v)^T / X = X a beta^T + a v^T + u beta^T + u v^T / X.  QED
+COROLLARY.  kappa(J/X) <= (pi/X)(1 + pi/X) kappa(A) kappa(B), pi = max Pi.
+Applied to Theorem J with A = J_d, B = J_c (one value of p): the head-tail correlation of a
+random element of Theta(m) inside the block p is QUADRATIC in the correlations of the two
+halves.  (The head of a is the lifted head of sigma, the tail the lifted tail of tau, and
+sigma, tau are coupled only through Pi(tail sigma, head tau).)
+What it does not give.  (i) The constant (pi/X)(1+pi/X) is ~ 250 (pi = 20, X ~ 1.3).
+(ii) The parity blocks: J_m is a mixture over p of blocks with disjoint supports (the
+parity of the first entry fixes that of the last), a correlation of order 1 outside the
+identity; inside a block the same happens one binary digit deeper, and so on.  So J_m is,
+up to quadratic errors, a mixture over "parity paths" of products of head and tail laws.
+A proof of Conjecture R would have to control this path mixture.
+
+------------------------------------------------------------------------------------------
+5. NUMERICS (window.bin; data/r_all_520.txt, data/chains.txt, data/stats_130.txt)
+------------------------------------------------------------------------------------------
+5.1 r(n) for all 19 <= n <= 520 (one run, ~7 min, 1.3 GB).  Columns of r_all_520.txt:
+n, r(n), log theta(n), #head windows, #tail windows (later files add maxPi, Pr(Pi=1),
+Pr(tie), kappa).  Over 16 <= n <= 520:  1.248296 (n = 27) <= r(n) <= 1.347328 (n = 512).
+On each octave [64,128], [128,256], [256,512] the range is 1.25650..1.34719,
+1.25696..1.34730, 1.25699..1.34733.  So for every n <= 520:
+     2.4965 theta(floor n/2) theta(ceil n/2) <= theta(n) <= 2.6947 theta(floor n/2) theta(ceil n/2)
+(n >= 16; Sharma: <= 21, DEGS: >= 2).  Not proved for all n (see 6).
+5.2 Doubling contraction (doubling.py):
+   octave n       max|r(2n)-r(n)|  ratio   max|r(2n+1)-(r(n)+r(n+1))/2|  ratio
+   [  8, 16)        9.995e-02        -        7.382e-02                    -
+   [ 16, 32)        2.392e-02      4.18       1.328e-02                  5.56
+   [ 32, 64)        8.117e-03      2.95       3.726e-03                  3.56
+   [ 64,128)        2.010e-03      4.04       9.443e-04                  3.95
+   [128,256)        5.109e-04      3.93       2.422e-04                  3.90
+   [256,260)        9.760e-05        (partial octave)
+   The factor 4 per doubling is confirmed on the full octave [128,256).
+5.3 THE MOD-3 DICHOTOMY (new).  Along a chain x 2^j (x odd):
+  * 3 does not divide x: r(x 2^{j+1}) - r(x 2^j) ~ A(x) 4^{-j}, the ratio of consecutive
+    differences tends to 4.0 (x = 5: 5.25e-3, 1.58e-3, 3.98e-4, 9.73e-5; x = 7, 11, 13, ...
+    alike).  Richardson: Phi(x) ~ r(2n) + (r(2n) - r(n))/3.
+  * 3 divides x: after a transient the differences collapse much faster than any fixed
+    geometric rate: x = 3: 1.40e-3 (24->48), -3.26e-6, -7.36e-10 (96->192, exact rational
+    from the b-file), < 1e-12 (192->384); x = 9: r(72) = 1.316957343, r(144) = 1.316957146,
+    r(288) = 1.316957146; x = 21: 2.4e-2, -4.95e-3, -3.62e-6, -2.50e-9.
+  The window statistics show the same split (stats_130.txt): maxPi = 6 at m = 2^k, 10 when
+  3 | m, 20 (or 15) otherwise; Pr(Pi = 1) is identical at 48 and 96 (0.788826).
+5.4 Head-tail correlation (stats mode: kappa(m) = total variation between J_m and the
+  product of its marginals, inside each first-entry parity block).  It decays like 4^{-j}
+  along chains with 3 not dividing x (2.63e-3 at 32, 6.48e-4 at 64, 1.58e-4 at 128) and
+  super-geometrically for 3 | m (3.4e-6 at 48, 5.9e-10 at 96; 2.9e-7 at 72).  For
+  m = 0 mod 4 (x even): |r(2m) - r(m)| = (0.62..0.68) kappa(m) for every 32 <= m <= 130.
+  So the doubling defect of r IS the head-tail correlation at half size, as the window
+  picture predicts, and Theorem Q explains why that correlation is small.
+5.5 Ties.  Pr(some 3-AP through a window pair ends at 0 or n+1) (the only pairs whose
+  linkage changes under lifting) decays only like 2^{-j} (0.82, 0.49, 0.26 at 24, 48, 96):
+  ties are not rare, their effect on r is.
+5.6 Long chains (data/chains.txt, run_chains.sh; one target per run, <= 2 GB, the largest
+  n = 1920 in ~10 min).  Successive differences r(x 2^{j+1}) - r(x 2^j) from n >= 40:
+   x  last n  r(last)       differences                                 ratios
+   1   1024  1.347334352   4.5e-4 1.1e-4 2.7e-5 6.6e-6                  4.16 4.03 4.01
+   5   1280  1.299702435   1.6e-3 4.0e-4 9.7e-5 2.4e-5 6.0e-6           3.97 4.09 4.03 4.01
+   7   1792  1.267068355   5.7e-4 1.7e-4 4.3e-5 1.1e-5 2.7e-6           3.28 4.05 4.01 4.00
+  11   1408  1.278073077   1.4e-3 3.4e-4 8.8e-5 [2.7e-5 over 352->1408]  4.14 3.88
+  13   1664  1.257477017   5.6e-4 1.4e-4 3.6e-5 [1.1e-5 over 416->1664]  4.02 3.85
+   3   1536  1.286904709   -3.3e-6 -7.4e-10 0 0 0       (0 = below 1e-12, double precision)
+   9   1152  1.316957146   -2.0e-7 0 0
+  15   1920  1.292843753   -1.0e-4 -7.5e-8 0 0
+  (the bracketed differences span two doublings and agree with 4^{-1} + 4^{-2} scaling.)
+  Richardson estimates Phi(x) = r(2n) + (r(2n)-r(n))/3:  Phi(1) = 1.3473365, Phi(5/4) =
+  1.2997044, Phi(7/4) = 1.2670693; and Phi(3/2) = 1.286904709, Phi(9/8) = 1.316957146,
+  Phi(15/8) = 1.292843753 (stable digits).
+  Over all computed n >= 16:  1.248296 <= r(n) <= 1.347334.
+
+------------------------------------------------------------------------------------------
+6. STATUS
+------------------------------------------------------------------------------------------
+PROVED (paper and Lean, Folds/SymRatio.lean):
+  run_prefix / run_take       sharp opening run: first floor((N+q)/2) - 6 entries of parity q
+  shuffle_decomp              every shuffle is lift(sigma.take k) ++ w ++ lift(tau.drop 6)
+  card_shuffles_eq_win        THEOREM W: P(sigma,tau) = Pi_{N,p}(last 6 of sigma, first 6 of tau)
+  card_shuffles_congr         P depends only on the windows
+  card_symSeqs_eq_win_sum     theta(N) = sum_p sum_sigma sum_tau Pi(window)      (N >= 14)
+  card_symSeqs_eq_stat_sum    THEOREM S: theta(N) = sum_p sum_{S,T} alpha_p(S) beta_p(T) Pi(S,T)
+  shuffle_head, shuffle_tail  windows propagate under the merge (|sigma|, |tau| >= 12)
+  card_filter_symSeqs_eq_sum  the merge identity refined by any predicate
+  card_window_eq_sum          THEOREM J (N >= 24): exact recursion for the joint window counts
+PROVED (paper only): Theorem J for 19 <= m <= 23 (needs the f-table), Theorem Q, the
+complexity bound, the correctness of window.c (it implements Theorem J literally; also
+validated against the b-file).
+GOAL 2(a): done (Theorem S; the statistics are the 6-window laws, support O(m)).
+GOAL 2(b): NOT proved.  Theorem Q gives quadratic decoupling of head and tail inside a
+parity block, but the parity-path mixture (section 4) is not controlled, so we do not get
+a contracting recursion for the window laws, nor the factor 4.
+IMPROVED CONSTANTS: not obtained for all n.  Theorem W gives only theta(n) <= 2 * 924 *
+theta theta (worse than Sharma's 21), and max Pi = 20 occurs for many n (section 5.3), so
+any bound below 21 must average, i.e. needs 2(b).  For n <= 520 (and along the chains to
+1920) the exact computation gives 2.4965 <= theta(n)/(theta theta) <= 2.6947 (n >= 16).
+CONJECTURE R: OPEN, with much stronger evidence: factor 4.0 per doubling up to n ~ 2000
+for 3 not dividing x, and super-geometric convergence for 3 | x.  Refined form:
+CONJECTURE R'.  For odd x, r(x 2^j) = Phi(x) + A(x) 4^{-j} + o(4^{-j}), with A(x) = 0
+  when 3 | x (then the error is smaller than any power of 4^{-j} seen numerically), and
+  |r(2m) - r(m)| / kappa(m) -> a constant (~0.65) for m = 0 mod 4.
+
+Files
+  window.c        the window recursion (double: r(n), stats; -DMODP: exact mod a prime)
+  checkmod.py     compares residues with the b-file
+  crt.py, run_exact.sh   exact theta(n) by CRT (data/theta_exact.txt, 19 <= n <= 300)
+  doubling.py     doubling table and chains from data/r_all_520.txt
+  run_chains.sh   long chains (data/chains.txt)
+  data/b003407.txt  OEIS b-file (copy)
+  build: gcc -O3 -march=native -o window.bin window.c -lm
+         gcc -O3 -march=native -DMODP -o window_mod.bin window.c -lm   (binaries ignored)

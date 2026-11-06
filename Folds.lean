@@ -69,3 +69,4 @@ import Folds.SymStructure2
 import Folds.PeriodLaw
 import Folds.SymRun
 import Folds.Live3q
+import Folds.SymRatio
