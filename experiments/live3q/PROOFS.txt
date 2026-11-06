@@ -1,0 +1,116 @@
+Live 3-prefixes, part 2: induction on N through copies, and the residual
+=======================================================================
+
+Notation as in experiments/live3p/PROOFS.txt (valid steps, CoReach, Theorem G, F3S, Dead3).
+"Lean" refers to Folds/Live3q.lean (no sorry, no native_decide; kernel checks by
+`decide +kernel` only).
+
+STATUS
+  CLAIM (3-prefix Conjecture C).  For N = 6 and N >= 8 a valid 3-prefix is live iff its set is
+  not Dead3 (live3p section STATUS).
+
+  * PROVEN for every N <= 50, N != 7  (Lean `extends3_iff_le_50`; previously N <= 30).
+  * REDUCTION for all N (Lean `extends3_iff_of_residual`): the claim for every N != 7 follows
+    from the statements `Residual3 N` for N > 50, i.e. from the co-reachability of the
+    RESIDUAL triples: valid, non-dead sorted triples of [N] that are settled neither for
+    themselves nor for their mirror image by
+       (G0) Theorem G in closed form (F3S),
+       (G2) Theorem G after at most two explicit valid steps,
+       (T)  a transfer through one of six copy families from a valid, non-dead triple of a
+            smaller strip p < N, p != 7 (induction on N).
+    The rules are explicit and decidable (Lean `Covered3S`), so for each N the residual is a
+    finite, computable list.
+  * Numerically (hints.c, every N <= 63, checkall.txt): every valid non-dead triple has a
+    completion (so the claim holds for N <= 63; previously checked to 44); the
+    residual is nonempty for every N >= 31 and has about 2N - 4N canonical sets (section 4).
+  * NOT PROVEN for all N: the residual families (section 4) have no uniform construction.
+
+1. Good3 and the induction
+--------------------------
+Good3 N: every sorted triple a < b < c of [N] that is valid (`valid3B`: one of its six
+orderings is a valid prefix, closed form `step2B`) and not dead (`dead3B`) is co-reachable.
+  * `good3_le_30`: from the certificates of Live3p (N <= 30, N != 7; the coverage check of
+    Live3p re-read with the Boolean dead test, `ok3_of_cert`, `good3_of_cert`).
+  * `extends3_iff_of_good3`: Good3 N gives the liveness iff for every valid 3-prefix of [N]
+    (dead direction: Live3p `not_extends_of_dead3`).
+  * Transfers (`Transfers N p phi`: CoReach p D -> CoReach N (phi D) for D in [p]); proven for
+    the copies (`copyF`, `copyOK`, `transfers_of_copyOK`)
+       k = 0  centred Beatty Z(N, p), 2p <= N                       (Live7 coReach_z_transfer)
+       k = 1  right-aligned Beatty X(N, p, h), h <= 1, h + 2p <= N+1 (Live5 coReach_beatty_transfer)
+       k = 2  residue class s mod q, q <= 12, with a residue chain   (Live2 coReach_mod)
+       k = 3  multiples of q, q | N + 1                              (Adjacent coReach_mult_transfer)
+       k = 4  swapped Beatty copies (SwapHyp)                        (Live6 coReach_swap_transfer)
+       k = 5  {1, 4, 6, ..., N}, N = 0 mod 4                        (Live6 coReach_chiY_transfer)
+    Since a window copy preserves the step condition, the preimage of a valid triple is a
+    valid triple of [p]; `trB` checks validity and non-deadness of the preimage directly, and
+    `coReach_of_trB` uses Good3 p (induction hypothesis; p = 7 is excluded because of the
+    sporadic dead set {1, 4, 7}).
+  * `stepsB`, `coReach_of_stepsB`: Theorem G after an explicit list of valid steps (live3p
+    Theorem 2 iterated), with the imbalance computed from the element list (`lcB`, `rcB`,
+    `inwB`), O(N * |list|) per check.
+  * `good3_of_residual`: strong induction; Covered3S triples are co-reachable given the
+    smaller strips, the rest is the hypothesis Residual3 N.
+
+2. Certificates for 31 <= N <= 50
+--------------------------------
+`hints.c N 3` gives one hint per needed triple (valid, not dead, not F3S; both orientations
+are listed separately, in lexicographic order): a transfer (preferred, cheapest), else
+Theorem G after <= 3 steps (for the triple or its mirror image), else a witness ordering of
+the complement from scratch (DFS completion read backwards).  `mkq.py` packs the hints of a
+chunk (fixed a, a range of b, about 40 cost units) into one base-128 number decoded in the
+kernel (`decH`; decoding needs no proof since every decoded hint is checked), and `chkR`
+compares the list of needed triples (computed in the kernel) with the hints one by one
+(`all2`, `chkR_sound`).  Packing matters: hint lists written as Lean list literals cost
+~0.3 GB of memory per N (numerals elaborate to OfNat terms); packed, the whole range fits
+under 3 GB.  Typical sizes: N = 40: 3276 transfers, 532 mirrored transfers, 480 one-step,
+114 multi-step, 98 witnesses; about 60 s of kernel time per N at N = 40.  The whole file
+(N = 31..50, 2.3 MB) takes 1500 s with `lean -M 3000` and peaks at 2.7 GB RSS (2.0 GB of it
+is the imported environment).  Extending to N = 63 (the limit of the 64-bit tools and of
+the base-128 packing of c2 <= 2N + 1) is mechanical but costs about 1.5 h more.
+`final.py 50` regenerates Folds/Live3q.lean from core.lean (definitions and soundness).
+
+3. Coverage of the rules (sorted triples, both orientations; hints.c N 2)
+-----------------------------------------------------------------------
+      N   transfer  mirror-transfer  1 step  2 steps  residual (W)
+     31     1185        273            330      54      143
+     40     3276        532            480      58      154
+     50     7026        970            710     102      298
+     55     9477       1411            882     124      393
+     60    13434       1366            940      94      268
+     63    15177       1983           1020     162      409
+(F3S, not listed, is another ~35%.)  Transfers by induction cover the bulk; the residual is
+about 1-2% of the valid non-dead triples, but it is not finite: it grows roughly linearly.
+
+4. The residual (resid.py; canonical orientation a + c <= N + 1)
+---------------------------------------------------------------
+N = 50: 175 sets, N = 51: 203, N = 52: 116 (odd N and N = 2 mod 4 are worse).  Families
+(N = 51 for instance):
+  * {1, 2, c}: for odd N every valid c (c >= (N+3)/2, c <= N - 2); for even N only
+    c >= about 0.8 N (for smaller c one step m = N/2 + 1 works).  1 and 2 are adjacent and
+    lie in no proper window copy (a copy containing 1 and 2 contains [1, 5], ...), so no
+    transfer can reach them.  For odd N a three-step pattern works for c below ~0.75 N
+    (N = 41: steps (c+N)/2 + 1, then about half of it, then ceil((c+1)/2)), witness orderings
+    above; no uniform rule yet.
+  * {1, 2k, N} (b even, c = N, odd N): the pair {1, N} (co-reachable for odd N != 7 via the
+    copies X_N of Live5) with a middle point.
+  * {a, b, c} with a fixed corner pair {a, c} (for instance (3, b, 44..49), (5, b, 43..47),
+    (6, b, 45), (7, b, 44) at N = 51) and b running through the middle: the hard corner pairs
+    of Conjecture C (live5 section 4, swapped Beatty copies) with one more point.  A copy
+    containing {a, c} contains b only for few b.
+  * {1, 3, c}, {1, 5, c}, ... with c = N + 1 - small.
+Ideas not carried out: (i) "ghost transfers": for {a, b, c} with {a, c} in a copy X and b
+outside X, order X^c - {b} first (needs X + {b} co-reachable) and then X - {a, c} against a
+background in which b acts as a ghost of weight -1; (ii) closed-form step families such as
+the three-step rule for {1, 2, c} above, proven by omega with an arm-count lemma for 6-sets
+(as `inward3` does for 3-sets, but 2^12 case splits); (iii) the near copies psiY / psiX of
+Live5/Live6 (which contain the adjacent pair 2, 3).
+
+Files
+-----
+  ana.c        classification by F / one step / transfer / two steps, leftover list
+  hints.c      one hint per needed triple (the certificate source); also the coverage table
+  mkq.py       packs the hints into Lean (decH format); final.py regenerates Folds/Live3q.lean
+  core.lean    the definitions and soundness part of Folds/Live3q.lean
+  comp.c       DFS completion after a background (exploration)
+  resid.py, one2.py, fam.py   residual lists and per-family hints
+  trial.sh, memtime.py        compile tests with time and peak memory
