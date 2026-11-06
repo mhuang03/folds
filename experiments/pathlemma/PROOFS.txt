@@ -1,0 +1,257 @@
+THE PATH LEMMA: REDUCTION, PARTIAL RESULTS, ATTEMPTS                 (experiments/pathlemma/)
+=========================================================================================
+
+Notation as in ../upper/PROOFS.txt.  A valid sequence a_1..a_N of [1..N]; S_k = {a_1..a_k},
+f_k = N - k free panels, V_k = V(S_k) = number of valid next panels (V_k >= 1 for k < N).
+I = cycDefect (cyclic defect), J = imb (imbalance); for free m, I(m) = J(m) and m is valid
+iff I(m) = 0.  Deficit  L(a) = sum_{k<N} ln(f_k / V_k);  Dmin(N) = min over valid a of L(a).
+PATH LEMMA (conjecture): Dmin(N)/N -> infinity.
+"[Lean]" = Folds/PathLemma.lean (no sorry, no native_decide).  "[paper]" = proved here.
+"[data]" = computed with the tools in this directory.
+
+
+SUMMARY / STATUS
+----------------
+* The Path Lemma is NOT proved, and neither is any weaker version with L/N unbounded.
+  Best rigorous lower bound on L (unchanged; it is a per-state bound applied along the path):
+      L(a) >= sum_{k odd, k < N/2} ln((N-k)/(N/2)) = 0.09657 N (1+o(1))     (N even)
+      L(a) >= sum_{k odd, k < N/3} ln((N-k)/(h+1+(k-1)/2)) = 0.0589 N (1+o(1))  (N = 2h+1)
+  (Growth.lean card_moves_odd_le, Upper.lean card_moves_odd_odd_le; plus V_1 <= ceil(N/2)).
+* [Lean] The reduction is formalised in a clean form:
+      PathLemma  ==>  for every c, eventually  a(N) <= N! e^{-cN}      (PathLemma.eventually_le)
+  via the path form of the tree bound (a(N) <= max_a prod_k V_k, semiCount_le_of_pathProd_le)
+  and its deficit form a(N) <= N! e^{-D} if every valid sequence has L >= D
+  (semiCount_le_of_deficit_ge).
+* [Lean] Linearisation: L(a) >= N ln(1/eps) whenever (1/N) sum_k V_k/f_k <= eps
+  (pathDeficit_ge_of_mean_le).  So the LINEAR statement "the mean acceptance of every valid
+  sequence tends to 0" (LinearPathLemma) implies the Path Lemma.  On the minimisers the
+  Jensen gap is tiny (L/N = 0.514 vs -ln(mean V/f) = 0.498 at N = 128), so nothing is lost.
+* [Lean] New local structure of the defect: I(m+1) - I(m) = [2m in S] + [2m+1 in S] - 2[m in S]
+  (doubled panels mod N), so I is non-decreasing across free panels and non-increasing across
+  bisected ones; two consecutive free valid panels force their doubled pair to be free;
+  run bound V(S) <= R(S) + A(S) (section 2).
+* [paper + data] A dynamic identity (|J| potential, section 3) and a rigorous "zero gap"
+  consequence of Schmidt's theorem (section 4.2).  Neither gives growth; the reasons are
+  isolated (zeros may cluster; per-panel bookkeeping is satisfied by the minimisers with
+  room to spare).
+* [data] The minimisers (N = 32..256) are low-discrepancy SPACE-TIME point sets (anchored
+  discrepancy 2.1 at N = 128, 3.5 at N = 256), with |J| <= 6, mean |J| ~ 0.5 and V/f ~ 0.5-0.6
+  flat in time.  They are not residue-class / composition paths (section 5).  A proof of the
+  Path Lemma must therefore contain a Roth-type irregularity statement for the ZERO SET of the
+  field (an "L^0" statement), which is strictly stronger than the known L^2 / L^1 / sup
+  statements (section 6).
+
+
+=========================================================================================
+1. THE REDUCTION                                              [Lean: Folds/PathLemma.lean]
+=========================================================================================
+pathProd N p = prod_{i < |p|} |moves N (p.take i)|.
+(1) pathProd_append: pathProd (p ++ [m]) = pathProd p * |moves N p|.
+(2) sum_inv_pathProd_le: sum over valid prefixes p of length k of 1/pathProd p <= 1.
+    (Random descent: choose a uniformly random valid move at each step; the probability of
+    ending exactly at p is 1/pathProd p, and distinct p are disjoint events.  Formally an
+    induction over `prefixes`, using that the children of distinct prefixes are distinct.)
+(3) semiSeqs_eq_prefixes: semiSeqs N = prefixes N N.
+(4) semiCount_le_of_pathProd_le: (forall a in semiSeqs N, pathProd N a <= B) -> a(N) <= B.
+    Proof: |semiSeqs| / B <= sum_a 1/pathProd a <= 1.  (Real version with 0 <= B.)
+(5) pathDeficit N a = sum_{k<N} ln((N-k)/V_k);  pathProd_eq_factorial_mul_exp:
+    pathProd N a = N! exp(-pathDeficit N a) for valid a (uses V_k >= 1, card_moves_take_pos,
+    and prod_{k<N} (N-k) = N!).
+(6) semiCount_le_of_deficit_ge: (forall valid a, D <= pathDeficit N a) -> a(N) <= N! e^{-D}.
+(7) PathLemma := exists D : N -> R, D(N)/N -> infinity and D(N) <= pathDeficit N a for all valid
+    a.   PathLemma.eventually_le: PathLemma -> forall c, eventually a(N) <= N! exp(-cN).
+(8) pathDeficit_ge_of_mean_le: if sum_k V_k/(N-k) <= eps N (eps > 0) then
+    N ln(1/eps) <= pathDeficit N a.  Proof: ln x <= x - 1 at x = (V/f)/eps, summed.
+    LinearPathLemma := exists eps(N) > 0, eps -> 0, forall valid a, sum_k V_k/f_k <= eps(N) N;
+    LinearPathLemma.pathLemma: LinearPathLemma -> PathLemma.
+
+Max of the mean acceptance (1/N) sum_k V_k/f_k over valid sequences [data]:
+     N         8     10     12     14     16     18     20     22   | 32    64    128   256
+   max mean  .869  .840  .821  .806  .795  .795  .774  .767   | .734  .667  .603  .545
+   exact (maxobj.c mode 1; the maximiser equals the     |  lower bounds: the mean
+   min-deficit path at N = 21, 22)                      |  along the beam minimisers
+So the linear target is consistent with the data (decrease ~0.06 per doubling), but just as
+slow as the deficit itself.
+
+
+=========================================================================================
+2. LOCAL STRUCTURE OF THE DEFECT                                [Lean: section 2 of the file]
+=========================================================================================
+2.1 Increment formula (cycDefect_succ).  For 1 <= m (N > 0, S duplicate-free in [1,N]):
+        I(m+1) = I(m) + [(2m-1)%N + 1 in S] + [(2m)%N + 1 in S] - 2 [m in S],
+i.e. I(m+1) - I(m) = s(2m) + s(2m+1) - 2 s(m) with the doubled panels taken mod N
+(s = indicator of S).  Proof: cycBelow (j+1) = cycBelow j + [j%N + 1 in S] (cycBelow_succ,
+from cycBelow_eq_cnt) twice, and below m = below (m-1) + [m in S].
+2.2 Consequences.
+  * cycDefect_mono_of_free: I(m) <= I(m+1) if m is free.  Across a bisected panel
+    I(m+1) - I(m) = -(f(2m) + f(2m+1)) <= 0 (f = 1 - s).  So I is a "height function" that
+    rises (by the number of bisected panels in the doubled pair) along free panels and falls
+    (by the number of free panels in the doubled pair) along bisected ones.
+  * In each run of consecutive free panels the valid panels form ONE block (cycDefect_mono_run).
+  * consecutive_valid: m, m+1 free and valid  ==>  the doubled panels 2m, 2m+1 (mod N) are free.
+  * card_moves_le_runs (RUN BOUND): V(S) <= R(S) + A(S), R = number of runs of free panels
+    (runEnds), A = #{m < N : m, m+1, 2m, 2m+1 free} (pairFree).
+    Proof: a valid m whose successor is also valid lies in A; the other valid panels are block
+    ends, and two block ends m < m' are separated by a run end (otherwise I(m+1) > 0 and I
+    stays positive up to m'); map each block end to the first run end to its right.
+  * doubling_of_zeros: I(m) = I(m') = 0 ==> P~(2m'-1) - P~(2m-1) = 2 (P(m'-1) - P(m-1)): the
+    doubled arc carries exactly twice the mass of the arc.  (Applied to consecutive zeros:
+    the counting measure of S, and that of the free set, is doubling-invariant at the
+    resolution of the zero set.)
+2.3 How much of the deficit does the run bound see?  [data, pathstat.py]  Along the
+minimisers, sum_k ln(f/min(f, R+A)) = 0.099, 0.096, 0.125, 0.143 per panel at N = 32, 64,
+128, 256, against L/N = 0.326, 0.422, 0.521, 0.623: about a quarter, and it does not grow
+like L.  Moreover R + A is not small on every state (S = odds: R = f), so the run bound alone
+gives no uniform lower bound on L.  For a random set of density t, R ~ t(1-t) N and
+A ~ (1-t)^4 N, so the run bound is at best a constant-factor statement.
+
+
+=========================================================================================
+3. A DYNAMIC IDENTITY (THE |J| POTENTIAL)                                           [paper]
+=========================================================================================
+Let F_k = free panels before step k (x_k = a_{k+1} in F_k, J_k(x_k) = 0) and
+Phi_k = sum_{m in F_k} |J_k(m)|.  Phi_0 = 0 (J = 0) and Phi_N = 0 (no free panels).
+By the dipole lemma (imb_cons) step k changes J by +1 on D+ = (x/2, x) and -1 on
+D- = (x, (N+x)/2], and removes x (|J(x)| = 0).  Among the free m != x in D = D+ u D-:
+     Z_k = #{J = 0},  A_k = #{J != 0, same sign as the kick},  B_k = #{opposite sign}.
+Then Phi_{k+1} - Phi_k = Z_k + A_k - B_k, and summing over the path:
+     sum_k B_k = sum_k (Z_k + A_k),   hence   sum_k #{m in F_k ∩ D_k : J_k(m) != 0}
+                                                >= (1/2) sum_k |F_k ∩ D_k \ {x_k}|.
+So along every valid sequence, at least half of the free panels hit by the dipoles are
+non-zeros of the field at the moment they are hit ("the field cannot be flat where you
+build").  [data, potential.py] the identity holds exactly; the non-zero share in the windows
+is 0.551, 0.572, 0.578, 0.604 along the minimisers at N = 32, 64, 128, 256: the minimisers
+nearly saturate the bound (B ~ Z: almost every departure of a free panel from 0 is undone
+by the next kick of the opposite sign).
+The same computation with any g(J) instead of |J| is equivalent to the statement that each
+panel's walk k -> J_k(m) (k <= t_m) starts and ends at 0.  These "one panel at a time"
+constraints are satisfied with room to spare by the minimisers, so no potential of the form
+sum_free g(J) can give growth; the growth must come from the geometry of the dipoles (the
+doubling map), i.e. from correlations between different panels.
+
+
+=========================================================================================
+4. ATTEMPTS AT THE PATH LEMMA
+=========================================================================================
+4.1 Reduction to "rich steps".  If L(a) <= C N then, by Markov, all but N/10 steps have
+V_k >= delta f_k with delta = e^{-10C}.  So the Path Lemma is equivalent to:
+  (RICH) for every delta > 0, the number of steps with f_k >= delta N and V_k >= delta f_k is
+         o(N), uniformly over valid sequences.
+Steps with f_k < delta N are irrelevant (at most delta N of them).
+
+4.2 Spread zeros are impossible for long (rigorous, weak).  If at time k every panel is
+within distance d of a zero of I_k (occupied or free), then |I_k| <= 2d everywhere
+(Lipschitz, ../upper 2.4), so disc(S_k) <= 2d + 1 (disc_le_of_cycDefect_le).  By Schmidt's
+theorem applied to the space-time point set (../upper 2.3), max_k disc(S_k) >= c_S ln N.
+Hence: along every valid sequence there is a time k at which I_k has a zero-free interval of
+length >= (c_S ln N - 3)/2.  More generally, iterating (*) of ../upper 2.1,
+     E(y) = sum_{j<J} 2^{-j-1} (s/N - I(T^j y + 1)) + 2^{-J} E(T^J y),   T y = 2y+1 mod N,
+so the discrepancy at y is O(B) if the doubling orbit of y stays ~log2 N steps in the region
+where |I| <= B.  This is the precise sense in which "rich and spread" states have low
+discrepancy.  It does not give (RICH): a rich state may have all of its zeros in one region
+whose doubling image is NOT zero-dense (Prop 3.1 of ../upper: zeros in [0, N/4], whose image
+[0, N/2] carries |I| ~ N), and then nothing constrains the discrepancy.
+4.3 Coarse doubling invariance (heuristic).  By doubling_of_zeros, if the free zeros of I_k
+have gaps <= g on an arc U, the free density rho of S_k satisfies rho(2x) ~ rho(x) on U at
+resolution g.  If U were the whole circle, ergodicity of the doubling map (the only
+T-invariant density in L^infinity is the constant) forces rho ~ const at every coarse scale:
+the state is low-discrepancy, and we are in the regime of the minimisers.  So rich states are
+of two kinds: (a) spread and coarsely uniform (minimiser regime), (b) clustered, with the zeros
+in a region U with T(U) not zero-dense (obstruction regime).  For (a) the remaining
+question is the local CLT V/f ~ 1/sigma_J with sigma_J -> infinity; for (b) one needs that
+clustered states cannot persist.  Neither half was proved:
+  (a) needs anti-concentration of the integer field I over the free panels, but every known
+      irregularity theorem (Roth L^2, Halasz L^1, Schmidt sup, Tijdeman-Wagner "most times")
+      bounds a NORM of the discrepancy, and a 2-Lipschitz integer field can be 0 on a
+      fraction 1 - eta of space-time while carrying any prescribed L^1 or L^2 mass on the rest
+      (blobs of height H = sqrt(ln N)/eta cover area eta).  An "L^0" irregularity statement
+      (the field is non-zero on a fraction -> 1 of space-time, weighted by 1/f_k) is needed
+      and is not known even for general 2D point sets; here it is false for general point
+      sets (the field of a lattice-like set vanishes identically: S = odds) and must use that
+      every point is placed on a zero.
+  (b) clustered rich states (Prop 3.1 type) were not shown to be transient.
+4.4 Multi-scale.  The binary decomposition (dyadic_defect) writes I as a sum of L = log2 N
+level terms b_i D(w_i).  A per-scale constant cost would need the level constraints to be
+nearly independent; the data (../asymptotics 2.3) shows adjacent levels correlate at -0.2 to
+-0.3 and cancel 74-78% of the level variance, i.e. the levels are strongly dependent, and the
+minimisers exploit exactly this.  Arithmetic invariants at scale 4 give no obstruction: if
+y, y+q, y+2q, y+3q (q = N/4) are all zeros then a_0 = a_2, a_1 = a_3 and the half-circle
+counts are 2a_0, 2a_1, which is consistent for every |S| even; triples at spacing N/3 force
+only b_0 = b_1 = b_2 (mod 2) for the three doubled arcs, consistent for every |S|.  The parity
+lemma (scale 2, |S| odd) is the only exact arithmetic obstruction found.
+State bounds by |S| [data, maxv.c, exhaustive over all sets, N <= 26]: max V(S) is
+f for many s (e.g. S = odds, S = multiples of 3); for even N and odd s it is N/2 (parity
+lemma); for even s >= 2 it is 2N/3 + O(1) (N = 16..26: 10,12,13,14,16,17; attained already at
+s = 2 by S = {N/3, 2N/3}).  Conjecture: V(S) <= ceil(2N/3) for N even, |S| even, |S| >= 2.
+It would add only ~0.036 N to the rigorous deficit (even steps with k < N/3), i.e. a constant
+improvement 0.0966 -> ~0.133; it was not proved.  Maxima over REACHABLE sets coincide with
+those over all sets except one case (N = 18, s = 4: 11 vs 12).
+
+
+=========================================================================================
+5. THE MINIMISERS                                                            [data]
+=========================================================================================
+Beam search (../upper/beam.c, B = 1500-3000; converged to the known values at N <= 256):
+     N        32     64     128    256
+   L/N      .326   .422   .521   .623    (B = 3000, 3000, 3000, 1500; N = 512 with B = 2500
+                                           gives 1.34: the beam is NOT converged there)
+structure.py on the N = 128 and 256 minimisers (p128.txt, p256.txt):
+  * the space-time point set (a_k/N, k/N) has maximal anchored-box discrepancy 2.06 (N = 128)
+    and 3.50 (N = 256), i.e. of the order of the Schmidt lower bound c ln N: the minimisers
+    are near-optimal low-discrepancy point sets in space-time;
+  * they are NOT composition/residue-class paths: the restriction of the order to the odd
+    (even) panels, read as an N/2-strip sequence, has 44 (41) invalid steps out of 64 at
+    N = 128 and 99 (102) of 128 at N = 256;
+  * V/f is flat in time, 0.47-0.60 for k/N < 3/4 (N = 256), rising only at the end;
+    max |J| over free panels is 3-6, mean |J| ~ 0.5-0.7;
+  * early on almost all free zeros come in blocks of consecutive panels (0.99 for k/N < 1/8),
+    late they are isolated (0.00 for k/N > 3/4): the run bound of 2.2 is relevant late,
+    the "doubled pair" condition early;
+  * the |J| potential of section 3 is nearly saturated (non-zero share 0.58-0.60).
+Interpretation.  The cheapest way through the tree is to keep the 2D point set as uniform as
+possible at every scale; the cost per step is then the local-CLT cost ~ ln(sqrt(2 pi) sigma_J)
+of an integer field whose spread is forced up by Roth-type irregularity.  A proof matching
+their behaviour (L ~ 0.1 N ln N on the observed range, presumably c N ln ln N eventually)
+would be an "irregularity of distribution for zero sets" theorem; see 4.3(a).
+
+
+=========================================================================================
+6. WHAT REMAINS
+=========================================================================================
+The Path Lemma is equivalent to (RICH) of 4.1, and by the linearisation it follows from the
+linear statement "mean acceptance -> 0".  What is proved: the reduction (Lean), the field
+cannot stay bounded (../upper 2.3), the field is non-zero on at least half of every dipole
+window on average (section 3), zeros cannot be uniformly spread at all times (4.2), and the
+local structure / run bound (section 2).  What is missing is the passage from "the field is
+large somewhere / often" to "the field vanishes on a vanishing fraction of the free panels",
+which fails for single states (../upper 3.1) and must use the history.  The two concrete
+sub-problems isolated here:
+  (a) [spread regime] anti-concentration: for states that are coarsely uniform and reached
+      along a valid path, V/f <= C / (typical |I|); together with a "most times" Roth bound
+      for the field this would give L >= c N ln ln N or better;
+  (b) [clustered regime] states whose free zeros lie in a region U with T(U) not zero-dense
+      can occupy only o(N) steps of a valid path.
+
+
+=========================================================================================
+7. FILES
+=========================================================================================
+maxobj.c      exact subset DP: max over valid sequences of sum_k g(V_k, f_k), g = ln V
+              (mode 0), V/f (mode 1) or [V >= delta f] (mode 2); prints an optimal path
+maxv.c        max V(S) over all sets / reachable sets of each size (exhaustive, N <= 26)
+beam2.c       beam.c (../upper) with the objective sum V/f when LIN is set (unreliable
+              beyond N = 64: the one-step look-ahead is too greedy for this objective)
+pathstat.py   L, L/N, mean V/f, Jensen bound, run-bound deficit along a path (asserts
+              V <= R + A at every step)
+structure.py  residue-class restrictions, space-time discrepancy, per-segment V/f, zero
+              blocks, |J| statistics
+potential.py  the |J| potential identity of section 3
+p32.txt .. p256.txt   beam minimisers (../upper/beam.c N 3000 1 file; 1500 for N = 256)
+Lean: Folds/PathLemma.lean
+  pathProd, pathProd_append, pathProd_pos, sum_inv_pathProd_le, prefixes_subset_semiSeqs,
+  semiSeqs_eq_prefixes, semiCount_le_of_pathProd_le(_real), pathDeficit,
+  prod_sub_eq_factorial, card_moves_take_pos, pathProd_eq_factorial_mul_exp,
+  semiCount_le_of_deficit_ge, PathLemma, PathLemma.eventually_le, pathDeficit_ge_of_mean_le,
+  LinearPathLemma, LinearPathLemma.pathLemma, ind, cycBelow_succ, cycDefect_succ,
+  cycDefect_mono_of_free, consecutive_valid, doubling_of_zeros, runEnds, pairFree,
+  cycDefect_mono_run, card_moves_le_runs.
