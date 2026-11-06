@@ -134,6 +134,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `PeriodLaw` (M) | arithmetic bookkeeping for the period-law exactness proofs (closed-form weights never vanish) |
 | `SymRun` (M) | symmetric case: the **exact minimal opening parity run** f(N) for all N ≥ 36 (`fRun_block`: δ = ⌊N/2⌋ − f ∈ {4,5,6} by an explicit dyadic block pattern); Sharma's bound is attained exactly at the δ = 6 points (`fRun_eq_sub_six_iff`) |
 | `Live3q` (M) | 3-prefix liveness iff for **every N ≤ 50**, N ≠ 7 (`extends3_iff_le_50`); for all N it reduces to `Residual3 N` (N > 50) through transfers and step families |
+| `SymRatio` (M) | symmetric case: **locality** (`card_shuffles_eq_win`): the number of shuffles depends only on the last 6 entries of σ and the first 6 of τ; θ(N) as a bilinear form in 6-window laws; an exact halving recursion for the window counts |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -234,6 +235,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/periods3/PROOFS.txt` | period-law exactness: Theorems D1/D2, exact periods of T(N,8), T(N,9), non-simple vertices |
 | `experiments/symrun/PROOFS.txt` | proof of the dyadic opening-run formula (Conjecture F′) via the φ/ψ halving states |
 | `experiments/live3q/PROOFS.txt` | 3-prefix liveness to N = 50, the residual families ({1,2,c}, {1,2k,N}, corner pairs + a middle point) |
+| `experiments/symratio/PROOFS.txt` | 3-AP-free: locality, an O(n³) algorithm for θ(n), **new terms θ(201..300)** beyond the OEIS b-file (`data/theta_exact.txt`), the refined Conjecture R′ (4^{−j} convergence; super-geometric when 3 ∣ x) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
