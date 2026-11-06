@@ -1,0 +1,184 @@
+ODD-N SLIPS: ALL-N EXPONENT 1/17 -> 1/16                       (experiments/superexp5/)
+=========================================================================================
+
+Notation as in ../superexp2/PROOFS.txt and ../superexp4/PROOFS.txt.  V_n = valid sequences of
+the n-strip, a(n) = |V_n|, x mod* n = representative in [1, n], qq_n(j) = 2j mod* n,
+pp_n(k) = (2k+1) mod* n, PB(alpha, beta) = odds-first parity block, B(n) = slip sum,
+M(x,y,r) = restricted chain sum.  "x before y" in a sequence: x is placed earlier (vacuous
+if x = y).  [Lean] = Folds/SuperExp5.lean, namespace Folds.Slip.Odd; no sorry, no
+native_decide; axioms propext, Classical.choice, Quot.sound.
+
+RESULT
+------
+Theorem (all N) [Lean: self_pow_le_semiCount_pow_16, alln16_aux].  For every N >= 1
+        N^N <= 2^{12N} a(N)^16,      i.e.   a(N) >= (N/4096)^{N/16}.
+So liminf ln a(N) / (N ln N) >= 1/16 (previously 1/17, Folds/SuperExp4.lean).
+K = 15 is NOT reachable with these tools: the potential accounting needs K >= 15.16
+(section 3), and the true recursion values on the worst N tend to about 1/15.2 (model5.py).
+
+New ingredients:
+ (O)  the odd slip lemma: slips at an ODD node 2n+1, with the extra "wrap" condition at the
+      doubling preimage of the slipped crease (2 is invertible mod 2n+1) [Lean:
+      oddSlip_mem_semiSeqs, oddSum_le];
+ (F)  the odd-node family: odd child in parity-block form, slips at k = 2i with i in one
+      parity class, wrap condition free by parity, the two remaining conditions averaged over
+      reversals:  4 a(2n+1) >= 2^{ceil(floor(p/4)/4)} a(e) a(p) a(p+1),  p = floor(n/2),
+      e = the even child [Lean: oddNodeA, oddNodeB];
+ (I)  the potential induction of superexp4 retuned for K = 16 (even surplus 7/4 per panel,
+      M surplus 7 per unit of r) [Lean: alln16_aux].
+
+
+=========================================================================================
+1. THE ODD SLIP LEMMA (Theorem O)
+=========================================================================================
+Let N = 2n+1, D ⊆ [1, n], d = indicator of D (d_0 = 0).  First block: the evens with 2k
+replaced by 2k+1 (k in D), f(i) = 2i + d_i, i in [1, n]; second block: the odds with 2k+1
+replaced by 2k, g(i) = 2i - 1 - d_{i-1}, i in [1, n+1].  For tau in V_n, sigma in V_{n+1} put
+        slip(D, tau, sigma) = f(tau) ++ g(sigma).
+
+Theorem O [Lean: oddSlip_mem_semiSeqs].  slip(D, tau, sigma) is valid in the N-strip if for
+every k in D:
+  (F)  tau   places k before qq_n(k)                  (= 2k if 2k <= n),
+  (S)  sigma places pp_{n+1}(k) before k + 1          (= 2k+1 if 2k < n+1),
+  (W)  wrap condition, at j with 2j - 1 ≡ 2k (mod N):
+         k ≢ n (mod 2), k <= n-1:   tau   places j = (k+n+1)/2 before k,
+         k ≡ n (mod 2):             sigma places k + 1 before j = (k+n+2)/2.
+In Lean the conditions are stated position by position, exactly as used:
+  (F) d(tau_j) = 1 => qq_n(tau_j) not before tau_j;
+  (W) d(tau_j) = 0, n+1 <= 2 tau_j, d(2 tau_j - n - 1) = 1 => 2 tau_j - n - 1 not before tau_j;
+  (S) d(sigma_j - 1) = 1 => pp_{n+1}(sigma_j - 1) before sigma_j;
+  (W') d(sigma_j - 1) = 0, n+2 <= 2 sigma_j, d(2 sigma_j - n - 2) = 1 => 2 sigma_j - n - 1
+       before sigma_j.
+Counting form [Lean: oddSum_le]:
+     oddSum(n) := sum_{D ⊆ [1,n]} #condFo(n, D) #condSo(n, D) <= a(2n+1)
+(the slip map is injective: D is read off the first block, i in D iff 2i+1 is in it).
+
+Proof (from the general slip lemma, superexp3 Theorem A; Lean: blockF, blockS, split,
+firstCond_odd, secondCond_odd).  The counting functions of the two blocks are
+   kappa(2m) = m - d_m, kappa(2m+1) = m;      mu(2m) = m + d_m,  mu(2m+1) = m + 1
+(capped at n, n+1; Lean kap, mu).  First block, step j: Theorem A asks
+t~(E) = 2 t(j-1) with E = kappa~(2 f_j - 1), and tau is strip valid: t~(2j-1) = 2 t(j-1).
+  z = 2 f_j - 1 = 4j - 1 + 2 d_j.  z < N:  E = 2j - 1 + d_j.
+  z >= N (wrap):  E = n + kappa(z - N) = 2j - 1 + d_j - w,  w = d(2j - n - 1 + d_j).
+  So E in {2j-2, 2j-1, 2j}: E = 2j needs (2j-1) mod n + 1 = qq_n(j) not placed (F);
+  E = 2j - 2 (d_j = 0, w = 1) needs (2j-2) mod n + 1 = 2j - n - 1 =: k not placed, k in D,
+  j = (k+n+1)/2 (W).  (d_0 = 0 excludes the degenerate 2j = n + 1.)
+Second block, step j (on top of the whole first block X): with e = d_{j-1}, z = 2 g_j - 1
+= 4j - 3 - 2e, the condition is  P~_X(z) + u~(mu~(z)) = 2 (P_X(g_j - 1) + u(j-1)),
+P_X(g_j - 1) = j - 1 - e,  and
+  z < N:   P~_X(z) = 2j - 2 - e,  mu~(z) = 2j - 1 - e;
+  z >= N:  P~_X(z) = 2j - 2 - e - w,  mu~(z) = 2j - 1 - e + w,  w = d(2j - 2 - e - n).
+Against the strip condition u~(2j-1) = 2u(j-1): e = 1, w = 0 needs (2j-2) mod (n+1) + 1
+= pp_{n+1}(j-1) placed (S); e = 0, w = 1 needs (2j-1) mod (n+1) + 1 = 2j - n - 1 = k + 1
+placed, k = 2j - n - 2 in D (W'); e = w = 1 and e = w = 0 need nothing.   QED
+(Two slips can cancel a condition: e.g. j in D and 2j - n in D give E = 2j - 1; the stated
+conditions are sufficient, the exact criterion is the one above.)
+
+Checks [oddslip.py, oddslip_out.txt].  Every odd N <= 17, every D ⊆ [1, n], every tau in V_n
+and every sigma in V_{n+1} (the first block's validity depends only on tau, the second's
+only on sigma, so this covers all triples (D, tau, sigma)): conditions => valid, 0 failures
+(1376256 block checks at N = 17), and the exact criterion above <=> valid, 0 mismatches;
+whole sequences for all triples N <= 11 (86016 at N = 11), 0 failures.
+
+
+=========================================================================================
+2. THE ODD NODE (Theorem F)
+=========================================================================================
+Slip only at k = 2i, i in U ⊆ I, where I = ivals(c, p) = {2t + c : t < floor(p/4)},
+p = floor(n/2) (so 1 <= i, 2i <= p, |I| = floor(p/4), i ≡ c (mod 2)).
+
+Case A, n = 2p+1 (first block = odd child), c = 2 - (p mod 2), i ≡ p (mod 2):
+  tau = PB(alpha, beta), alpha in V_{p+1}, beta in V_p.
+  (F) 2i before 4i in tau: both even, i.e. beta places i before 2i.
+  (W) k = 2i ≢ n: tau places i + p + 1 (odd, as i ≡ p) before 2i (even): free.
+  (S) sigma in V_{2p+2} places 4i+1 before 2i+1.
+  [Lean: famA_F, famA_S.]
+Case B, n = 2p (second block = odd child), c = 1 + (p mod 2), i ≢ p (mod 2):
+  (F) tau in V_{2p} places 2i before 4i.
+  sigma = PB(alpha', beta'), alpha' in V_{p+1}, beta' in V_p.
+  (S) 4i+1 before 2i+1 in sigma: both odd, i.e. alpha' places 2i+1 before i+1.
+  (W') k = 2i ≡ n: sigma places 2i+1 (odd) before i + p + 1 (even, as i ≢ p): free.
+  [Lean: famB_F, famB_S.]
+So each slip costs exactly two order conditions, one on the even child and one on a half of
+the odd child, and reversal flips each of them (the four panels are distinct).  Lemma A of
+superexp4 (avg4) gives
+  Case A:  4 sum_U #{beta: U} #{sigma: U} >= a(p) a(2p+2) 2^{ceil(|I|/4)},
+  Case B:  4 sum_U #{tau: U} #{alpha': U} >= a(2p) a(p+1) 2^{ceil(|I|/4)},
+and with the free half (alpha, resp. beta'), Theorem O and the injectivity of U -> 2U
+[Lean: family_le, oddNodeA, oddNodeB]:
+   a(p+1) a(p) a(2p+2) 2^{ceil(floor(p/4)/4)} <= 4 a(4p+3),
+   a(p) a(2p) a(p+1)   2^{ceil(floor(p/4)/4)} <= 4 a(4p+1).
+Gain: about n/32 bits over the parity-block product a(e) a(p) a(p+1).  (The old bound
+a(2n+1) >= 2 a(n) a(n+1) uses the odd child whole; here it is a parity block, which is all
+its own (i) bound gave it anyway, up to the factor 2.)
+
+Checks [oddfamily.py, oddfamily_out.txt]: the family built explicitly for N = 5..19 (up to
+6.26 million members): all valid, all distinct, count = formula, 4W/(a a 2^{ceil(|I|/4)}) >= 1.
+(|I| <= 1 in this range; the Lean proof covers all sizes.)
+
+Why not more positions.  For odd k (or k > n/2) the remaining conditions fall twice on the
+same sequence (e.g. n odd, k odd: sigma: 2k+1 before k+1 AND k+1 before (k+n+2)/2), which
+reversal does not average (it maps a<b<c to c<b<a); for the other parity class of i the wrap
+panel has the wrong parity and adds a second condition on the half of the odd child.
+
+
+=========================================================================================
+3. THE INDUCTION (K = 16, u = 12) AND THE BINDING CONSTRAINTS
+=========================================================================================
+Strong induction on N >= 1 of [Lean: alln16_aux]
+   (i)   N^N <= 2^{12N} a(N)^16
+   (ii)  N even:  N^N 2^{floor(7N/4)} <= 2^{12N} a(N)^16           (even surplus 7/4)
+   (iii) (2N)^{2N} 2^{floor(7N/2)} <= 2^{24N} B(N)^16
+   (iv)  N^N y^y 2^{7r} <= 2^{12(N+y)} M(N,y,r)^16   (y in {N,N+1}, 2r <= N, 2r+1 <= y,
+         N <= 2r+2).
+Pair(p): p^p (p+1)^{p+1} 2^{floor(7p/4)} <= 2^{12(2p+1)} (a(p)a(p+1))^16, from (ii) of the
+even one and (i) of the other.
+(iv): r <= 12 trivial; r >= 13 by mSum_chain:  N + y + 2 + 7r <= 16 ceil(r/2) + 7 floor(r/2)
+      (arith16_iv; per r: 4 + 7 <= 8 + 3.5, margin r/2).
+(iii): N <= 512 trivial ((8N)^{2N} <= 4096^{2N}).  N = 2m: chain B(2m) >= 2^m a(m)^2 B(m)
+      (needs K >= 9.5).  N = 2m+1, m >= 256: Theorem U + Lemma A of superexp4, Pair(m) and
+      (iv)(m, m+1, floor(m/2)):
+         4N + 34 + floor(7N/2) <= floor(7m/4) + 7 floor(m/2) + 16 (ceil(m/2) + ceil(floor(m/2)/4))
+      (arith16_iii; per m: 15 <= 1.75 + 3.5 + 10 = 15.25; true for m >= 161).
+(i), N <= 4096 trivial.  N even: (iii).  N = 2n+1 > 4096: Theorem F with self_pow_split twice
+      (N -> n, n+1 and the odd child 2p+1 -> p, p+1), (ii) for the even child, Pair(p):
+         N + (2p+1) + 34 <= floor(7e/4) + floor(7p/4) + 16 ceil(floor(p/4)/4)
+      (arith16_oddA/B; per n: 3 <= 1.75 + 0.875 + 0.5 = 3.125; true for n >= 296).
+(ii): from (iii).
+
+Binding constraints (per element, asymptotically; s_e = even surplus, b = 2 s_e the surplus
+B must carry, s_M = M surplus per unit of r, g = odd-node gain per n, here g = 1/32,
+U = 1/8 the upper-slip averaging of superexp4):
+   (M)  s_M <= K - 8                                 [M recursion: 4 + s_M/2 <= K/2]
+   (B)  8 + 2b <= s_e + s_M/2 + K (1/2 + U)          [top of B(odd n), per h]
+   (O)  3 <= (3/2) s_e + K g                          [odd node, per n: two splits, the even
+                                                       child and the even grandchild pay]
+Eliminating s_e, s_M:   K (1 + U + 2g) >= 18.
+   g = 0,    U = 1/8:  K >= 16       (superexp4: K = 17 with margin)
+   g = 1/32, U = 1/8:  K >= 15.16    -> K = 16 with margin 0.84 (split here as 0.25h in (B),
+                                        0.125n in (O), 0.5r in (M)), K = 15 impossible.
+   K = 15 would need U + 2g >= 1/5, i.e. g >= 3/80 (1/26.7) with U = 1/8, or U >= 0.1375
+   with g = 1/32.
+The binding pair is (B) + (O): the even surplus s_e is squeezed between the odd node, which
+wants s_e >= 2 - (2/3) K g (= 5/3 at K = 16), and the top of B(odd), which allows at most
+s_e <= (s_M/2 + 5K/8 - 8)/3 (= 11/6 at K = 16, s_M = 7).  The factor 2/3 (not 1) in front
+of K g is the price of the parity-block odd child: it gives up its own odd-node gain, so on
+a chain of odd children only every other node gains.
+True recursion values (model5.py, U = 1/16 per n, g = 1/32, worst family N = 2^L/3):
+0.0685 (L = 256), 0.0672 (L = 512), decreasing towards about 1/15.2; with g = 0 the same
+model gives 0.0638 at L = 512, tending to 1/16.
+
+
+=========================================================================================
+4. FILES (1 core, < 1 GB)
+=========================================================================================
+oddslip.py         Theorem O, exhaustive for odd N <= 17 (sufficiency and exact criterion).
+oddslip_out.txt    its output.
+oddfamily.py       Theorem F family built explicitly (N <= 19): validity, distinctness, count,
+                   averaging ratio.   oddfamily_out.txt: its output.
+model5.py          numerical recursion model (section 3).  python3 model5.py U g
+Lean               Folds/SuperExp5.lean: OAdm, kap, mu, blockF, blockS, split, ext_lt, ext_ge,
+                   firstCond_odd, secondCond_odd, oddSlip_mem_semiSeqs, condFo, condSo, oddSum,
+                   oddSum_le, family_le, ivals, famA_F, famA_S, oddNodeA, famB_F, famB_S,
+                   oddNodeB, small_slipSum16, arith16_iv, arith16_iii, arith16_oddA,
+                   arith16_oddB, alln16_aux, self_pow_le_semiCount_pow_16.

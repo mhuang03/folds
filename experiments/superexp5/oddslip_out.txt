@@ -1,0 +1,13 @@
+N=3: a(n)=1 a(n+1)=2 block checks=6 valid=5 conds=5 conds-but-invalid=0 exact-mismatch=0
+   whole sequences: 4 triples, conds-but-invalid=0
+N=5: a(n)=2 a(n+1)=4 block checks=24 valid=15 conds=12 conds-but-invalid=0 exact-mismatch=0
+   whole sequences: 32 triples, conds-but-invalid=0
+N=7: a(n)=4 a(n+1)=10 block checks=112 valid=47 conds=34 conds-but-invalid=0 exact-mismatch=0
+   whole sequences: 320 triples, conds-but-invalid=0
+N=9: a(n)=10 a(n+1)=28 block checks=608 valid=212 conds=142 conds-but-invalid=0 exact-mismatch=0
+   whole sequences: 4480 triples, conds-but-invalid=0
+N=11: a(n)=28 a(n+1)=96 block checks=3968 valid=910 conds=492 conds-but-invalid=0 exact-mismatch=0
+   whole sequences: 86016 triples, conds-but-invalid=0
+N=13: a(n)=96 a(n+1)=256 block checks=22528 valid=3789 conds=1820 conds-but-invalid=0 exact-mismatch=0
+N=15: a(n)=256 a(n+1)=1120 block checks=176128 valid=22168 conds=10464 conds-but-invalid=0 exact-mismatch=0
+N=17: a(n)=1120 a(n+1)=4256 block checks=1376256 valid=139273 conds=52216 conds-but-invalid=0 exact-mismatch=0

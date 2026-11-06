@@ -1,0 +1,10 @@
+N=5 n=2 |I|=0 members=4 distinct=4 formula=4 invalid(checked every 1)=0 4W/(aa2^c)=4.000
+N=7 n=3 |I|=0 members=20 distinct=20 formula=20 invalid(checked every 1)=0 4W/(aa2^c)=4.000
+N=9 n=4 |I|=1 members=100 distinct=100 formula=100 invalid(checked every 1)=0 4W/(aa2^c)=2.500
+N=11 n=5 |I|=0 members=768 distinct=768 formula=768 invalid(checked every 1)=0 4W/(aa2^c)=4.000
+N=13 n=6 |I|=0 members=3840 distinct=3840 formula=3840 invalid(checked every 1)=0 4W/(aa2^c)=4.000
+N=15 n=7 |I|=1 members=56000 distinct=56000 formula=56000 invalid(checked every 1)=0 4W/(aa2^c)=2.500
+N=17 n=8 |I|=1 members=392000 distinct=392000 formula=392000 invalid(checked every 1)=0 4W/(aa2^c)=2.500
+N=19 n=9 |I|=1 members=6257300 distinct=6257300 formula=6257300 invalid(checked every 1)=0 4W/(aa2^c)=2.500
+
+[exited with code 0]
