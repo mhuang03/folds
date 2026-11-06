@@ -1,0 +1,6 @@
+# ignore everything (compiled binaries, outputs) except sources and notes
+*
+!*.c
+!*.py
+!*.txt
+!.gitignore
