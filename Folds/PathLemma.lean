@@ -294,4 +294,195 @@ theorem LinearPathLemma.pathLemma (h : LinearPathLemma) : PathLemma := by
   have : (N : ℝ) ≠ 0 := by linarith
   field_simp
 
+/-! ## 2. Local structure of the cyclic defect -/
+
+section Local
+
+variable {N : Nat} {S : List Nat}
+
+/-- Indicator of membership, as an integer. -/
+def ind (S : List Nat) (x : Nat) : Int := if x ∈ S then 1 else 0
+
+theorem ind_nonneg (S : List Nat) (x : Nat) : 0 ≤ ind S x := by
+  unfold ind; split <;> norm_num
+
+theorem cycBelow_succ (hnd : S.Nodup) (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) (hN : 0 < N) (j : Nat) :
+    (cycBelow N S (j + 1) : Int) = cycBelow N S j + ind S (j % N + 1) := by
+  rw [cycBelow_eq_cnt hnd hS hN, cycBelow_eq_cnt hnd hS hN, cnt_succ, Nat.zero_add]
+  unfold ind
+  by_cases h : j % N + 1 ∈ S <;> simp [h]
+
+/-- **Increment of the cyclic defect**:
+`I(m+1) - I(m) = [2m ∈ S] + [2m+1 ∈ S] - 2 [m ∈ S]`, where the panels `2m`, `2m+1` are taken
+mod `N` (as `(2m-1) % N + 1` and `(2m) % N + 1`). -/
+theorem cycDefect_succ (hnd : S.Nodup) (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) (hN : 0 < N) {m : Nat}
+    (hm : 1 ≤ m) :
+    cycDefect N S (m + 1) =
+      cycDefect N S m + ind S ((2 * m - 1) % N + 1) + ind S ((2 * m) % N + 1) - 2 * ind S m := by
+  unfold cycDefect
+  have e1 : 2 * (m + 1) - 1 = (2 * m - 1) + 1 + 1 := by omega
+  have e2 : (2 * m - 1) + 1 = 2 * m := by omega
+  rw [e1, cycBelow_succ hnd hS hN, cycBelow_succ hnd hS hN, e2]
+  have hb := below_succ hnd (m - 1)
+  rw [show m - 1 + 1 = m by omega] at hb
+  rw [show m + 1 - 1 = m by omega, hb]
+  unfold ind
+  by_cases h : m ∈ S <;> simp [h] <;> ring
+
+/-- Across a free panel the cyclic defect does not decrease. -/
+theorem cycDefect_mono_of_free (hnd : S.Nodup) (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) (hN : 0 < N)
+    {m : Nat} (hm : 1 ≤ m) (hmS : m ∉ S) : cycDefect N S m ≤ cycDefect N S (m + 1) := by
+  rw [cycDefect_succ hnd hS hN hm]
+  have h0 : ind S m = 0 := by simp [ind, hmS]
+  have := ind_nonneg S ((2 * m - 1) % N + 1)
+  have := ind_nonneg S ((2 * m) % N + 1)
+  linarith
+
+/-- **Consecutive valid panels.**  If `m` and `m + 1` are both free and both valid, then the
+two panels `2m`, `2m + 1` (mod `N`) of their doubled position are free as well. -/
+theorem consecutive_valid (hnd : S.Nodup) (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) {m : Nat}
+    (hm : 1 ≤ m) (hmN : m + 1 ≤ N) (hmS : m ∉ S) (hm1S : m + 1 ∉ S)
+    (h1 : SemiStep N S m) (h2 : SemiStep N S (m + 1)) :
+    (2 * m - 1) % N + 1 ∉ S ∧ (2 * m) % N + 1 ∉ S := by
+  have hN : 0 < N := by omega
+  rw [semiStep_iff_cycDefect hnd hS hm (by omega) hmS] at h1
+  rw [semiStep_iff_cycDefect hnd hS (by omega) hmN hm1S, cycDefect_succ hnd hS hN hm, h1] at h2
+  have h0 : ind S m = 0 := by simp [ind, hmS]
+  have a1 := ind_nonneg S ((2 * m - 1) % N + 1)
+  have a2 := ind_nonneg S ((2 * m) % N + 1)
+  constructor
+  · intro hx
+    have : ind S ((2 * m - 1) % N + 1) = 1 := by simp [ind, hx]
+    linarith
+  · intro hx
+    have : ind S ((2 * m) % N + 1) = 1 := by simp [ind, hx]
+    linarith
+
+/-- **Doubling relation between zeros.**  If the cyclic defect vanishes at `m` and `m'`, the
+doubled arc `(2m-1, 2m'-1]` contains twice as many panels of `S` as the arc `(m-1, m'-1]`. -/
+theorem doubling_of_zeros {m m' : Nat} (h : cycDefect N S m = 0) (h' : cycDefect N S m' = 0) :
+    (cycBelow N S (2 * m' - 1) : Int) - cycBelow N S (2 * m - 1) =
+      2 * ((below S (m' - 1) : Int) - below S (m - 1)) := by
+  unfold cycDefect at h h'
+  linarith
+
+end Local
+
+/-! ### The run bound -/
+
+/-- Right ends of the runs of free panels: `e ∉ S` with `e = N` or `e + 1 ∈ S`. -/
+def runEnds (N : Nat) (S : List Nat) : Finset Nat :=
+  (Finset.Icc 1 N).filter fun e => e ∉ S ∧ (e = N ∨ e + 1 ∈ S)
+
+/-- Panels `m < N` such that `m`, `m + 1` and the doubled panels `2m`, `2m + 1` (mod `N`) are
+all free. -/
+def pairFree (N : Nat) (S : List Nat) : Finset Nat :=
+  (Finset.Icc 1 N).filter fun m =>
+    m + 1 ≤ N ∧ m ∉ S ∧ m + 1 ∉ S ∧ (2 * m - 1) % N + 1 ∉ S ∧ (2 * m) % N + 1 ∉ S
+
+/-- Inside a run of free panels the defect is non-decreasing. -/
+theorem cycDefect_mono_run (hnd : S.Nodup) (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) (hN : 0 < N)
+    {b : Nat} (hb : 1 ≤ b) : ∀ d, (∀ j, b ≤ j → j ≤ b + d → j ∉ S) →
+      cycDefect N S b ≤ cycDefect N S (b + d)
+  | 0, _ => le_rfl
+  | d + 1, hfree => by
+    have ih := cycDefect_mono_run hnd hS hN hb d (fun j h1 h2 => hfree j h1 (by omega))
+    have := cycDefect_mono_of_free hnd hS hN (m := b + d) (by omega)
+      (hfree (b + d) (by omega) (by omega))
+    rw [← Nat.add_assoc]; exact ih.trans this
+
+/-- **Run bound.**  `V(S) ≤ #(runs of free panels) + #{m : m, m+1, 2m, 2m+1 free}`: in a run
+of free panels the defect is non-decreasing, so the valid panels of a run form one block, and
+two consecutive valid panels need a free doubled pair (`consecutive_valid`). -/
+theorem card_moves_le_runs (hnd : S.Nodup) (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) :
+    (moves N S).card ≤ (runEnds N S).card + (pairFree N S).card := by
+  classical
+  rcases Nat.eq_zero_or_pos N with hN0 | hN
+  · subst hN0; simp [moves]
+  set M1 := (moves N S).filter (fun m => m + 1 ∈ moves N S) with hM1
+  set M2 := (moves N S).filter (fun m => m + 1 ∉ moves N S) with hM2
+  have hsplit : M1.card + M2.card = (moves N S).card :=
+    Finset.card_filter_add_card_filter_not _
+  -- consecutive valid panels
+  have h1 : M1 ⊆ pairFree N S := by
+    intro m hm
+    rw [hM1, Finset.mem_filter, mem_moves, mem_moves] at hm
+    obtain ⟨⟨⟨hm1, hmN⟩, hmS, hv⟩, ⟨⟨_, hm1N⟩, hm1S, hv1⟩⟩ := hm
+    have := consecutive_valid hnd hS hm1 hm1N hmS hm1S hv hv1
+    rw [pairFree, Finset.mem_filter, Finset.mem_Icc]
+    exact ⟨⟨hm1, hmN⟩, hm1N, hmS, hm1S, this.1, this.2⟩
+  -- block ends: one per run
+  have hwit : ∀ b ∈ M2, ∃ e ∈ runEnds N S, b ≤ e ∧ ∀ b' ∈ M2, b < b' → e < b' := by
+    intro b hb
+    rw [hM2, Finset.mem_filter, mem_moves] at hb
+    obtain ⟨⟨⟨hb1, hbN⟩, hbS, hbv⟩, hnext⟩ := hb
+    have hex : ∃ e, b ≤ e ∧ (N ≤ e ∨ e + 1 ∈ S) := ⟨N, hbN, Or.inl le_rfl⟩
+    set e := Nat.find hex with he
+    have hespec := Nat.find_spec hex
+    have heN : e ≤ N := Nat.find_min' hex ⟨hbN, Or.inl le_rfl⟩
+    have hfree : ∀ j, b ≤ j → j ≤ e → j ∉ S := by
+      intro j hj1 hj2
+      rcases Nat.eq_or_lt_of_le hj1 with rfl | hlt
+      · exact hbS
+      · have hmin := Nat.find_min hex (m := j - 1) (by omega)
+        push Not at hmin
+        have := hmin (by omega)
+        rw [show j - 1 + 1 = j by omega] at this
+        exact this.2
+    refine ⟨e, ?_, hespec.1, ?_⟩
+    · rw [runEnds, Finset.mem_filter, Finset.mem_Icc]
+      refine ⟨⟨by omega, heN⟩, hfree e hespec.1 le_rfl, ?_⟩
+      rcases hespec.2 with h | h
+      · left; omega
+      · right; exact h
+    · intro b' hb' hbb'
+      by_contra hcon
+      push Not at hcon
+      rw [hM2, Finset.mem_filter, mem_moves] at hb'
+      obtain ⟨⟨⟨_, hb'N⟩, hb'S, hb'v⟩, _⟩ := hb'
+      have hz : cycDefect N S b = 0 := (semiStep_iff_cycDefect hnd hS hb1 hbN hbS).1 hbv
+      have hz' : cycDefect N S b' = 0 := (semiStep_iff_cycDefect hnd hS (by omega) hb'N hb'S).1 hb'v
+      have hb1S : b + 1 ∉ S := hfree (b + 1) (by omega) (by omega)
+      have hnz : cycDefect N S (b + 1) ≠ 0 := by
+        intro h0
+        apply hnext
+        rw [mem_moves]
+        exact ⟨⟨by omega, by omega⟩, hb1S,
+          (semiStep_iff_cycDefect hnd hS (by omega) (by omega) hb1S).2 h0⟩
+      have hmono1 := cycDefect_mono_of_free hnd hS hN hb1 hbS
+      have hmono2 := cycDefect_mono_run hnd hS hN (b := b + 1) (by omega) (b' - (b + 1))
+        (fun j h1 h2 => hfree j (by omega) (by omega))
+      rw [show b + 1 + (b' - (b + 1)) = b' by omega] at hmono2
+      have : 0 < cycDefect N S (b + 1) := lt_of_le_of_ne (hz ▸ hmono1) (Ne.symm hnz)
+      omega
+  have hne : ∀ b ∈ M2, ((runEnds N S).filter (b ≤ ·)).Nonempty := by
+    intro b hb
+    obtain ⟨e, he, hbe, _⟩ := hwit b hb
+    exact ⟨e, Finset.mem_filter.2 ⟨he, hbe⟩⟩
+  let r : Nat → Nat := fun b =>
+    if h : ((runEnds N S).filter (b ≤ ·)).Nonempty then ((runEnds N S).filter (b ≤ ·)).min' h
+    else 0
+  have hr_mem : ∀ b ∈ M2, r b ∈ runEnds N S ∧ b ≤ r b := by
+    intro b hb
+    simp only [r, hne b hb, ↓reduceDIte]
+    exact Finset.mem_filter.1 (Finset.min'_mem _ _)
+  have h2 : M2.card ≤ (runEnds N S).card := by
+    apply Finset.card_le_card_of_injOn r (fun b hb => (hr_mem b hb).1)
+    intro b hb b' hb' hrr
+    have key : ∀ x ∈ M2, ∀ y ∈ M2, x < y → r x < r y := by
+      intro x hx y hy hxy
+      obtain ⟨e, he, hxe, hlt⟩ := hwit x hx
+      have h1 : r x ≤ e := by
+        simp only [r, hne x hx, ↓reduceDIte]
+        exact Finset.min'_le _ _ (Finset.mem_filter.2 ⟨he, hxe⟩)
+      have := hlt y hy hxy
+      have := (hr_mem y hy).2
+      omega
+    rcases lt_trichotomy b b' with h | h | h
+    · exact absurd hrr (key b hb b' hb' h).ne
+    · exact h
+    · exact absurd hrr (key b' hb' b hb h).ne'
+  have := Finset.card_le_card h1
+  omega
+
 end Folds
