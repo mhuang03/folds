@@ -47,20 +47,21 @@ static void buildb(void){ int X[130]; nb=0;
   for(int q=2;q<=N/2;q++)for(int s=1;s<=q;s++){ int p=(N+q-s)/q; for(int y=1;y<=p;y++)X[y-1]=(y-1)*q+s; addb(2,p,q,s,X);}
 }
 static int phi[130];
-static int YPSI=0;
+static int YPSI=0, NOY=0;
 /* Y = complement of the image I: as the increasing image of [q]; irregular panels of psi must form
    a live prefix: one panel (any), or two panels (i1, i2) valid in [q] and in [N], non-dead pair */
 static int deadpair(int n,int u,int v){ return u==1&&v==n&&((n%2==0&&n>=4)||n==7); }
 static int ypsi(W I,char *out){ int ps[130],q=0; for(int x=1;x<=N;x++) if(!((I>>(x-1))&1)) ps[++q]=x;
   if(q<1)return 0; int irr[4],ni=0;
   for(int i=1;i<=q;i++){ int bad=0; for(int y=1;y<=q;y++) if(rel(N,ps[i],ps[y])!=rel(q,i,y)){bad=1;break;} if(bad){ if(ni>=2)return 0; irr[ni++]=i; } }
-  if(ni==0){sprintf(out,"P0");return 1;}
-  if(ni==1){sprintf(out,"P1 %d",irr[0]);return 1;}
+  if(ni<=1){ for(int i1=1;i1<=q;i1++)for(int i2=1;i2<=q;i2++){ if(i1==i2)continue; if(ni==1&&i1!=irr[0]&&i2!=irr[0])continue;
+      if(rel(q,i2,i1)!=0||rel(N,ps[i2],ps[i1])!=0)continue; int u=i1<i2?i1:i2,v=i1<i2?i2:i1; if(deadpair(q,u,v))continue;
+      sprintf(out,"P %d %d",i1,i2); return 1; } return 0; }
   for(int o=0;o<2;o++){ int i1=irr[o],i2=irr[1-o];
     if(rel(q,i2,i1)!=0)continue;            /* i2 valid after [i1] in [q] */
     if(rel(N,ps[i2],ps[i1])!=0)continue;    /* and in [N] */
     int u=i1<i2?i1:i2,v=i1<i2?i2:i1; if(deadpair(q,u,v))continue;
-    sprintf(out,"P2 %d %d",i1,i2); return 1; }
+    sprintf(out,"P %d %d",i1,i2); return 1; }
   return 0; }
 static int regall(int p,int i,int j,int l){
   for(int x=1;x<=p;x++){ if(x==i||x==j||x==l)continue;
@@ -85,7 +86,7 @@ static int tryt(int a,int b,int c,char *out){
       int inc=1; for(int y=1;y<=p;y++){ if(phi[y]<1||phi[y]>N)inc=0; if(y<p&&phi[y]>=phi[y+1])inc=0;} if(!inc)continue;
       if(!regall(p,ii,jj,ll))continue;
       W I=0; for(int y=1;y<=p;y++)I|=(W)1<<(phi[y]-1);
-      char so[64]; if(!ycheck(I,so)){ if(!YPSI||!ypsi(I,so))continue; }
+      char so[64]; if(NOY){ sprintf(so,"NOY"); } else if(!ycheck(I,so)){ if(!YPSI||!ypsi(I,so))continue; }
       sprintf(out,"R %d %d %d %d %d %d %d %d %d %d %d %s",bk[q],p,bu[q],bv[q],y1,e1,y2,e2,ii,jj,ll,so); return 1; }
   }
   return 0;}
@@ -96,7 +97,7 @@ static int tryx(int a,int b,int c,char *out){
   if(!okpre(n-1,pre[0],pre[1],pre[2]))return 0;
   sprintf(out,"X %d %d %d",pre[0],pre[1],pre[2]); return 1; }
 int main(int argc,char**argv){
-  FILE *f=fopen(argv[1],"r"); if(argc>2)K=atoi(argv[2]); YPSI=getenv("YPSI")!=0; int n,a,b,c,curN=-1,tot=0,cov=0;
+  FILE *f=fopen(argv[1],"r"); if(argc>2)K=atoi(argv[2]); YPSI=getenv("YPSI")!=0; NOY=getenv("NOY")!=0; int n,a,b,c,curN=-1,tot=0,cov=0;
   while(fscanf(f,"%d %d %d %d",&n,&a,&b,&c)==4){
     if(n!=curN){ curN=n; N=n; memset(cused,0,sizeof cused);
       for(int m=1;m<=N;m++){int r=reachn(N,m);Lm[m]=Rm[m]=0;for(int d=1;d<=r;d++){Lm[m]|=(W)1<<(m-d-1);Rm[m]|=(W)1<<(m+d-1);}}

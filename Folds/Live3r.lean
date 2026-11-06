@@ -1,4 +1,5 @@
 import Folds.Live3p
+import Folds.ThinCover
 
 /-!
 # Live 3-prefixes, part 3: near copies
@@ -783,11 +784,176 @@ theorem coReach_one_even_N {N k : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 
     bne_iff_ne, ne_eq, Bool.not_false]
   simp only [and_true, le_refl]; omega
 
+/-! ## The complement of a near copy through a second near copy
+
+The complement `Y` of the image of a near map is co-reachable as soon as `Y` is itself the
+image of a near copy `ψ` of a strip `[q]` that is regular at every panel except two panels
+`i₁, i₂` forming a live 2-prefix `[i₁, i₂]` of `[q]` (Conjecture C, `ThinCover.conjectureC`)
+whose image `[ψ i₁, ψ i₂]` is a valid 2-prefix of `[N]`: the image of a completion
+`[i₁, i₂, …]` orders `Y` from scratch. -/
+
+/-- The image of a full sequence of `[q]` that starts with the irregular panels. -/
+theorem coReach_compl_nearEmb {N q : Nat} {ψ : Nat → Nat} {R : Nat → Prop}
+    (hψ : NearEmb N q ψ R) {i₁ i₂ : Nat}
+    (hreg : ∀ x, 1 ≤ x → x ≤ q → x ≠ i₁ → x ≠ i₂ → R x) (hext : Extends q [i₁, i₂])
+    (hst : SemiStep N [ψ i₁] (ψ i₂)) :
+    CoReach N (Finset.Icc 1 N \ (Finset.Icc 1 q).image ψ) := by
+  obtain ⟨a, hf, hv, hpre⟩ := hext
+  have hnd : a.Nodup := (List.Perm.nodup_iff hf).2 (List.nodup_range' ..)
+  have hb : ∀ y ∈ a, 1 ≤ y ∧ y ≤ q := fun y hy => by
+    have := hf.subset hy; rw [List.mem_range'_1] at this; omega
+  obtain ⟨t, rfl⟩ := hpre
+  have hnd' := hnd
+  rw [List.nodup_append] at hnd'
+  have hi12 : i₁ ≠ i₂ := by
+    have := hnd'.1; simp at this; exact this
+  have hmap : SemiSymmetric N (([i₁, i₂] ++ t).map ψ) := by
+    intro k hk
+    simp only [List.length_map] at hk
+    rw [List.getElem_map, ← List.map_take]
+    rcases Nat.lt_or_ge k 2 with hk2 | hk2
+    · interval_cases k
+      · simp [SemiStep, leftCount, rightCount]
+      · simpa using hst
+    · have hS := take_nodup hnd k
+      have hx : ([i₁, i₂] ++ t)[k] ∈ t := by
+        rw [List.getElem_append_right (by simpa using hk2)]; exact List.getElem_mem _
+      have hxb := hb _ (List.getElem_mem hk)
+      have hx1 : ([i₁, i₂] ++ t)[k] ≠ i₁ := fun e => hnd'.2.2 i₁ (by simp) _ hx e.symm
+      have hx2 : ([i₁, i₂] ++ t)[k] ≠ i₂ := fun e => hnd'.2.2 i₂ (by simp) _ hx e.symm
+      have hR := hreg _ hxb.1 hxb.2 hx1 hx2
+      refine (near_step hS (fun x hx' y hy e => ?_) (fun y hy => ?_)).2 (hv k hk)
+      · have := hb x (List.mem_of_mem_take hx'); have := hb y (List.mem_of_mem_take hy)
+        exact hψ.inj x y (by omega) (by omega) (by omega) (by omega) e
+      · have := hb y (List.mem_of_mem_take hy)
+        exact ⟨hψ.left _ y hxb.1 hxb.2 hR this.1 this.2, hψ.right _ y hxb.1 hxb.2 hR this.1 this.2⟩
+  have hsub : (Finset.Icc 1 q).image ψ ⊆ Finset.Icc 1 N := by
+    intro x hx
+    obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hx
+    rw [Finset.mem_Icc] at hy ⊢
+    exact hψ.bound y hy.1 hy.2
+  unfold CoReach g
+  rw [Finset.card_pos, Finset.sdiff_sdiff_eq_self hsub]
+  refine ⟨_, mem_semiOrders.2 ⟨⟨hψ.nodup_map hnd hb, ?_⟩, hmap⟩⟩
+  ext x
+  simp only [List.mem_toFinset, List.mem_map, Finset.mem_image, Finset.mem_Icc]
+  constructor
+  · rintro ⟨y, hy, rfl⟩; exact ⟨y, hb y hy, rfl⟩
+  · rintro ⟨y, hy, rfl⟩
+    refine ⟨y, hf.symm.subset ?_, rfl⟩
+    rw [List.mem_range'_1]; omega
+
+/-- The panels of `[N]` outside `xs`, in increasing order. -/
+def cmpL (N : Nat) (xs : List Nat) : List Nat := (List.range' 1 N).filter fun x => !xs.contains x
+
+/-- The increasing enumeration of a list. -/
+def enumF (l : List Nat) (y : Nat) : Nat := l.getD (y - 1) 0
+
+theorem map_enumF (l : List Nat) : (List.range' 1 l.length).map (enumF l) = l := by
+  apply List.ext_getElem (by simp)
+  intro n h1 h2
+  simp only [List.getElem_map, List.getElem_range', enumF]
+  rw [show 1 + 1 * n - 1 = n by omega, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h2]
+  rfl
+
+/-- **The near-copy rule with the complement through a second near copy.**  As `nearTrB`, but
+the complement `Y` of the image of `φ` is shown co-reachable by its own increasing
+enumeration `ψ : [q] → Y`, regular except at `i₁, i₂`, with `[i₁, i₂]` a valid non-dead
+2-prefix of `[q]` and `[ψ i₁, ψ i₂]` a valid 2-prefix of `[N]`. -/
+def nearTrP (N a b c k p u v y₁ e₁ y₂ e₂ i j l i₁ i₂ : Nat) : Bool :=
+  let φ := nearF k N p u v y₁ e₁ y₂ e₂
+  let ys := cmpL N ((List.range' 1 p).map φ)
+  let ψ := enumF ys
+  decide (p < N) && p != 7 && decide (1 ≤ i) && decide (i < j) && decide (j < l) &&
+    decide (l ≤ p) && φ i == a && φ j == b && φ l == c && valid3B p i j l &&
+    !dead3B p i j l && incB N p φ &&
+    (List.range' 1 p).all (fun x => x == i || x == j || x == l || regB N p φ x) &&
+    incB N ys.length ψ &&
+    (List.range' 1 ys.length).all (fun x => x == i₁ || x == i₂ || regB N ys.length ψ x) &&
+    decide (1 ≤ i₁) && decide (i₁ ≤ ys.length) && decide (1 ≤ i₂) && decide (i₂ ≤ ys.length) &&
+    i₁ != i₂ && step2B ys.length i₁ i₁ i₂ && step2B N (ψ i₁) (ψ i₁) (ψ i₂) &&
+    !deadB ys.length (min i₁ i₂) (max i₁ i₂)
+
+theorem coReach_of_nearTrP {N a b c k p u v y₁ e₁ y₂ e₂ i j l i₁ i₂ : Nat}
+    (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
+    (h : nearTrP N a b c k p u v y₁ e₁ y₂ e₂ i j l i₁ i₂ = true) : CoReach N {a, b, c} := by
+  unfold nearTrP at h
+  simp only [Bool.and_eq_true, decide_eq_true_eq, Bool.not_eq_true', beq_iff_eq,
+    bne_iff_ne, ne_eq] at h
+  obtain ⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨⟨hp, hp7⟩, hi⟩, hij⟩, hjl⟩, hl⟩, ea⟩, eb⟩, ec⟩, hv⟩, hd⟩, hinc⟩,
+    hreg⟩, hinc2⟩, hreg2⟩, h11⟩, h12⟩, h21⟩, h22⟩, hne⟩, hs1⟩, hs2⟩, hdd⟩ := h
+  set φ := nearF k N p u v y₁ e₁ y₂ e₂ with hφdef
+  set ys := cmpL N ((List.range' 1 p).map φ) with hys
+  have hφ := nearEmb_of_B hinc
+  have hψ := nearEmb_of_B hinc2
+  have hD := IH p hp hp7 i j l hi hij hjl hl hv hd
+  -- the 2-prefix `[i₁, i₂]` of `[ys.length]` extends (Conjecture C)
+  have hval : SemiSymmetric ys.length [i₁, i₂] := by
+    intro k hk
+    simp only [List.length_cons, List.length_nil] at hk
+    interval_cases k
+    · simp [SemiStep, leftCount, rightCount]
+    · simpa using step1B_iff.1 hs1
+  have hext : Extends ys.length [i₁, i₂] :=
+    (ThinCover.conjectureC ⟨h11, h12⟩ ⟨h21, h22⟩ hne hval).2 hdd
+  have hY := coReach_compl_nearEmb hψ (i₁ := i₁) (i₂ := i₂) (fun x hx1 hxq hx1' hx2' => by
+      rw [List.all_eq_true] at hreg2
+      have := hreg2 x (List.mem_range'_1.2 ⟨hx1, by omega⟩)
+      simp only [Bool.or_eq_true, beq_iff_eq] at this
+      rcases this with (h | h) | h
+      · exact absurd h hx1'
+      · exact absurd h hx2'
+      · exact h) hext (step1B_iff.1 hs2)
+  -- the image of `ψ` is the complement of the image of `φ`
+  have hlt := lt_of_incB hinc
+  have himg : (Finset.Icc 1 ys.length).image (enumF ys) =
+      Finset.Icc 1 N \ (Finset.Icc 1 p).image φ := by
+    ext x
+    have e1 : x ∈ (Finset.Icc 1 ys.length).image (enumF ys) ↔ x ∈ ys := by
+      rw [← map_enumF ys, List.mem_map, Finset.mem_image]
+      simp only [Finset.mem_Icc, List.mem_range'_1, map_enumF]
+      constructor
+      · rintro ⟨y, hy, e⟩; exact ⟨y, ⟨hy.1, by omega⟩, e⟩
+      · rintro ⟨y, hy, e⟩; exact ⟨y, ⟨hy.1, by omega⟩, e⟩
+    have e2 : x ∈ (List.range' 1 p).map φ ↔ ∃ y, (1 ≤ y ∧ y ≤ p) ∧ φ y = x := by
+      rw [List.mem_map]
+      constructor
+      · rintro ⟨y, hy, e⟩; rw [List.mem_range'_1] at hy; exact ⟨y, ⟨hy.1, by omega⟩, e⟩
+      · rintro ⟨y, hy, e⟩; exact ⟨y, List.mem_range'_1.2 ⟨hy.1, by omega⟩, e⟩
+    rw [e1, hys, cmpL, List.mem_filter, List.mem_range'_1, Finset.mem_sdiff, Finset.mem_Icc,
+      Finset.mem_image, Bool.not_eq_true', Bool.eq_false_iff, ne_eq, List.contains_iff_mem, e2]
+    simp only [Finset.mem_Icc]
+    constructor
+    · rintro ⟨hx, hn⟩; exact ⟨⟨hx.1, by omega⟩, hn⟩
+    · rintro ⟨hx, hn⟩; exact ⟨⟨hx.1, by omega⟩, hn⟩
+  have hsub : (Finset.Icc 1 p).image φ ⊆ Finset.Icc 1 N := by
+    intro x hx
+    obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hx
+    rw [Finset.mem_Icc] at hy ⊢
+    exact hφ.bound y hy.1 hy.2
+  rw [himg, Finset.sdiff_sdiff_eq_self hsub] at hY
+  have := coReach_nearEmb hφ hY (D := {i, j, l}) (fun x hx => by
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+      rw [Finset.mem_Icc]; omega)
+    (fun x hx1 hxp hx => by
+      rw [List.all_eq_true] at hreg
+      have := hreg x (List.mem_range'_1.2 ⟨hx1, by omega⟩)
+      simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hx
+      simp only [Bool.or_eq_true, beq_iff_eq] at this
+      rcases this with ((h | h) | h) | h
+      · exact absurd h hx.1
+      · exact absurd h hx.2.1
+      · exact absurd h hx.2.2
+      · exact h) hD
+  simpa [Finset.image_insert, ea, eb, ec] using this
+
 /-! ## The enlarged rules and the reduction -/
 
-/-- The new rules for a sorted triple: a near copy (`nearTrB`) or the copy `X_N` (`chiXB`). -/
+/-- The new rules for a sorted triple: a near copy (`nearTrB`, `nearTrP`) or the copy `X_N`
+(`chiXB`). -/
 def NearCov (N a b c : Nat) : Prop :=
   (∃ k p u v y₁ e₁ y₂ e₂ i j l c2 ms, nearTrB N a b c k p u v y₁ e₁ y₂ e₂ i j l c2 ms = true) ∨
+    (∃ k p u v y₁ e₁ y₂ e₂ i j l i₁ i₂, nearTrP N a b c k p u v y₁ e₁ y₂ e₂ i j l i₁ i₂ = true) ∨
     ∃ i j l, chiXB N a b c i j l = true
 
 /-- `Covered3S` (Live3q) or a new rule, for the triple or its mirror image. -/
@@ -796,8 +962,10 @@ def Covered3R (N a b c : Nat) : Prop :=
 
 theorem coReach_of_nearCov {N a b c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
     (h : NearCov N a b c) : CoReach N {a, b, c} := by
-  rcases h with ⟨k, p, u, v, y₁, e₁, y₂, e₂, i, j, l, c2, ms, h⟩ | ⟨i, j, l, h⟩
+  rcases h with ⟨k, p, u, v, y₁, e₁, y₂, e₂, i, j, l, c2, ms, h⟩ |
+    ⟨k, p, u, v, y₁, e₁, y₂, e₂, i, j, l, i₁, i₂, h⟩ | ⟨i, j, l, h⟩
   · exact coReach_of_nearTrB IH h
+  · exact coReach_of_nearTrP IH h
   · exact coReach_of_chiXB IH h
 
 theorem coReach_of_covered3R {N a b c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
