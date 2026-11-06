@@ -1,0 +1,185 @@
+SECOND RECURRENCE SEARCH: NICHE FAMILIES                                (experiments/recsearch2/)
+==========================================================================================
+
+Follows experiments/recsearch/REPORT.txt (P-recursive to 30 unknowns, LLL to 64, divide-and-
+conquer, convolutions, OEIS transforms, algebraic/ADE GFs of low order, mod-p BM, expression
+trees).  None of those is repeated.  This search covers nonlinear shift relations, normalised
+and ratio sequences, Mahler / q-difference / Bell-type functional equations, product and
+2-regular structure, Hankel determinants and continued fractions, relations with the side
+sequences, and mod structure.  Following the literature notes, every family that allows it
+is also split by parity.
+
+Data: a(1..38) (semi_counts.txt), c(1..41) (arith/selfdual_out.txt), J(1..33)
+(jseq/out/data.txt), I(1..38) (recomputed from identity (A) and checked against data.txt),
+T(N,k) for N <= 24 (rust/results/stats).  All arithmetic is exact (Fractions, python-flint)
+except family 9, which is a float model fit.  The engine is recsearch/common.py: ranks mod two
+61-bit primes, kernels over Q with flint, and nfit/excess as defined there.  Excess = number of
+leading equations matched beyond the free-parameter count; generic = 0.  It used 1 core and
+< 200 MB.
+
+BOTTOM LINE
+-----------
+There are NO hits.  About 14,200 boxes were tested in total, each with at least 5 held-out
+exact equations (E - K >= 5).  None has a kernel vector, i.e. no relation of any family below
+holds on all data.  Every planted control was recovered: exp(x) via A(x)^2 = A(2x), the Stern
+Mahler equation, Bell numbers via F' = e^z F and via the OGF substitution
+B(x) = 1 + x/(1-x) B(x/(1-x)), a binomially weighted recurrence, the k! S-fraction, and
+Stern / popcount / n^2 in the 2-regular test.  The near misses are small: the maximum excess
+anywhere is +4, and every excess >= 2 is a structural artefact of the box (sparse columns or
+tiny initial terms), not a partial fit (see NEAR MISSES).
+
+New facts that come out of the search:
+ * PROVEN (easy): a cannot satisfy any OGF Mahler equation, linear or polynomial
+   P(x, F(x), F(x^2), ...) = 0, in which a(N) is solved for from the x^N coefficient.  Such an
+   equation makes a(N) a bounded combination or convolution of earlier terms with constant
+   coefficients, so a(N) = O(C^N), contradicting the proven super-exponential lower bound.
+   (The EGF has no such obstruction, so it was searched; see M1-M4.)
+ * PROVEN (standard): a(N), and any sequence that grows faster than polynomially, is not
+   2-regular.  2-regular sequences are O(N^c).
+ * a(k) with a(0) = 1 is NOT a Hamburger moment sequence: the Hankel determinant H_5^(0) < 0
+   (signs ++++----+++-----++--).  a(k+2) is not a Stieltjes moment sequence: its S-fraction
+   has negative coefficients (alpha_5 = -11.81...).  So there is no positive measure / positive
+   J-fraction representation, and no total positivity of the Hankel matrix.  For a(k+1), the
+   determinant H_2 = det[[1,2],[2,4]] = 0, so its S-fraction does not exist.
+ * Asymptotics per parity (family 9): the conjecture's 3-parameter model
+   -N ln(kappa ln N) + alpha ln N + beta fits as well as every 4-parameter alternative.
+   kappa = 0.8275 (even), 0.8324 (odd), 0.8186 (3 | N), 0.8317 (N = +-1 mod 6).  The
+   alternatives are: c N lnln N; a Bell saddle exp(lam(e^{cz}-1)/c); and an extra N/ln N term.
+   The Bell-saddle fit parameters are not consistent across residue classes (lam = 1.32 for
+   even N, 0.42 for odd N).  So 38 terms cannot separate the models, and nothing favours a
+   Bell-type law.  The residual rms of 0.015-0.02 within a parity class is the mod-3
+   arithmetic effect: it is 0.005 within N = +-1 (mod 6).
+
+RESULTS TABLE
+-------------
+K = unknowns per box, E = exact equations, held-out = E - K (always >= 5).  "boxes" = number of
+(shape, degree) boxes run.  "best exc" = the largest excess over all boxes of the row.
+
+ #   ansatz (script)                                         boxes  K range  E        held-out  result
+ --  ------------------------------------------------------  -----  -------  -------  --------  ---------------------
+ 1a  Somos/Hirota bilinear (fam1_nonlinear.py):                5028  3..30    9..39    >= 5      no hit; best exc +1
+     al s(n)s(n-k) + be s(n-i)s(n-k+i) [+ ga s(n-j)s(n-k+j)]
+     = 0, k = 2..12, all pairs/triples, al..ga in Q[n]_{<=d};
+     s in {a, a/n!, r=a(n)/a(n-1), r/n, a/n^n, c(2n), c(4n+1),
+     a(2n), J}
+ 1b  Riccati: p0 s(n)s(n-g) + p1 s(n) + p2 s(n-g) + p3 = 0,       190  4..32    9..39    >= 5      no hit; best exc +1 (J, d=0)
+     g = 1..4, p_i in Q[n]_{<=d}, same 9 sequences
+ 1c  polynomial relations P(n, s(n..n-r)) = 0, a-degree        301  3..32    9..39    >= 5      no hit; best exc +2 (J, r=1,
+     hom 2, hom 3, all <= 2, all <= 3; r = 1..7; n-degree d                                        d=0: J(1..4) = 1,2,2,2)
+ 2   normalise, then P-rec REC(r,d) (K <= 30) and C-finite      2006  2..30    11..37   >= 5      no hit; best exc +0
+     (fam2_normalised.py), all, and with first 6 eqs dropped:
+     a/n!, a n!/(2n)!, a^2/n! (= (a/sqrt n!)^2), a/n^n,
+     a/[n]_2!, r, Delta r, n a(n-1)/a(n), r/n, r/n - 1,
+     r/(2^n-1), r(n)/r(n-1), a(n)/a(fl n/2)^2,
+     a(n)/(a(fl)a(cl)), a(2n)/a(n)^2, a(2n+1)/(a(n)a(n+1)),
+     r(2n), r(2n+1), a(n+1)a(n-1)-a(n)^2
+ 3   EGF / Mahler (fam3_egf.py), a(0) in {1, 0}:
+     M1 linear 2-Mahler sum p_i(x) G(x^{2^i}) [+inh],            242  2..34    ~30..39  >= 5      no hit; best exc +4 *
+        m = 1..3, EGF and OGF (OGF provably impossible, ctrl)
+     M2 theta-Mahler sum p_ijk x^j theta^k G(x^{2^i})            108  4..32    ~30..39  >= 5      no hit; best exc +4 *
+     M3 nonlinear Mahler deg <= 2 in G(x),G(x^2)[,G(x^4)]         94   3..33    ~35..39  >= 5      no hit; best exc +1
+     M4 q-difference: linear in G(x),G(-x),G(2x),G(4x),G(x^2);   117  3..33    ~35..39  >= 5      no hit; best exc +3 *
+        quadratic in (A(x),A(-x)), (A(x),A(2x)), (A,A(-x),A(x^2))
+     M5 P-rec + C-finite on coefficients of A(x)A(-x),            612  2..30    17..38   >= 5      no hit; best exc +2
+        A(x)/A(-x), A'/A, log A (EGF), F(x)F(-x), F/F(-x), F'/F,
+        A(x)^2/A(2x), A(x)^2/A(x^2), F(x)^2/F(x^2)
+     M6 q-holonomic (q=2): sum c n^l 2^{kn} s(n-i), s = a, a/n!  100   6..32    31..37   >= 5      no hit; best exc +0
+ 4   products (fam4_product.py):
+     4a a(n)Q_j(n) = a(n-s)P_j(n) on n = j mod p, p = 1..6,       ~80   2..32    6..37    >= 5      no hit; best exc +1 (p=1)
+        s = 1 or p (quasi-rational / progression products);
+        P-rec + C-fin on a(3n+j), a(4n+j)
+     4b multiplicative Moebius b(n) = prod a(d)^mu(n/d):         --    --       --       --        non-integral at 21 of 25
+        Dirichlet inverse; a(mn)/(a(m)a(n)^m), P-rec on it        21    2..12    7..18    >= 5      composite n; no hit
+     4c 2-regularity: kernel rank lower bound (7x8 matrix),      9 seq  4        8        4         rank 7/7 (maximal) for r,
+        s(4n+j) in span{1,s(n),s(2n),s(2n+1)}                                                      n a(n-1)/a(n), v_2(a),
+                                                                                                    a(n)/(a(fl)a(cl)); no
+                                                                                                    closure except trivial
+                                                                                                    (v_3(a(4n+1)) = 0 for
+                                                                                                    n <= 8; c(4n+3) = 0)
+ 5   Hankel / continued fractions (fam5_hankel.py):              245   2..30    ~13..36  >= 5      no hit; best exc +0
+     H^(0), H^(1) of a(k+1), a(k) [a0=1], a(k+2), a(k)/k!:
+     P-rec, C-fin, Somos-k (k=4..7, poly coeffs) on H_n;
+     S-fraction alpha_n, J-fraction lambda_n: integrality,
+     P-rec / C-fin
+ 6   side sequences (fam6_mixed.py): sum p_f(N) f(N) = 0 over    147   3..30    7..38    >= 5      no hit; best exc +0
+     feature sets of {a(N), a(N-1), a(N-2), c(N+-), J(N-0..2),
+     I(N), I(N-1), T(N,N-2..4), T(N-1,N-1..3), T(N,N/2..)}, linear
+     and homogeneous quadratic; all N, even N, odd N
+ 7   mod structure (fam7_mod.py):                                --    --       38 terms --        no structure beyond the known
+     2-/3-kernel collapse of a mod 4,8,16,3,9, a/2 mod 2,4,                                        (see below)
+     c mod 8; v_2(a), a mod 8 vs digit statistics of n;
+     Gessel/Dwork a(np) == a(n) mod p, p^2, a(np^2) == a(np);
+     (a - c) mod 16 by N mod 8
+ 8   Bell-type, per parity (fam8_bell.py), c in {+-1, +-2,       4923  2..34    ~13..38  >= 5      no hit; best exc +3 *
+     +-1/2, +-3, 1/3}, on A, A_ev, A_od (= (F(z)+-F(-z))/2) and
+     the EGFs B_ev, B_od of a(2m), a(2m+1):
+     B1 S' = sum_{i<=2} G_i(z) theta^i S [+H], G_i in
+        span{z^j e^{kcz}: j <= dz, k <= ke}  (a(n+1) = sum_k
+        C(n,k) c^{n-k} P(k) a(k) and generalisations)
+     B2 S'' = G1 S' + G0 S [+H], same coefficient space
+     B2' algebraic order-2 ODE, degree <= 2 in S,S',S'', with
+        coefficients in span{e^{kcz}}
+     B3 OGF substitution P(x)F(x) = Q(x)F(x/(1-cx)) [+R(x)], and
+        with F(x/(1-2cx)) too; on F, F_ev, F_od, sum a(2m)x^m,
+        sum a(2m+1)x^m
+ 9   asymptotic model selection per parity / mod-3 class       --    2-4 par  14-27 pts float     no model preferred; see above
+     (fam9_asymptotics.py)
+
+ (*) = an excess >= 2 that is a box artefact (next section).
+
+NEAR MISSES (honest list)
+--------------------------
+No partial fit extends past N = 6.  The excesses above +1 are all explained:
+ * +4 in M1/M2 with m = 3 (G(x^8) columns), and +3 in M4 with G(x^2): the columns
+   x^j G(x^{2^i}) are sparse (G(x^8) has only 5 non-zero coefficients up to x^38), so the
+   prefix rank grows more slowly than the "generic" model assumes.  The excess measures the
+   column sparsity.  The full systems are still of full column rank (no kernel).
+ * +2/+3 in family 8 on A_ev / A_od: these series vanish in every other coefficient, which
+   has the same effect.  All of these occur at d = 0 or dz = 0 (the smallest boxes).
+ * +2 for J in 1c (r = 1, d = 0): J(1..4) = 1, 2, 2, 2.
+ * +2 in M5 for A(x)/A(-x): from the first few coefficients only.
+ * Family 1 with c(N): every apparent hit (71 at first) came from c(N) = 0 for N = 3 (mod 4).
+   The zero pattern decouples the monomials into blocks that each have fewer equations than
+   unknowns.  This is not a relation.  c is now used only through its zero-free subsequences
+   c(2n) and c(4n+1).
+ * Family 7: s(np) == s(n) (mod 2) holds 18/19 for a, but this is just "a(N) even for
+   N >= 2".  The mod-3, -5 and -7 Gessel/Dwork counts are at chance level (a: 3/12, 2/7, 1/5;
+   mod p^2: 0/12, 0/7, 0/5).  The 2-kernel of a mod 4/8/16 and the 3-kernel of a mod 8/9/16
+   show no collapse beyond shuffled controls: 7/7 and 13/13 distinct elements, against
+   10/13 for a mod 4 (3-kernel), which is matched by the shuffled control at 10.0.  The
+   Thue-Morse control collapses to 3.  v_2(a(n)) and a(n) mod 8 are not functions of n mod 16,
+   popcount(n), v_2(n), (popcount, n mod 4) or (v_2(n), n mod 8): every class with >= 2
+   members conflicts.  (a - c) mod 16 has no pattern by N mod 8.
+ * Hankel determinants: H_n is always divisible by about 2^n (a consequence of a(N) being
+   even); after removing all prime factors < 10^5, cofactors of 7 to 77 digits remain from n ~ 7 on
+   (n <= 12 shown).  This is the same "huge prime factor" picture as a(N) itself.
+
+WHAT THIS MEANS
+---------------
+Together with recsearch/, the following are now ruled out on all 38 terms, in boxes of up to
+about 30 unknowns:
+  * linear recurrences, including P-recursive, Mahler-type and q-holonomic ones;
+  * nonlinear shift relations (Somos, Riccati, cubic);
+  * linear or quadratic relations for the ratio sequence a(n)/a(n-1) and many normalisations;
+  * Bell-type exponential-coefficient ODEs and Moebius-substitution equations for the EGF/OGF,
+    with or without the parity split;
+  * linear and quadratic relations with c, J, I and T(N,k).
+Every structural test (moment sequence, 2-regularity, automaticity, digit functions,
+Gessel/Dwork congruences) comes out negative.  The only exact recursions known remain the
+subset recursion (README) and identities (A)/(B).  Both recurse over subsets, not over earlier
+terms.
+
+FILES
+-----
+common2.py            loads a, c, J, I (from identity (A), checked), T; wraps the recsearch engine; rec_search
+fam1_nonlinear.py     Somos/Hirota, Riccati, polynomial relations        -> fam1_nonlinear_out.txt
+fam2_normalised.py    normalisations, ratios; P-rec + C-finite            -> fam2_normalised_out.txt
+fam3_egf.py           Mahler (linear, theta, nonlinear), q-difference, derived EGF/OGF series, q-holonomic -> fam3_egf_out.txt
+fam4_product.py       quasi-rational products, multiplicative, 2-regular -> fam4_product_out.txt
+fam5_hankel.py        Hankel determinants, Somos on them, S-/J-fractions -> fam5_hankel_out.txt
+fam6_mixed.py         relations with c, J, I, T                          -> fam6_mixed_out.txt
+fam7_mod.py           automaticity, digit functions, Gessel/Dwork        -> fam7_mod_out.txt
+fam8_bell.py          Bell-type ODEs, OGF substitution, per parity       -> fam8_bell_out.txt
+fam9_asymptotics.py   asymptotic model selection per parity              -> fam9_asymptotics_out.txt
+Run each with `python3 famX.py > famX_out.txt` from this directory.  The longest runs are
+fam8 (~1 min) and fam5 (~2 min).
