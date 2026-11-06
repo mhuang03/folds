@@ -1,0 +1,150 @@
+Live pairs, part 8: the covering statement beyond N = 64
+=======================================================
+
+Notation as in experiments/live7/PROOFS.txt.  Lean = Folds/Live8.lean (no sorry, no native_decide;
+every `decide` is one N of the certificate check).  A pair is (u, v), 1 <= u < v <= N, u + v <= N + 1
+(mirror symmetry), u' = N + 1 - v >= u, d = u' - u, M = N + 2.  "Wide" = Theorem G fails:
+v >= 2u + 2 and 2v >= N + u + 3, i.e. u + 2u' <= N - 1; write delta = N - 1 - u - 2u' >= 0 (distance
+to the inward boundary).  Mixed parity: u + v odd, i.e. u - u' = N mod 2.
+
+STATUS
+  * Lean, unconditional: Conjecture C for 2-prefixes holds for every N <= 300
+      `coReach_le_300`, `extends_iff_not_dead_le_300`.
+  * Lean, for all N: Conjecture C follows from the mixed-parity statement for N > 300 alone
+      `coReach_of_mixed_large`, `conjectureC_of_mixed`
+    where `MixedCover N` = every mixed-parity wide pair with u + v <= N + 1 is settled
+    (Settled7) or its mirror is; and MixedCover N follows from two statements
+      `mixedCover_of_arith`, `conjectureC_of_arith`:
+      - `ArithCover N` (purely arithmetic, no copies): every mixed wide pair with u >= 4 passes
+        an "exact direct test" `dirAny` (section 3) in one of its orientations;
+      - `SmallCover N`: MixedCover for the pairs with u <= 3.
+    Both are verified by C programs faithful to the Lean definitions: ArithCover for every
+    61 <= N <= 3000 (dircheck.c; for 13 <= N <= 60 it fails only at (N, u, v) = (23, 6, 17),
+    (28, 5, 18), (44, 5, 26), (46, 11, 30), (60, 5, 34)), SmallCover for 65 <= N <= 3000
+    (smallcheck.c).  So the open part of Conjecture C is now the elementary
+    Diophantine statement ArithCover N for N > 300 (and the small family u <= 3).
+  * Lean, proven families for ALL N (reducing what remains of MixedCover):
+      - every same-parity pair (`samePar_settled`, N >= 65), in particular `coverAt_of_mixed`:
+        CoverAt E7 N <== MixedCover N;
+      - N even, u and u' both even (`settled_evenEven`): the copy Z(N, N/2 - 1);
+      - the explicit "direct region" (`settled_directZ_region`, u >= 4, u <= u', u + u' <= N):
+            (u - r) M (u + u' + 1) >= 2 (u + 1) (M u + 2 u u' + u)
+            (u M - r M - 2u + 2)(u' + 1) >= 2u (u'^2 + M)            (r = u mod 2),
+        via the sliding-window lemma (`slide`, `settled_directZ`).
+    Residual (not covered by these families) at N = 1000: 22.7% of the mixed wide pairs; at
+    N = 1001: 43.6% (resid.py prints the map: the near-diagonal wedge u' < ~1.5u, the corner
+    u ~ u' ~ N/3, and small u near the inward boundary).
+  * Computation: the full covering statement holds for 13 <= N <= 2665 (live7 cover7.c); the
+    rotation certificates below cover every mixed wide pair except (1, *) and (2, N - 2) for
+    every N tested (rot.c mode 1, N <= ~2000 sampled), and the position-free ones
+    (rot2.c mode 0, Q <= 50) everything except u = 1, small odd u near the inward boundary,
+    and a few near-boundary resonances.
+  * NOT proven: MixedCover N for N > 300 in the residual region.  See section 4 for the
+    proof strategy that the numerics support, and what is missing.
+
+1. Same parity, and the reduction (Lean)
+----------------------------------------
+Exactly the paper proof of live7 section 4(a): slope-2 copies X(2n, n, 0) = evens,
+X(2n, n, 1) = odds, X(2n + 1, n + 1, 0) = odds, Z(2n + 1, n) = evens; dead preimages only for
+(2, N) (N = 0 mod 4; X(N, N/2 - 1, 0) corner), (1, N - 1) (its mirror is (2, N)), (2, N - 1)
+(N = 1 mod 4; Z-corner with p = (N - 3)/2), and (1, N) (N odd: the {1, N} rule).
+`coverAt_of_mixed`: for N >= 65, Theorem G, same parity, and the mirror leave only the mixed
+wide pairs with u + v <= N + 1 (if u + v > N + 1 the mirror pair is used).
+
+2. The certificate check for 65 <= N <= 300 (Lean)
+--------------------------------------------------
+`mixedB N cs`: for each u (one packed Nat per u, base 2^12) and each mixed wide v, a certificate
+c = 8p + 2f + o: orientation o (pair or mirror), family f (X(N,p,0), X(N,p,1), Z(N,p), or 3 =
+fallback to the full Live7 search `settled7B`, used for the 138 pairs of the families
+(1, N/2 + 2), (3, N - 3)), parameter p; the indices are Live7's candB / candZ and the images
+are re-checked (`chkCert_sound`).  gencert.c writes the certificates (largest p first),
+gen_cov8.py the Lean block.  Cost: ~N^3.4; N = 300: 10 s, 2.2 GB peak (baseline import 1.9 GB);
+the whole file (block 65..300) 11 min, 2.9 GB peak.
+N = 400 would take 27 s / 2.4 GB, so the bound can be raised at roughly N0^4.4 total time.
+
+3. The sliding-window (rotation) lemmas
+---------------------------------------
+Every family is a Beatty set B(K, s) = {floor(kK/s)} (K = N for X(N, s, h), K = M for
+Z(N, s - 1)).  For a combo (family, orientation) with left value L (= u or u') and right value R
+(the other one, shifted: Z: R = y, X: R = y - 2), membership of the pair at denominator s is
+    (I)  X := aK - sL - alpha in [0, s - 1]      (index a of the left element)
+    (II) Y := cK - sR - beta  in [0, s - 1]      (distance c of the right element from the end)
+(Z: alpha = 0, beta = 1; X(N,p,0): alpha = 0, beta = 1; X(N,p,1): alpha = 1, beta = 0), plus
+s in the copy range; the index constraints a >= 1, c >= 1, a + c < s are then automatic
+(u + u' <= N), and the preimage is non-dead as soon as a >= 2.
+  slide (Lean `slide`): for s1 <= s <= s2 the windows [sR + beta, sR + beta + s - 1] overlap
+  or abut when R <= s1, so their union is [s1 R + beta, s2 R + beta + s2 - 1]; if its length is
+  >= K it contains some cK.
+  direct lemma (Lean `settled_directZ`): fix a; s runs through I_a = {s : (I)}; with s >= R the
+  (II)-windows are contiguous.  Position-free if (S2 - S1) R + S2 >= K.
+  exact direct test (Lean `dirOK`, `dirAll`, `dirAny`, soundness `settled7_of_dirAny`):
+  S2 = min(floor((aK - alpha)/L), smax), S1 = max(ceil((aK - alpha + 1)/(L + 1)), R, 2); pass iff
+  S1 <= S2 and the union [S1 R + beta, S2 R + beta + S2 - 1] contains a multiple of K (no length
+  condition).  dirAll tries Z (K = M, R = y, alpha = 0, beta = 1, smax = M/2), X(., ., 0)
+  (K = N, R = y - 2, 0, 1, (N+1)/2) and X(., ., 1) (K = N, R = y - 2, 1, 0, N/2); dirAny tries
+  a = 2 .. x + 1.  Numerically (resid2.py, dircheck.c) the six tests (3 families x 2
+  orientations) settle every mixed wide pair with u >= 4 for 61 <= N <= 3000; the pairs with
+  u <= 3 that fail are (1, *), (2, N - 2), (3, N - 3) and a few sporadic (3, *).
+  Why this is not yet a proof: the union is shorter than K for a positive proportion of the
+  pairs, and then whether it meets a multiple of K depends on the position (a three-gap /
+  continued-fraction question in a); see section 4.
+  (Q,P) lemma (rot2.c, not in Lean): fix j = Qc - Pa; then QY - PX = D(s) = jK - s(QR - PL) -
+  (Q beta - P alpha) does not depend on the choice of (a, c) on the line; on an s-range where
+  |D(s)| <= Delta the condition becomes X in [ceil(Delta/P), min(s - 1, (Q(s-1) - Delta)/P)]
+  with a in a fixed class mod Q; these windows slide by L, are contiguous when their length is
+  >= L, and the union must contain a multiple of QK in the right class (position-free: length
+  >= QK).  Q = P = 1 is the "difference" lemma (fix c - a), natural near the diagonal.
+Numerics (Z orientation 0 only, rot2z.c, map.py): the direct lemma covers the bulk
+(u <~ N u'/(N + 3u')), Q = 1 the near-diagonal wedge, Q >= 2 the rest except near the inward
+boundary; with all six combos and Q <= 50 (rot2.c mode 0, N = 1000) the only uncovered pairs
+are u = 1, odd u <= 29 ~ sqrt(N) with delta small, and (201, 397..399).
+
+4. A proof strategy for MixedCover, and what is missing
+-------------------------------------------------------
+(a) Direct lemma with a = floor(u/2) (or (u +- 1)/2): covers, position-free, the region
+    M (u' - u) >~ 3 u u' (explicit form in Lean: `settled_directZ_region`), and near the
+    boundary also odd u as soon as u (u + delta) >= M + 2u.
+(b) (Q,P) lemma + Dirichlet: with eta = (K - 2R)/(2K) (>= (u + 3)/(2M) for Z, orientation 0)
+    the lemma needs |QR - PL| <= L eta (up to constants), |QR - PL| >= ~1/eta (so that the
+    centre s0 = (jK - C)/(QR - PL) can be placed in [R, K/2]), and Q <= L eta.  Dirichlet gives
+    Q1 <= Q0 with |Q1 R - P1 L| <= L/(Q0 + 1); taking a multiple k(Q1, P1) moves |E| into the
+    window.  This closes if L eta^3 >~ const, i.e. for u >~ C N^(3/4) near the boundary and for
+    all u >~ C away from it (eta bounded below).
+(c) Near-diagonal with small u: Q = 1 with eta ~ 1/2.
+(d) Small odd u near the boundary (u odd, u (u + delta) < M): the direct lemma fails because
+    s must be >= R ~ M/2 for contiguity.  A two-step slide (s of fixed parity: the windows move
+    by 2R - K = -(K - 2R), small) covers delta >= u - 3 (a = (u - 1)/2); left are the pairs with
+    u odd <= ~sqrt(N) and delta < u (about N/4 pairs per N), e.g. (3, (N - 4)/2): their
+    witnesses (data: corner.py) have a = 1, sigma in [u, u + 1), and need a position-dependent
+    argument (two alternating window positions with a slow drift).
+(e) u = 1: the mirror pair (u', N) needs one condition only (N is the last element of every
+    X(N, p, 0)); u' = N/2 - 1, N = 0 mod 4 is the chiY family.
+What is missing for a complete proof: the Lean formalisation of (b) (Dirichlet + the (Q,P)
+lemma + the inequality bookkeeping), (c), (d), (e), and a rigorous treatment of the finitely
+many shapes in (d) (or a finer sliding argument); the constants in (b) must be made explicit
+and the range below the asymptotic threshold covered by computation (the check of section 2
+up to the threshold).
+
+5. Exploration (why the simple ideas fail)
+------------------------------------------
+* Bounded block complexity (rules.c): writing a witness as slope m with blocks t, t' (x = ma + t,
+  y' = mc + t'), m <= 6 and |t|, |t'| <= T covers everything for N <= 600 with T = 6, and with
+  T = 1 for N = 10007, but not uniformly: at N = 10003 the corner pairs with 3 | d, M = 0 mod 3,
+  delta < d - 3 need T ~ u/d (or rational slopes like 22/3 and 5/2).
+* Integer-slope residue rules (live7 4(b)) generalised: x in X(N, p, h) iff
+  floor((xe - mh)/N) = x mod m and (xe - mh) mod N < N - e, for any m with e = N - mp (also
+  e < 0); the right element likewise.  The near-diagonal rays need squares (t, t + 1) at
+  t ~ u/d.  With d odd (N odd) one of d - 2, d, d + 2 is divisible by 3, which handles small d
+  away from the resonance above.
+* The rotation lemma of live7 4(c) is the direct lemma with a ~ u/2 and a cruder bound.
+
+6. Programs (1 core, < 100 MB each)
+  wit8.py, stat8.py, corner.py, slope2.py, cplx.py   witnesses and their statistics
+  rules.c                                            block rules (slope m, blocks t, t')
+  rot.c, rot2.c, rot2z.c, map.py, summ.py           sliding-window certificates, maps
+  qpsim.py                                           a deterministic (Q,P) choice (too crude)
+  regD.py, resid.py                                  the Lean direct region, the residual map
+  resid2.py, dirk.c                                  exact direct tests (map; restricted a)
+  dircheck.c                                         ArithCover, faithful to Live8.dirAny
+  smallcheck.c                                       SmallCover (live7 cover7.c restricted to u <= 3)
+  gencert.c, gen_cov8.py, trylean.py, memtime.py     the Lean certificate block, timing

@@ -1,7 +1,7 @@
 /* gencert.c N1 N2 [file]: certificates for Live8.mixedB.  For every N, every u >= 1 with a
    wide pair, and every v in [vLo, N + 1 - u] with u + v odd, a certificate c = 8 p + 2 f + o
    (o = orientation, f = family 0: X(N,p,0), 1: X(N,p,1), 2: Z(N,p), 3: fallback search),
-   c = 0 for the dead pair.  The certificates of one u are packed into one number in base 2^16
+   c = 0 for the dead pair.  The certificates of one u are packed into one number in base 2^12
    (first v = least significant).  Output: one Lean theorem per N.
    Faithful to Live8.beattyW / zW (candidate indices candB, candZ of Live7). */
 #include <stdio.h>
@@ -42,17 +42,17 @@ static ll cert(ll N, ll u, ll v) {
 }
 
 static void printBig(FILE *f, unsigned *dig, int n) {
-  /* number = sum dig[i] 65536^i, print in decimal */
+  /* number = sum dig[i] 4096^i, print in decimal */
   if (n == 0) { fprintf(f, "0"); return; }
-  /* convert base 65536 -> base 10^9 */
+  /* convert base 4096 -> base 10^9 */
   int cap = n * 2 + 2;
   unsigned *out = calloc(cap, sizeof(unsigned));
   int len = 0;
   for (int i = n - 1; i >= 0; i--) {
-    /* out = out * 65536 + dig[i] */
+    /* out = out * 4096 + dig[i] */
     unsigned long long carry = dig[i];
     for (int j = 0; j < len; j++) {
-      unsigned long long t = (unsigned long long)out[j] * 65536ULL + carry;
+      unsigned long long t = (unsigned long long)out[j] * 4096ULL + carry;
       out[j] = t % 1000000000ULL;
       carry = t / 1000000000ULL;
     }
@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
       for (ll v = vlo; v <= N + 1 - u; v++) {
         if ((u + v) % 2 != 1) continue;
         ll c = cert(N, u, v);
+        if (c >= 4096) { fprintf(stderr, "certificate too large\n"); return 1; }
         if ((c / 2) % 4 == 3) { fallback++; fprintf(stderr, "fallback N=%lld u=%lld v=%lld\n", N, u, v); }
         dig[n++] = (unsigned)c;
       }

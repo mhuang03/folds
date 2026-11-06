@@ -7,3 +7,7 @@ gencert
 *.o
 *.out
 __pycache__/
+dircheck
+smallcheck
+dirk
+dircheck2
