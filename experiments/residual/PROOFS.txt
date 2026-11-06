@@ -24,7 +24,7 @@ STATUS
         polygon whose edges are explicit in N, u, u'); no fractional part enters, except through
         the integer slice parameter j of RegionSL.  RegionS is a list of explicit families.
   * Numerically (residual2.c, exact rational arithmetic, faithful to the Lean definitions):
-        CoverAll N holds for every 301 <= N <= 3000 and on the sample N = 3001 + 997k <= 30000,
+        CoverAll N holds for every 301 <= N <= 3000 and on the sample N = 3001 + 997k <= 26929,
     i.e. Residual2 is vacuous there.  Over 301 <= N <= 3000 (3.73e8 pairs): the old residual
     was 1.508e8 pairs (40.4%); RegionPF alone leaves 585758 (0.157% of all pairs); RegionSL and
     RegionS leave none (section 6).
@@ -126,7 +126,11 @@ For N >= 301 (omega / short ring identities; u3.c checks 301 <= N <= 200000):
   Per N (old residual -> after PF -> after PF + S + SL):
      N = 301:  1553 -> 69 -> 0;   N = 1001: 16824 -> 129 -> 0;   N = 3001: 150871 -> 320 -> 0;
      N = 6002: 603812 -> 804 -> 0 (residual2 6001 6002 1).
-  sample 3001 <= N <= 30000 (step 997), residual2 3001 30000 997: SAMPLE_RESULT
+  sample N = 3001 + 997k, k = 0..24 (up to N = 26929; the run was stopped there by a time
+  limit), residual2 3001 30000 997: "left 0" for every one of the 25 values; e.g.
+     N = 10977: 2019476 old residual pairs -> 1085 after PF -> 0 (S 5, SL 1080);
+     N = 26929: tot 30204239, old 18045945, PF 12155680, S 5, SL 2609, left 0.
+  (The exact __int128 arithmetic of parok.h is safe up to N ~ 3e4.)
 
 7. What remains: the covering statement CoverAll N for N > 300
 --------------------------------------------------------------

@@ -617,7 +617,7 @@ theorem conjectureC_of_residual2 (hR : ∀ N, 300 < N → Residual2 N) {N m₁ m
 
 /-- **The covering statement**: every mixed-parity wide non-special pair lies in `Proven2`.
 (Numerically `Residual2 N` is vacuous: `CoverAll N` holds for `301 ≤ N ≤ 3000` and on a sample
-up to `30000`, `experiments/residual/residual2.c`.) -/
+up to `26929`, `experiments/residual/residual2.c`.) -/
 def CoverAll (N : ℕ) : Prop :=
   ∀ u v, 2 ≤ u → u < v → u + v ≤ N + 1 → (u + v) % 2 = 1 → 2 * u + 2 ≤ v →
     N + u + 3 ≤ 2 * v → ¬ Special N u (N + 1 - v) → Proven2 N u (N + 1 - v)
