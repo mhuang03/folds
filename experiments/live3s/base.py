@@ -23,3 +23,11 @@ def centre(N, S):
     return (not neg or not pos or max(neg) < min(pos))
 def cs12(N):
     return [c for c in range(3, N + 1) if valid3(N, 1, 2, c) and not dead3(N, 1, 2, c)]
+
+# the closed-form families OneTwo of Folds/Live3s.lean
+def onetwo(N, c):
+    return ((N % 4 == 1 and N >= 17 and c % 2 == 1 and 7 <= c and c + 4 <= N) or
+            (N % 2 == 0 and N >= 16 and c % 2 == 1 and 7 <= c < N and (N % 4 == 0 or c + 5 <= N)) or
+            (N % 2 == 0 and N >= 16 and c % 2 == 0 and 8 <= c and c + 2 <= N and (N % 4 == 0 or c + 6 <= N)) or
+            (N % 4 == 3 and N >= 19 and c % 2 == 0 and 8 <= c and c + 5 <= N) or
+            (N % 4 == 3 and c % 4 == 1 and 13 <= c and c + 6 <= N))

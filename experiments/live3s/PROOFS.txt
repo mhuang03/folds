@@ -1,0 +1,163 @@
+Live 3-prefixes, part 4: more closed-form near copies for {1, 2, c}, and the final reduction
+==========================================================================================
+
+Notation as in experiments/live3p, live3q, live3r PROOFS.txt (valid steps, arms, CoReach,
+Theorem G, near copies = Live3r Theorem 1, Good3, Covered3S / Covered3R, Residual3R).
+"Lean" refers to Folds/Live3s.lean (no sorry, no native_decide; 62 s, 2.71 GB peak with
+`lean -M 3000`, `Elab.async false`) and Folds/Live3Final.lean (imports Live3q; 1.3 s, 1.96 GB).
+
+STATUS
+  * NOT DONE: `forall N > 50, Residual3R N`, and hence 3-prefix liveness for all N, is NOT
+    proven.  Two separate things are missing:
+      (A) Residual3R N quantifies over ALL valid non-dead triples of [N] not settled by
+          Covered3R.  That this residual consists only of {1, 2, c} (and mirror images) is
+          known numerically for N = 51..70 only (Live3r rcov.c).  For N > 70 nothing is
+          known: there is no parametric proof that the families of Live3q section 4 (corner
+          pairs {a, b, c} with fixed {a, c}, {1, 3, c}, {1, 5, c}, ...) are covered by
+          near copies for every N; they were settled one N at a time by searched hints.
+          So even a complete treatment of {1, 2, c} would not give Residual3R for all N.
+      (B) The {1, 2, c} family itself is now settled in closed form for about half of the
+          values (section 2); what is left is listed in section 3 (48 of Live3r's 86 triples
+          for N <= 70; for general N: odd N with c of the "wrong parity", c >= ~0.5 N, and a
+          few c near N).
+  * PROVEN (Lean), for every N (inside the induction, i.e. given Good3 q for q < N):
+      {1, 2, c} is co-reachable when                                    (Live3s.OneTwo)
+        O   N = 1 mod 4, c odd, 7 <= c <= N - 4                   (Live3r.coReach_one_two_odd)
+        F1  N even, c odd, 7 <= c < N, c <= N - 5 if N = 2 mod 4  (coReach_one_two_evenN)
+        F4  N even, c even, 8 <= c <= N - 2, c <= N - 6 if N = 2 mod 4
+                                                                  (coReach_one_two_evenN_even)
+        F2  N = 3 mod 4, c even, 8 <= c <= N - 5                  (coReach_one_two_even3)
+        F3  N = 3 mod 4, c = 1 mod 4, 13 <= c <= N - 6            (coReach_one_two_odd3)
+      and the mirror images {N + 1 - c, N - 1, N}.
+  * PROVEN (Lean), the reduction:
+      Covered3T N a b c := Covered3R N a b c or (a, b, c) = (1, 2, c) with OneTwo N c
+                           or (b, c) = (N - 1, N) with OneTwo N (N + 1 - a)
+      Residual3T N      := every valid non-dead sorted triple not settled by Covered3T is
+                           co-reachable
+      residual3R_of_residual3T, good3_of_residual3T, residual3R_all_of_residual3T
+    and in Folds/Live3Final.lean (imports Live3q):
+      Live3Final.extends3_iff_of_residual3T :
+        (forall N, 50 < N -> Live3s.Residual3T N) ->
+        forall N x y z, N != 7 -> x, y, z in [1, N] distinct -> SemiSymmetric N [x, y, z] ->
+          (Extends N [x, y, z] <-> not Dead3 N {x, y, z})
+    (via Live3q.extends3_iff_of_residual, Live3q.good3_le_50, Live3r.residual3_all_of_residual3R;
+    the only non-definitional bridge between the verbatim copies of Live3q and Live3r is the
+    structural recursion stepsB, `stepsB_q_r`).
+  * NUMERICAL: the four new maps are checked for every N <= 200 (verify.py, verify.txt:
+    regularity outside {1, 2, g} by brute force, the step 5 where used, Theorem G with the
+    centre 1/2 for the image); the Lean proofs are for all N.
+
+
+1. Free panels of a near copy
+-----------------------------
+Live3r Theorem 1 (coReach_nearEmb) needs regularity of phi only at the panels j of [p] outside
+the transferred set D, but at those panels for every y, including y in D.  The panels of D
+themselves may be moved freely (they are never stepped), as long as no panel j outside D sees a
+moved panel on a different side of an arm end.  For ratio-2 copies the arm ends of phi(j) are
+explicit, which gives the four maps below; everything is proven by `unfold; split_ifs; omega`.
+
+  phi12 : 1 -> 1, 2 -> 2, y -> 2y - 1 (the odd class with 3 moved to 2).
+     into [2p - 1], p odd: regular outside {2} (Live3r; p even: j* = (p+2)/2 is irregular).
+     into [2p], EVERY p: regular outside {2}.  (In [2p] the reach of 2j - 1 is 2r or 2r + 1;
+       the left arm of p + 1 = phi((p+2)/2) is [2, p + 1) and contains 2.)
+  phi12m g : phi12 with g -> 2g - 2, into [2p]: regular outside {2, g} for 4 <= g <= p.
+  phiE : 1 -> 1, 2 -> 2, y -> 2y (the even class with 2 -> 1, 4 -> 2).
+     into [2p + 1]: regular outside {1, 2} iff p is odd (p even: j = (p+2)/2 sees 2 on the
+     wrong side).
+  phiEm g : phiE with g -> 2g - 1, into [2p + 1], p odd, g odd: regular outside {1, 2, g}.
+     (The right arm of 2j ends at the odd number 2(j + r) + 1, which separates 2g - 1 from 2g
+     only when g = j + r + 1 = 2j, g even.)
+  [For odd N the other moves (phiE with g -> 2g + 1, phi12 with g -> 2g or 2g - 2, g even)
+   are regular too (moved.py), but their images are not co-reachable by Theorem G once c is
+   large: the hole next to c is pulled to the right (section 3).]
+
+The complement of the image (needed from scratch) is settled by Theorem G with the centre 1/2
+("no outside panel is pulled to the right"), via a counting function F with
+F(t + 1) = F(t) + [t in the set] (Lean `inward_of_cnt`, `semiStep_of_cnt`; the arm counts are
+F(m) - F(m - r) and F(m + 1 + r) - F(m + 1)):
+  F1  image of phi12 in [2p] = {1, 2, 5, 7, ..., 2p - 1}: inward, no step.
+      F(t) = t/2 (t >= 5), 2 (t = 3, 4), t - 1 (t <= 2).
+  F4  image of phi12m g = the same with 2g - 1 replaced by 2g - 2: inward, no step.
+      F(t) = t/2 + [t = 3] + [t = 2g - 1].
+  F2  image of phiE in [2p + 1] = {1, 2, 6, 8, ..., 2p}: 5 is a valid step (arms {1, 2} and
+      {6, 8}), then inward.  F(t) = 3 + (t - 5)/2 (t >= 6), 2 (3 <= t <= 5), t - 1.
+  F3  image of phiEm g: 2g replaced by 2g - 1 (7 <= g <= p - 2): 5 is a valid step, then
+      inward.  F(t) = (t + 1)/2 + [t = 2g] - [t in {1, 5}].
+The inequality R <= L is split along the two cases of the reach (`cnt_ineq_split`:
+m <= (N + 1)/2, arms [1, m) and (m, 2m - 1]; otherwise [2m - N, m) and (m, N]) to keep the
+`split_ifs` case trees small (memory).
+
+The preimage {1, 2, g} (g >= 4) is valid in [p] (ordering g, 2, 1) and not dead unless p is odd
+and g >= p - 1; then it is co-reachable by the induction hypothesis (`coReach_one_two_pre`).
+  F1: g = (c + 1)/2;  F4: g = (c + 2)/2, phi12m g g = c;  F2: g = c/2;
+  F3: g = (c + 1)/2 (odd since c = 1 mod 4), phiEm g g = c.
+
+
+2. Coverage of {1, 2, c}
+------------------------
+left12.py / left12.txt.  Of the 86 triples that Live3r left for N = 51..70, OneTwo settles 38;
+still left (48):
+   N=51: 48 49            N=53: 46 50 51         N=54: 53        N=55: 52 53
+   N=57: 46 50 52 54 55   N=58: 57               N=59: 35 43 47 51 55 56 57
+   N=61: 50 54 56 58 59   N=62: 61               N=63: 60 61     N=64: 64, {1, 63, 64}
+   N=65: 62 63            N=66: 65               N=67: 39 47 51 55 59 63 64 65
+   N=69: 58 62 64 66 67   N=70: 69
+For general N, OneTwo misses (c >= 8):
+   N = 0 mod 4:  c = N;
+   N = 2 mod 4:  c = N - 4 .. N (the preimage {1, 2, p - 1} or {1, 2, p} is dead in the odd
+                 strip p, or c = N);
+   N = 1 mod 4:  every even c, and c = N - 2;
+   N = 3 mod 4:  every c = 3 mod 4, and c = N - 4, N - 3, N - 2.
+Most of the small and middle c are settled anyway by the rules of Live3q / Live3r (Theorem G
+directly for c <= ~N/2, Theorem G after 1-3 steps up to ~0.75 N; gdepth.c), so for N <= 70 the
+list above is all that is left.
+
+
+3. What is still missing for {1, 2, c}
+--------------------------------------
+(a) Odd N, wrong parity (N = 1 mod 4 with c even, N = 3 mod 4 with c = 3 mod 4).  The moved
+    maps (phi12 with g -> 2g or 2g - 2, phiE with g -> 2g + 1) ARE regular outside {1, 2, g}
+    (moved.py), so Theorem 1 applies as soon as the image is co-reachable; but the image has a
+    hole next to c (the old position of g) that is pulled to the right, while the bottom odd
+    panels are pulled to the left, so Theorem G fails for every centre.  Explicit steps help in
+    bands: for N = 3 mod 4, c = 3 mod 4, the steps 5 (resp. 5, 4, 3, (N + 7)/2) make the image
+    inward for c up to ~0.5 N (resp. ~0.78 N) (pat3.py; this settles e.g. N = 59: 35, 43, 47
+    and N = 67: 39, 47, 51), and the DFS (imgdfs.py) finds longer completions above (e.g.
+    N = 59, c = 55: 19 steps, a halving chain 33 47 31 25 17 ... ).  The top band c >= ~0.78 N
+    needs chains of length ~log N, as for {1, 2, c} itself (live3r section 5).  Not formalized.
+(b) c near N: {1, 2, N - 2} for odd N (the near copy sends it to the dead {1, 2, p - 1}),
+    {1, 2, N - 3}, {1, 2, N - 4} for N = 3 mod 4, c = N - 4 .. N - 1 for N = 2 mod 4, and
+    {1, 2, N} for even N.  No closed form; the numerical completions (live3r leftchk.txt) are
+    long DFS orderings.
+(c) A halving-chain lemma (the approach suggested for this part): the step sequences of the
+    completions are "(N + c)/2 + 1, then m_{i+1} in [(x_{i+1} + 1)/2, x_{i+2}/2]": each step
+    m <= (N + 1)/2 has left arm [1, m) containing exactly {1, 2} and right arm (m, 2m - 1]
+    containing exactly the two smallest elements above it.  An invariant that is preserved
+    by such a step (chain.py): {1, 2} in B, B n [3, a) empty, B n (a, 2a - 1] = {b, w}, every
+    panel t > a outside B has R(t) <= L(t); then every panel in (m, a) gets R <= 3 = L, and
+    the chain ends with Theorem G (centre 1/2) at a = 3.  But the invariant fails at the start
+    of the chain for large c (chain.py: no start state for c >= ~0.55 N with <= 2 top steps):
+    for t just below c the right arm (t, N] holds c and the top steps, and the left arm
+    [2t - N, t) must hold as many; in the mirror coordinate u = N + 1 - t this asks for
+    #B n (u, 2u - 1] >= #B n [1, u), i.e. a set near the top whose density does not decrease,
+    which the DFS completions build with ~N/6 extra steps for c = N - 2.  So the completions
+    are not a single halving chain plus Theorem G; a uniform proof needs a second (dense) top
+    structure.  Not carried out.
+
+
+4. Files
+--------
+  base.py        strip helpers (reach, arms, valid steps, Theorem G, dead/valid triples)
+  valid12.py     which {1, 2, c} are valid / not dead (all c <= N, c <= N - 2 for odd N)
+  fams.py        the families O, F1, F2 (first version of the coverage list)
+  maps.py        regularity of phi12 / phiE and Theorem G for their images, by N
+  moved.py       the maps with the third panel moved by one (regularity, image after steps)
+  evenmove.py    phi12 into [2p] with g -> 2g - 2 (F4) and g -> 2g
+  verify.py      verify.txt: F1..F4 checked for N <= 200
+  left12.py      left12.txt: what OneTwo settles of Live3r's 86, and what it misses for N <= 128
+  gdepth.c       least number of valid steps before Theorem G for {1, 2, c} outside the families
+  chain.py       the halving-chain invariant search (section 3c)
+  repair.py, pat3.py, imgdfs.py   step patterns for the images of the wrong-parity moved maps
+  bisect.py      debugging aid (sorry one `have` block of a theorem)
+  lean.sh, memtime.py   compile against the prebuilt oleans of the main checkout (and a scratch
+                 olean directory for Live3s when compiling Live3Final), time and peak memory

@@ -1,0 +1,3 @@
+F2 FAIL 7
+checked F1, F2 up to N = 200 failures: 1
+checked F3, F4 up to N = 200 failures: 0

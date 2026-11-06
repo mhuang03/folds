@@ -10,7 +10,7 @@ import Folds.Live3r
   differences of `F` and the conditions are `omega` goals.
 * `coReach_one_two_pre`: `{1, 2, g}` is co-reachable in a smaller strip `[p]` (induction
   hypothesis), for `4 ≤ g ≤ p`, `g ≤ p - 2` when `p` is odd.
-* Two new closed-form near copies fixing `1` and `2`:
+* Two new closed-form near copies fixing `1` and `2` (`NearEmb`, Live3r):
   - `phi12 : [p] → [2p]` (`1 ↦ 1`, `2 ↦ 2`, `y ↦ 2y - 1`), regular at every panel `≠ 2` for
     every `p`; its image `{1, 2, 5, 7, …, 2p - 1}` satisfies Theorem G with the centre `1/2`.
     Hence **`{1, 2, c}` for even `N`, odd `c`** (`coReach_one_two_evenN`).
@@ -18,9 +18,17 @@ import Folds.Live3r
     `≥ 3`; `5` is a valid step for its image `{1, 2, 6, 8, …, 2p}`, after which Theorem G
     holds with the centre `1/2`.  Hence **`{1, 2, c}` for `N ≡ 3 (mod 4)`, even `c`**
     (`coReach_one_two_even3`).
-* `OneTwoB`, `Covered3T`, `Residual3T`, `good3_of_residual3T`, `residual3R_all_of_residual3T`:
+* Moving the third panel (the panels of the transferred set need no regularity):
+  - `phi12m g` (`phi12` with `g ↦ 2g - 2`) into `[2p]`: **`{1, 2, c}` for even `N`, even `c`**
+    (`coReach_one_two_evenN_even`; the image satisfies Theorem G directly);
+  - `phiEm g` (`phiE` with `g ↦ 2g - 1`, `g` odd) into `[2p + 1]`, `p` odd:
+    **`{1, 2, c}` for `N ≡ 3 (mod 4)`, `c ≡ 1 (mod 4)`** (`coReach_one_two_odd3`; step `5`,
+    then Theorem G).
+* `OneTwo`, `Covered3T`, `Residual3T`, `good3_of_residual3T`, `residual3R_all_of_residual3T`:
   the reduction of Live3r with these families (and `Live3r.coReach_one_two_odd`) added, for the
-  triple or its mirror image.
+  triple or its mirror image.  `Folds/Live3Final.lean` combines it with Live3q.
+
+This does **not** prove `∀ N > 50, Residual3R N`: see `experiments/live3s/PROOFS.txt`.
 -/
 
 namespace Folds
