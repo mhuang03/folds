@@ -230,35 +230,128 @@ theorem a_le_of_wit {K x s smax α a : ℕ} (hK : 0 < K) (hα : α ≤ 1) (hsm :
   have h2 : a * K ≤ (x + 1) * K := by nlinarith
   exact Nat.le_of_mul_le_mul_right h2 hK
 
-theorem dirAny_of_consZ {N x y : ℕ} {a c : ℤ} (hx : 1 ≤ x) (hy : 1 ≤ y)
-    (h : ∀ f ∈ consZ N x y, 0 ≤ f.eval a c) : dirAny N x y = true := by
-  obtain ⟨a', c', s, -, -, ha, hs, hsm, hRs, h1, h2, h3, h4⟩ :=
-    wit_of_cons (by omega) hx hy h
+/-- A witness `(a, c, s)` of the family `(K, L, R, α, β, smax, amin)` (`Live8.dirOK_spec`). -/
+def Wit (K L R α β smax amin : ℕ) : Prop :=
+  ∃ a c s : ℕ, amin ≤ a ∧ 2 ≤ s ∧ s ≤ smax ∧ R ≤ s ∧ s * L + α ≤ a * K ∧
+    a * K + 1 ≤ s * (L + 1) + α ∧ s * R + β ≤ c * K ∧ c * K + 1 ≤ s * R + β + s
+
+theorem wit_of_cons' {K L R α β smax amin : ℕ} {a c : ℤ} (hK : 0 < K) (hL : 1 ≤ L) (hR : 1 ≤ R)
+    (h : ∀ f ∈ famCons K L R α β smax amin, 0 ≤ f.eval a c) : Wit K L R α β smax amin := by
+  obtain ⟨a', c', s, -, -, h⟩ := wit_of_cons hK hL hR h
+  exact ⟨a', c', s, h⟩
+
+theorem dirAny_of_witZ' {N x y : ℕ} (hx : 1 ≤ x) (h : Wit (N + 2) x y 0 1 ((N + 2) / 2) 2) :
+    dirAny N x y = true := by
+  obtain ⟨a', c', s, ha, hs, hsm, hRs, h1, h2, h3, h4⟩ := h
   have hax := a_le_of_wit (K := N + 2) (α := 0) (by omega) (by omega) hsm (by omega) h2
   exact dirAny_of_dirAll (a := a') (by omega) hax
     (dirAll_Z ha (dirOK_of_wit (by omega) hx hs hRs hsm h1 h2 h3 h4))
 
-theorem dirAny_of_consX0 {N x y : ℕ} {a c : ℤ} (hx : 1 ≤ x) (hy : 3 ≤ y) (hN : 0 < N)
-    (h : ∀ f ∈ consX0 N x y, 0 ≤ f.eval a c) : dirAny N x y = true := by
-  obtain ⟨a', c', s, -, -, ha, hs, hsm, hRs, h1, h2, h3, h4⟩ :=
-    wit_of_cons hN hx (by omega) h
+theorem dirAny_of_witX0 {N x y : ℕ} (hx : 1 ≤ x) (hy : 2 ≤ y) (hN : 0 < N)
+    (h : Wit N x (y - 2) 0 1 ((N + 1) / 2) 1) : dirAny N x y = true := by
+  obtain ⟨a', c', s, ha, hs, hsm, hRs, h1, h2, h3, h4⟩ := h
   have hax := a_le_of_wit (K := N) (α := 0) hN (by omega) hsm (by omega) h2
-  have ha1 : 1 ≤ a' := by
-    by_contra h0
-    have : a' = 0 := by omega
-    subst this
-    have : s * x ≥ 2 := by nlinarith
-    omega
-  exact dirAny_of_dirAll (a := a') ha1 hax
-    (dirAll_X0 (by omega) (dirOK_of_wit hN hx hs hRs hsm h1 h2 h3 h4))
+  exact dirAny_of_dirAll (a := a') ha hax
+    (dirAll_X0 hy (dirOK_of_wit hN hx hs hRs hsm h1 h2 h3 h4))
 
-theorem dirAny_of_consX1 {N x y : ℕ} {a c : ℤ} (hx : 1 ≤ x) (hy : 3 ≤ y) (hN : 0 < N)
-    (h : ∀ f ∈ consX1 N x y, 0 ≤ f.eval a c) : dirAny N x y = true := by
-  obtain ⟨a', c', s, -, -, ha, hs, hsm, hRs, h1, h2, h3, h4⟩ :=
-    wit_of_cons hN hx (by omega) h
+theorem dirAny_of_witX1 {N x y : ℕ} (hx : 1 ≤ x) (hy : 2 ≤ y) (hN : 0 < N)
+    (h : Wit N x (y - 2) 1 0 (N / 2) 2) : dirAny N x y = true := by
+  obtain ⟨a', c', s, ha, hs, hsm, hRs, h1, h2, h3, h4⟩ := h
   have hax := a_le_of_wit (K := N) (α := 1) hN le_rfl hsm (by omega) h2
   exact dirAny_of_dirAll (a := a') (by omega) hax
-    (dirAll_X1 ha (by omega) (dirOK_of_wit hN hx hs hRs hsm h1 h2 h3 h4))
+    (dirAll_X1 ha hy (dirOK_of_wit hN hx hs hRs hsm h1 h2 h3 h4))
+
+theorem dirAny_of_consZ {N x y : ℕ} {a c : ℤ} (hx : 1 ≤ x) (hy : 1 ≤ y)
+    (h : ∀ f ∈ consZ N x y, 0 ≤ f.eval a c) : dirAny N x y = true :=
+  dirAny_of_witZ' hx (wit_of_cons' (by omega) hx hy h)
+
+theorem dirAny_of_consX0 {N x y : ℕ} {a c : ℤ} (hx : 1 ≤ x) (hy : 3 ≤ y) (hN : 0 < N)
+    (h : ∀ f ∈ consX0 N x y, 0 ≤ f.eval a c) : dirAny N x y = true :=
+  dirAny_of_witX0 hx (by omega) hN (wit_of_cons' hN hx (by omega) h)
+
+theorem dirAny_of_consX1 {N x y : ℕ} {a c : ℤ} (hx : 1 ≤ x) (hy : 3 ≤ y) (hN : 0 < N)
+    (h : ∀ f ∈ consX1 N x y, 0 ≤ f.eval a c) : dirAny N x y = true :=
+  dirAny_of_witX1 hx (by omega) hN (wit_of_cons' hN hx (by omega) h)
+
+/-! ## Slices: fix `a = p c + j`, a polygon in `(s, c)`
+
+With the left index tied to the right distance by `a = p c + j`, the witness conditions are
+eight affine conditions on `(s, c)` (no length condition: a lattice point *is* a witness). -/
+
+/-- The slice `a = p c + j` of the family `(K, L, R, α, β, smax, amin)`, in the variables
+`(s, c)`. -/
+def sliceCons (K L R α β smax amin p : ℕ) (j : ℤ) : List Aff :=
+  [⟨-(L : ℚ), (p : ℚ) * K, (j : ℚ) * K - α⟩, ⟨(L : ℚ) + 1, -((p : ℚ) * K), (α : ℚ) - 1 - j * K⟩,
+    ⟨-(R : ℚ), K, -(β : ℚ)⟩, ⟨(R : ℚ) + 1, -(K : ℚ), (β : ℚ) - 1⟩,
+    ⟨1, 0, -2⟩, ⟨1, 0, -(R : ℚ)⟩, ⟨-1, 0, smax⟩, ⟨0, p, (j : ℚ) - amin⟩]
+
+theorem wit_of_slice {K L R α β smax amin p : ℕ} {j s c : ℤ} (hK : 0 < K)
+    (h : ∀ f ∈ sliceCons K L R α β smax amin p j, 0 ≤ f.eval s c) : Wit K L R α β smax amin := by
+  simp only [sliceCons, List.mem_cons, List.not_mem_nil, or_false, forall_eq_or_imp,
+    forall_eq, Aff.eval] at h
+  obtain ⟨g1, g2, g3, g4, g5, g6, g7, g8⟩ := h
+  have e1 : 0 ≤ (p : ℤ) * c * K + j * K - s * L - α := by
+    have : (0 : ℚ) ≤ (((p : ℤ) * c * K + j * K - s * L - α : ℤ) : ℚ) := by push_cast; linarith
+    exact_mod_cast this
+  have e2 : 0 ≤ s * ((L : ℤ) + 1) + α - 1 - ((p : ℤ) * c * K + j * K) := by
+    have : (0 : ℚ) ≤ ((s * ((L : ℤ) + 1) + α - 1 - ((p : ℤ) * c * K + j * K) : ℤ) : ℚ) := by
+      push_cast; linarith
+    exact_mod_cast this
+  have e3 : 0 ≤ c * (K : ℤ) - s * R - β := by
+    have : (0 : ℚ) ≤ ((c * (K : ℤ) - s * R - β : ℤ) : ℚ) := by push_cast; linarith
+    exact_mod_cast this
+  have e4 : 0 ≤ s * (R : ℤ) + β + s - 1 - c * K := by
+    have : (0 : ℚ) ≤ ((s * (R : ℤ) + β + s - 1 - c * K : ℤ) : ℚ) := by push_cast; linarith
+    exact_mod_cast this
+  have e5 : 2 ≤ s := by exact_mod_cast (show (2 : ℚ) ≤ s by linarith)
+  have e6 : (R : ℤ) ≤ s := by exact_mod_cast (show (R : ℚ) ≤ s by linarith)
+  have e7 : s ≤ (smax : ℤ) := by exact_mod_cast (show (s : ℚ) ≤ smax by linarith)
+  have e8 : (amin : ℤ) ≤ p * c + j := by
+    exact_mod_cast (show (amin : ℚ) ≤ p * c + j by linarith)
+  have hc0 : 0 ≤ c := by
+    by_contra hc
+    push Not at hc
+    have : c * (K : ℤ) < 0 := Int.mul_neg_of_neg_of_pos hc (by exact_mod_cast hK)
+    have : (0 : ℤ) ≤ s * R := mul_nonneg (by omega) (by positivity)
+    have : (0 : ℤ) ≤ β := by positivity
+    omega
+  obtain ⟨s', rfl⟩ := Int.eq_ofNat_of_zero_le (show (0 : ℤ) ≤ s by omega)
+  obtain ⟨c', rfl⟩ := Int.eq_ofNat_of_zero_le hc0
+  obtain ⟨a', ha'⟩ := Int.eq_ofNat_of_zero_le (show (0 : ℤ) ≤ p * c' + j by omega)
+  refine ⟨a', c', s', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> zify <;>
+    (rw [← ha'] at *; nlinarith)
+
+/-- Slice of `Z(N, s - 1)` in orientation `(x, y)`. -/
+def sliceZ (N x y p : ℕ) (j : ℤ) : List Aff := sliceCons (N + 2) x y 0 1 ((N + 2) / 2) 2 p j
+/-- Slice of `X(N, s, 0)`. -/
+def sliceX0 (N x y p : ℕ) (j : ℤ) : List Aff := sliceCons N x (y - 2) 0 1 ((N + 1) / 2) 1 p j
+/-- Slice of `X(N, s, 1)`. -/
+def sliceX1 (N x y p : ℕ) (j : ℤ) : List Aff := sliceCons N x (y - 2) 1 0 (N / 2) 2 p j
+
+/-- **Region SL**: some slice `a = p c + j` of some family and orientation contains a
+fundamental parallelogram of `ℤ²` in the variables `(s, c)`. -/
+def RegionSL (N u u' : ℕ) : Prop :=
+  ∃ (p : ℕ) (j : ℤ),
+    ParOK (sliceZ N u' u p j) ∨ (2 ≤ u ∧ ParOK (sliceX0 N u' u p j)) ∨
+      (2 ≤ u ∧ ParOK (sliceX1 N u' u p j)) ∨ ParOK (sliceZ N u u' p j) ∨
+      (2 ≤ u' ∧ ParOK (sliceX0 N u u' p j)) ∨ (2 ≤ u' ∧ ParOK (sliceX1 N u u' p j))
+
+theorem covered_of_regionSL {N u u' : ℕ} (hN : 0 < N) (hu : 1 ≤ u) (hu' : 1 ≤ u')
+    (h : RegionSL N u u') : dirAny N u u' = true ∨ dirAny N u' u = true := by
+  obtain ⟨p, j, h | ⟨h2, h⟩ | ⟨h2, h⟩ | h | ⟨h2, h⟩ | ⟨h2, h⟩⟩ := h
+  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
+    exact Or.inr (dirAny_of_witZ' hu' (wit_of_slice (by omega) hsc))
+  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
+    exact Or.inr (dirAny_of_witX0 hu' h2 hN (wit_of_slice (by omega) hsc))
+  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
+    exact Or.inr (dirAny_of_witX1 hu' h2 hN (wit_of_slice (by omega) hsc))
+  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
+    exact Or.inl (dirAny_of_witZ' hu (wit_of_slice (by omega) hsc))
+  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
+    exact Or.inl (dirAny_of_witX0 hu h2 hN (wit_of_slice (by omega) hsc))
+  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
+    exact Or.inl (dirAny_of_witX1 hu h2 hN (wit_of_slice (by omega) hsc))
+
 
 /-! ## The parallelogram region and the new residual -/
 
@@ -285,13 +378,14 @@ theorem covered_of_regionPF {N u u' : ℕ} (hN : 0 < N) (hu : 1 ≤ u) (hu' : 1 
     exact Or.inl (dirAny_of_consX1 hu h3 hN hac)
 
 /-- The proven regions: those of `ArithCover` and the new ones. -/
-def Proven2 (N u u' : ℕ) : Prop := Proven N u u' ∨ RegionPF N u u'
+def Proven2 (N u u' : ℕ) : Prop := Proven N u u' ∨ RegionPF N u u' ∨ RegionSL N u u'
 
 theorem covered_of_proven2 {N u u' : ℕ} (hN : 0 < N) (hu : 1 ≤ u) (hu' : 1 ≤ u')
     (h : Proven2 N u u') : dirAny N u u' = true ∨ dirAny N u' u = true := by
-  rcases h with h | h
+  rcases h with h | h | h
   · exact covered_of_proven h
   · exact covered_of_regionPF hN hu hu' h
+  · exact covered_of_regionSL hN hu hu' h
 
 /-- **The new residual statement**: `ArithCover N` for the pairs outside `Proven2`. -/
 def Residual2 (N : ℕ) : Prop :=
