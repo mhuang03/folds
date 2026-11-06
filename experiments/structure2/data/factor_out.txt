@@ -1,0 +1,153 @@
+== a(N) factorisations ==
+ 1    [largest p: 1 digits]
+ 2 2   [largest p: 1 digits]
+ 3 2^2   [largest p: 1 digits]
+ 4 2 * 5   [largest p: 1 digits]
+ 5 2^2 * 7   [largest p: 1 digits]
+ 6 2^5 * 3   [largest p: 1 digits]
+ 7 2^8   [largest p: 1 digits]
+ 8 2^5 * 5 * 7   [largest p: 1 digits]
+ 9 2^5 * 7 * 19   [largest p: 2 digits]
+10 2 * 7 * 1277   [largest p: 4 digits]
+11 2^4 * 5 * 887   [largest p: 3 digits]
+12 2^2 * 95869   [largest p: 5 digits]
+13 2^3 * 67 * 3023   [largest p: 4 digits]
+14 2^2 * 1303 * 1759   [largest p: 4 digits]
+15 2^4 * 3 * 107 * 9311   [largest p: 4 digits]
+16 2^3 * 7 * 29 * 170063   [largest p: 6 digits]
+17 2^2 * 370498679   [largest p: 9 digits]
+18 2 * 13 * 18301 * 21193   [largest p: 5 digits]
+19 2^3 * 5 * 1377054703   [largest p: 10 digits]
+20 2 * 3 * 5 * 11 * 4481 * 269741   [largest p: 6 digits]
+21 2 * 317 * 3952178287   [largest p: 10 digits]
+22 2 * 400151 * 22701593   [largest p: 8 digits]
+23 2^2 * 3^2 * 13^4 * 509 * 227393   [largest p: 6 digits]
+24 2 * 489865076925487   [largest p: 15 digits]
+25 2^2 * 443 * 18839 * 196642211   [largest p: 9 digits]
+26 2^2 * 5^3 * 7 * 53149 * 298793329   [largest p: 9 digits]
+27 2^3 * 3 * 28697 * 599815537241   [largest p: 12 digits]
+28 2 * 7 * 2339 * 259499 * 424013137   [largest p: 9 digits]
+29 2^7 * 11 * 89501 * 218581555007   [largest p: 12 digits]
+30 2 * 5^3 * 21929 * 32839 * 1460179687   [largest p: 10 digits]
+31 2^4 * 3 * 5 * 11 * 31 * 24893051164663183   [largest p: 17 digits]
+32 2 * 3^2 * 191 * 5882050821859400057   [largest p: 19 digits]
+33 2^5 * 2848629851 * 1883236287587   [largest p: 13 digits]
+34 2^2 * 13 * 29 * 179 * 23017 * 38953 * 7073820181   [largest p: 10 digits]
+35 2^2 * 3 * 47 * 523 * 5827279 * 8677930122313   [largest p: 13 digits]
+36 2^2 * 3 * 53 * 1061 * 769459 * 313770816491017   [largest p: 15 digits]
+37 2 * 59 * 857 * 14194762997899659087161   [largest p: 23 digits]
+38 2 * 7^2 * 19 * 57110071 * 146689901 * 1018341341   [largest p: 10 digits]
+
+== c(N) (self-dual) factorisations ==
+ 1 
+ 2 2
+ 4 2 * 3
+ 5 2^2
+ 6 2^2 * 3
+ 8 2^2 * 19
+ 9 2^4
+10 2 * 137
+12 2^6 * 17
+13 2^2 * 3 * 59
+14 2^6 * 89
+16 2^2 * 9871
+17 2^3 * 1913
+18 2 * 88169
+20 2 * 3 * 97 * 2657
+21 2 * 3 * 113 * 757
+22 2 * 3 * 1594249
+24 2 * 5 * 2423 * 2707
+25 2^2 * 6153613
+26 2^2 * 132160697
+28 2 * 5 * 481654163
+29 2^2 * 857 * 508489
+30 2 * 3 * 47^2 * 2475163
+32 2 * 61 * 15671 * 184627
+33 2^4 * 53 * 683 * 177601
+34 2^2 * 47309 * 16422089
+36 2^2 * 13 * 43 * 13073309131
+37 2 * 5 * 204859 * 5425297
+38 2 * 5 * 30130562165549
+40 2^3 * 19^2 * 12979 * 91607059
+41 2 * 17 * 53 * 503 * 1168160291
+
+== symmetric s(N) = A003407 ==
+ 1 
+ 2 2
+ 3 2^2
+ 4 2 * 5
+ 5 2^2 * 5
+ 6 2^4 * 3
+ 7 2^3 * 13
+ 8 2 * 3 * 47
+ 9 2^4 * 31
+10 2 * 13 * 41
+11 2^2 * 3 * 5 * 41
+12 2^4 * 383
+13 2^3 * 3 * 5 * 107
+14 2^2 * 5 * 13 * 113
+
+== small primes: #{6<=N<=38 : p | a(N)} vs expected 33/p ==
+p= 3 hits= 9 expected=11.00 (prob of >=hits Binomial) N=[6, 15, 20, 23, 27, 31, 32, 35, 36]
+p= 5 hits= 7 expected= 6.60 (prob of >=hits Binomial) N=[8, 11, 19, 20, 26, 30, 31]
+p= 7 hits= 7 expected= 4.71 (prob of >=hits Binomial) N=[8, 9, 10, 16, 26, 28, 38]
+p=11 hits= 3 expected= 3.00 (prob of >=hits Binomial) N=[20, 29, 31]
+p=13 hits= 3 expected= 2.54 (prob of >=hits Binomial) N=[18, 23, 34]
+p=17 hits= 0 expected= 1.94 (prob of >=hits Binomial) N=[]
+p=19 hits= 2 expected= 1.74 (prob of >=hits Binomial) N=[9, 38]
+p=23 hits= 0 expected= 1.43 (prob of >=hits Binomial) N=[]
+p=29 hits= 2 expected= 1.14 (prob of >=hits Binomial) N=[16, 34]
+p=31 hits= 1 expected= 1.06 (prob of >=hits Binomial) N=[31]
+p=37 hits= 0 expected= 0.89 (prob of >=hits Binomial) N=[]
+mean #odd primes<1000 dividing a(N): 1.424, random: 1.698
+
+log(largest prime)/log a(N):
+6:0.24 7:0.12 8:0.28 9:0.35 10:0.73 11:0.61 12:0.89 13:0.56 14:0.47 15:0.52 16:0.62 17:0.93 18:0.43 19:0.85 20:0.47 21:0.77 22:0.55 23:0.38 24:0.98 25:0.52 26:0.51 27:0.67 28:0.46 29:0.58 30:0.45 31:0.77 32:0.84 33:0.53 34:0.41 35:0.51 36:0.55 37:0.82 38:0.32
+
+== 2-adic valuations ==
+N  v2(a) v2(c) a mod 8  c mod 8  a mod 16 c mod 16
+2 1 1 2 2 2 2
+3 2 inf 4 0 4 0
+4 1 1 2 6 10 6
+5 2 2 4 4 12 4
+6 5 2 0 4 0 12
+7 8 inf 0 0 0 0
+8 5 2 0 4 0 12
+9 5 4 0 0 0 0
+10 1 1 6 2 6 2
+11 4 inf 0 0 0 0
+12 2 6 4 0 4 0
+13 3 2 0 4 8 4
+14 2 6 4 0 4 0
+15 4 inf 0 0 0 0
+16 3 2 0 4 8 12
+17 2 3 4 0 12 8
+18 1 1 2 2 2 2
+19 3 inf 0 0 8 0
+20 1 1 2 6 2 6
+21 1 1 6 6 6 14
+22 1 1 6 6 14 6
+23 2 inf 4 0 4 0
+24 1 1 6 2 14 2
+25 2 2 4 4 12 4
+26 2 2 4 4 12 4
+27 3 inf 0 0 8 0
+28 1 1 6 6 14 14
+29 7 2 0 4 0 4
+30 1 1 2 2 10 2
+31 4 inf 0 0 0 0
+32 1 1 6 2 14 2
+33 5 4 0 0 0 0
+34 2 2 4 4 12 4
+35 2 inf 4 0 4 0
+36 2 2 4 4 4 4
+37 1 1 6 6 6 14
+38 1 1 2 2 10 2
+distribution of v2(a(N)), N=2..38: [(1, 13), (2, 11), (3, 4), (4, 3), (5, 4), (7, 1), (8, 1)]
+random even integer: P(v2=k) = 2^-k ; expected counts for 37 terms: [18.5, 9.2, 4.6, 2.3, 1.2, 0.6, 0.3]
+
+== primes p <= 50 dividing a(N) for all N >= N0 in a residue class mod q (q <= 12) ==
+p 5 q 11 r 8 [8, 19, 30]
+2^3 q 10 r 9 [9, 19, 29]
+2^3 q 12 r 7 [7, 19, 31]
+
