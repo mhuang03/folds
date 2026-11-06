@@ -515,5 +515,131 @@ theorem coReach_one_X {n : Nat} (hn : 6 ≤ n) (he : n % 2 = 0)
   have e2 : chiX n (n - 1) = 2 * n - 1 := by unfold chiX; split_ifs <;> omega
   rw [e1, e2]
 
+/-! ## `{1, N}` for odd `N` -/
+
+theorem wit13 : witOK 13 (1, 13, [10, 12, 5, 6, 8, 11, 9, 2, 3, 4, 7]) = true := by
+  decide +kernel
+
+theorem wit15 : witOK 15 (1, 15, [12, 14, 4, 7, 13, 6, 9, 10, 11, 2, 3, 5, 8]) = true := by
+  decide +kernel
+
+theorem coReach_of_witOK {N u v : Nat} {l : List Nat} (h : witOK N (u, v, l) = true) :
+    CoReach N {u, v} := by
+  unfold witOK at h
+  simp only [Bool.and_eq_true, decide_eq_true_eq] at h
+  obtain ⟨⟨hnd, hs⟩, hv⟩ := h
+  unfold CoReach g
+  rw [Finset.card_pos]
+  exact ⟨l, mem_semiOrders.2 ⟨⟨hnd, hs⟩, hv⟩⟩
+
+/-- **`{1, N}` is co-reachable for every odd `N ≠ 7`.**  Strong induction:
+`N ≡ 1 (mod 4)`: through the odd class (the Beatty copy `X(N, (N+1)/2, 0)`) from
+`{1, (N+1)/2}`; `N ≡ 3 (mod 4)`: through `X_N` from `{1, (N-1)/2}`; the recursion hits the
+dead pair `{1, 7}` only from `N = 13, 15`, which are checked directly. -/
+theorem coReach_one_N : ∀ N, N % 2 = 1 → N ≠ 7 → CoReach N {1, N} := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro hodd h7
+    by_cases hsmall : N ≤ 3
+    · apply coReach_small
+      have : Finset.Icc 1 N \ {1, N} ⊆ Finset.Icc 2 2 := by
+        intro x hx
+        simp only [Finset.mem_sdiff, Finset.mem_Icc, Finset.mem_insert,
+          Finset.mem_singleton] at hx
+        rw [Finset.mem_Icc]; omega
+      have := Finset.card_le_card this
+      simpa using this
+    by_cases h12 : N ≤ 12
+    · refine coReach_base h12 le_rfl (by omega) le_rfl ?_
+      interval_cases N <;> simp_all [deadB]
+    by_cases h13 : N = 13
+    · subst h13; exact coReach_of_witOK (N := 13) (u := 1) (v := 13) wit13
+    by_cases h15 : N = 15
+    · subst h15; exact coReach_of_witOK (N := 15) (u := 1) (v := 15) wit15
+    rcases Nat.lt_or_ge (N % 4) 2 with h1 | h3
+    · -- `N ≡ 1 (mod 4)`
+      have hp := ih ((N + 1) / 2) (by omega) (by omega) (by omega)
+      have := coReach_beatty_transfer (N := N) (p := (N + 1) / 2) (h := 0) (by omega)
+        (by omega) (by omega) (D := {1, (N + 1) / 2}) (fun x hx => by
+          simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+          rw [Finset.mem_Icc]; omega) hp
+      convert this using 1
+      rw [Finset.image_insert, Finset.image_singleton]
+      have e1 : beatty N ((N + 1) / 2) 0 1 = 1 := by
+        unfold beatty
+        rw [Nat.one_mul, Nat.sub_zero]
+        apply Nat.div_eq_of_lt_le <;> omega
+      have e2 : beatty N ((N + 1) / 2) 0 ((N + 1) / 2) = N := by
+        unfold beatty
+        rw [Nat.sub_zero, Nat.mul_comm, Nat.mul_div_cancel _ (by omega)]
+      rw [e1, e2]
+    · -- `N ≡ 3 (mod 4)`
+      have hp := ih ((N - 1) / 2) (by omega) (by omega) (by omega)
+      have := coReach_one_X (n := (N + 1) / 2) (by omega) (by omega)
+        (by rw [show (N + 1) / 2 - 1 = (N - 1) / 2 by omega]; exact hp)
+      rwa [show 2 * ((N + 1) / 2) - 1 = N by omega] at this
+
+/-! ## The enlarged proven family -/
+
+/-- `Cov5`: the closure of `Cov3` and of the pairs `{1, N}` (`N` odd, `N ≠ 7`) under residue
+transfers through good classes and through the multiples of `q` (`q ∣ N + 1`), transfers
+through right-aligned Beatty copies (`h ≤ 1`) and through splits into two window copies
+(e.g. the doubling splits `split_res`), and the mirror. -/
+inductive Cov5 : Nat → Finset Nat → Prop
+  | cov3 {N : Nat} {D : Finset Nat} : Cov3 N D → Cov5 N D
+  | one {N : Nat} : N % 2 = 1 → N ≠ 7 → Cov5 N {1, N}
+  | res {q N s : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ N → Good q (N % q) s →
+      D ⊆ Finset.Icc 1 (ccount q s N) → Cov5 (ccount q s N) D → Cov5 N (D.image (cls q s))
+  | mult {q N : Nat} {D : Finset Nat} : 2 ≤ q → q ≤ N → (N + 1) % q = 0 →
+      D ⊆ Finset.Icc 1 (ccount q q N) → Cov5 (ccount q q N) D → Cov5 N (D.image (cls q q))
+  | beatty {N p h : Nat} {D : Finset Nat} : 1 ≤ p → h + 2 * p ≤ N + 1 → h ≤ 1 →
+      D ⊆ Finset.Icc 1 p → Cov5 p D → Cov5 N (D.image (beatty N p h))
+  | split {N p q : Nat} {φ ψ : Nat → Nat} {D : Finset Nat} : Split N p q φ ψ →
+      D ⊆ Finset.Icc 1 p → Cov5 p D → Cov5 N (D.image φ)
+  | mirror {N : Nat} {D : Finset Nat} : Cov5 N D → Cov5 N (D.image (N + 1 - ·))
+
+theorem Cov5.coReach {N : Nat} {D : Finset Nat} (h : Cov5 N D) : CoReach N D := by
+  induction h with
+  | cov3 h => exact h.coReach
+  | one h1 h7 => exact coReach_one_N _ h1 h7
+  | res hq2 hqN hg hDs _ ih => exact coReach_good (by omega) hqN hg hDs ih
+  | mult hq2 hqN hN hDs _ ih => exact coReach_mult_transfer (by omega) hqN hN hDs ih
+  | beatty hp hh h1 hDs _ ih => exact coReach_beatty_transfer hp hh h1 hDs ih
+  | split hs hDs _ ih => exact coReach_split hs hDs ih
+  | mirror _ ih => exact coReach_mirror ih
+
+/-- Doubling split `N = (2j+1) n`, the odd positions of each block (a copy of the
+`(j+1)n`-strip). -/
+theorem Cov5.oddRes {j n : Nat} (hj : 1 ≤ j) {D : Finset Nat}
+    (hDs : D ⊆ Finset.Icc 1 ((j + 1) * n)) (h : Cov5 ((j + 1) * n) D) :
+    Cov5 ((2 * j + 1) * n) (D.image (oddRes j)) :=
+  Cov5.split (split_res hj n).symm hDs h
+
+/-- Doubling split `N = (2j+1) n`, the even positions of each block. -/
+theorem Cov5.evenRes {j n : Nat} (hj : 1 ≤ j) {D : Finset Nat}
+    (hDs : D ⊆ Finset.Icc 1 (j * n)) (h : Cov5 (j * n) D) :
+    Cov5 ((2 * j + 1) * n) (D.image (evenRes j)) :=
+  Cov5.split (split_res hj n) hDs h
+
+/-- Every valid 2-prefix whose set is in the family is live. -/
+theorem Cov5.extends {N u v : Nat} (h : Cov5 N {u, v}) (hu : 1 ≤ u ∧ u ≤ N)
+    (hv : 1 ≤ v ∧ v ≤ N) (huv : u ≠ v) (hval : SemiSymmetric N [u, v]) :
+    Extends N [u, v] := by
+  rw [extends_iff_coReach (by simp [huv]) (by
+    intro x hx; simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
+    rcases hx with rfl | rfl <;> assumption) hval]
+  convert h.coReach using 2
+  ext x; simp
+
+/-- **`{1, N}` as a prefix**: for odd `N ≥ 3`, `N ≠ 7`, the valid 2-prefix `[1, N]` is live. -/
+theorem extends_one_N {N : Nat} (h1 : N % 2 = 1) (h7 : N ≠ 7) (h3 : 3 ≤ N) :
+    Extends N [1, N] := by
+  have hval : SemiSymmetric N [1, N] := by
+    intro k hk
+    simp only [List.length_cons, List.length_nil] at hk
+    interval_cases k <;> simp [SemiStep, leftCount, rightCount, reach]
+  exact (Cov5.one h1 h7).extends ⟨le_rfl, by omega⟩ ⟨by omega, le_rfl⟩ (by omega) hval
+
 end Live5
 end Folds
