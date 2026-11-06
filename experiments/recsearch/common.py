@@ -79,6 +79,7 @@ assert _is_prime(P1)
 
 
 def modp(x, p):
+    assert not isinstance(x, float), "float in exact data"
     if isinstance(x, Fraction):
         return x.numerator % p * pow(x.denominator % p, -1, p) % p
     return int(x) % p

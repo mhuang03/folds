@@ -13,7 +13,7 @@ def s_exp(g):          # exp of a series with g[0] = 0
     L = len(g) - 1
     h = [Fraction(1)] + [Fraction(0)] * L
     for n in range(1, L + 1):
-        h[n] = sum(k * g[k] * h[n - k] for k in range(1, n + 1)) / n
+        h[n] = Fraction(sum((k * g[k] * h[n - k] for k in range(1, n + 1)), Fraction(0)), n)
     return h
 
 
@@ -21,7 +21,7 @@ def s_log(g):          # log of a series with g[0] = 1
     L = len(g) - 1
     f = [Fraction(0)] * (L + 1)
     for n in range(1, L + 1):
-        f[n] = g[n] - sum(k * f[k] * g[n - k] for k in range(1, n)) / n
+        f[n] = g[n] - Fraction(sum((k * f[k] * g[n - k] for k in range(1, n)), Fraction(0)), n)
     return f
 
 
