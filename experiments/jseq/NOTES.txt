@@ -10,9 +10,10 @@ size 2..k-1.  I(N) = #valid N-sequences with no neutral proper prefix.
    (B)  a(N) = J(N) + Σ_{k=2}^{N-1} J(k) C_N(k)
 
 Summary
- * J(N) extended from N = 24 to N = 34 (sections 1-2), I(N) to N = 38 (it is explicit by (A)).
- * J(N)/a(N) is stable: ρ ≈ 0.18358 for N ≡ ±1 (mod 6), higher for even N (≈ 0.1853-0.1860)
-   and for 3 | N (≈ 0.1868-0.1880), i.e. the same mod-6 arithmetic effect as a(N) (section 3).
+ * J(N) extended from N = 24 to N = 33 (sections 1-2), I(N) to N = 38 (it is explicit by (A)).
+ * J(N)/a(N) is stable: ρ ≈ 0.18358 for N ≡ ±1 (mod 6), higher for even N (≈ 0.1853-0.1866)
+   and for 3 | N (≈ 0.1861-0.1882), i.e. the same mod-6 arithmetic effect as a(N) (section 3);
+   the non-coprime classes drift down slowly, consistent with one common limit ≈ 0.1836.
  * Exact renewal form of (B): 1 = ρ_N + Σ_k ρ_k q_k(N), with ρ_k = J(k)/a(k) and
    q_k(N) = a(k)C_N(k)/a(N) = P(first k panels form a copy); q_k(N) converges fast
    (q_2 ≈ 0.634, q_3 ≈ 0.274, q_4 ≈ 0.141, q_5 ≈ 0.053, q_6 ≈ 0.031).
@@ -41,7 +42,7 @@ Files
                primes < 2^32 / 2^16 / 2^8 stored in 4/2/1-byte words.  Memory 2·C(N,N/2) words.
  runall.sh, run3031.sh, run_big.sh, run34.sh   the runs (outputs out/jdp_N_MOD.txt, ignored by
                git; N ≤ 28: one run mod 2^64; 29-31: 2^64, 2^61-1, 4294967291; 32: four u32
-               primes; 33: six u16 primes; 34: twelve u8 primes).
+               primes; 33: six u16 primes; run34.sh: see section 1).
  analyse.py    CRT, the redundancy check, C_N(k), J(N) by (B), I(N) by (A) -> out/data.txt
                (lines "N ...", "C N k C_N(k)", "X N k mask g(Xᶜ)" for every copy X).
  halfcopies.py the closed-set count for copies of size N/2 (checked against copies.c, N ≤ 80).
@@ -60,7 +61,10 @@ N/2), keeping two colex-ranked layers, and reads g at the ranks of the copy comp
 each layer is finished.  Only ONE array is needed (no J-type kill state), so memory is
 2·C(N, N/2) words:
    N = 31: u64, 4.8 GB, 45 s per modulus;   N = 32: u32, 4.8 GB, ~1.7 min per modulus;
-   N = 33: u16, 4.7 GB, ~3.2 min;           N = 34: u8, 4.7 GB.
+   N = 33: u16, 4.7 GB, ~3.2 min per modulus.
+N = 34 would need u8 words (4.7 GB) and 12 primes (run34.sh); under the machine's load one run
+did not finish in 30 min (≈ 4 h in total), so it was abandoned.  N ≥ 35 would need the mirror
+reduction (or the MITM below) to stay under 8 GB.
 Every run also returns g([N]) = a(N) mod p, which matched the known a(N) in every run.  The
 copy enumeration (copies.c) is a left-to-right DFS on the prefix form
    left half  (2m-1 ≤ N):  P(2m-1) = P(m-1) + P(m),
@@ -86,8 +90,7 @@ J(N) (no copy prefix of size 2..N-1):
  30  49343907482690273870                0.18771    0.9998797
  31  374001928577015582864               0.18358    0.9999870
  32  3747283718972645073238              0.18530    0.9999925
- 33  31941655789962876066952              0.18607    0.9999746
- J34
+ 33  31941655789962876066952             0.18607    0.9999746
 
 I(N) = a(N) - (product part of (A)) for N = 25..38:
  6561496898227356, 55569700979541916, 412957532114523992, 3602694716415488846,
@@ -112,23 +115,23 @@ Number of copies of [N] (all sizes 1..N, including singletons and [N]), N = 1..4
       592 732 820 988 1036 1312 1428 1623 1848
  k=6: 0 0 0 0 0 1 0 0 1 1 1 8 4 9 16 20 24 54 49 76 116 136 145 300 253 388 510 583 656 998
       1010 1310 1669 1900 2100 2905 2977 3716 4417 5024
-C_N(k) for all N ≤ 34, k and the completion count g(Xᶜ) of every copy are in out/data.txt.
+C_N(k) for all N ≤ 33, k and the completion count g(Xᶜ) of every copy are in out/data.txt.
 
 
 3. J(N)/a(N): CONVERGENCE AND ARITHMETIC EFFECT
 ------------------------------------------------
-J/a by N mod 6 (N = 11..34):
+J/a by N mod 6 (N = 11..33):
  N ≡ 1:  13 0.16987  19 0.18084  25 0.18355  31 0.18358
  N ≡ 5:  11 0.16302  17 0.17623  23 0.18351  29 0.18357
  N ≡ 2:  14 0.18059  20 0.18657  26 0.18597  32 0.18530
- N ≡ 4:  16 0.17827  22 0.18533  28 0.18572  34 J34R
+ N ≡ 4:  16 0.17827  22 0.18533  28 0.18572
  N ≡ 0:  12 0.17576  18 0.18823  24 0.18793  30 0.18771
  N ≡ 3:  15 0.17946  21 0.18775  27 0.18678  33 0.18607
  * For gcd(N, 6) = 1 the ratio has converged to 4 digits: 0.18351, 0.18355, 0.18357, 0.18358
    (N = 23, 25, 29, 31).  Conjecture: ρ = lim J/a over N ≡ ±1 (mod 6) is ≈ 0.1836.
  * Even N sit ≈ 0.002 higher and multiples of 3 ≈ 0.002-0.004 higher (the 3 | N bump of a(N)
    is amplified, not cancelled, in J).  Whether these classes converge to the same ρ slowly
-   or have their own limits cannot be decided from N ≤ 34.  All the other classes drift DOWN
+   or have their own limits cannot be decided from N ≤ 33.  All the other classes drift DOWN
    towards 0.1836: even N 0.18657, 0.18597, 0.18533 (N ≡ 2) / 0.18572, 0.18530 (N ≡ 4, 2);
    odd multiples of 3: 0.18775, 0.18678, 0.18607 (N = 21, 27, 33); even multiples of 3 drift
    slowest: 0.18823, 0.18793, 0.18771 (18, 24, 30).  Conjecture (weak): one common limit
@@ -156,7 +159,7 @@ J/a by N mod 6 (N = 11..34):
    So "a(N) ≈ J(N)/(1-ρ)" is not the right shape; the exact relation is the renewal identity,
    and ρ = 1 - Σ_k ρ_k q_k(∞) if the q_k(N) converge (they do, numerically, per class).
  * a/J (N = 2..): 1, 2, 5, 7, 6, 5.33, 5.6, 6.57, 5.95, 6.13, 5.69, 5.89, 5.54, 5.57, 5.61, 5.67,
-   5.31, 5.53, 5.36, 5.33, 5.40, 5.45, 5.32, 5.45, 5.38, 5.35, 5.38, 5.45, 5.33, 5.45, 5.40:
+   5.31, 5.53, 5.36, 5.33, 5.40, 5.45, 5.32, 5.45, 5.38, 5.35, 5.38, 5.45, 5.33, 5.45, 5.40, 5.37 (N = 33):
    ≈ 1/0.1836 = 5.447 for N ≡ ±1 (mod 6).
 
 
@@ -195,7 +198,7 @@ Corollary 4.4.  For N/2 < k < N:  C_N(k) = a(N - k) if k = (N+1)/2 (N odd) or k 
 odd d | N, 3 ≤ d < N (j = (d-1)/2); otherwise C_N(k) = 0.                       [CN_large]
 So identity (B) becomes  [identity_B_split]
    a(N) = J(N) + Σ_{k=2}^{⌊N/2⌋} J(k) C_N(k) + Σ_{X ∈ NFam(N), |X| > N/2} J(|X|) a(N - |X|),
-and only the terms k ≤ N/2 involve completion counts.  Checked against the DP for all N ≤ 34.
+and only the terms k ≤ N/2 involve completion counts.  Checked against the DP for all N ≤ 33.
 (The tail is tiny: Σ_{k>N/2} f_k ≈ 1e-6 of a(N) at N = 31.)
 
 
