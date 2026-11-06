@@ -33,3 +33,12 @@ import Folds.LabellingSATCore
 import Folds.LabellingSAT
 import Folds.LabellingSAT3Certs
 import Folds.LabellingSAT3
+import Folds.LabellingSAT4CertsA
+import Folds.LabellingSAT4CertsB
+import Folds.LabellingSAT4CertsC
+import Folds.LabellingSAT4CertsD
+import Folds.LabellingSAT4CertsE
+import Folds.LabellingSAT4CertsF
+import Folds.LabellingSAT4CertsG
+import Folds.LabellingSAT4CertsH
+import Folds.LabellingSAT4
