@@ -127,6 +127,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `CoverAll` (M) | **the whole 2-D bulk** of the pair triangle for all N ≥ 301 (`bulk`, three cells, 11 LP-certified leaves); `d1_line`; `conjectureC_of_thinCover`: Conjecture C for all N reduces to `ThinCover`, a statement about lines with bounded offsets and a bounded box |
 | `Structure2` (M) | refined-count identities: L(N,m) = F(N,m) (reversal), mirror symmetry, exactly a(N)/2 sequences start with an odd panel for even N |
 | `ThinCover*` (M) | **Conjecture C for all N** (`ThinCover.conjectureC`): a valid 2-prefix extends to a full semi-symmetric sequence iff it is not one of the explicit dead pairs. Built from slice and parallelogram certificates (LP-certified polynomial inequalities) for N ≥ 1000, plus 699 kernel checks for 301 ≤ N < 1000 |
+| `SymParity` (M) | symmetric (3-AP-free) case: exactly half the sequences start with an odd panel (`two_mul_card_head_odd`; first and last panels always differ in parity); the same at step k when 4k ≤ N+1 (`two_mul_card_getElem_odd`, via the orientation theorem `orient`) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
