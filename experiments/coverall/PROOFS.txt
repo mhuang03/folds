@@ -91,7 +91,8 @@ u - u%2 >= u - 1, of RegionB with u/2 >= (u - 1)/2) is a nonnegative combination
 <= 4 of the leaf's linear forms (Handelman-type certificate).  leaves.py finds the support by a
 float LP (handel.py: variables scaled by 1000 for conditioning, then the support is re-checked by
 an exact rational solve, so the hints are exact); the Lean proof of each is `linarith` with those
-products as hints (genbulk.py).  80 such certificates; the whole file elaborates in ~1 min.
+products as hints (genbulk.py).  65 such certificates (plus 32 for d1_line); the whole file
+elaborates in ~1 min (lake build, 4 threads).
 The leaves were designed from the asymptotic picture (section 2); near the special points
 (the triple point (1/8, 1/4) where the A-, D-, B-boundaries and the line u' = 2u meet, and the
 point (1/4, 3/8) on the edge where the A- and B1-boundaries meet) the margins vanish, which is
