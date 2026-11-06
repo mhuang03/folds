@@ -1,6 +1,7 @@
 import Folds.SymStructure
 import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.Tactic.IntervalCases
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 /-!
 # Symmetric (3-AP-free) fold sequences II: extendable prefixes, live counts, the merge
@@ -547,6 +548,125 @@ theorem le_six_of_noLong {K a : ℕ} (h : noLong K a 7 [] = true) {π : List ℕ
     (fun v hv => htop v (List.mem_of_mem_take hv)) ?_
   exact hE.of_prefix (by simpa using List.take_prefix 7 π)
 
+
+/-! ## Theorem L: live `k`-prefixes -/
+
+/-- The extendable (live) `k`-prefixes: the distinct `k`-prefixes of 3-AP-free
+permutations of `[1, N]`.  `L_k(N) = (liveSet N k).card`. -/
+def liveSet (N k : ℕ) : Finset (List ℕ) := (symSeqs N).image (List.take k)
+
+theorem mem_liveSet {N k : ℕ} {π : List ℕ} (hk : k ≤ N) :
+    π ∈ liveSet N k ↔ π.length = k ∧ Ext N π := by
+  simp only [liveSet, Finset.mem_image]
+  constructor
+  · rintro ⟨a, ha, rfl⟩
+    refine ⟨by rw [List.length_take, (mem_symSeqs_iff.1 ha).1.length]; omega,
+      ext_iff_mem_symSeqs.2 ⟨a, ha, List.take_prefix _ _⟩⟩
+  · rintro ⟨hl, hE⟩
+    obtain ⟨a, ha, hp⟩ := ext_iff_mem_symSeqs.1 hE
+    exact ⟨a, ha, by rw [← hl]; exact (List.prefix_iff_eq_take.1 hp).symm⟩
+
+/-- Prefix parity (`../symparity`, Corollary D) for extendable prefixes: an extendable
+prefix of length `≤ (N + 1)/4` lies in one parity class. -/
+theorem Ext.parity {N w : ℕ} {t : List ℕ} (hE : Ext N (w :: t))
+    (hlen : 4 * (w :: t).length ≤ N + 1) : ∀ v ∈ w :: t, v % 2 = w % 2 := by
+  obtain ⟨s, hP, hap⟩ := hE
+  have hf := isPermOf_iff_isFoldSeq.1 hP
+  intro v hv
+  obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.1 hv
+  have hi' : i < (w :: t ++ s).length := by simp at hi ⊢; omega
+  have := prefix_parity hf (apFree_of_apf hap) hi' (by omega)
+  rw [List.getElem_append_left hi] at this
+  simpa using this
+
+/-- Theorem E for a prefix inside one class: a rescaled extendable prefix lifts. -/
+theorem ext_lift {N p : ℕ} (hp : p ≤ 1) {ρ : List ℕ} (hρ : Ext ((N + p) / 2) ρ) (hne : ρ ≠ []) :
+    Ext N (ρ.map (lift p)) := by
+  obtain ⟨r, ρ', rfl⟩ := List.exists_cons_of_ne_nil hne
+  have h1 : ∀ x ∈ r :: ρ', 1 ≤ x := fun x hx => (hρ.range x hx).1
+  have hw : lift p r % 2 = p := lift_mod hp (h1 r (by simp))
+  have hpar : ∀ v ∈ (r :: ρ').map (lift p), v % 2 = lift p r % 2 := by
+    intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    rw [hw]; exact lift_mod hp (h1 x hx)
+  refine ext_of_cond (w := lift p r) (t := ρ'.map (lift p)) rfl
+    (hρ.nodup.map (lift_inj hp)) ?_ ?_ ?_ ?_ ?_
+  · intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    have := hρ.range x hx
+    simp only [lift]; omega
+  · intro y _ u hu _ huw; exact absurd (hpar u hu) huw
+  · intro u hu y _ _ _ huw; exact absurd (hpar u hu) huw
+  · rw [hw, cls_map_lift hp h1]; exact hρ
+  · rw [hw, cls_map_lift_other hp (by omega) h1]; exact ext_nil _
+
+/-- Conversely, an extendable prefix inside one class rescales to an extendable prefix. -/
+theorem ext_half {N w : ℕ} {t : List ℕ} (hE : Ext N (w :: t))
+    (hall : ∀ v ∈ w :: t, v % 2 = w % 2) :
+    Ext ((N + w % 2) / 2) ((w :: t).map half) ∧ ((w :: t).map half).map (lift (w % 2)) = w :: t := by
+  have hc : cls (w % 2) (w :: t) = (w :: t).map half := by
+    rw [cls, List.filter_eq_self.2]; intro v hv; simpa using hall v hv
+  refine ⟨hc ▸ (ext_imp rfl hE).2.2.1, ?_⟩
+  rw [List.map_map]
+  conv_rhs => rw [← List.map_id (w :: t)]
+  exact List.map_congr_left fun v hv => lift_half (hall v hv)
+
+/-- **Theorem L.**  For `k ≥ 1` and `N ≥ 4k - 1`,
+`L_k(N) = L_k(⌈N/2⌉) + L_k(⌊N/2⌋)`. -/
+theorem live_rec {N k : ℕ} (hk : 1 ≤ k) (hN : 4 * k ≤ N + 1) :
+    (liveSet N k).card = (liveSet ((N + 1) / 2) k).card + (liveSet (N / 2) k).card := by
+  have i1 : Function.Injective (List.map (lift 1)) := List.map_injective_iff.2 (lift_inj le_rfl)
+  have i0 : Function.Injective (List.map (lift 0)) := List.map_injective_iff.2 (lift_inj (by omega))
+  have e : liveSet N k = (liveSet ((N + 1) / 2) k).map ⟨_, i1⟩ ∪ (liveSet (N / 2) k).map ⟨_, i0⟩ := by
+    ext π
+    simp only [Finset.mem_union, Finset.mem_map, Function.Embedding.coeFn_mk]
+    rw [mem_liveSet (by omega)]
+    constructor
+    · rintro ⟨hl, hE⟩
+      obtain ⟨w, t, rfl⟩ := List.exists_cons_of_ne_nil (show π ≠ [] by rintro rfl; simp at hl; omega)
+      have hall := hE.parity (by omega)
+      obtain ⟨hE', he⟩ := ext_half hE hall
+      rcases Nat.mod_two_eq_zero_or_one w with h | h
+      · rw [h] at hE' he
+        exact Or.inr ⟨_, (mem_liveSet (by omega)).2 ⟨by simpa using hl, by simpa using hE'⟩, he⟩
+      · rw [h] at hE' he
+        exact Or.inl ⟨_, (mem_liveSet (by omega)).2 ⟨by simpa using hl, hE'⟩, he⟩
+    · rintro (⟨ρ, hρ, rfl⟩ | ⟨ρ, hρ, rfl⟩)
+      · rw [mem_liveSet (by omega)] at hρ
+        exact ⟨by simpa using hρ.1, ext_lift le_rfl hρ.2 (by rintro rfl; simp at hρ; omega)⟩
+      · rw [mem_liveSet (by omega)] at hρ
+        exact ⟨by simpa using hρ.1, ext_lift (p := 0) (by omega) (by simpa using hρ.2)
+          (by rintro rfl; simp at hρ; omega)⟩
+  rw [e, Finset.card_union_of_disjoint, Finset.card_map, Finset.card_map]
+  rw [Finset.disjoint_left]
+  rintro π h1 h2
+  simp only [Finset.mem_map, Function.Embedding.coeFn_mk] at h1 h2
+  obtain ⟨ρ, hρ, rfl⟩ := h1
+  obtain ⟨ρ', hρ', e'⟩ := h2
+  rw [mem_liveSet (by omega)] at hρ hρ'
+  obtain ⟨r, t, rfl⟩ := List.exists_cons_of_ne_nil (show ρ ≠ [] by rintro rfl; simp at hρ; omega)
+  obtain ⟨r', t', rfl⟩ := List.exists_cons_of_ne_nil (show ρ' ≠ [] by rintro rfl; simp at hρ'; omega)
+  simp only [List.map_cons, List.cons.injEq] at e'
+  have := hρ.2.range r (by simp)
+  have := hρ'.2.range r' (by simp)
+  have := e'.1
+  simp only [lift] at this; omega
+
+/-- **Consequence of Theorem L: `L_k(N) = O(N)`.** -/
+theorem live_linear (k : ℕ) (hk : 1 ≤ k) : ∃ C, ∀ N, 1 ≤ N → (liveSet N k).card ≤ C * N := by
+  refine ⟨∑ n ∈ Finset.range (4 * k), (liveSet n k).card, fun N => ?_⟩
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+  intro hN
+  by_cases h : 4 * k ≤ N + 1
+  · rw [live_rec hk h]
+    have h1 := ih ((N + 1) / 2) (by omega) (by omega)
+    have h2 := ih (N / 2) (by omega) (by omega)
+    calc _ ≤ _ := Nat.add_le_add h1 h2
+      _ = _ := by rw [← Nat.mul_add]; congr 1; omega
+  · have := Finset.single_le_sum (f := fun n => (liveSet n k).card) (fun _ _ => Nat.zero_le _)
+      (Finset.mem_range.2 (show N < 4 * k by omega))
+    exact this.trans (Nat.le_mul_of_pos_right _ hN)
 
 /-! ## Theorem F: prefixes inside a top segment have length at most 6 -/
 
