@@ -1,0 +1,6 @@
+*.o
+*.out
+a.out
+/bin/
+*.bin
+__pycache__/
