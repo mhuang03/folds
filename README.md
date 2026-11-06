@@ -125,6 +125,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `ArithCover` (M) | two-class slide (Theorem B): the near-boundary crux `dirAny_nearBoundary` for all N ≥ 301; five proven regions; `conjectureC_of_residual` reduces Conjecture C to a smaller `Residual N` (about 40% of mixed wide pairs: the near-diagonal wedge and the corner) |
 | `Residual` (M) | lattice-parallelogram and slice lemmas; regions `RegionPF`, `RegionSL`, `RegionS`; `conjectureC_of_coverAll`: Conjecture C for all N follows from the semialgebraic covering statement `CoverAll N` (N > 300), which has an empty residual for 301 ≤ N ≤ 3000 |
 | `CoverAll` (M) | **the whole 2-D bulk** of the pair triangle for all N ≥ 301 (`bulk`, three cells, 11 LP-certified leaves); `d1_line`; `conjectureC_of_thinCover`: Conjecture C for all N reduces to `ThinCover`, a statement about lines with bounded offsets and a bounded box |
+| `Structure2` (M) | refined-count identities: L(N,m) = F(N,m) (reversal), mirror symmetry, exactly a(N)/2 sequences start with an odd panel for even N |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -219,6 +220,8 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/arithcover/PROOFS.txt` | Theorem B, regions, the residual and the route via three-gap / lattice flatness |
 | `experiments/residual/PROOFS.txt` | lattice and slice regions, the reduction to CoverAll, the cell decomposition |
 | `experiments/coverall/PROOFS.txt` | bulk cell decomposition and certificates, the remaining thin sets and their slices |
+| `experiments/structure2/FINDINGS.txt` | refined counts (none nicer than a(N)), the first-panel limit law (density ∝ √min(x,1−x)), the parity offset in growth, factorisations, 1838 failed cross-sequence searches |
+| `docs/RECURRENCE_LITERATURE.md` | which recurrence classes are compatible with N!/(log N)^N growth; prioritised ansätze |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
