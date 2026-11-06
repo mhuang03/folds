@@ -19,6 +19,8 @@ elements, *neutral* if it is balanced around every panel.
   are exactly the odd panels (odd `N`) and the sets `E_dᶜ`.
 * `CN_large`: hence `C_N(k) = #{X ∈ NFam N : |X| = k} · a(N - k)` for `N < 2k`, `k < N`: the
   part `k > N/2` of identity (B) is explicit.
+* `identity_B_split`: `a(N) = J(N) + ∑_{k=2}^{⌊N/2⌋} J(k) C_N(k) +
+  ∑_{X ∈ NFam N, |X| > N/2} J(|X|) a(N - |X|)`.
 
 # Copies of size 2 and of size N/2
 * `isCopy_pair`, `card_copies_two`: `{x < y}` is a copy iff `2x ≤ y` and `x + N + 1 ≤ 2y`;
@@ -27,6 +29,7 @@ elements, *neutral* if it is balanced around every panel.
   `{2i + 1, 2i + 2}`, and such a set is a copy iff (panels mod `N`) `2i + 1 ∈ X ⇒ 4i + 1 ∈ X`
   and `2i + 2 ∈ X ⇒ 4i + 4 ∈ X`.  So the copies of size `N/2` correspond to the subsets of
   `Z/(N/2)` closed under `i ↦ 2i` and `2i + 1 ↦ i`.
+* `copy_half_odd`: for `N ≡ 2 (mod 4)` the only copies of size `N/2` are the parity classes.
 -/
 
 namespace Folds
@@ -266,6 +269,41 @@ theorem CN_large {k : Nat} (hN : 2 ≤ N) (hk : N < 2 * k) (hkN : k < N) :
     ((neutral_iff_copy_compl hsub).1 hn).2
   rw [g_copy hcs hcc, Finset.card_sdiff_of_subset hsub, Nat.card_Icc, Nat.add_sub_cancel, hX.2]
 
+/-- **Identity (B) with its explicit tail.**  For `N ≥ 2`,
+`a(N) = J(N) + ∑_{k=2}^{⌊N/2⌋} J(k) C_N(k) + ∑_{X ∈ NFam N, |X| > N/2} J(|X|) a(N - |X|)`. -/
+theorem identity_B_split (hN : 2 ≤ N) :
+    semiCount N = Jc N + ∑ k ∈ Finset.Icc 2 (N / 2), Jc k * CN N k +
+      ∑ X ∈ (NFam N).filter (fun X => N < 2 * X.card), Jc X.card * semiCount (N - X.card) := by
+  rw [identity_B N, Nat.add_assoc]
+  congr 1
+  have hsplit : Finset.Ico 2 N = Finset.Icc 2 (N / 2) ∪ Finset.Ioo (N / 2) N := by
+    ext k; simp only [Finset.mem_Ico, Finset.mem_union, Finset.mem_Icc, Finset.mem_Ioo]; omega
+  have hdisj : Disjoint (Finset.Icc 2 (N / 2)) (Finset.Ioo (N / 2) N) := by
+    rw [Finset.disjoint_left]; intro k h1 h2
+    simp only [Finset.mem_Icc, Finset.mem_Ioo] at h1 h2; omega
+  rw [hsplit, Finset.sum_union hdisj]
+  congr 1
+  -- the tail
+  have hmaps : ∀ X ∈ (NFam N).filter (fun X => N < 2 * X.card), X.card ∈ Finset.Ioo (N / 2) N := by
+    intro X hX
+    rw [Finset.mem_filter] at hX
+    obtain ⟨-, -, hlt⟩ := (neutral_classification hN (nfam_sub hX.1)).2 hX.1
+    rw [Finset.mem_Ioo]; omega
+  rw [← Finset.sum_fiberwise_of_maps_to hmaps]
+  apply Finset.sum_congr rfl
+  intro k hk
+  rw [Finset.mem_Ioo] at hk
+  rw [CN_large hN (by omega) hk.2, Finset.filter_filter]
+  have hf : (NFam N).filter (fun X => N < 2 * X.card ∧ X.card = k) =
+      (NFam N).filter (fun X => X.card = k) := by
+    apply Finset.filter_congr; intro X _; constructor
+    · exact fun h => h.2
+    · intro h; exact ⟨by omega, h⟩
+  rw [hf, Finset.sum_congr rfl (g := fun _ => Jc k * semiCount (N - k)), Finset.sum_const,
+    smul_eq_mul]
+  · ring
+  · intro X hX; rw [(Finset.mem_filter.1 hX).2]
+
 /-! ## Copies of size 2 -/
 
 /-- A 2-set `{x < y}` is a copy iff `2x ≤ y` and `x + N + 1 ≤ 2y`. -/
@@ -454,6 +492,100 @@ theorem copy_half_iff (hN : 0 < N) (hX : X ⊆ Finset.Icc 1 N) (h2 : 2 * X.card 
         show 2 * i + 2 - 1 = 2 * i + 1 by omega]
       obtain ⟨-, f2, f3, f4, f5, -, f7⟩ := facts hP i
       omega
+
+/-- **`N ≡ 2 (mod 4)`.**  Then the only copies of size `N/2` are the two parity classes: the
+closure digraph `i ↦ 2i`, `2i + 1 ↦ i` on `Z/(N/2)` is strongly connected (`i → j → i - 1`
+with `2j ≡ i - 1`). -/
+theorem copy_half_odd (hN : 0 < N) (hX : X ⊆ Finset.Icc 1 N) (hc : IsCopy N X)
+    (h2 : 2 * X.card = N) (hodd : X.card % 2 = 1) : X = parCls N 1 ∨ X = parCls N 2 := by
+  obtain ⟨hP, h1, h3⟩ := (copy_half_iff hN hX h2).1 hc
+  generalize hn : X.card = n at h2 hodd
+  have pair : ∀ i, xi N X (2 * i + 1) + xi N X (2 * i + 2) = 1 := fun i => (pair_of_P hP i).1
+  have le1 : ∀ k, xi N X k ≤ 1 := fun k => xi_le_one k
+  have per : ∀ i q, xi N X (2 * (i + n * q) + 1) = xi N X (2 * i + 1) := by
+    intro i q
+    induction q with
+    | zero => simp
+    | succ q ih =>
+      rw [show 2 * (i + n * (q + 1)) + 1 = 2 * (i + n * q) + 1 + N by rw [← h2]; ring, xi_add hN,
+        ih]
+  have c1 : ∀ i, xi N X (2 * i + 1) = 1 → xi N X (2 * (2 * i) + 1) = 1 := fun i h => by
+    rw [show 2 * (2 * i) + 1 = 4 * i + 1 by ring]; exact h1 i h
+  have c2 : ∀ i, xi N X (2 * (2 * i + 1) + 1) = 1 → xi N X (2 * i + 1) = 1 := by
+    intro i h
+    by_contra hne
+    have e1 : xi N X (2 * i + 2) = 1 := by have := pair i; have := le1 (2 * i + 1); omega
+    have e2 := h3 i e1
+    have e3 := pair (2 * i + 1)
+    rw [show 2 * (2 * i + 1) + 2 = 4 * i + 4 by ring] at e3
+    omega
+  have step : ∀ i, xi N X (2 * (i + 1) + 1) = 1 → xi N X (2 * i + 1) = 1 := by
+    intro i h
+    have hj : 2 * (i * ((n + 1) / 2)) = i + n * i := by
+      have : 2 * ((n + 1) / 2) = n + 1 := by omega
+      calc 2 * (i * ((n + 1) / 2)) = i * (2 * ((n + 1) / 2)) := by ring
+        _ = i + n * i := by rw [this]; ring
+    have a : xi N X (2 * (i * ((n + 1) / 2)) + 1) = 1 := by
+      apply c2
+      rw [show 2 * (2 * (i * ((n + 1) / 2)) + 1) + 1 = 2 * (i + 1 + n * i) + 1 by rw [hj]; ring,
+        per]; exact h
+    have b := c1 _ a
+    rw [hj, per] at b
+    exact b
+  have down : ∀ m, xi N X (2 * m + 1) = 1 → ∀ i ≤ m, xi N X (2 * i + 1) = 1 := by
+    intro m hm i hi
+    induction m with
+    | zero => rw [show i = 0 by omega]; exact hm
+    | succ m ih =>
+      rcases Nat.eq_or_lt_of_le hi with e | lt
+      · rw [e]; exact hm
+      · exact ih (step m hm) (by omega)
+  -- membership in terms of the bits
+  have memo : ∀ i, 2 * i + 1 ≤ N → (2 * i + 1 ∈ X ↔ xi N X (2 * i + 1) = 1) := fun i hi =>
+    mem_iff_xi hN (Finset.mem_Icc.2 ⟨by omega, hi⟩)
+  have meme : ∀ i, 2 * i + 2 ≤ N → (2 * i + 2 ∈ X ↔ xi N X (2 * i + 1) = 0) := fun i hi => by
+    rw [mem_iff_xi hN (Finset.mem_Icc.2 ⟨by omega, hi⟩)]
+    have := pair i; have := le1 (2 * i + 1); have := le1 (2 * i + 2); omega
+  have hsplit : ∀ x, 1 ≤ x → (x % 2 = 1 ∧ x = 2 * (x / 2) + 1) ∨ (x % 2 = 0 ∧ x = 2 * ((x - 2) / 2) + 2) :=
+    fun x hx => by omega
+  rcases le1 (2 * 0 + 1) |> Nat.lt_or_eq_of_le with h0 | h0
+  · -- bit 0 is 0: all bits 0, X = evens
+    have all0 : ∀ i, xi N X (2 * i + 1) = 0 := by
+      intro i; by_contra hne
+      have := down i (by have := le1 (2 * i + 1); omega) 0 (Nat.zero_le _); omega
+    right
+    ext x
+    rw [mem_parCls (by omega) le_rfl]
+    constructor
+    · intro hx
+      have hb := Finset.mem_Icc.1 (hX hx)
+      rcases hsplit x hb.1 with ⟨ho, e⟩ | ⟨he, e⟩
+      · rw [e] at hx; rw [memo _ (by omega), all0] at hx; omega
+      · exact ⟨hb.1, hb.2, by omega⟩
+    · rintro ⟨hx1, hx2, he⟩
+      rcases hsplit x hx1 with ⟨ho, e⟩ | ⟨he', e⟩
+      · omega
+      · rw [e, meme _ (by omega)]; exact all0 _
+  · -- bit 0 is 1: all bits 1, X = odds
+    have all1 : ∀ i, xi N X (2 * i + 1) = 1 := by
+      intro i
+      have hq := per 0 (i + 1)
+      rw [h0] at hq
+      have hn1 : 1 ≤ n := by omega
+      exact down (0 + n * (i + 1)) hq i (by nlinarith)
+    left
+    ext x
+    rw [mem_parCls le_rfl (by omega)]
+    constructor
+    · intro hx
+      have hb := Finset.mem_Icc.1 (hX hx)
+      rcases hsplit x hb.1 with ⟨ho, e⟩ | ⟨he, e⟩
+      · exact ⟨hb.1, hb.2, by omega⟩
+      · rw [e] at hx; rw [meme _ (by omega), all1] at hx; omega
+    · rintro ⟨hx1, hx2, ho⟩
+      rcases hsplit x hx1 with ⟨ho', e⟩ | ⟨he, e⟩
+      · rw [e, memo _ (by omega)]; exact all1 _
+      · omega
 
 end Copies2
 end Folds

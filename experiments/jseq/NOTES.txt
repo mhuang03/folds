@@ -22,7 +22,7 @@ Summary
        a(N-k) or 0 and the tail k > N/2 of (B) is explicit (section 4);
      - the number of copies of size 2 is ⌊N²/2⌋ - ⌊N²/3⌋ = ⌊(N²+2)/6⌋ (OEIS A156040(N-2));
      - copies of size N/2 (N even) = subsets of Z/(N/2) closed under i ↦ 2i and 2i+1 ↦ i;
-       in particular (paper) only the two parity classes when N ≡ 2 (mod 4) (section 5).
+       in particular only the two parity classes when N ≡ 2 (mod 4) (section 5).
  * Copies of size 3: (fitted, exact for N ≤ 200) N³/108 + period-6 linear + period-12
    constant term.  Size k ≥ 4: degree k, no quasi-polynomial of small period (section 6).
  * No exact recursion for a(N) through smaller a, J: C_N(k) for k ≤ N/2 is a sum of
@@ -47,6 +47,7 @@ Files
  halfcopies.py the closed-set count for copies of size N/2 (checked against copies.c, N ≤ 80).
  nearhalf.sh, out/nearhalf.txt   copy counts just below N/2.
  relfit.py     the linear-relation test of section 7.
+ check_near.py the C_N((N-1)/2) formula of 5.3 (brute force).
  oeis.py       OEIS lookups.
 
 
@@ -192,7 +193,7 @@ neutral copies of exactly these sizes, so X is one of them.                     
 
 Corollary 4.4.  For N/2 < k < N:  C_N(k) = a(N - k) if k = (N+1)/2 (N odd) or k = (j+1)N/d for an
 odd d | N, 3 ≤ d < N (j = (d-1)/2); otherwise C_N(k) = 0.                       [CN_large]
-So identity (B) becomes
+So identity (B) becomes  [identity_B_split]
    a(N) = J(N) + Σ_{k=2}^{⌊N/2⌋} J(k) C_N(k) + Σ_{X ∈ NFam(N), |X| > N/2} J(|X|) a(N - |X|),
 and only the terms k ≤ N/2 involve completion counts.  Checked against the DP for all N ≤ 34.
 (The tail is tiny: Σ_{k>N/2} f_k ≈ 1e-6 of a(N) at N = 31.)
@@ -214,10 +215,10 @@ and only the terms k ≤ N/2 involve completion counts.  Checked against the DP 
      Theorem 5.2.  The copies of size N/2 are exactly X_U = {2i+1 : i ∈ U} ∪ {2i+2 : i ∉ U} for
      the U ⊆ Z/n closed under i ↦ 2i and under 2i+1 ↦ i (equivalently: m ∈ X ⇒ 2m - [m odd] ∈ X,
      panels mod N).                                                          [copy_half_iff]
-     Corollary (paper).  If n is odd (N ≡ 2 mod 4) the only copies of size N/2 are the two
-     parity classes.  Proof: 2 is invertible mod n, so i ↦ 2i is a permutation and its inverse
-     i ↦ i/2 is a power of it; composing i ↦ (i-1)/2 (the edge 2j+1 → j) with doubling gives
-     i ↦ i - 1, so the closure digraph is strongly connected and only U = ∅, Z/n are closed. □
+     Corollary [copy_half_odd].  If n is odd (N ≡ 2 mod 4) the only copies of size N/2 are the two
+     parity classes.  Proof: put j = (i-1)(n+1)/2, so 2j ≡ i-1 and 2j+1 ≡ i (mod n).  The edges
+     i = 2j+1 → j → 2j = i-1 show that i ∈ U ⇒ i-1 ∈ U, so the closure digraph is strongly
+     connected and only U = ∅ (evens), U = Z/n (odds) are closed.                         □
      Counts (N = 2n; halfcopies.py, = copies.c for N ≤ 80):
        N   4 8 12 16 20 24 28 32 36  40  44  48  52   56  60   64  68    72  76    80
        #   3 5  8 12  8 35 20 95 24 249  8 744  8 1761 112 7091 20 10847  8 57095
@@ -229,9 +230,21 @@ and only the terms k ≤ N/2 involve completion counts.  Checked against the DP 
      for every prime-like N large enough (stable once N ≳ 6j; checked N = 59..83; numbers with
      small odd divisors differ).  For N ≡ 2 (mod 4) the sizes N/2 + 1 - j give
        1, 2, 9, 8, 72, 32, 396, 160, 2916, 512, 15264, 2176, ...
-     The four copies of size (N-1)/2 (odd N ≥ 9) are the evens with 2 → 1 and/or N-1 → N;
-     their completion ratios g(Xᶜ)/a((N+1)/2) are 1 (evens, neutral), 1/2, 1/2 EXACTLY (one swap;
-     N ≤ 33) and ≈ 0.20-0.36 (both swaps), so C_N((N-1)/2)/a((N+1)/2) → ≈ 2.25.
+     The four copies of size (N-1)/2 (odd N ≥ 9; observed for N ≤ 64) are the evens with
+     2 → 1 and/or N-1 → N; their completion ratios g(Xᶜ)/a((N+1)/2) are 1 (evens, neutral),
+     1/2, 1/2 EXACTLY (one swap; checked N ≤ 33) and ≈ 0.20-0.36 (both swaps), so
+     C_N((N-1)/2)/a((N+1)/2) ≈ 2.25.
+     Proof of the 1/2 (paper).  Let n = (N+1)/2 and Y = Xᶜ = (odds \ {1}) ∪ {2}.  Relabel
+     1 ↦ 2.  For an odd panel m ≥ 3 an arm of m contains 2 iff it contains 1 (left half: the
+     left arm is [1, m-1]; right half: the left arm starts at the odd number 2m-N, so it
+     contains 2 iff 2m - N ≤ 1 iff it contains 1); the right arms of m ≥ 3 contain neither.
+     Panel 1 is always valid, panel 2 is valid iff 3 is not yet placed (arms {1}, {3}, 1 ∉ Y).
+     So the valid orderings of Y are the valid orderings of the odd panels (a window copy:
+     valid n-sequences) in which 1 comes before 3, i.e. the valid n-sequences with 1 before 2;
+     by reversal invariance these are exactly half.  The same argument at both ends gives
+        C_N((N-1)/2) = 2a(n) + #{valid n-sequences with 1 before 2 and n before n-1}
+     (check_near.py: brute force, N = 9..17)
+     (given the observed list of the four copies).
 
 
 6. COUNTS OF COPIES OF FIXED SIZE k (as functions of N)
@@ -280,3 +293,5 @@ and only the terms k ≤ N/2 involve completion counts.  Checked against the DP 
  CN_large            C_N(k) = #{X ∈ NFam N : |X| = k} · a(N-k) for N < 2k, k < N
  isCopy_pair, card_copies_two     #copies of size 2 = ⌊N²/2⌋ - ⌊N²/3⌋
  copy_half_P, copy_half_iff       the half-size characterisation (5.2)
+ copy_half_odd                   N ≡ 2 (mod 4): only the parity classes have size N/2
+ identity_B_split                (B) with the explicit tail k > N/2
