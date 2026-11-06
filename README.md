@@ -130,6 +130,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `SymParity` (M) | symmetric (3-AP-free) case: exactly half the sequences start with an odd panel (`two_mul_card_head_odd`; first and last panels always differ in parity); the same at step k when 4k ≤ N+1 (`two_mul_card_getElem_odd`, via the orientation theorem `orient`) |
 | `SymStructure` (M) | symmetric case: **merge theorem** (`merge_iff_apFree`): 3-AP-free ⇔ both parity subsequences are 3-AP-free and the D-entry comes first on every linked pair; `parity_sort` |
 | `Live3p` (M) | 3-prefix liveness: **iff for every N ≤ 30, N ≠ 7** (`extends3_iff_le_30`); dead 3-sets proven dead for all N; Theorem G for 3-sets in closed form (`F3S`, `coReach3_of_F`) |
+| `SymStructure2` (M) | symmetric case: recursive extension test **Theorem E** (`ext_iff_cond`, decidable via `extB`), prefix-count recursion **Theorem L** (`live_rec`; L_k(N) = O(N)), exact shuffle-count identity for θ(N), and **Sharma's bound for all N** (`ends_parity`: a[k] has a[0]'s parity whenever k+6 < N/2; sharp at N = 26) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
