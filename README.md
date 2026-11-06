@@ -120,6 +120,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `SuperExp4` (M) | upper odd slip positions + reversal averaging; `self_pow_le_semiCount_pow_17`: N^N ≤ 2^{11N}·a(N)^{17} for all N ≥ 1 |
 | `Live7` (M) | centred Beatty copies Z(N,p) = {⌊k(N+2)/(p+1)⌋}; {3,N−2}, {5,N−4} co-reachable; 65 witness orderings via the bitmask checker; **Conjecture C proven for every N ≤ 64** (`extends_iff_not_dead_le_64`); for N ≥ 65 it reduces to `CoverAt E7 N` (checked to N = 2665) |
 | `SuperExp5` (M) | odd-N slip lemma `oddSlip_mem_semiSeqs` (with the wrap condition); odd-node gain; `self_pow_le_semiCount_pow_16`: N^N ≤ 2^{12N}·a(N)^{16} for all N ≥ 1 |
+| `Copies2` (M) | copies larger than N/2 are neutral (`copy_large_neutral`); which copy sizes occur (`copies_nonempty_iff`); ⌊(N²+2)/6⌋ copies of size 2; half-size copies; explicit tail of identity (B) (`identity_B_split`) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -207,6 +208,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/superexp4/PROOFS.txt` | all-N exponent 1/17; why odd N has no free slips; truncation fails for slip chains |
 | `experiments/live7/PROOFS.txt` | centred Beatty copies, the covering statement and its partial proof |
 | `experiments/superexp5/PROOFS.txt` | odd-N slip lemma, exponent 1/16, the binding constraints (limit about 1/15.2) |
+| `experiments/jseq/NOTES.txt` | J(N) to 33, I(N) to 38, copy counts, the J/a limit, the renewal form of (B) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
@@ -231,7 +233,8 @@ See `experiments/reccount/NOTES.txt`.
   - The remainder I(N)/a(N) → 1 (0.999 at N = 24).
 - **Identity (B):** a(N) = J(N) + Σ_k J(k)·C_N(k), split by the first prefix that is a window copy.
   - J(N)/a(N) stays near 0.18.
-  - **Proven in Lean** (`Neutral.identity_B`), including J(k) universality.
+  - **Proven in Lean** (`Neutral.identity_B`), including J(k) universality; the k > N/2 terms are explicit (`Copies2.identity_B_split`).
+  - J(N) is known to N = 33. **Conjecture:** J(N)/a(N) → ρ ≈ 0.1836, with the same mod-6 effect as a(N). See `experiments/jseq/NOTES.txt`.
   - C_N(k) involves completion counts, not values of a, so it is not a closed recursion.
 
 ## Practical note for folders
