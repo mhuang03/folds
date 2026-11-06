@@ -1,0 +1,1024 @@
+import Folds.SymStructure
+import Mathlib.Order.Interval.Finset.Nat
+import Mathlib.Tactic.IntervalCases
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+
+/-!
+# Symmetric (3-AP-free) fold sequences II: extendable prefixes, live counts, the merge
+count and Sharma's ends bound
+
+See `experiments/symstruct2/NOTES.txt` and `experiments/symstruct/PROOFS.txt`.  Parity
+classes are rescaled by `half v = (v+1)/2` (inverse `lift p r = 2r - p`); the class of
+parity `p` in `[1, N]` becomes `[1, ⌊(N+p)/2⌋]`.  `Ext N π`: `π` is a prefix of a 3-AP-free
+permutation of `[1, N]`.
+
+* `ext_iff_cond` (**Theorem E**): `w :: t` extends iff (a) `CondA`, (b) `CondB`, and the two
+  rescaled parity parts extend in their own classes.  `extB_iff`: the resulting recursive
+  Boolean test decides extendability.
+* `live_rec` (**Theorem L**): `L_k(N) = L_k(⌈N/2⌉) + L_k(⌊N/2⌋)` for `k ≥ 1`, `N ≥ 4k - 1`;
+  `live_linear`: `L_k(N) = O(N)`.
+* `card_symSeqs_eq_sum`: `θ(N) = Σ_p Σ_σ Σ_τ P(σ, τ)` with `P = (shuffles N p σ τ).card`.
+* `le_six_top` (**Theorem F (2)**), `top_rec` (**Theorem F (3)**), `ends_parity`
+  (**Sharma's bound** `f(N) ≥ ⌊N/2⌋ - 6`, all `N`), `sharp_26` (equality at `N = 26`).
+  The base `13 ≤ K ≤ 27` of Theorem F is fifteen small `decide +kernel` checks
+  (`base_13` … `base_27`) of a pruned search driven by `extB`.
+-/
+
+namespace Folds
+namespace SymStructure2
+
+open SymParity SymStructure
+open scoped List
+
+/-! ## Rescaling a parity class -/
+
+/-- Rescaling of a parity class: `2r - 1 ↦ r` (odd class) and `2r ↦ r` (even class). -/
+def half (v : ℕ) : ℕ := (v + 1) / 2
+
+/-- Inverse of `half` on the class of parity `p`: `r ↦ 2r - p`. -/
+def lift (p r : ℕ) : ℕ := 2 * r - p
+
+/-- `a` lists every element of `[1, N]` exactly once. -/
+def IsPermOf (N : ℕ) (a : List ℕ) : Prop := a.Nodup ∧ ∀ v, v ∈ a ↔ 1 ≤ v ∧ v ≤ N
+
+/-- `π` is an **extendable** (live) prefix: it is a prefix of a 3-AP-free permutation of
+`[1, N]`. -/
+def Ext (N : ℕ) (π : List ℕ) : Prop := ∃ s, IsPermOf N (π ++ s) ∧ APF (π ++ s)
+
+/-- The parity-`p` entries of `l`, rescaled. -/
+def cls (p : ℕ) (l : List ℕ) : List ℕ := (l.filter (fun v => decide (v % 2 = p))).map half
+
+theorem isPermOf_iff_isFoldSeq {N : ℕ} {a : List ℕ} : IsPermOf N a ↔ IsFoldSeq N a := by
+  constructor
+  · rintro ⟨hnd, hI⟩
+    exact (List.perm_ext_iff_of_nodup hnd (List.nodup_range' ..)).2 fun v => by
+      rw [hI, List.mem_range'_1]; omega
+  · intro hf
+    exact ⟨hf.nodup_iff.2 (List.nodup_range' ..), fun v => mem_range'_of_perm hf⟩
+
+theorem IsPermOf.length {N : ℕ} {a : List ℕ} (h : IsPermOf N a) : a.length = N := by
+  rw [(isPermOf_iff_isFoldSeq.1 h).length_eq]; simp
+
+theorem apFree_of_apf {a : List ℕ} (h : APF a) : APFree a := by
+  intro i j k hij hjk hk e
+  have hj : j < a.length := by omega
+  have hi : i < a.length := by omega
+  have h1 : [a[k]] <+ a.drop k := by
+    rw [List.drop_eq_getElem_cons hk]; exact List.singleton_sublist.2 List.mem_cons_self
+  have h2 : [a[j], a[k]] <+ a.drop j := by
+    rw [List.drop_eq_getElem_cons hj]
+    exact (h1.trans (List.drop_sublist_drop_left _ (by omega))).cons_cons _
+  have h3 : [a[i], a[j], a[k]] <+ a.drop i := by
+    rw [List.drop_eq_getElem_cons hi]
+    exact (h2.trans (List.drop_sublist_drop_left _ (by omega))).cons_cons _
+  exact h _ _ _ (h3.trans (List.drop_sublist _ _)) e
+
+theorem apf_iff_apFree {a : List ℕ} : APF a ↔ APFree a := ⟨apFree_of_apf, apf_of_apFree⟩
+
+theorem mem_symSeqs_iff {N : ℕ} {a : List ℕ} : a ∈ symSeqs N ↔ IsPermOf N a ∧ APF a := by
+  rw [mem_symSeqs, isPermOf_iff_isFoldSeq, apf_iff_apFree]
+  constructor
+  · rintro ⟨hf, hs⟩; exact ⟨hf, (symmetric_iff_apFree hf).1 hs⟩
+  · rintro ⟨hf, hs⟩; exact ⟨hf, (symmetric_iff_apFree hf).2 hs⟩
+
+/-- 3-AP-freeness is preserved by a map that reflects 3-term progressions. -/
+theorem apf_map {l : List ℕ} {f : ℕ → ℕ}
+    (hf : ∀ x ∈ l, ∀ y ∈ l, ∀ z ∈ l, f x + f z = 2 * f y → x + z = 2 * y) (h : APF l) :
+    APF (l.map f) := by
+  intro x' y' z' hs e
+  obtain ⟨l', hl', he⟩ := List.sublist_map_iff.1 hs
+  rcases l' with _ | ⟨x, _ | ⟨y, _ | ⟨z, _ | ⟨w, l'⟩⟩⟩⟩ <;> simp at he
+  obtain ⟨rfl, rfl, rfl⟩ := he
+  have hx : x ∈ l := hl'.subset (by simp)
+  have hy : y ∈ l := hl'.subset (by simp)
+  have hz : z ∈ l := hl'.subset (by simp)
+  exact h x y z hl' (hf x hx y hy z hz e)
+
+theorem apf_map_half {l : List ℕ} {p : ℕ} (hp : ∀ v ∈ l, v % 2 = p) (h : APF l) :
+    APF (l.map half) := by
+  refine apf_map (fun x hx y hy z hz e => ?_) h
+  have := hp x hx; have := hp y hy; have := hp z hz
+  simp only [half] at e; omega
+
+theorem apf_map_lift {l : List ℕ} {p : ℕ} (hp : p ≤ 1) (h1 : ∀ v ∈ l, 1 ≤ v) (h : APF l) :
+    APF (l.map (lift p)) := by
+  refine apf_map (fun x hx y hy z hz e => ?_) h
+  have := h1 x hx; have := h1 y hy; have := h1 z hz
+  simp only [lift] at e; omega
+
+theorem half_lift {p r : ℕ} (hp : p ≤ 1) (hr : 1 ≤ r) : half (lift p r) = r := by
+  simp only [half, lift]; omega
+
+theorem lift_half {p v : ℕ} (hv : v % 2 = p) : lift p (half v) = v := by
+  simp only [half, lift]; omega
+
+theorem lift_mod {p r : ℕ} (hp : p ≤ 1) (hr : 1 ≤ r) : lift p r % 2 = p := by
+  simp only [lift]; omega
+
+theorem lift_inj {p : ℕ} (hp : p ≤ 1) : Function.Injective (lift p) := by
+  intro x y e; simp only [lift] at e; omega
+
+theorem cls_append (p : ℕ) (l₁ l₂ : List ℕ) : cls p (l₁ ++ l₂) = cls p l₁ ++ cls p l₂ := by
+  simp [cls]
+
+theorem mem_cls {p r : ℕ} {l : List ℕ} : r ∈ cls p l ↔ ∃ v ∈ l, v % 2 = p ∧ half v = r := by
+  simp [cls, and_assoc]
+
+theorem cls_nodup {p : ℕ} {l : List ℕ} (h : l.Nodup) : (cls p l).Nodup := by
+  refine (h.filter _).map_on ?_
+  intro x hx y hy e
+  simp only [List.mem_filter, decide_eq_true_eq] at hx hy
+  simp only [half] at e; omega
+
+theorem cls_range {N p : ℕ} {l : List ℕ} (hp : p ≤ 1) (h : ∀ v ∈ l, 1 ≤ v ∧ v ≤ N) :
+    ∀ r ∈ cls p l, 1 ≤ r ∧ r ≤ (N + p) / 2 := by
+  intro r hr
+  obtain ⟨v, hv, hvp, rfl⟩ := mem_cls.1 hr
+  have := h v hv
+  simp only [half]; omega
+
+theorem cls_isPermOf {N p : ℕ} {a : List ℕ} (hp : p ≤ 1) (h : IsPermOf N a) :
+    IsPermOf ((N + p) / 2) (cls p a) := by
+  refine ⟨cls_nodup h.1, fun r => ⟨fun hr => cls_range hp (fun v hv => (h.2 v).1 hv) r hr,
+    fun hr => mem_cls.2 ⟨lift p r, (h.2 _).2 ?_, lift_mod hp hr.1, half_lift hp hr.1⟩⟩⟩
+  simp only [lift]; omega
+
+theorem cls_apf {p : ℕ} {a : List ℕ} (h : APF a) : APF (cls p a) :=
+  apf_map_half (p := p) (fun v hv => by simpa using (List.mem_filter.1 hv).2)
+    (h.sublist List.filter_sublist)
+
+/-- Lifting back the rescaled class gives the parity-`p` subsequence. -/
+theorem map_lift_cls (p : ℕ) (l : List ℕ) :
+    (cls p l).map (lift p) = l.filter (fun v => decide (v % 2 = p)) := by
+  rw [cls, List.map_map]
+  conv_rhs => rw [← List.map_id (List.filter _ l)]
+  apply List.map_congr_left
+  intro v hv
+  simp only [List.mem_filter, decide_eq_true_eq] at hv
+  exact lift_half hv.2
+
+theorem cls_map_lift {p : ℕ} (hp : p ≤ 1) {l : List ℕ} (h1 : ∀ r ∈ l, 1 ≤ r) :
+    cls p (l.map (lift p)) = l := by
+  rw [cls, List.filter_eq_self.2, List.map_map]
+  · conv_rhs => rw [← List.map_id l]
+    exact List.map_congr_left fun r hr => half_lift hp (h1 r hr)
+  · intro v hv
+    obtain ⟨r, hr, rfl⟩ := List.mem_map.1 hv
+    simpa using lift_mod hp (h1 r hr)
+
+theorem cls_map_lift_other {p q : ℕ} (hp : p ≤ 1) (hq : q ≠ p) {l : List ℕ}
+    (h1 : ∀ r ∈ l, 1 ≤ r) : cls q (l.map (lift p)) = [] := by
+  rw [cls, List.filter_eq_nil_iff.2, List.map_nil]
+  intro v hv
+  obtain ⟨r, hr, rfl⟩ := List.mem_map.1 hv
+  have := lift_mod hp (h1 r hr)
+  simp; omega
+
+theorem filter_ne_eq (w : ℕ) (l : List ℕ) :
+    l.filter (fun v => decide (v % 2 ≠ w % 2)) = l.filter (fun v => decide (v % 2 = 1 - w % 2)) :=
+  List.filter_congr fun v _ => by
+    rw [decide_eq_decide]; omega
+
+/-! ## Basic facts about extendable prefixes -/
+
+theorem Ext.nodup {N : ℕ} {π : List ℕ} (h : Ext N π) : π.Nodup := by
+  obtain ⟨s, ⟨hnd, _⟩, _⟩ := h
+  exact hnd.sublist (List.sublist_append_left _ _)
+
+theorem Ext.range {N : ℕ} {π : List ℕ} (h : Ext N π) : ∀ v ∈ π, 1 ≤ v ∧ v ≤ N := by
+  obtain ⟨s, ⟨_, hI⟩, _⟩ := h
+  exact fun v hv => (hI v).1 (List.mem_append_left _ hv)
+
+theorem Ext.of_append {N : ℕ} {π ρ : List ℕ} (h : Ext N (π ++ ρ)) : Ext N π := by
+  obtain ⟨s, h1, h2⟩ := h
+  exact ⟨ρ ++ s, by rwa [← List.append_assoc], by rwa [← List.append_assoc]⟩
+
+theorem Ext.of_prefix {N : ℕ} {π ρ : List ℕ} (h : Ext N ρ) (hp : π <+: ρ) : Ext N π := by
+  obtain ⟨t, rfl⟩ := hp
+  exact h.of_append
+
+theorem ext_iff_mem_symSeqs {N : ℕ} {π : List ℕ} : Ext N π ↔ ∃ a ∈ symSeqs N, π <+: a := by
+  constructor
+  · rintro ⟨s, h1, h2⟩
+    exact ⟨π ++ s, mem_symSeqs_iff.2 ⟨h1, h2⟩, List.prefix_append _ _⟩
+  · rintro ⟨a, ha, ⟨s, rfl⟩⟩
+    exact ⟨s, mem_symSeqs_iff.1 ha⟩
+
+theorem ext_zero : Ext 0 [] :=
+  ⟨[], ⟨by simp, fun v => by simp; omega⟩, fun x y z hs _ => by
+    have := hs.length_le; simp at this⟩
+
+theorem ext_one : Ext 1 [1] :=
+  ⟨[], ⟨by simp, fun v => by simp; omega⟩, fun x y z hs _ => by
+    have := hs.length_le; simp at this⟩
+
+/-- Every list of distinct elements of `[1, N]`, `N ≤ 1`, is extendable. -/
+theorem ext_of_le_one {N : ℕ} {π : List ℕ} (hN : N ≤ 1) (hnd : π.Nodup)
+    (hr : ∀ v ∈ π, 1 ≤ v ∧ v ≤ N) : Ext N π := by
+  rcases π with _ | ⟨w, _ | ⟨w', t⟩⟩
+  · rcases (show N = 0 ∨ N = 1 by omega) with rfl | rfl
+    · exact ext_zero
+    · exact (show Ext 1 ([] ++ [1]) from ext_one).of_append
+  · have := hr w (by simp)
+    obtain rfl : w = 1 := by omega
+    obtain rfl : N = 1 := by omega
+    exact ext_one
+  · have h1 := hr w (by simp)
+    have h2 := hr w' (by simp)
+    simp only [List.nodup_cons, List.mem_cons, not_or] at hnd
+    exact absurd (by omega) hnd.1.1
+
+/-! ## Theorem E: which prefixes extend -/
+
+instance (N y u : ℕ) : Decidable (Linked N y u) :=
+  inferInstanceAs (Decidable ((u < 2 * y ∧ 2 * y ≤ N + u) ∨ (y < 2 * u ∧ 2 * u ≤ N + y)))
+
+/-- (a) On linked pairs inside `π`, the entry of the parity of `w` (the `D`-entry) comes
+first. -/
+def CondA (N w : ℕ) (π : List ℕ) : Prop :=
+  ∀ y ∈ π, ∀ u ∈ π, y % 2 = w % 2 → u % 2 ≠ w % 2 → Linked N y u → Bef π y u
+
+/-- (b) No `C`-entry of `π` is linked to a `D`-value of `[1, N]` outside `π`. -/
+def CondB (N w : ℕ) (π : List ℕ) : Prop :=
+  ∀ u ∈ π, ∀ y ∈ List.range' 1 N, y ∉ π → y % 2 = w % 2 → u % 2 ≠ w % 2 → ¬ Linked N y u
+
+/-! Boolean versions (fast in the kernel). -/
+
+def linkedB (N y u : ℕ) : Bool :=
+  (Nat.blt u (2 * y) && Nat.ble (2 * y) (N + u)) || (Nat.blt y (2 * u) && Nat.ble (2 * u) (N + y))
+
+theorem linkedB_iff {N y u : ℕ} : linkedB N y u = true ↔ Linked N y u := by
+  simp [linkedB, Linked, Nat.blt_eq, Nat.ble_eq]
+
+def befB : List ℕ → ℕ → ℕ → Bool
+  | [], _, _ => false
+  | x :: t, y, u => (x == y && t.contains u) || befB t y u
+
+theorem befB_iff : ∀ {l : List ℕ} {y u : ℕ}, befB l y u = true ↔ Bef l y u
+  | [], y, u => by simp [befB, Bef]
+  | x :: t, y, u => by
+    rw [bef_cons_iff, ← befB_iff]
+    simp only [befB, Bool.or_eq_true, Bool.and_eq_true, beq_iff_eq, List.contains_iff_mem]
+    constructor
+    · rintro (⟨rfl, h⟩ | h)
+      · exact Or.inr ⟨rfl, h⟩
+      · exact Or.inl h
+    · rintro (h | ⟨rfl, h⟩)
+      · exact Or.inr h
+      · exact Or.inl ⟨rfl, h⟩
+
+def condAB (N w : ℕ) (π : List ℕ) : Bool :=
+  π.all fun y => y % 2 != w % 2 || π.all fun u => u % 2 == w % 2 || !linkedB N y u || befB π y u
+
+def condBB (N w : ℕ) (π : List ℕ) : Bool :=
+  π.all fun u => u % 2 == w % 2 || (List.range' 1 N).all fun y =>
+    π.contains y || y % 2 != w % 2 || !linkedB N y u
+
+theorem condAB_iff {N w : ℕ} {π : List ℕ} : condAB N w π = true ↔ CondA N w π := by
+  simp only [condAB, CondA, List.all_eq_true, Bool.or_eq_true, bne_iff_ne, ne_eq, beq_iff_eq,
+    Bool.not_eq_true', befB_iff]
+  constructor
+  · intro h y hy u hu hyw huw hl
+    rcases h y hy with h | h
+    · exact absurd hyw h
+    · rcases h u hu with (h | h) | h
+      · exact absurd h huw
+      · rw [← Bool.not_eq_true, linkedB_iff] at h; exact absurd hl h
+      · exact h
+  · intro h y hy
+    by_cases hyw : y % 2 = w % 2
+    · refine Or.inr fun u hu => ?_
+      by_cases huw : u % 2 = w % 2
+      · exact Or.inl (Or.inl huw)
+      by_cases hl : Linked N y u
+      · exact Or.inr (h y hy u hu hyw huw hl)
+      · exact Or.inl (Or.inr (by rw [← Bool.not_eq_true, linkedB_iff]; exact hl))
+    · exact Or.inl hyw
+
+theorem condBB_iff {N w : ℕ} {π : List ℕ} : condBB N w π = true ↔ CondB N w π := by
+  simp only [condBB, CondB, List.all_eq_true, Bool.or_eq_true, bne_iff_ne, ne_eq, beq_iff_eq,
+    Bool.not_eq_true', List.contains_iff_mem]
+  constructor
+  · intro h u hu y hy hyπ hyw huw hl
+    rcases h u hu with h | h
+    · exact huw h
+    · rcases h y hy with (h | h) | h
+      · exact hyπ h
+      · exact h hyw
+      · rw [← Bool.not_eq_true, linkedB_iff] at h; exact h hl
+  · intro h u hu
+    by_cases huw : u % 2 = w % 2
+    · exact Or.inl huw
+    refine Or.inr fun y hy => ?_
+    by_cases hyπ : y ∈ π
+    · exact Or.inl (Or.inl hyπ)
+    by_cases hyw : y % 2 = w % 2
+    · exact Or.inr (by rw [← Bool.not_eq_true, linkedB_iff]; exact h u hu y hy hyπ hyw huw)
+    · exact Or.inl (Or.inr hyw)
+
+instance (N w : ℕ) (π : List ℕ) : Decidable (CondA N w π) := decidable_of_iff _ condAB_iff
+instance (N w : ℕ) (π : List ℕ) : Decidable (CondB N w π) := decidable_of_iff _ condBB_iff
+
+theorem bef_left {π s : List ℕ} (hnd : (π ++ s).Nodup) {x y : ℕ} (hx : x ∈ π) (hy : y ∈ π)
+    (h : Bef (π ++ s) x y) : Bef π x y := by
+  rcases bef_total (hnd.sublist (List.sublist_append_left _ _)) hx hy (bef_ne hnd h) with h' | h'
+  · exact h'
+  · exact absurd (bef_append_left h') (bef_asymm hnd h)
+
+/-- **Theorem E, "only if".** -/
+theorem ext_imp {N w : ℕ} {π t : List ℕ} (hπ : π = w :: t) (h : Ext N π) :
+    CondA N w π ∧ CondB N w π ∧ Ext ((N + w % 2) / 2) (cls (w % 2) π) ∧
+      Ext ((N + (1 - w % 2)) / 2) (cls (1 - w % 2) π) := by
+  obtain ⟨s, hP, hap⟩ := h
+  have ha : π ++ s = w :: (t ++ s) := by rw [hπ]; rfl
+  obtain ⟨_, _, hor⟩ := (merge_iff ha hP.1 hP.2).1 hap
+  refine ⟨?_, ?_, ⟨cls (w % 2) s, ?_, ?_⟩, ⟨cls (1 - w % 2) s, ?_, ?_⟩⟩
+  · intro y hy u hu hyw huw hl
+    exact bef_left hP.1 hy hu
+      (hor y u (List.mem_append_left _ hy) (List.mem_append_left _ hu) hyw huw hl)
+  · intro u hu y hy hyπ hyw huw hl
+    rw [List.mem_range'_1] at hy
+    have hya : y ∈ π ++ s := (hP.2 y).2 (by omega)
+    have hys : y ∈ s := by simpa [hyπ] using hya
+    have h1 := hor y u hya (List.mem_append_left _ hu) hyw huw hl
+    exact bef_asymm hP.1 h1 (bef_append_mid hu hys)
+  · rw [← cls_append]; exact cls_isPermOf (by omega) hP
+  · rw [← cls_append]; exact cls_apf hap
+  · rw [← cls_append]; exact cls_isPermOf (by omega) hP
+  · rw [← cls_append]; exact cls_apf hap
+
+section classPart
+variable {N p : ℕ} {π s₁ : List ℕ} (hp : p ≤ 1) (hP : IsPermOf ((N + p) / 2) (cls p π ++ s₁))
+include hp hP
+
+theorem part_range : ∀ v ∈ s₁.map (lift p), 1 ≤ v ∧ v ≤ N ∧ v % 2 = p := by
+  intro v hv
+  obtain ⟨r, hr, rfl⟩ := List.mem_map.1 hv
+  have := (hP.2 r).1 (List.mem_append_right _ hr)
+  simp only [lift]; omega
+
+theorem part_disj : ∀ v ∈ s₁.map (lift p), v ∉ π := by
+  intro v hv hvπ
+  obtain ⟨r, hr, rfl⟩ := List.mem_map.1 hv
+  have h1 := (hP.2 r).1 (List.mem_append_right _ hr)
+  have hc : r ∈ cls p π :=
+    mem_cls.2 ⟨lift p r, hvπ, lift_mod hp h1.1, half_lift hp h1.1⟩
+  exact (List.nodup_append.1 hP.1).2.2 r hc r hr rfl
+
+theorem part_cover : ∀ v, 1 ≤ v → v ≤ N → v % 2 = p → v ∈ π ∨ v ∈ s₁.map (lift p) := by
+  intro v h1 h2 h3
+  have hm := (hP.2 (half v)).2 (by simp only [half]; omega)
+  rcases List.mem_append.1 hm with hm | hm
+  · obtain ⟨x, hx, hxp, e⟩ := mem_cls.1 hm
+    left
+    have : x = v := by simp only [half] at e; omega
+    exact this ▸ hx
+  · right
+    exact List.mem_map.2 ⟨half v, hm, lift_half h3⟩
+
+theorem part_nodup : (s₁.map (lift p)).Nodup :=
+  ((List.nodup_append.1 hP.1).2.1).map (lift_inj hp)
+
+omit hp in
+theorem part_one_le : ∀ r ∈ cls p π ++ s₁, 1 ≤ r := fun r hr => ((hP.2 r).1 hr).1
+
+end classPart
+
+/-- **Theorem E, "if"**: the explicit completion `π ++ (rest of σ) ++ (rest of τ)`. -/
+theorem ext_of_cond {N w : ℕ} {π t : List ℕ} (hπ : π = w :: t) (hnd : π.Nodup)
+    (hr : ∀ v ∈ π, 1 ≤ v ∧ v ≤ N) (hA : CondA N w π) (hB : CondB N w π)
+    (hD : Ext ((N + w % 2) / 2) (cls (w % 2) π))
+    (hC : Ext ((N + (1 - w % 2)) / 2) (cls (1 - w % 2) π)) : Ext N π := by
+  obtain ⟨s₁, hP₁, hap₁⟩ := hD
+  obtain ⟨s₂, hP₂, hap₂⟩ := hC
+  have hp1 : w % 2 ≤ 1 := by omega
+  have hq1 : 1 - w % 2 ≤ 1 := by omega
+  set A := s₁.map (lift (w % 2)) with hAdef
+  set B := s₂.map (lift (1 - w % 2)) with hBdef
+  have rA := part_range hp1 hP₁
+  have rB := part_range hq1 hP₂
+  have dA := part_disj hp1 hP₁
+  have dB := part_disj hq1 hP₂
+  have cA := part_cover hp1 hP₁
+  have cB := part_cover hq1 hP₂
+  have hnd' : (π ++ (A ++ B)).Nodup := by
+    refine List.nodup_append.2 ⟨hnd, List.nodup_append.2 ⟨part_nodup hp1 hP₁,
+      part_nodup hq1 hP₂, ?_⟩, ?_⟩
+    · intro x hx y hy e
+      have := (rA x hx).2.2; have := (rB y hy).2.2; omega
+    · intro x hx y hy e
+      subst e
+      rcases List.mem_append.1 hy with hy | hy
+      · exact dA x hy hx
+      · exact dB x hy hx
+  have hI : ∀ v, v ∈ π ++ (A ++ B) ↔ 1 ≤ v ∧ v ≤ N := by
+    intro v
+    simp only [List.mem_append]
+    constructor
+    · rintro (h | h | h)
+      · exact hr v h
+      · exact ⟨(rA v h).1, (rA v h).2.1⟩
+      · exact ⟨(rB v h).1, (rB v h).2.1⟩
+    · rintro ⟨h1, h2⟩
+      by_cases hv : v % 2 = w % 2
+      · rcases cA v h1 h2 hv with h | h
+        · exact Or.inl h
+        · exact Or.inr (Or.inl h)
+      · rcases cB v h1 h2 (by omega) with h | h
+        · exact Or.inl h
+        · exact Or.inr (Or.inr h)
+  have ha : π ++ (A ++ B) = w :: (t ++ (A ++ B)) := by rw [hπ]; rfl
+  refine ⟨A ++ B, ⟨hnd', hI⟩, (merge_iff ha hnd' hI).2 ⟨?_, ?_, ?_⟩⟩
+  · have e1 : A.filter (fun v => decide (v % 2 = w % 2)) = A :=
+      List.filter_eq_self.2 fun v hv => by simpa using (rA v hv).2.2
+    have e2 : B.filter (fun v => decide (v % 2 = w % 2)) = [] :=
+      List.filter_eq_nil_iff.2 fun v hv => by have := (rB v hv).2.2; simp; omega
+    rw [List.filter_append, List.filter_append, e1, e2, List.append_nil, ← map_lift_cls,
+      hAdef, ← List.map_append]
+    exact apf_map_lift hp1 (part_one_le hP₁) hap₁
+  · rw [filter_ne_eq]
+    have e1 : A.filter (fun v => decide (v % 2 = 1 - w % 2)) = [] :=
+      List.filter_eq_nil_iff.2 fun v hv => by have := (rA v hv).2.2; simp; omega
+    have e2 : B.filter (fun v => decide (v % 2 = 1 - w % 2)) = B :=
+      List.filter_eq_self.2 fun v hv => by simpa using (rB v hv).2.2
+    rw [List.filter_append, List.filter_append, e1, e2, List.nil_append, ← map_lift_cls,
+      hBdef, ← List.map_append]
+    exact apf_map_lift hq1 (part_one_le hP₂) hap₂
+  · intro y u hy hu hyw huw hl
+    simp only [List.mem_append] at hy hu
+    rcases hy with hy | hy | hy
+    · rcases hu with hu | hu | hu
+      · exact bef_append_left (hA y hy u hu hyw huw hl)
+      · exact absurd (rA u hu).2.2 huw
+      · exact bef_append_mid hy (List.mem_append_right _ hu)
+    · rcases hu with hu | hu | hu
+      · exact absurd hl (hB u hu y (List.mem_range'_1.2 ⟨(rA y hy).1, by
+          have := (rA y hy).2.1; omega⟩) (dA y hy) hyw huw)
+      · exact absurd (rA u hu).2.2 huw
+      · exact bef_append_right (bef_append_mid hy hu)
+    · exact absurd (rB y hy).2.2 (by omega)
+
+/-- **Theorem E (the extension test).**  A nonempty list `π = w :: t` of distinct elements
+of `[1, N]` is a prefix of a 3-AP-free permutation of `[1, N]` iff
+(a) `D` precedes `C` on linked pairs inside `π`, (b) no `C`-entry of `π` is linked to a
+`D`-value outside `π`, and (c), (d) the two rescaled parity subsequences of `π` are
+extendable in their own (rescaled) classes `[1, ⌊(N + p)/2⌋]`. -/
+theorem ext_iff_cond {N w : ℕ} {π t : List ℕ} (hπ : π = w :: t) (hnd : π.Nodup)
+    (hr : ∀ v ∈ π, 1 ≤ v ∧ v ≤ N) :
+    Ext N π ↔ CondA N w π ∧ CondB N w π ∧ Ext ((N + w % 2) / 2) (cls (w % 2) π) ∧
+      Ext ((N + (1 - w % 2)) / 2) (cls (1 - w % 2) π) :=
+  ⟨ext_imp hπ, fun ⟨hA, hB, hD, hC⟩ => ext_of_cond hπ hnd hr hA hB hD hC⟩
+
+/-- Every `N` has a 3-AP-free permutation, and for `N ≥ 1` one starting with `1`. -/
+theorem ext_nil_one : ∀ N, Ext N [] ∧ (1 ≤ N → Ext N [1]) := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+  rcases (show N = 0 ∨ N = 1 ∨ 2 ≤ N by omega) with rfl | rfl | hN
+  · exact ⟨ext_zero, fun h => absurd h (by omega)⟩
+  · exact ⟨(show Ext 1 ([] ++ [1]) from ext_one).of_append, fun _ => ext_one⟩
+  · have h1 : Ext N [1] := by
+      refine ext_of_cond (w := 1) (t := []) rfl (by simp) (by simp; omega) ?_ ?_ ?_ ?_
+      · intro y hy u hu _ huw; simp at hu; omega
+      · intro u hu y _ _ _ huw; simp at hu; omega
+      · have : cls (1 % 2) [1] = [1] := by decide
+        rw [this]; exact (ih _ (by omega)).2 (by omega)
+      · have : cls (1 - 1 % 2) [1] = [] := by decide
+        rw [this]; exact (ih _ (by omega)).1
+    exact ⟨(show Ext N ([] ++ [1]) from h1).of_append, fun _ => h1⟩
+
+theorem ext_nil (N : ℕ) : Ext N [] := (ext_nil_one N).1
+
+/-! ## A decision procedure for extendability (Theorem E as an algorithm) -/
+
+/-- The recursive extension test of Theorem E (with fuel `f ≥ N`). -/
+def extB : ℕ → ℕ → List ℕ → Bool
+  | 0, _, _ => true
+  | _ + 1, _, [] => true
+  | f + 1, N, w :: t =>
+    if N ≤ 1 then true else
+      decide (CondA N w (w :: t)) && decide (CondB N w (w :: t)) &&
+      extB f ((N + w % 2) / 2) (cls (w % 2) (w :: t)) &&
+      extB f ((N + (1 - w % 2)) / 2) (cls (1 - w % 2) (w :: t))
+
+theorem extB_iff : ∀ f N π, N ≤ f → π.Nodup → (∀ v ∈ π, 1 ≤ v ∧ v ≤ N) →
+    (extB f N π = true ↔ Ext N π) := by
+  intro f
+  induction f with
+  | zero =>
+    intro N π hN hnd hr
+    simp only [extB, true_iff]
+    exact ext_of_le_one (by omega) hnd hr
+  | succ f ih =>
+    intro N π hN hnd hr
+    rcases π with _ | ⟨w, t⟩
+    · simp only [extB, true_iff]; exact ext_nil N
+    by_cases h1 : N ≤ 1
+    · simp only [extB, h1, ite_true, true_iff]; exact ext_of_le_one h1 hnd hr
+    simp only [extB, h1, ite_false, Bool.and_eq_true, decide_eq_true_eq]
+    rw [ext_iff_cond rfl hnd hr, ih _ _ (by omega) (cls_nodup hnd) (cls_range (by omega) hr),
+      ih _ _ (by omega) (cls_nodup hnd) (cls_range (by omega) hr)]
+    tauto
+
+/-! ### Exhaustive search for long extendable prefixes inside a top segment -/
+
+/-- `noLong K a d π`: no extension of `π` by `d` further values from the top segment
+`(K - a, K]` is extendable (depth-first search, pruned by extendability). -/
+def noLong (K a : ℕ) : ℕ → List ℕ → Bool
+  | 0, _ => false
+  | d + 1, π => (List.range' (K + 1 - a) a).all fun v =>
+      decide (v ∈ π) || !extB K K (π ++ [v]) || noLong K a d (π ++ [v])
+
+theorem noLong_spec {K a : ℕ} : ∀ d π, noLong K a d π = true → ∀ ρ : List ℕ, ρ.length = d →
+    (∀ v ∈ ρ, K < v + a) → ¬ Ext K (π ++ ρ) := by
+  intro d
+  induction d with
+  | zero => intro π h; simp [noLong] at h
+  | succ d ih =>
+    intro π h ρ hl htop hE
+    rcases ρ with _ | ⟨v, ρ'⟩
+    · simp at hl
+    have hE' : Ext K ((π ++ [v]) ++ ρ') := by simpa using hE
+    have hv := hE.range v (by simp)
+    have hvπ : v ∉ π := by
+      have := hE.nodup
+      rw [List.nodup_append] at this
+      exact fun hv' => this.2.2 v hv' v (by simp) rfl
+    have hB : extB K K (π ++ [v]) = true :=
+      (extB_iff K K _ le_rfl hE'.of_append.nodup hE'.of_append.range).2 hE'.of_append
+    simp only [noLong, List.all_eq_true, Bool.or_eq_true, decide_eq_true_eq,
+      Bool.not_eq_true'] at h
+    have hvt := htop v (by simp)
+    rcases h v (List.mem_range'_1.2 ⟨by omega, by omega⟩) with (h | h) | h
+    · exact hvπ h
+    · rw [hB] at h; exact absurd h (by decide)
+    · exact ih _ h ρ' (by simpa using hl) (fun x hx => htop x (by simp [hx])) hE'
+
+/-- A successful search bounds every extendable prefix inside the top segment by `6`. -/
+theorem le_six_of_noLong {K a : ℕ} (h : noLong K a 7 [] = true) {π : List ℕ} (hE : Ext K π)
+    (htop : ∀ v ∈ π, K < v + a) : π.length ≤ 6 := by
+  by_contra hl
+  refine noLong_spec 7 [] h (π.take 7) (by simp; omega)
+    (fun v hv => htop v (List.mem_of_mem_take hv)) ?_
+  exact hE.of_prefix (by simpa using List.take_prefix 7 π)
+
+
+/-! ## Theorem L: live `k`-prefixes -/
+
+/-- The extendable (live) `k`-prefixes: the distinct `k`-prefixes of 3-AP-free
+permutations of `[1, N]`.  `L_k(N) = (liveSet N k).card`. -/
+def liveSet (N k : ℕ) : Finset (List ℕ) := (symSeqs N).image (List.take k)
+
+theorem mem_liveSet {N k : ℕ} {π : List ℕ} (hk : k ≤ N) :
+    π ∈ liveSet N k ↔ π.length = k ∧ Ext N π := by
+  simp only [liveSet, Finset.mem_image]
+  constructor
+  · rintro ⟨a, ha, rfl⟩
+    refine ⟨by rw [List.length_take, (mem_symSeqs_iff.1 ha).1.length]; omega,
+      ext_iff_mem_symSeqs.2 ⟨a, ha, List.take_prefix _ _⟩⟩
+  · rintro ⟨hl, hE⟩
+    obtain ⟨a, ha, hp⟩ := ext_iff_mem_symSeqs.1 hE
+    exact ⟨a, ha, by rw [← hl]; exact (List.prefix_iff_eq_take.1 hp).symm⟩
+
+/-- Prefix parity (`../symparity`, Corollary D) for extendable prefixes: an extendable
+prefix of length `≤ (N + 1)/4` lies in one parity class. -/
+theorem Ext.parity {N w : ℕ} {t : List ℕ} (hE : Ext N (w :: t))
+    (hlen : 4 * (w :: t).length ≤ N + 1) : ∀ v ∈ w :: t, v % 2 = w % 2 := by
+  obtain ⟨s, hP, hap⟩ := hE
+  have hf := isPermOf_iff_isFoldSeq.1 hP
+  intro v hv
+  obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.1 hv
+  have hi' : i < (w :: t ++ s).length := by simp at hi ⊢; omega
+  have := prefix_parity hf (apFree_of_apf hap) hi' (by omega)
+  rw [List.getElem_append_left hi] at this
+  simpa using this
+
+/-- Theorem E for a prefix inside one class: a rescaled extendable prefix lifts. -/
+theorem ext_lift {N p : ℕ} (hp : p ≤ 1) {ρ : List ℕ} (hρ : Ext ((N + p) / 2) ρ) (hne : ρ ≠ []) :
+    Ext N (ρ.map (lift p)) := by
+  obtain ⟨r, ρ', rfl⟩ := List.exists_cons_of_ne_nil hne
+  have h1 : ∀ x ∈ r :: ρ', 1 ≤ x := fun x hx => (hρ.range x hx).1
+  have hw : lift p r % 2 = p := lift_mod hp (h1 r (by simp))
+  have hpar : ∀ v ∈ (r :: ρ').map (lift p), v % 2 = lift p r % 2 := by
+    intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    rw [hw]; exact lift_mod hp (h1 x hx)
+  refine ext_of_cond (w := lift p r) (t := ρ'.map (lift p)) rfl
+    (hρ.nodup.map (lift_inj hp)) ?_ ?_ ?_ ?_ ?_
+  · intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    have := hρ.range x hx
+    simp only [lift]; omega
+  · intro y _ u hu _ huw; exact absurd (hpar u hu) huw
+  · intro u hu y _ _ _ huw; exact absurd (hpar u hu) huw
+  · rw [hw, cls_map_lift hp h1]; exact hρ
+  · rw [hw, cls_map_lift_other hp (by omega) h1]; exact ext_nil _
+
+/-- Conversely, an extendable prefix inside one class rescales to an extendable prefix. -/
+theorem ext_half {N w : ℕ} {t : List ℕ} (hE : Ext N (w :: t))
+    (hall : ∀ v ∈ w :: t, v % 2 = w % 2) :
+    Ext ((N + w % 2) / 2) ((w :: t).map half) ∧ ((w :: t).map half).map (lift (w % 2)) = w :: t := by
+  have hc : cls (w % 2) (w :: t) = (w :: t).map half := by
+    rw [cls, List.filter_eq_self.2]; intro v hv; simpa using hall v hv
+  refine ⟨hc ▸ (ext_imp rfl hE).2.2.1, ?_⟩
+  rw [List.map_map]
+  conv_rhs => rw [← List.map_id (w :: t)]
+  exact List.map_congr_left fun v hv => lift_half (hall v hv)
+
+/-- **Theorem L.**  For `k ≥ 1` and `N ≥ 4k - 1`,
+`L_k(N) = L_k(⌈N/2⌉) + L_k(⌊N/2⌋)`. -/
+theorem live_rec {N k : ℕ} (hk : 1 ≤ k) (hN : 4 * k ≤ N + 1) :
+    (liveSet N k).card = (liveSet ((N + 1) / 2) k).card + (liveSet (N / 2) k).card := by
+  have i1 : Function.Injective (List.map (lift 1)) := List.map_injective_iff.2 (lift_inj le_rfl)
+  have i0 : Function.Injective (List.map (lift 0)) := List.map_injective_iff.2 (lift_inj (by omega))
+  have e : liveSet N k = (liveSet ((N + 1) / 2) k).map ⟨_, i1⟩ ∪ (liveSet (N / 2) k).map ⟨_, i0⟩ := by
+    ext π
+    simp only [Finset.mem_union, Finset.mem_map, Function.Embedding.coeFn_mk]
+    rw [mem_liveSet (by omega)]
+    constructor
+    · rintro ⟨hl, hE⟩
+      obtain ⟨w, t, rfl⟩ := List.exists_cons_of_ne_nil (show π ≠ [] by rintro rfl; simp at hl; omega)
+      have hall := hE.parity (by omega)
+      obtain ⟨hE', he⟩ := ext_half hE hall
+      rcases Nat.mod_two_eq_zero_or_one w with h | h
+      · rw [h] at hE' he
+        exact Or.inr ⟨_, (mem_liveSet (by omega)).2 ⟨by simpa using hl, by simpa using hE'⟩, he⟩
+      · rw [h] at hE' he
+        exact Or.inl ⟨_, (mem_liveSet (by omega)).2 ⟨by simpa using hl, hE'⟩, he⟩
+    · rintro (⟨ρ, hρ, rfl⟩ | ⟨ρ, hρ, rfl⟩)
+      · rw [mem_liveSet (by omega)] at hρ
+        exact ⟨by simpa using hρ.1, ext_lift le_rfl hρ.2 (by rintro rfl; simp at hρ; omega)⟩
+      · rw [mem_liveSet (by omega)] at hρ
+        exact ⟨by simpa using hρ.1, ext_lift (p := 0) (by omega) (by simpa using hρ.2)
+          (by rintro rfl; simp at hρ; omega)⟩
+  rw [e, Finset.card_union_of_disjoint, Finset.card_map, Finset.card_map]
+  rw [Finset.disjoint_left]
+  rintro π h1 h2
+  simp only [Finset.mem_map, Function.Embedding.coeFn_mk] at h1 h2
+  obtain ⟨ρ, hρ, rfl⟩ := h1
+  obtain ⟨ρ', hρ', e'⟩ := h2
+  rw [mem_liveSet (by omega)] at hρ hρ'
+  obtain ⟨r, t, rfl⟩ := List.exists_cons_of_ne_nil (show ρ ≠ [] by rintro rfl; simp at hρ; omega)
+  obtain ⟨r', t', rfl⟩ := List.exists_cons_of_ne_nil (show ρ' ≠ [] by rintro rfl; simp at hρ'; omega)
+  simp only [List.map_cons, List.cons.injEq] at e'
+  have := hρ.2.range r (by simp)
+  have := hρ'.2.range r' (by simp)
+  have := e'.1
+  simp only [lift] at this; omega
+
+/-- **Consequence of Theorem L: `L_k(N) = O(N)`.** -/
+theorem live_linear (k : ℕ) (hk : 1 ≤ k) : ∃ C, ∀ N, 1 ≤ N → (liveSet N k).card ≤ C * N := by
+  refine ⟨∑ n ∈ Finset.range (4 * k), (liveSet n k).card, fun N => ?_⟩
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+  intro hN
+  by_cases h : 4 * k ≤ N + 1
+  · rw [live_rec hk h]
+    have h1 := ih ((N + 1) / 2) (by omega) (by omega)
+    have h2 := ih (N / 2) (by omega) (by omega)
+    calc _ ≤ _ := Nat.add_le_add h1 h2
+      _ = _ := by rw [← Nat.mul_add]; congr 1; omega
+  · have := Finset.single_le_sum (f := fun n => (liveSet n k).card) (fun _ _ => Nat.zero_le _)
+      (Finset.mem_range.2 (show N < 4 * k by omega))
+    exact this.trans (Nat.le_mul_of_pos_right _ hN)
+
+/-! ## The exact counting identity `θ(N) = Σ_{p, σ, τ} P(σ, τ)` -/
+
+/-- The allowed shuffles of `σ` (a permutation of the rescaled class of parity `p`) and `τ`
+(of the other class): the permutations `a` of `[1, N]` starting with parity `p` whose
+parity-`p` subsequence is `σ` lifted, whose other subsequence is `τ` lifted, and in which
+`D` precedes `C` on every linked pair.  `P(σ, τ) = (shuffles N p σ τ).card`. -/
+def shuffles (N p : ℕ) (σ τ : List ℕ) : Finset (List ℕ) :=
+  (List.range' 1 N).permutations.toFinset.filter fun a =>
+    a.headD 0 % 2 = p ∧ a.filter (fun v => decide (v % 2 = p)) = σ.map (lift p) ∧
+      a.filter (fun v => decide (v % 2 ≠ p)) = τ.map (lift (1 - p)) ∧
+      ∀ y ∈ a, ∀ u ∈ a, y % 2 = p → u % 2 ≠ p → Linked N y u → Bef a y u
+
+theorem filter_eq_map_lift_iff {p : ℕ} (hp : p ≤ 1) {σ a : List ℕ} (hσ : ∀ r ∈ σ, 1 ≤ r) :
+    a.filter (fun v => decide (v % 2 = p)) = σ.map (lift p) ↔ cls p a = σ := by
+  constructor
+  · intro h
+    rw [cls, h, List.map_map]
+    conv_rhs => rw [← List.map_id σ]
+    exact List.map_congr_left fun r hr => half_lift hp (hσ r hr)
+  · intro h; rw [← map_lift_cls, h]
+
+theorem shuffle_key {N p : ℕ} (hp : p ≤ 1) {σ τ a : List ℕ} (hσ : APF σ) (hσ1 : ∀ r ∈ σ, 1 ≤ r)
+    (hτ : APF τ) (hτ1 : ∀ r ∈ τ, 1 ≤ r) (hP : IsPermOf N a) (hN : 1 ≤ N)
+    (hh : a.headD 0 % 2 = p) :
+    (APF a ∧ cls p a = σ ∧ cls (1 - p) a = τ) ↔
+      (a.filter (fun v => decide (v % 2 = p)) = σ.map (lift p) ∧
+        a.filter (fun v => decide (v % 2 ≠ p)) = τ.map (lift (1 - p)) ∧
+        ∀ y ∈ a, ∀ u ∈ a, y % 2 = p → u % 2 ≠ p → Linked N y u → Bef a y u) := by
+  obtain ⟨w, tl, ha⟩ : ∃ w tl, a = w :: tl := by
+    cases a with
+    | nil => have := hP.length; simp at this; omega
+    | cons w tl => exact ⟨w, tl, rfl⟩
+  have hw : w % 2 = p := by rw [ha] at hh; simpa using hh
+  have hne : a.filter (fun v => decide (v % 2 ≠ p)) = a.filter (fun v => decide (v % 2 = 1 - p)) :=
+    List.filter_congr fun v _ => by rw [decide_eq_decide]; omega
+  have f1 := filter_eq_map_lift_iff (a := a) hp hσ1
+  have f2 := filter_eq_map_lift_iff (a := a) (p := 1 - p) (by omega) hτ1
+  have M := merge_iff ha hP.1 hP.2
+  rw [hw] at M
+  constructor
+  · rintro ⟨hap, h1, h2⟩
+    have := M.1 hap
+    exact ⟨f1.2 h1, by rw [hne]; exact f2.2 h2, fun y hy u hu => this.2.2 y u hy hu⟩
+  · rintro ⟨h1, h2, h3⟩
+    refine ⟨M.2 ⟨by rw [h1]; exact apf_map_lift hp hσ1 hσ,
+      by rw [h2]; exact apf_map_lift (by omega) hτ1 hτ, fun y u hy hu => h3 y hy u hu⟩,
+      f1.1 h1, f2.1 (by rw [← hne]; exact h2)⟩
+
+/-- **The exact counting identity** (from the merge theorem):
+`θ(N) = Σ_{p ∈ {0,1}} Σ_{σ ∈ Θ(⌊(N+p)/2⌋)} Σ_{τ ∈ Θ(⌊(N+1-p)/2⌋)} P(σ, τ)`. -/
+theorem card_symSeqs_eq_sum {N : ℕ} (hN : 1 ≤ N) :
+    (symSeqs N).card = ∑ p ∈ Finset.range 2, ∑ σ ∈ symSeqs ((N + p) / 2),
+      ∑ τ ∈ symSeqs ((N + 1 - p) / 2), (shuffles N p σ τ).card := by
+  rw [Finset.card_eq_sum_card_fiberwise (f := fun a => a.headD 0 % 2) (t := Finset.range 2)
+    (fun a _ => Finset.mem_range.2 (Nat.mod_lt _ (by omega)))]
+  refine Finset.sum_congr rfl fun p hp => ?_
+  have hp1 : p ≤ 1 := by simp at hp; omega
+  rw [Finset.card_eq_sum_card_fiberwise (f := cls p) (t := symSeqs ((N + p) / 2))
+    (s := (symSeqs N).filter (fun a => a.headD 0 % 2 = p)) (by
+    intro a ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, mem_symSeqs_iff] at ha
+    exact mem_symSeqs_iff.2 ⟨cls_isPermOf hp1 ha.1.1, cls_apf ha.1.2⟩)]
+  refine Finset.sum_congr rfl fun σ hσ => ?_
+  rw [Finset.card_eq_sum_card_fiberwise (f := cls (1 - p)) (t := symSeqs ((N + 1 - p) / 2))
+    (s := ((symSeqs N).filter (fun a => a.headD 0 % 2 = p)).filter (fun a => cls p a = σ)) (by
+    intro a ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, Finset.mem_filter, mem_symSeqs_iff] at ha
+    have := cls_isPermOf (p := 1 - p) (by omega) ha.1.1.1
+    rw [show (N + (1 - p)) / 2 = (N + 1 - p) / 2 by omega] at this
+    exact mem_symSeqs_iff.2 ⟨this, cls_apf ha.1.1.2⟩)]
+  refine Finset.sum_congr rfl fun τ hτ => ?_
+  congr 1
+  ext a
+  obtain ⟨hσP, hσA⟩ := mem_symSeqs_iff.1 hσ
+  obtain ⟨hτP, hτA⟩ := mem_symSeqs_iff.1 hτ
+  have hσ1 : ∀ r ∈ σ, 1 ≤ r := fun r hr => ((hσP.2 r).1 hr).1
+  have hτ1 : ∀ r ∈ τ, 1 ≤ r := fun r hr => ((hτP.2 r).1 hr).1
+  simp only [shuffles, Finset.mem_filter, mem_symSeqs_iff, List.mem_toFinset,
+    List.mem_permutations]
+  rw [← IsFoldSeq, ← isPermOf_iff_isFoldSeq]
+  constructor
+  · rintro ⟨⟨⟨⟨hP, hap⟩, hh⟩, h1⟩, h2⟩
+    exact ⟨hP, hh, (shuffle_key hp1 hσA hσ1 hτA hτ1 hP hN hh).1 ⟨hap, h1, h2⟩⟩
+  · rintro ⟨hP, hh, h⟩
+    obtain ⟨hap, h1, h2⟩ := (shuffle_key hp1 hσA hσ1 hτA hτ1 hP hN hh).2 h
+    exact ⟨⟨⟨⟨hP, hap⟩, hh⟩, h1⟩, h2⟩
+
+/-! ## Theorem F: prefixes inside a top segment have length at most 6 -/
+
+/-! ### The finite base `13 ≤ K ≤ 27` (kernel checks of the Theorem-E search) -/
+
+theorem base_13 : noLong 13 7 7 [] = true := by decide +kernel
+theorem base_14 : noLong 14 7 7 [] = true := by decide +kernel
+theorem base_15 : noLong 15 8 7 [] = true := by decide +kernel
+theorem base_16 : noLong 16 8 7 [] = true := by decide +kernel
+theorem base_17 : noLong 17 9 7 [] = true := by decide +kernel
+theorem base_18 : noLong 18 9 7 [] = true := by decide +kernel
+theorem base_19 : noLong 19 10 7 [] = true := by decide +kernel
+theorem base_20 : noLong 20 10 7 [] = true := by decide +kernel
+theorem base_21 : noLong 21 11 7 [] = true := by decide +kernel
+theorem base_22 : noLong 22 11 7 [] = true := by decide +kernel
+theorem base_23 : noLong 23 12 7 [] = true := by decide +kernel
+theorem base_24 : noLong 24 12 7 [] = true := by decide +kernel
+theorem base_25 : noLong 25 13 7 [] = true := by decide +kernel
+theorem base_26 : noLong 26 13 7 [] = true := by decide +kernel
+theorem base_27 : noLong 27 14 7 [] = true := by decide +kernel
+
+theorem le_six_base {K a : ℕ} (hK1 : 13 ≤ K) (hK2 : K ≤ 27) (ha : 2 * a ≤ K + 1) {π : List ℕ}
+    (hE : Ext K π) (htop : ∀ v ∈ π, K < v + a) : π.length ≤ 6 := by
+  have ht : ∀ v ∈ π, K < v + (K + 1) / 2 := fun v hv => by have := htop v hv; omega
+  interval_cases K
+  · exact le_six_of_noLong base_13 hE ht
+  · exact le_six_of_noLong base_14 hE ht
+  · exact le_six_of_noLong base_15 hE ht
+  · exact le_six_of_noLong base_16 hE ht
+  · exact le_six_of_noLong base_17 hE ht
+  · exact le_six_of_noLong base_18 hE ht
+  · exact le_six_of_noLong base_19 hE ht
+  · exact le_six_of_noLong base_20 hE ht
+  · exact le_six_of_noLong base_21 hE ht
+  · exact le_six_of_noLong base_22 hE ht
+  · exact le_six_of_noLong base_23 hE ht
+  · exact le_six_of_noLong base_24 hE ht
+  · exact le_six_of_noLong base_25 hE ht
+  · exact le_six_of_noLong base_26 hE ht
+  · exact le_six_of_noLong base_27 hE ht
+
+/-- For `K ≥ 28`, a `C`-entry in an extendable prefix forces seven linked `D`-entries into
+it (Theorem E(b)); so if the rescaled `D`-part has length `≤ 6` the prefix lies in one
+parity class. -/
+theorem one_class_of_le_six {K w : ℕ} {t : List ℕ} (hK : 28 ≤ K) (hE : Ext K (w :: t))
+    (h6 : (cls (w % 2) (w :: t)).length ≤ 6) : ∀ u ∈ w :: t, u % 2 = w % 2 := by
+  obtain ⟨-, hB, -, -⟩ := ext_imp rfl hE
+  by_contra hc
+  push Not at hc
+  obtain ⟨u, hu, hup⟩ := hc
+  have hu1 := hE.range u hu
+  have hy : ∀ j < 7, (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j) ∈ w :: t := by
+    intro j hj
+    by_contra hyπ
+    exact hB u hu _ (List.mem_range'_1.2 ⟨by omega, by omega⟩) hyπ (by omega) hup
+      (Or.inl ⟨by omega, by omega⟩)
+  have hsub : (Finset.range 7).image (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))
+      ⊆ (cls (w % 2) (w :: t)).toFinset := by
+    intro r hr
+    simp only [Finset.mem_image, Finset.mem_range] at hr
+    obtain ⟨j, hj, rfl⟩ := hr
+    rw [List.mem_toFinset]
+    exact mem_cls.2 ⟨_, hy j hj, by omega, rfl⟩
+  have hcard : ((Finset.range 7).image
+      (fun j => half (u / 2 + 1 + (u / 2 + 1 + w % 2) % 2 + 2 * j))).card = 7 := by
+    rw [Finset.card_image_of_injOn, Finset.card_range]
+    intro i _ j _ e
+    simp only [half] at e; omega
+  have h1 := Finset.card_le_card hsub
+  have h2 := List.toFinset_card_le (cls (w % 2) (w :: t))
+  omega
+
+/-- **Theorem F (2).**  If `2a ≤ K + 1`, every extendable prefix of `[1, K]` whose entries
+all lie in the top segment `(K - a, K]` has length at most `6`.  (Proof: strong induction
+on `K`; for `K ≥ 28` a `C`-entry would force seven linked `D`-entries into the prefix by
+Theorem E(b), contradicting the bound for the rescaled class; otherwise the prefix lies in
+one class and Theorem E(c) reduces to `⌊(K + p)/2⌋`.  Base `K ≤ 27`: trivial for
+`K ≤ 12`, kernel-checked search for `13 ≤ K ≤ 27`.) -/
+theorem le_six_top : ∀ K a, 2 * a ≤ K + 1 → ∀ π, Ext K π → (∀ v ∈ π, K < v + a) →
+    π.length ≤ 6 := by
+  intro K
+  induction K using Nat.strong_induction_on with
+  | _ K ih =>
+  intro a ha π hE htop
+  by_cases hK : K ≤ 12
+  · have hsub : π.toFinset ⊆ Finset.Ioc (K - a) K := by
+      intro v hv
+      rw [List.mem_toFinset] at hv
+      have := htop v hv; have := hE.range v hv
+      rw [Finset.mem_Ioc]; omega
+    have := Finset.card_le_card hsub
+    rw [List.toFinset_card_of_nodup hE.nodup, Nat.card_Ioc] at this
+    omega
+  by_cases hK2 : K ≤ 27
+  · exact le_six_base (by omega) hK2 ha hE htop
+  rcases π with _ | ⟨w, t⟩
+  · simp
+  obtain ⟨-, -, hD, -⟩ := ext_imp rfl hE
+  have hlen := ih ((K + w % 2) / 2) (by omega) ((K + w % 2) / 2 - (K - a + w % 2) / 2)
+    (by omega) _ hD (by
+      intro r hr
+      obtain ⟨v, hv, hvp, rfl⟩ := mem_cls.1 hr
+      have := htop v hv; have := hE.range v hv
+      simp only [half]; omega)
+  have hall := one_class_of_le_six (by omega) hE hlen
+  have : (cls (w % 2) (w :: t)).length = (w :: t).length := by
+    rw [cls, List.length_map, List.filter_eq_self.2]
+    intro v hv; simpa using hall v hv
+  omega
+
+/-- Mirror image `v ↦ K + 1 - v` of an extendable prefix is extendable. -/
+theorem Ext.mirror {K : ℕ} {π : List ℕ} (h : Ext K π) : Ext K (π.map (fun v => K + 1 - v)) := by
+  obtain ⟨s, ⟨hnd, hI⟩, hap⟩ := h
+  refine ⟨s.map (fun v => K + 1 - v), ?_, ?_⟩
+  · rw [← List.map_append]
+    refine ⟨hnd.map_on fun x hx y hy e => ?_, fun v => ?_⟩
+    · have := (hI x).1 hx; have := (hI y).1 hy; omega
+    · rw [List.mem_map]
+      constructor
+      · rintro ⟨x, hx, rfl⟩; have := (hI x).1 hx; omega
+      · intro hv; exact ⟨K + 1 - v, (hI _).2 (by omega), by omega⟩
+  · rw [← List.map_append]
+    refine apf_map (fun x hx y hy z hz e => ?_) hap
+    have := (hI x).1 hx; have := (hI y).1 hy; have := (hI z).1 hz; omega
+
+/-- **Theorem F (2), bottom segments** (by the mirror). -/
+theorem le_six_bot {K a : ℕ} (ha : 2 * a ≤ K + 1) {π : List ℕ} (hE : Ext K π)
+    (hb : ∀ v ∈ π, v ≤ a) : π.length ≤ 6 := by
+  have := le_six_top K a ha _ hE.mirror (by
+    intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    have := hb x hx; have := hE.range x hx; omega)
+  simpa using this
+
+/-! ## Sharma's ends theorem -/
+
+/-- In a 3-AP-free permutation of `[1, N]`, at most `6` entries of the parity of the first
+entry come after any entry of the other parity. -/
+theorem D_after_le_six {N w : ℕ} {a tl : List ℕ} (ha : a = w :: tl) (hP : IsPermOf N a)
+    (hap : APF a) {k : ℕ} (hk : k < a.length) (hu : a[k] % 2 ≠ w % 2) :
+    ((a.drop (k + 1)).filter (fun v => decide (v % 2 = w % 2))).length ≤ 6 := by
+  have hsplit : a = (a.take k ++ [a[k]]) ++ a.drop (k + 1) := by
+    rw [List.append_assoc, List.singleton_append, ← List.drop_eq_getElem_cons hk,
+      List.take_append_drop]
+  have hu1 := (hP.2 a[k]).1 (List.getElem_mem hk)
+  have hnl : ∀ y ∈ a.drop (k + 1), y % 2 = w % 2 → ¬ Linked N y a[k] := by
+    intro y hy hyw
+    refine not_linked_of_bef ha hP.1 hP.2 hap hyw hu ?_
+    have : Bef ((a.take k ++ [a[k]]) ++ a.drop (k + 1)) a[k] y := by
+      rw [List.append_assoc]; exact bef_append_right (bef_head hy)
+    rwa [← hsplit] at this
+  have hσ : IsPermOf ((N + w % 2) / 2) (cls (w % 2) a) := cls_isPermOf (by omega) hP
+  have hσa : APF (cls (w % 2) a) := cls_apf hap
+  rw [hsplit, cls_append] at hσ hσa
+  have hE : Ext ((N + w % 2) / 2) (cls (w % 2) (a.drop (k + 1))).reverse := by
+    refine ⟨(cls (w % 2) (a.take k ++ [a[k]])).reverse, ?_, ?_⟩
+    · rw [← List.reverse_append]
+      exact ⟨List.nodup_reverse.2 hσ.1, fun v => by rw [List.mem_reverse]; exact hσ.2 v⟩
+    · rw [← List.reverse_append]; exact hσa.reverse
+  have hlen : (cls (w % 2) (a.drop (k + 1))).reverse.length =
+      ((a.drop (k + 1)).filter (fun v => decide (v % 2 = w % 2))).length := by
+    simp [cls]
+  rw [← hlen]
+  by_cases h2u : 2 * a[k] ≤ N + 1
+  · refine le_six_top _ ((N + w % 2) / 2 - (N / 2 + w % 2) / 2) (by omega) _ hE ?_
+    intro r hr
+    rw [List.mem_reverse] at hr
+    obtain ⟨y, hy, hyw, rfl⟩ := mem_cls.1 hr
+    have hl := hnl y hy hyw
+    have := (hP.2 y).1 (List.mem_of_mem_drop hy)
+    simp only [Linked] at hl
+    simp only [half]; omega
+  · refine le_six_bot (a := (N / 2 + w % 2) / 2) (by omega) hE ?_
+    intro r hr
+    rw [List.mem_reverse] at hr
+    obtain ⟨y, hy, hyw, rfl⟩ := mem_cls.1 hr
+    have hl := hnl y hy hyw
+    have := (hP.2 y).1 (List.mem_of_mem_drop hy)
+    simp only [Linked] at hl
+    simp only [half]; omega
+
+/-- **Sharma's ends theorem, `f(N) ≥ ⌊N/2⌋ - 6`.**  In every 3-AP-free permutation of
+`[1, N]` (symmetric fold sequence), the first `⌊N/2⌋ - 6` entries all have the parity of
+the first entry. -/
+theorem ends_parity {N : ℕ} {a : List ℕ} (ha : a ∈ symSeqs N) {k : ℕ} (hk : k < a.length)
+    (hkN : k + 6 < N / 2) : a[k] % 2 = a[0]'(by omega) % 2 := by
+  obtain ⟨hP, hap⟩ := mem_symSeqs_iff.1 ha
+  obtain ⟨w, tl, rfl⟩ : ∃ w tl, a = w :: tl := by
+    cases a with
+    | nil => simp at hk
+    | cons w tl => exact ⟨w, tl, rfl⟩
+  show (w :: tl)[k] % 2 = w % 2
+  by_contra hu
+  have h6 := D_after_le_six rfl hP hap hk hu
+  have hσ := (cls_isPermOf (p := w % 2) (by omega) hP).length
+  have hsplit : w :: tl = ((w :: tl).take k ++ [(w :: tl)[k]]) ++ (w :: tl).drop (k + 1) := by
+    rw [List.append_assoc, List.singleton_append, ← List.drop_eq_getElem_cons hk,
+      List.take_append_drop]
+  rw [hsplit, cls_append, cls_append, List.length_append, List.length_append] at hσ
+  have h1 : (cls (w % 2) ((w :: tl).take k)).length ≤ k := by
+    rw [cls, List.length_map]
+    exact (List.length_filter_le _ _).trans (by simp)
+  have h2 : (cls (w % 2) [(w :: tl)[k]]).length = 0 := by
+    simp [cls, hu]
+  have h3 : (cls (w % 2) ((w :: tl).drop (k + 1))).length =
+      (((w :: tl).drop (k + 1)).filter (fun v => decide (v % 2 = w % 2))).length := by
+    simp [cls]
+  omega
+
+/-- **Theorem F (3), the halving recursion.**  For `K ≥ 28` and `2a ≤ K + 1`: an extendable
+prefix of length `m` inside the top `a` values of `[1, K]` exists iff, for some parity `p`,
+one exists inside the top `a_p` values of the rescaled class `[1, ⌊(K+p)/2⌋]`, where
+`a_p = ⌊(K+p)/2⌋ - ⌊(K-a+p)/2⌋` is the number of parity-`p` values among the top `a`.
+So `G(K, a) = max (G(⌈K/2⌉, a_odd), G(⌊K/2⌋, a_even))`. -/
+theorem top_rec {K a m : ℕ} (hK : 28 ≤ K) (ha : 2 * a ≤ K + 1) :
+    (∃ π : List ℕ, π.length = m ∧ Ext K π ∧ ∀ v ∈ π, K < v + a) ↔
+      ∃ p ≤ 1, ∃ ρ : List ℕ, ρ.length = m ∧ Ext ((K + p) / 2) ρ ∧
+        ∀ r ∈ ρ, (K + p) / 2 < r + ((K + p) / 2 - (K - a + p) / 2) := by
+  constructor
+  · rintro ⟨π, hl, hE, htop⟩
+    rcases π with _ | ⟨w, t⟩
+    · exact ⟨0, by omega, [], hl, ext_nil _, by simp⟩
+    have hD := (ext_imp rfl hE).2.2.1
+    have htop' : ∀ r ∈ cls (w % 2) (w :: t),
+        (K + w % 2) / 2 < r + ((K + w % 2) / 2 - (K - a + w % 2) / 2) := by
+      intro r hr
+      obtain ⟨v, hv, hvp, rfl⟩ := mem_cls.1 hr
+      have := htop v hv; have := hE.range v hv
+      simp only [half]; omega
+    have h6 := le_six_top _ _ (by omega) _ hD htop'
+    have hall := one_class_of_le_six hK hE h6
+    have hc : cls (w % 2) (w :: t) = (w :: t).map half := by
+      rw [cls, List.filter_eq_self.2]; intro v hv; simpa using hall v hv
+    refine ⟨w % 2, by omega, (w :: t).map half, by simpa using hl, (ext_half hE hall).1,
+      hc ▸ htop'⟩
+  · rintro ⟨p, hp, ρ, hl, hE, htop⟩
+    rcases ρ with _ | ⟨r, ρ'⟩
+    · exact ⟨[], hl, ext_nil _, by simp⟩
+    refine ⟨(r :: ρ').map (lift p), by simpa using hl, ext_lift hp hE (by simp), ?_⟩
+    intro v hv
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hv
+    have := htop x hx
+    simp only [lift]; omega
+
+/-- **Sharpness at `N = 26`**: a 3-AP-free permutation of `[1, 26]` whose entry at index
+`7 = ⌊26/2⌋ - 6` changes parity, so `f(26) = ⌊26/2⌋ - 6` and `ends_parity` is optimal
+there. -/
+theorem sharp_26 : ∃ a ∈ symSeqs 26, ∃ h : 7 < a.length, a[7] % 2 ≠ a[0] % 2 := by
+  refine ⟨[16, 8, 12, 4, 10, 2, 6, 1, 24, 20, 26, 18, 22, 14, 17, 9, 5, 25, 21, 13, 3, 19, 11,
+    7, 23, 15], mem_symSeqs.2 ⟨by decide +kernel, by decide +kernel⟩, by decide, by decide⟩
+
+end SymStructure2
+end Folds
