@@ -4,6 +4,7 @@
   one     {1, N}, N odd, N != 7
   beatty  right-aligned Beatty copies X(N, p, h), h in {0, 1}, 2p + h <= N + 1
   swap    Swap(N, p, h, c) and mirror (live6)
+  chiY    {1, 4, 6, ..., N} for N = 0 mod 4 (live6)
   dbl     doubling splits N = (2j+1) n (oddRes / evenRes)
   mirror  always
 Rules given as a comma list (default all).  Prints per N the missing non-dead pairs (u <= mirror)."""
@@ -45,6 +46,8 @@ def copies(N, rules):
                     X[-1] = N - c
                     out.append((p, [None] + X))
                     out.append((p, [None] + [N + 1 - x for x in reversed(X)]))
+    if 'chiY' in rules and N % 4 == 0 and N >= 8:
+        out.append((N // 2, [None, 1] + [2 * y for y in range(2, N // 2 + 1)]))
     if 'dbl' in rules:
         for d in range(3, N + 1, 2):
             if N % d:
@@ -91,5 +94,5 @@ def run(NMAX, rules, extra=None, verbose=True):
 
 if __name__ == '__main__':
     rules = set(sys.argv[2].split(',')) if len(sys.argv) > 2 else \
-        {'base', 'inward', 'one', 'beatty', 'dbl', 'swap'}
+        {'base', 'inward', 'one', 'beatty', 'dbl', 'swap', 'chiY'}
     run(int(sys.argv[1]), rules)

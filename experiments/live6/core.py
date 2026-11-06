@@ -27,7 +27,7 @@ def core(N, rules):
 
 
 if __name__ == '__main__':
-    rules = set(sys.argv[3].split(',')) if len(sys.argv) > 3 else {'beatty', 'dbl', 'one', 'swap'}
+    rules = set(sys.argv[3].split(',')) if len(sys.argv) > 3 else {'beatty', 'dbl', 'one', 'swap', 'chiY'}
     for N in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
         c = core(N, rules)
         print(N, len(c), c, flush=True)

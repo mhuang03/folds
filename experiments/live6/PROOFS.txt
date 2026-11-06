@@ -1,0 +1,173 @@
+Live pairs, part 6: swapped Beatty copies, the copy {1, 4, 6, ..., N}, and the hard core
+=========================================================================================
+
+Notation as in experiments/adjacent/PROOFS.txt and experiments/live5/PROOFS.txt (I_X(m),
+Theorem G, CoReach, X(N, p, h) = {floor((rN - h)/p) : r = 1..p}).  For a pair (u, v), u < v,
+write u' = N + 1 - v (distance of v from the right end).  "Lean" = Folds/Live6.lean (no
+sorry, no native_decide, no decide on large terms).
+
+STATUS
+  * New uniform constructions (all in Lean):
+      - SWAPPED BEATTY COPIES (section 2): X(N, p, h) with its last element moved to N - c is a
+        window copy satisfying Theorem G whenever p is odd, h <= 1, c >= 2, N + h >= 2cp + 1.
+        Consequence: {c + 1, N + 1 - floor((N - h)/p)} is co-reachable for such p != 7
+        (`coReach_corner`), in particular {3, N - 3} for EVERY N >= 37 (`coReach_three`), and
+        the corner families (3, N-5), (3, N-9), (5, N-7) for all large N.
+      - THE COPY {1, 4, 6, ..., N}, N = 0 mod 4 (section 3): co-reachable (complement ordered
+        through psiY); gives {1, N/2 + 2} for every N = 0 mod 4, N >= 8 (`coReach_one_half`).
+      - Theorem G for pairs, exact criterion (section 1, `inward_pair`).
+  * Family Cov6 = Cov5 + swap + chiY (Lean `Cov6`, `Cov6.coReach`, `Cov6.extends`).
+    Coverage (cov6.py, faithful to Lean): for 13 <= N <= 130 Cov6 misses 31 pairs (19 up to
+    the mirror) instead of 175 for Cov5:
+      35: (3,32)  37: (3,32)  41: (3,32)  43: (3,34)  49: (3,44)  53: (5,46)  59: (5,52)
+      64: (3,62) (5,60)  71: (5,64)  73: (3,64)  83: (3,74) (5,76)  101: (5,94)
+      112: (5,108)  124: (5,120)  127: (5,123)  128: (3,126) (5,124)
+  * Covering argument (section 4).  Under STRONG INDUCTION on N (every non-dead pair of a
+    smaller strip co-reachable), a pair of [N] is settled as soon as it is inward or lies in
+    one of the copies {Beatty h <= 1 or its mirror, swapped Beatty or its mirror, chiY,
+    doubling split} with a NON-DEAD preimage.  The pairs settled by nothing ("hard core",
+    core.py) were computed for 13 <= N <= 520:
+        N <= 103: 55 pairs up to the mirror (list in section 4), all covered by Cov5/Cov6
+                  except the Cov6-missing ones above;
+        104 <= N <= 520: ONLY N = 2^k, the two symmetric pairs (3, N - 2) and (5, N - 4).
+    For these powers of two, two-sided Beatty copies (section 5) work numerically
+    (N <= 1024 resp. 512) but are not in Lean.
+  * Conjecture C is therefore NOT proven for all N.  What remains, precisely (section 6):
+      (R1) the covering lemma for all N: every non-dead pair is inward or lies in one of the
+           copies above with a non-dead preimage, except (3, 2^k - 2), (5, 2^k - 4) and the
+           finite list of section 4 -- a Diophantine statement about Beatty sets, verified for
+           N <= 520 only;
+      (R2) a proof for (3, 2^k - 2) and (5, 2^k - 4) (two-sided Beatty copies, section 5);
+      (R3) the finitely many small pairs of section 4 that Cov6 does not reach (19 up to mirror,
+           all N <= 128) -- e.g. by explicit witness orderings (witOK + decide).
+    Given (R1)-(R3), Conjecture C follows by strong induction from the Lean lemmas of this
+    file and Live5 (no other ingredient is needed).
+
+1. Theorem G for pairs
+----------------------
+For B = {u, v}, 1 <= u < v <= N: B satisfies (*) of Theorem G iff v <= 2u + 1 or
+2v <= N + u + 2 (equivalently: the gap v - u - 1 is at most max(u, u')).  Centre 2v + 1
+(resp. 2u - 1).  Lean: `leftCount_pair`, `rightCount_pair` (the arm counts of a pair as two
+indicator terms), `inward_pair`, `coReach_pair_inward`.  The non-inward ("wide") pairs are the
+ones with gap > max(u, u').
+
+2. Swapped Beatty copies
+------------------------
+LEMMA S.  Let p >= 3 be odd, h <= 1, c >= 2 and N + h >= 2cp + 1.  Let X = X(N, p, h) (last
+element N - h) and X' = (X \ {N - h}) + {N - c}.  Then X' is a window copy of [p]
+(phi' = swapF: r -> floor((rN - h)/p) for r < p, p -> N - c) and X' satisfies Theorem G with
+the centre N - c.
+Proof.  Arithmetic (`swap_last`, `swap_mid_lo`, `swap_mid_hi`): x_{p-1} + 2c < N (from
+N + h > 2cp); with p = 2k + 1, 2 x_k + c <= N and 2 x_{k+1} >= N + 1.  Hence no element y of
+X \ {N-h} has N - c + 1 <= 2y <= N - h (`swap_facts`): the only windows that separate N - c
+from N - h are the left-type windows [1, 2m - 1] with N - c <= 2m - 1 < N - h, and no element
+of X has such a window.  (For p even, x_{p/2} is about N/2 and the lemma fails -- that is
+why p must be odd.)
+  Copy (`winEmb_swap`): pairs of old elements keep their relation (Beatty copy); an old x_j
+  and the new N - c: N - c is never in a left arm (x_j < N - 2c), and N - c is in the right
+  arm of x_j iff N - h was, by the separation property; x_j is never in an arm of N - c
+  (reach c, window [N - 2c, N]).
+  Theorem G (`inward_swap`), centre N - c: for m < N - c outside X', the left counts of X and
+  X' agree and the right count can only grow (N - h in the right arm implies N - c in it), so
+  I_X'(m) <= I_X(m) <= 0 by Live5 `inward_beatty`; for m > N - c nothing of X' lies right of
+  m, so I_X'(m) >= 0.  QED
+(swapcheck.py verifies the lemma for all N <= 300: 54166 cases; swap3.py shows the bound is
+sharp: e.g. for c >= 3 it fails just below N + h = 2cp + 1.)
+COROLLARY (corner pairs, `coReach_corner`).  Under the hypotheses of Lemma S and p != 7,
+{c + 1, N + 1 - floor((N - h)/p)} is co-reachable: the mirror of the image of {1, p}
+(co-reachable by Live5 `coReach_one_N`).
+  * (3, N - 3): c = 2, h = 1, x = 4: p odd with 4p <= N - 1 < 5p; p = floor((N-1)/4) or that
+    minus 1 is odd and >= 9 for N >= 37 (`coReach_three`: {3, N - 3} for all N >= 37).
+  * (3, N - 5) = mirror (6, N - 2): odd p != 7 with 6p <= N - h < 7p (all N >= 84 and many
+    smaller); (3, N - 9): x = 10; (5, N - 7) = mirror (8, N - 4): c = 4, 8p <= N - h < 9p.
+  More generally Lemma S gives every pair (x, N - c) with x in X(N, p, h) (preimage (a, p),
+  non-dead unless a = 1 and p = 7).
+
+3. The copy {1, 4, 6, ..., N}, N = 0 mod 4
+-------------------------------------------
+N = 2n, n even.  chiY: 1 -> 1, y -> 2y is a window copy of [n] (`winEmb_chiY`).  Its
+complement {2, 3, 5, ..., N - 1} is psiY([n]), psiY: 1 -> 2, y -> 2y - 1, which preserves the
+window relation except for the pairs (1, 2) and (n/2 + 1, 1) (`agree_psiY`, computed for
+n <= 28 in the exploration).  A full semi-symmetric sequence of [n] placing n/2 + 1 before 1
+before 2: tau ++ [1, 2], tau an ordering of [3, n] from scratch (Theorem G for the interval
+[1, 2]); [2, 1] is valid from scratch, so Live4 `semiSymmetric_append_rev` applies.  Its
+image under psiY orders the complement (Live4 `semiSymmetric_near`; `coReach_Y`).
+Transfer (`coReach_chiY_transfer`): (1, y) -> (1, 2y), (x, y) -> (2x, 2y).  In particular
+{1, N/2 + 2} comes from {1, N/4 + 1} in [N/2], which is inward (`coReach_one_half`).
+(For N = 2 mod 4 the set is not a copy: chiY fails on (n/2 + 1, 1).)
+
+4. The hard core under strong induction
+---------------------------------------
+core.py N1 N2: non-dead pairs (u <= u') that are not inward and lie in no copy of the uniform
+list (Beatty X(N,p,h), h <= 1, and mirror; Swap(N,p,h,c) and mirror; chiY; doubling splits)
+with a non-dead preimage.  Result (core520.txt), 13 <= N <= 520:
+  13 (2,11)  15 (1,14) (2,13)  16 (1,15) (2,15) (3,14) (5,12)  17 (1,16) (2,16) (3,12) (3,14)
+  18 (2,17)  19 (3,16)  21 (2,19)  23 (2,21) (3,18) (5,16) (6,17)  25 (2,23)  27 (2,25)
+  28 (5,18)  29 (3,20) (3,24) (3,26) (5,22)  31 (3,28) (5,24)  32 (3,26) (3,30) (5,22) (5,28)
+  35 (3,32)  37 (3,32) (5,30)  41 (3,32) (3,36)  43 (3,34) (3,38)  47 (3,42) (5,40)
+  49 (3,44)  53 (3,48) (5,46)  59 (5,52)  61 (3,52) (5,54)  64 (3,62) (5,60)  67 (5,60)
+  71 (5,64)  73 (3,64)  83 (3,74) (5,76)  101 (5,94)  103 (5,96)
+  128, 256, 512: (3, N-2), (5, N-4)
+and nothing else.  (Without swap and chiY the core also contains (3, N-3), (3, N-5), (3, N-9),
+(5, N-7) for most odd N and (1, N/2 + 2) for every N = 0 mod 4: ucov.py / core.py -r.)
+Most of the small core pairs are covered by Cov5 (Good residue classes); Cov6 misses only the
+19 pairs listed in STATUS.
+The numbers suggest the covering statement (R1) is true for all N; a proof would have to
+exhibit, for every wide pair, an explicit (p, h) (or split) with both elements in the copy --
+a three-parameter Diophantine condition (u, v in X(N, p, h) iff the intervals
+[pu + h, pu + h + p - 1], [pv + h, pv + h + p - 1] contain multiples of N).  recipes.py shows
+that most pairs need interior indices (u not the first element of the copy), so no single
+explicit recipe (such as "u is the first element") suffices.
+
+5. Inward copies in general; two-sided Beatty copies
+----------------------------------------------------
+A set X is a window copy iff I_X(x) = 0 for every x in X (copydfs.c / endcopy.c use this).
+For an inward copy with min u, max v and centre in the middle, left of the centre the copy
+satisfies the doubling relations x_{2i-1} <= 2x_i - 1 < x_{2i} <= 2x_i + 1, so its slope lies
+in [u, u + 1]; symmetrically on the right with u'; the two halves are coupled across the
+middle.  Hence end copies of a pair have p in a narrow window (about N/(u+1) .. N/u), whose
+parity can be forced: e.g. (3, N-3) has only end copies, with p in about [N/5, N/4]
+(scanp.sh); for N = 29, 31 only p in {6, 7}, i.e. dead preimages.
+TWO-SIDED BEATTY COPIES TB = {floor((Ai - e)/D) : i <= L} + {N + 1 - floor((A'j - e')/D') :
+j <= R} unify the right-aligned Beatty copies (R = 0), the swapped copies (R = 1) and
+two-residue-class copies (D = 1).  For the power-of-two pairs (tbpow2.py):
+  (3, N - 2): N = 32: 7/2, (L, R) = (4, 5);  64: 10/3, (9, 10);  128: 13/4, (19, 20);
+              256: 7/2, (36, 37);  512: 10/3, (76, 77);  1024: 10/3, (153, 154)
+  (5, N - 4): 64: 11/2, (5, 6);  128: 6/1, (10, 11);  256: 31/6, (24, 25);  512: 6/1, (42, 43)
+(the slope A/D, both sides equal; L + R odd != 7, so the preimage {1, L + R} is
+co-reachable).  A general TB lemma (conditions on L, R for the junction) is the natural next
+step and would also settle (R2); not attempted in Lean.
+Other exploration: endcopy.c (inward copies with given ends, DFS with interval pruning),
+copyp.c (copies with given size p via the index constraints, fast), twoside.py (two-class
+copies: rarely end copies of good size), swapsearch.py (Beatty copies with one moved element:
+found Lemma S and a second family moving the 2nd element, which is not needed), recipes.py.
+
+6. What remains for Conjecture C
+--------------------------------
+(R1) covering lemma (section 4) for all N > 520 (and its proof for N <= 520, currently only
+     computed); (R2) (3, 2^k - 2), (5, 2^k - 4) for k >= 6; (R3) the 19 small pairs.
+Everything else (the transfer machinery, the corner families, (1, N/2 + 2), the base N <= 12
+and {1, N}) is in Lean.
+
+7. Programs (1 core, < 200 MB)
+  ucov.py        coverage by uniform rules only (base, inward, one, beatty, swap, chiY, dbl)
+  core.py        the hard core under strong induction (core520.txt: N <= 520, 5 minutes)
+  cov6.py        the Lean family Cov6 (Cov5 + swap + chiY), faithful (cov6_130.txt)
+  swap.py, swap2.py, swap3.py, swapcheck.py   swapped Beatty copies (Lemma S, sharpness)
+  swapsearch.py  Beatty copies with one moved element, on the hard core
+  endcopy.c, copyp.c, scanp.sh, run2.sh, run3.sh, endscan.sh   inward copies with given ends
+  twoside.py, twobeatty.py, tbpow2.py, prof.py   two-sided copies, imbalance profiles
+  recipes.py     which Beatty witnesses the wide pairs have
+
+8. Lean (Folds/Live6.lean)
+  inward_pair : 1 ≤ u → u < v → v ≤ N → (v ≤ 2u + 1 ∨ 2v ≤ N + u + 2) → ∃ c2, Inward N c2 {u, v}
+  coReach_pair_inward : ... → CoReach N {u, v}
+  winEmb_chiY, coReach_Y : 4 ≤ n → n % 2 = 0 → 0 < g (2n) ([2n] \ chiY([n]))
+  coReach_chiY_transfer : ... → CoReach n D → CoReach (2n) (D.image chiY)
+  coReach_one_half : 8 ≤ N → N % 4 = 0 → CoReach N {1, N / 2 + 2}
+  SwapHyp N p h c := 3 ≤ p ∧ p odd ∧ h ≤ 1 ∧ 2 ≤ c ∧ 2cp + 1 ≤ N + h
+  winEmb_swap, inward_swap : SwapHyp N p h c → Inward N (2 (N - c)) (swapF([p]))
+  coReach_swap_transfer : SwapHyp N p h c → D ⊆ [p] → CoReach p D → CoReach N (D.image swapF)
+  coReach_corner : SwapHyp N p h c → p ≠ 7 → CoReach N {c + 1, N + 1 - (N - h) / p}
+  coReach_three : 37 ≤ N → CoReach N {3, N - 3}
+  Cov6 (cov5 / res / mult / beatty / split / swap / chiY / mirror), Cov6.coReach, Cov6.extends
