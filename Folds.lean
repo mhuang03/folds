@@ -57,3 +57,4 @@ import Folds.SuperExp4
 import Folds.SuperExp5
 import Folds.Copies2
 import Folds.Live8
+import Folds.ArithCover
