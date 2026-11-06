@@ -113,6 +113,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `RecCount` (M) | `card_parFam`: the recursive parity family has 2^{N−1} members; `g_winEmb`: g(X) = a(\|X\|) for window copies; antichain decomposition `semiCount_eq_sum_antichain`; a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2a(jn)a((j+1)n) + rest |
 | `Neutral` (M) | **classification of neutral sets** (`neutral_classification`: only the parity classes and E_d, E_dᶜ for odd d ∣ N); **identity (A)** in full (`identity_A`); J(k) universality and **identity (B)** (`identity_B`) |
 | `Upper` (M) | odd-N parity upper bound `semiCount_odd_le_prod` (a(N) ≤ N!·e^{−0.059N(1+o(1))}), so there is now an exponential saving for **all** N; the discrepancy transfer `disc_le_of_cycDefect_le` |
+| `PathLemma` (M) | the reduction `PathLemma.eventually_le` (Path Lemma ⇒ a(N) ≤ N!·e^{−ω(N)}); linear variant; the cyclic-defect step identity and the run bound on valid moves |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -192,6 +193,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/recsearch/REPORT.txt` | search for recurrences in previous terms (all negative), with the proven and conditional non-D-finiteness arguments |
 | `experiments/neutral/PROOFS.txt` | neutral-set classification, identities (A) and (B) |
 | `experiments/upper/PROOFS.txt` | upper-bound attempts; reduction of a(N) ≤ N!e^{−ω(N)} to a "Path Lemma" (numerically true); why state statistics cannot work |
+| `experiments/pathlemma/PROOFS.txt` | Path Lemma attempts: the potential identity, minimiser structure, open sub-problems |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences

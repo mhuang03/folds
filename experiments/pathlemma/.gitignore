@@ -2,3 +2,5 @@ maxobj
 beam2
 pathstat
 *.o
+beam
+maxv
