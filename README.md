@@ -112,6 +112,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live5` (M) | `coReach_one_N`: {1,N} is co-reachable for every odd N ≠ 7; transfers through Beatty copies and splits; family `Cov5` (every non-dead 2-set for N = 100 and 130) |
 | `RecCount` (M) | `card_parFam`: the recursive parity family has 2^{N−1} members; `g_winEmb`: g(X) = a(\|X\|) for window copies; antichain decomposition `semiCount_eq_sum_antichain`; a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2a(jn)a((j+1)n) + rest |
 | `Neutral` (M) | **classification of neutral sets** (`neutral_classification`: only the parity classes and E_d, E_dᶜ for odd d ∣ N); **identity (A)** in full (`identity_A`); J(k) universality and **identity (B)** (`identity_B`) |
+| `Upper` (M) | odd-N parity upper bound `semiCount_odd_le_prod` (a(N) ≤ N!·e^{−0.059N(1+o(1))}), so there is now an exponential saving for **all** N; the discrepancy transfer `disc_le_of_cycDefect_le` |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -190,6 +191,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/labelling_lrat/NOTES.txt` | LRAT certificate pipeline and costs |
 | `experiments/recsearch/REPORT.txt` | search for recurrences in previous terms (all negative), with the proven and conditional non-D-finiteness arguments |
 | `experiments/neutral/PROOFS.txt` | neutral-set classification, identities (A) and (B) |
+| `experiments/upper/PROOFS.txt` | upper-bound attempts; reduction of a(N) ≤ N!e^{−ω(N)} to a "Path Lemma" (numerically true); why state statistics cannot work |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
