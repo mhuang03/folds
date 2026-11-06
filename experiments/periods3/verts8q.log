@@ -1,0 +1,6 @@
+  28000/30812 polytopes, 458 vertices with 40 | index, 331s
+  30000/30812 polytopes, 502 vertices with 40 | index, 354s
+532 distinct vertices with 40 | index: {40: 192, 120: 340}
+order 120: 338 valid vertices carry it; coefficient of e(-N/120) in c_0(T(N,8)) = (-0.08727833403381531+0.005289726393344733j)
+order 40: 528 valid vertices carry it; coefficient of e(-N/40) in c_0(T(N,8)) = (-773.5596549022371+80.87594757812005j)
+non-simple vertices skipped: 4
