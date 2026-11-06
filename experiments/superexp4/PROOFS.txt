@@ -109,7 +109,7 @@ The old proof (K = 22) fed M(n, n, (n-1)/2) into the M-induction directly, so th
 the odd node never contributed its surplus: s h >= 6n forced s >= 12 and K >= 20 (+2 slack).
 To go below 16 one needs gains at the ODD nodes a(2n+1): a gain of g n bits lowers the even
 surplus needed by the odd node from 2 to 2 - Kg; with g = 1/32 the same accounting gives
-K >= 14.6.  True recursion values on the worst N (model.py, model3.py): 0.058 (old tools),
+K >= 14.8.  True recursion values on the worst N (model.py, model3.py): 0.058 (old tools),
 0.065 (with U), 0.075 (with U and g = 1/16); 1/6 needs g ~ 1/2.
 
 
