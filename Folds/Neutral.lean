@@ -1001,5 +1001,130 @@ theorem identity_A (hN : 2 ≤ N) :
       obtain ⟨nX, p0, p1⟩ := (neutral_classification hN (hsub X hX)).2 hX
       exact h X.card (Finset.mem_Ioo.2 ⟨p0, p1⟩) (by rw [e]; exact nX)
 
+/-! ## Copies are window copies: the increasing enumeration -/
+
+/-- Counting function of `X ⊆ [1, N]`, extended past `N` with slope one. -/
+def ecnt (N : Nat) (X : Finset Nat) (t : Nat) : Nat := (X.filter (· ≤ t)).card + (t - N)
+
+theorem ecnt_exists (y : Nat) : ∃ t, y ≤ ecnt N X t := ⟨y + N, by unfold ecnt; omega⟩
+
+/-- The `y`-th smallest element of `X` (for `1 ≤ y ≤ |X|`). -/
+noncomputable def enum (N : Nat) (X : Finset Nat) (y : Nat) : Nat :=
+  Nat.find (ecnt_exists (N := N) (X := X) y)
+
+theorem ecnt_mono {a b : Nat} (h : a ≤ b) : ecnt N X a ≤ ecnt N X b := by
+  unfold ecnt
+  have : (X.filter (· ≤ a)).card ≤ (X.filter (· ≤ b)).card := by
+    apply Finset.card_le_card; intro x hx
+    simp only [Finset.mem_filter] at hx ⊢; exact ⟨hx.1, by omega⟩
+  omega
+
+theorem ecnt_le {t : Nat} (ht : t ≤ N) :
+    ecnt N X t = (X.filter (· ≤ t)).card := by
+  unfold ecnt; omega
+
+theorem ecnt_zero (hX : X ⊆ Finset.Icc 1 N) : ecnt N X 0 = 0 := by
+  rw [ecnt_le (Nat.zero_le _), Finset.card_eq_zero, Finset.filter_eq_empty_iff]
+  intro x hx; have := Finset.mem_Icc.1 (hX hx); omega
+
+theorem ecnt_N (hX : X ⊆ Finset.Icc 1 N) : ecnt N X N = X.card := by
+  rw [ecnt_le le_rfl]; congr 1
+  ext x; simp only [Finset.mem_filter]
+  exact ⟨fun h => h.1, fun h => ⟨h, (Finset.mem_Icc.1 (hX h)).2⟩⟩
+
+theorem ecnt_succ_le (hX : X ⊆ Finset.Icc 1 N) (t : Nat) : ecnt N X (t + 1) ≤ ecnt N X t + 1 := by
+  unfold ecnt
+  rcases Nat.lt_or_ge t N with h | h
+  · have : X.filter (· ≤ t + 1) ⊆ insert (t + 1) (X.filter (· ≤ t)) := by
+      intro x hx
+      simp only [Finset.mem_filter, Finset.mem_insert] at hx ⊢
+      by_cases e : x = t + 1
+      · exact Or.inl e
+      · exact Or.inr ⟨hx.1, by omega⟩
+    have := (Finset.card_le_card this).trans (Finset.card_insert_le _ _)
+    omega
+  · have : X.filter (· ≤ t + 1) = X.filter (· ≤ t) := by
+      apply Finset.filter_congr; intro x hx; have := Finset.mem_Icc.1 (hX hx); omega
+    rw [this]; omega
+
+theorem enum_countEmb (hX : X ⊆ Finset.Icc 1 N) :
+    CountEmb N X.card (enum N X) (ecnt N X) := by
+  have gal : ∀ y t, enum N X y ≤ t ↔ y ≤ ecnt N X t := fun y t =>
+    ⟨fun h => le_trans (Nat.find_spec (ecnt_exists y)) (ecnt_mono h),
+      fun h => Nat.find_min' _ h⟩
+  refine ⟨fun y t _ => gal y t, fun y hy => ?_, ecnt_zero hX, ecnt_N hX⟩
+  by_contra hc
+  push_neg at hc
+  have a1 := (gal (y + 1) _).1 le_rfl
+  have a2 : enum N X y ≤ enum N X (y + 1) := (gal y _).2 (by omega)
+  have e : enum N X (y + 1) = enum N X y := le_antisymm hc a2
+  rw [e] at a1
+  have hpos : 1 ≤ enum N X y := by
+    by_contra h0
+    have : enum N X y = 0 := by omega
+    rw [this, ecnt_zero hX] at a1; omega
+  have b : ¬ y ≤ ecnt N X (enum N X y - 1) := fun h => by
+    have := (gal y _).2 h; omega
+  have := ecnt_succ_le hX (enum N X y - 1)
+  rw [Nat.sub_add_cancel hpos] at this
+  omega
+
+theorem enum_image (hX : X ⊆ Finset.Icc 1 N) :
+    (Finset.Icc 1 X.card).image (enum N X) = X := by
+  have h := enum_countEmb hX
+  apply Finset.eq_of_subset_of_card_le
+  · intro x hx
+    obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hx
+    rw [Finset.mem_Icc] at hy
+    have t1 := h.phi_pos hy.1
+    have t2 := h.phi_le hy.1 hy.2
+    have c1 := h.c_phi hy.1
+    have c2 := h.c_phi_pred hy.1
+    rw [ecnt_le t2] at c1
+    rw [ecnt_le (by omega)] at c2
+    by_contra hn
+    have : X.filter (· ≤ enum N X y) = X.filter (· ≤ enum N X y - 1) := by
+      apply Finset.filter_congr; intro x hx
+      constructor
+      · intro hle; rcases Nat.eq_or_lt_of_le hle with e | lt
+        · exact absurd (e ▸ hx) hn
+        · omega
+      · intro; omega
+    rw [this] at c1; omega
+  · rw [Finset.card_image_of_injOn, Nat.card_Icc, Nat.add_sub_cancel]
+    intro a ha b hb e
+    simp only [Finset.coe_Icc, Set.mem_Icc] at ha hb
+    have := h.c_phi ha.1; rw [e, h.c_phi hb.1] at this; exact this.symm
+
+theorem toFinset_range'_map (p : Nat) (φ : Nat → Nat) :
+    ((List.range' 1 p).map φ).toFinset = (Finset.Icc 1 p).image φ := by
+  ext x
+  simp only [List.mem_toFinset, List.mem_map, List.mem_range'_1, Finset.mem_image,
+    Finset.mem_Icc]
+  constructor <;> rintro ⟨y, hy, e⟩ <;> exact ⟨y, by omega, e⟩
+
+/-- **Copy criterion (sets).**  `X ⊆ [1, N]` is a copy (balanced around each of its elements)
+iff it is the image of a window embedding of the `|X|`-strip; the increasing enumeration is
+one. -/
+theorem isCopy_iff_winEmb (hX : X ⊆ Finset.Icc 1 N) :
+    IsCopy N X ↔ ∃ φ, WinEmb N X.card φ ∧ (Finset.Icc 1 X.card).image φ = X := by
+  constructor
+  · intro hc
+    have h := enum_countEmb hX
+    refine ⟨enum N X, h.winEmb_iff.1.2 fun j hj1 hjp => ?_, enum_image hX⟩
+    have hnd : ((List.range' 1 X.card).map (enum N X)).Nodup := by
+      apply nodup_map_of_injOn (List.nodup_range' ..)
+      intro a ha b hb e
+      rw [List.mem_range'_1] at ha hb
+      have := h.c_phi (j := a) (by omega); rw [e, h.c_phi (j := b) (by omega)] at this
+      exact this.symm
+    rw [balanced_iff_balF hnd, toFinset_range'_map, enum_image hX]
+    apply hc
+    have := Finset.mem_image_of_mem (enum N X)
+      (show j ∈ Finset.Icc 1 X.card from Finset.mem_Icc.2 ⟨hj1, hjp⟩)
+    rwa [enum_image hX] at this
+  · rintro ⟨φ, hφ, e⟩
+    rw [← e]; exact isCopy_winEmb hφ
+
 end Neutral
 end Folds
