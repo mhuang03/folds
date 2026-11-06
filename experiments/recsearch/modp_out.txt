@@ -1,0 +1,59 @@
+Family 5: number-theoretic structure.
+
+(1) Berlekamp-Massey over F_p for every prime p <= 97, for a(1..37), a(k..37) (k <= 8)
+    and c(1..41).  A random sequence of length n has linear complexity ~ n/2; a genuine
+    recurrence of order L is only *verified* if n >= 2L + 5 (then BM's answer is forced
+    by 5 extra terms).
+(2) Ultimate periodicity mod m, m <= 64: smallest preperiod t <= 10, period P with
+    P + t <= (37 - 5)/2 (so at least 5 extra checks beyond one full period... need
+    a(n+P) == a(n) for all t <= n <= 37 - P, and 37 - P - t + 1 >= P + 5).
+(3) p-adic valuations v_p(a(N)) for p = 2, 3, 5, 7, frequency of p | a(N) vs 1/p.
+(4) Lucas-type congruences a(pn + k) == a(n) a(k) (mod p), a(0) = 1.
+
+(1) Berlekamp-Massey linear complexity L over F_p  (n terms; verified iff n >= 2L+5)
+    p : L(a 1..37)  min_k L(a k..37), k<=8  L(c 1..41)  L(c(2n), n<=20)
+    2 :   1    0 (k=2)    1    0 a-VERIFIED tail-VERIFIED c-VERIFIED c2-VERIFIED
+    3 :  17   14 (k=8)   21   10
+    5 :  19   15 (k=8)   20   10
+    7 :  19   16 (k=8)   21   10
+   11 :  19   15 (k=8)   21   10
+   13 :  19   15 (k=8)   21   10
+   17 :  19   15 (k=8)   21   10
+   19 :  19   15 (k=8)   21   10
+   23 :  19   15 (k=8)   21   10
+   29 :  19   15 (k=8)   21   10
+   31 :  19   15 (k=8)   21   10
+   37 :  19   15 (k=8)   21   10
+   41 :  19   15 (k=8)   21   10
+   43 :  19   15 (k=8)   21   10
+   47 :  19   15 (k=8)   21   10
+   53 :  19   15 (k=8)   21   10
+   59 :  19   15 (k=8)   21   10
+   61 :  19   15 (k=8)   21   10
+   67 :  19   15 (k=8)   21   10
+   71 :  19   15 (k=8)   21   10
+   73 :  19   15 (k=8)   21   10
+   79 :  19   15 (k=8)   21   10
+   83 :  19   15 (k=8)   21   10
+   89 :  19   15 (k=8)   21   10
+   97 :  19   15 (k=8)   21   10
+   verified short recurrences: [(2, ' a-VERIFIED tail-VERIFIED c-VERIFIED c2-VERIFIED')]
+
+(2) ultimate periodicity of a(N) mod m, m = 2..64 (with >= 5 extra checks)
+   periodic moduli (m, (start N, period)): [(2, (2, 1))]
+   (a(N) mod 2 = 0 for N >= 2 is the trivial hit if listed)
+
+(3) p-adic valuations v_p(a(N)), N = 1..37
+   p= 2: [0, 1, 2, 1, 2, 5, 8, 5, 5, 1, 4, 2, 3, 2, 4, 3, 2, 1, 3, 1, 1, 1, 2, 1, 2, 2, 3, 1, 7, 1, 4, 1, 5, 2, 2, 2, 1]   share divisible 0.97 (random 1/p = 0.50)
+   p= 3: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0, 1, 1, 0]   share divisible 0.24 (random 1/p = 0.33)
+   p= 5: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0]   share divisible 0.22 (random 1/p = 0.20)
+   p= 7: [0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]   share divisible 0.19 (random 1/p = 0.14)
+   p=11: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0]   share divisible 0.08 (random 1/p = 0.09)
+   p=13: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]   share divisible 0.08 (random 1/p = 0.08)
+
+(4) Lucas-type test a(pn+k) == a(n) a(k) (mod p), a(0)=1
+   p= 3: holds for 14/35 N  (chance ~ 11.7)
+   p= 5: holds for 6/33 N  (chance ~ 6.6)
+   p= 7: holds for 6/31 N  (chance ~ 4.4)
+   p=11: holds for 3/27 N  (chance ~ 2.5)
+   p=13: holds for 1/25 N  (chance ~ 1.9)
