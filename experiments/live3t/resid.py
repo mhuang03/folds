@@ -3,6 +3,7 @@
 # a + c <= N + 1), then the Live3r rules (bin/rcov256, nearTrB with <= K steps for the image,
 # nearTrP with YPSI=1, chiX), then the closed-form families OneTwo of Live3s.
 # ({1, 2, c} in OneTwo are dropped before rcov256, which is slow on the triples it cannot settle).
+# Env K12: step bound for {1, 2, c} (default K; 2 is much faster for large N).
 # Writes bin/l<N>.txt (Live3q residual minus OneTwo), bin/c<N>.txt (rcov hints); prints per N:
 #   N=.. q=<Live3q residual> T: <left by Covered3T, as a,b,c>
 import subprocess, sys, os
@@ -24,9 +25,15 @@ for N in range(N0, N1 + 1):
             S.add((a, b, c))
     lf = os.path.join(D, 'l%d.txt' % N)
     T = [t for t in sorted(S) if not ((t[0], t[1]) == (1, 2) and onetwo(N, t[2]))]
+    # K12 (env): a smaller step bound for the {1, 2, c} (and mirror {1, N - 1, N}) triples
+    K12 = os.environ.get('K12', K)
+    cov = ''
+    for part, k in (([t for t in T if t[:2] != (1, 2) and t[1:] != (N - 1, N)], K),
+                    ([t for t in T if t[:2] == (1, 2) or t[1:] == (N - 1, N)], K12)):
+        open(lf, 'w').write(''.join('%d %d %d %d\n' % (N, *t) for t in part))
+        cov += subprocess.run([os.path.join(D, 'rcov256'), lf, k], capture_output=True,
+                              text=True, env=env).stdout
     open(lf, 'w').write(''.join('%d %d %d %d\n' % (N, *t) for t in T))
-    cov = subprocess.run([os.path.join(D, 'rcov256'), lf, K], capture_output=True, text=True,
-                         env=env).stdout
     open(os.path.join(D, 'c%d.txt' % N), 'w').write(cov)
     left = [tuple(map(int, l.split()[1:4])) for l in cov.split('\n') if l.endswith('LEFT')]
     print('N=%d q=%d T: %s' % (N, len(S), ' '.join('%d,%d,%d' % t for t in left)))

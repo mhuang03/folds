@@ -208,16 +208,23 @@ theorem coReach_image_zAm {s j e : Nat} (hj2 : 2 ≤ j) (hjs : j ≤ s + 1) (he 
   · rw [hmem] at hx; rw [Finset.mem_Icc]; omega
   refine inward_of_cnt (F := FA s j e) (fun x hx1 hxN => hmem x) (FA_succ hj2 hjs he) ?_
   intro m hm1 hmN _
+  have hI : ∀ t, (if e = 1 ∧ t = 2 * j - 1 then 1 else 0) ≤ 1 ∧
+      ((if e = 1 ∧ t = 2 * j - 1 then 1 else 0) = 1 → t = 2 * j - 1) := by
+    intro t
+    split <;> omega
   refine cnt_ineq_split hm1 hmN (fun _ => ?_) (fun _ => ?_)
   · rw [FA_lo (t := 1) (by omega), FA_lo (t := m) (by omega), FA_lo (t := m + 1) (by omega)]
+    have h1 := hI 1; have h2 := hI m; have h3 := hI (m + 1); have h4 := hI (2 * m)
     rcases le_or_gt (2 * m) (2 * s + 2) with h | h
-    · rw [FA_lo h]; split_ifs <;> omega
-    · rw [FA_hi (by omega) (by omega)]; split_ifs <;> omega
+    · rw [FA_lo h]; omega
+    · rw [FA_hi (by omega) (by omega)]; omega
   · rw [FA_hi (t := 4 * s + 2 + 1) (by omega) (by omega), FA_hi (t := m) (by omega) (by omega),
       FA_hi (t := m + 1) (by omega) (by omega)]
+    have h1 := hI (4 * s + 2 + 1); have h2 := hI m; have h3 := hI (m + 1)
+    have h4 := hI (2 * m - (4 * s + 2))
     rcases le_or_gt (2 * m - (4 * s + 2)) (2 * s + 2) with h | h
-    · rw [FA_lo h]; split_ifs <;> omega
-    · rw [FA_hi (by omega) (by omega)]; split_ifs <;> omega
+    · rw [FA_lo h]; omega
+    · rw [FA_hi (by omega) (by omega)]; omega
 
 /-- `{1, j, p}` is co-reachable in the even strip `[p]` (`p < N`), by the induction
 hypothesis. -/
@@ -268,12 +275,156 @@ theorem coReach_one_b_N {N b : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q) 
     refine coReach3_of_mirror (by omega) (by omega) le_rfl ?_
     rwa [show N + 1 - N = 1 by omega, show N + 1 - 1 = N by omega]
 
+/-! ## `{1, 2, N}` for `N ≡ 4 (mod 8)`
+
+`N = 8t + 4`, `p = 4t + 4` (even).  The centred Beatty copy `Z(N, p)` in closed form is `zB t`:
+`k ↦ 2k - 1, 2k - 2, 2k - 3, 2k - 4` on the four quarters of `[p]`.  With the panel `2` sent
+from `3` to `2` it is regular outside `{1, 2, p}`, its image satisfies Theorem G with the centre
+`1/2`, and `{1, 2, N}` is the image of `{1, 2, p}`, which is not dead in the even strip `[p]`.
+(For `N ≡ 0 (mod 8)` the copy that settles `{1, 2, N}` numerically is `Z(N, N/2 + 2^(v - 1))`,
+`v = v₂(N)`, with `2^v` pieces; for `N = 2^k` there is none.) -/
+
+/-- `Z(8t + 4, 4t + 4)` in closed form. -/
+def zB (t k : Nat) : Nat :=
+  if k ≤ t + 1 then 2 * k - 1 else if k ≤ 2 * t + 2 then 2 * k - 2
+  else if k ≤ 3 * t + 3 then 2 * k - 3 else 2 * k - 4
+
+/-- `zB` with the panel `2` sent to `2`. -/
+def zBm (t k : Nat) : Nat := if k = 2 then 2 else zB t k
+
+theorem nearEmb_zBm {t : Nat} (ht : 2 ≤ t) :
+    NearEmb (8 * t + 4) (4 * t + 4) (zBm t) (fun k => k ≠ 2) := by
+  refine ⟨fun y h1 h2 => ?_, fun x y hx1 hxp hy1 hyp e' => ?_, fun k y hk1 hkp hR hy1 hyp => ?_,
+    fun k y hk1 hkp hR hy1 hyp => ?_⟩
+  · unfold zBm zB; split_ifs <;> omega
+  · unfold zBm zB at e'; split_ifs at e' <;> omega
+  · unfold zBm zB reach; split_ifs <;> omega
+  · unfold zBm zB reach; split_ifs <;> omega
+
+/-- The membership predicate of the image of `zBm t`. -/
+def PB (t x : Nat) : Prop :=
+  x = 1 ∨ x = 2 ∨ (x % 2 = 1 ∧ 5 ≤ x ∧ x ≤ 2 * t + 1) ∨ (x % 2 = 0 ∧ 2 * t + 2 ≤ x ∧ x ≤ 4 * t + 2)
+    ∨ (x % 2 = 1 ∧ 4 * t + 3 ≤ x ∧ x ≤ 6 * t + 3) ∨ (x % 2 = 0 ∧ 6 * t + 4 ≤ x ∧ x ≤ 8 * t + 4)
+
+instance (t x : Nat) : Decidable (PB t x) := by unfold PB; infer_instance
+
+theorem mem_image_zBm {t x : Nat} (ht : 2 ≤ t) :
+    x ∈ (Finset.Icc 1 (4 * t + 4)).image (zBm t) ↔ PB t x := by
+  rw [Finset.mem_image]
+  unfold PB
+  constructor
+  · rintro ⟨y, hy, rfl⟩; rw [Finset.mem_Icc] at hy; unfold zBm zB; split_ifs <;> omega
+  · intro h
+    by_cases h1 : x = 1
+    · exact ⟨1, Finset.mem_Icc.2 ⟨le_rfl, by omega⟩, by subst h1; simp [zBm, zB]⟩
+    by_cases h2 : x = 2
+    · exact ⟨2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by simp [zBm, h2]⟩
+    by_cases hq1 : x ≤ 2 * t + 1
+    · exact ⟨(x + 1) / 2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by
+        unfold zBm zB; split_ifs <;> omega⟩
+    by_cases hq2 : x ≤ 4 * t + 2
+    · exact ⟨(x + 2) / 2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by
+        unfold zBm zB; split_ifs <;> omega⟩
+    by_cases hq3 : x ≤ 6 * t + 3
+    · exact ⟨(x + 3) / 2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by
+        unfold zBm zB; split_ifs <;> omega⟩
+    · exact ⟨(x + 4) / 2, Finset.mem_Icc.2 ⟨by omega, by omega⟩, by
+        unfold zBm zB; split_ifs <;> omega⟩
+
+/-- The counting function of the image of `zBm t`. -/
+def FB (t u : Nat) : Nat :=
+  if u ≤ 2 then u - 1 else if u ≤ 4 then 2 else if u ≤ 2 * t + 2 then u / 2
+  else if u ≤ 4 * t + 3 then (u - 1) / 2 + 1 else if u ≤ 6 * t + 4 then u / 2 + 1
+  else if u ≤ 8 * t + 5 then (u - 1) / 2 + 2 else 4 * t + 4
+
+theorem FB_succ {t : Nat} (ht : 2 ≤ t) (u : Nat) :
+    FB t (u + 1) = FB t u + if PB t u then 1 else 0 := by
+  unfold FB PB; split_ifs <;> omega
+
+theorem FB_0 {t u : Nat} (h : u ≤ 2) : FB t u = u - 1 := by
+  unfold FB; split <;> omega
+theorem FB_1 {t u : Nat} (ht : 2 ≤ t) (h : 3 ≤ u) (h' : u ≤ 5) : FB t u = 2 := by
+  unfold FB; split_ifs <;> omega
+theorem FB_2 {t u : Nat} (h : 5 ≤ u) (h' : u ≤ 2 * t + 2) : FB t u = u / 2 := by
+  unfold FB; split_ifs <;> omega
+theorem FB_3 {t u : Nat} (ht : 2 ≤ t) (h : 2 * t + 2 ≤ u) (h' : u ≤ 4 * t + 3) :
+    FB t u = (u - 1) / 2 + 1 := by
+  unfold FB; split_ifs <;> omega
+theorem FB_4 {t u : Nat} (ht : 2 ≤ t) (h : 4 * t + 3 ≤ u) (h' : u ≤ 6 * t + 4) :
+    FB t u = u / 2 + 1 := by
+  unfold FB; split_ifs <;> omega
+theorem FB_5 {t u : Nat} (ht : 2 ≤ t) (h : 6 * t + 4 ≤ u) (h' : u ≤ 8 * t + 5) :
+    FB t u = (u - 1) / 2 + 2 := by
+  unfold FB; split_ifs <;> omega
+
+/-- The image of `zBm t` satisfies Theorem G (centre `1/2`). -/
+theorem coReach_image_zBm {t : Nat} (ht : 3 ≤ t) :
+    CoReach (8 * t + 4) ((Finset.Icc 1 (4 * t + 4)).image (zBm t)) := by
+  have hmem := fun x => mem_image_zBm (t := t) (x := x) (by omega)
+  refine coReach_of_inward (c2 := 1) (fun x hx => ?_) ?_
+  · rw [hmem] at hx; unfold PB at hx; rw [Finset.mem_Icc]; omega
+  refine inward_of_cnt (F := FB t) (fun x hx1 hxN => hmem x) (FB_succ (by omega)) ?_
+  intro m hm1 hmN hm
+  unfold PB at hm
+  refine cnt_ineq_split hm1 hmN (fun _ => ?_) (fun _ => ?_)
+  · rw [FB_0 (u := 1) (by omega)]
+    rcases Nat.lt_or_ge m 5 with h5 | h5
+    · rw [FB_1 (u := m) (by omega) (by omega) (by omega),
+        FB_1 (u := m + 1) (by omega) (by omega) (by omega), FB_2 (u := 2 * m) (by omega) (by omega)]
+      omega
+    rcases Nat.lt_or_ge m (2 * t + 2) with h6 | h6
+    · rw [FB_2 (u := m) h5 (by omega), FB_2 (u := m + 1) (by omega) (by omega)]
+      rcases Nat.lt_or_ge (2 * m) (2 * t + 2) with h7 | h7
+      · rw [FB_2 (u := 2 * m) (by omega) (by omega)]; omega
+      rcases Nat.lt_or_ge (2 * m) (4 * t + 3) with h8 | h8
+      · rw [FB_3 (u := 2 * m) (by omega) h7 (by omega)]; omega
+      · rw [FB_4 (u := 2 * m) (by omega) h8 (by omega)]; omega
+    · rw [FB_3 (u := m) (by omega) h6 (by omega), FB_3 (u := m + 1) (by omega) (by omega)
+        (by omega)]
+      rcases Nat.lt_or_ge (2 * m) (6 * t + 4) with h7 | h7
+      · rw [FB_4 (u := 2 * m) (by omega) (by omega) (by omega)]; omega
+      · rw [FB_5 (u := 2 * m) (by omega) h7 (by omega)]; omega
+  · rw [FB_5 (u := 8 * t + 4 + 1) (by omega) (by omega) (by omega)]
+    rcases Nat.lt_or_ge m (6 * t + 4) with h6 | h6
+    · rw [FB_4 (u := m) (by omega) (by omega) (by omega), FB_4 (u := m + 1) (by omega)
+        (by omega) (by omega)]
+      rcases Nat.lt_or_ge (2 * m - (8 * t + 4)) 3 with h7 | h7
+      · rw [FB_0 (u := 2 * m - (8 * t + 4)) (by omega)]; omega
+      rcases Nat.lt_or_ge (2 * m - (8 * t + 4)) 5 with h8 | h8
+      · rw [FB_1 (u := 2 * m - (8 * t + 4)) (by omega) h7 (by omega)]; omega
+      rcases Nat.lt_or_ge (2 * m - (8 * t + 4)) (2 * t + 2) with h9 | h9
+      · rw [FB_2 (u := 2 * m - (8 * t + 4)) h8 (by omega)]; omega
+      · rw [FB_3 (u := 2 * m - (8 * t + 4)) (by omega) h9 (by omega)]; omega
+    · rw [FB_5 (u := m) (by omega) h6 (by omega), FB_5 (u := m + 1) (by omega) (by omega)
+        (by omega)]
+      rcases Nat.lt_or_ge (2 * m - (8 * t + 4)) (6 * t + 4) with h7 | h7
+      · rw [FB_4 (u := 2 * m - (8 * t + 4)) (by omega) (by omega) (by omega)]; omega
+      · rw [FB_5 (u := 2 * m - (8 * t + 4)) (by omega) h7 (by omega)]; omega
+
+/-- **`{1, 2, N}` is co-reachable for `N ≡ 4 (mod 8)`, `N ≥ 28`**, given the smaller strips. -/
+theorem coReach_one_two_N8 {N : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q) (hN : N % 8 = 4)
+    (h28 : 28 ≤ N) : CoReach N {1, 2, N} := by
+  obtain ⟨t, ht⟩ : ∃ t, t = N / 8 := ⟨_, rfl⟩
+  have hNt : N = 8 * t + 4 := by omega
+  have hD := coReach_one_two_pre (p := 4 * t + 4) (g := 4 * t + 4) IH (by omega) (by omega)
+    (by omega) le_rfl (Or.inl (by omega))
+  have e3 : zBm t (4 * t + 4) = 8 * t + 4 := by unfold zBm zB; split_ifs <;> omega
+  have e1 : zBm t 1 = 1 := by unfold zBm zB; split_ifs <;> omega
+  have e2 : zBm t 2 = 2 := by unfold zBm; split_ifs <;> omega
+  have := coReach_one_two_near (nearEmb_zBm (by omega)) (coReach_image_zBm (by omega))
+    e1 e2 (by omega) le_rfl hD (fun j _ _ hj => by
+      simp only [Finset.mem_insert, Finset.mem_singleton, not_or] at hj; exact hj.2.1)
+  rw [e3] at this
+  rw [hNt]
+  exact this
+
 /-! ## The enlarged rules and the reduction -/
 
-/-- The parametric families of this file: `{1, b, N}` for `N ≡ 2 (mod 4)`, and `{1, 3, N}`,
-`{1, N - 2, N}` for `N ≡ 1 (mod 4)`. -/
+/-- The parametric families of this file: `{1, b, N}` for `N ≡ 2 (mod 4)`; `{1, 3, N}`,
+`{1, N - 2, N}` for `N ≡ 1 (mod 4)`; `{1, 2, N}`, `{1, N - 1, N}` for `N ≡ 4 (mod 8)`. -/
 def OneN (N a b c : Nat) : Prop :=
-  a = 1 ∧ c = N ∧ ((N % 4 = 2 ∧ 30 ≤ N) ∨ (N % 4 = 1 ∧ 17 ≤ N ∧ (b = 3 ∨ b + 2 = N)))
+  a = 1 ∧ c = N ∧ ((N % 4 = 2 ∧ 30 ≤ N) ∨ (N % 4 = 1 ∧ 17 ≤ N ∧ (b = 3 ∨ b + 2 = N)) ∨
+    (N % 8 = 4 ∧ 28 ≤ N ∧ (b = 2 ∨ b + 1 = N)))
 
 /-- `Covered3T` (Live3s) or one of the families `OneN`. -/
 def Covered3U (N a b c : Nat) : Prop := Covered3T N a b c ∨ OneN N a b c
@@ -281,13 +432,17 @@ def Covered3U (N a b c : Nat) : Prop := Covered3T N a b c ∨ OneN N a b c
 theorem coReach_of_covered3U {N a b c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
     (ha : 1 ≤ a) (hab : a < b) (hbc : b < c) (hcN : c ≤ N) (h : Covered3U N a b c) :
     CoReach N {a, b, c} := by
-  rcases h with h | ⟨rfl, rfl, ⟨h2, h30⟩ | ⟨h1, h17, rfl | hb⟩⟩
+  rcases h with h | ⟨rfl, rfl, ⟨h2, h30⟩ | ⟨h1, h17, rfl | hb⟩ | ⟨h8, h28, rfl | hb⟩⟩
   · exact coReach_of_covered3T IH ha hab hbc hcN h
   · exact coReach_one_b_N IH h2 h30 (by omega) (by omega)
   · exact coReach_one_three_N IH h1 h17
   · refine coReach3_of_mirror (by omega) (by omega) le_rfl ?_
     rw [show c + 1 - c = 1 by omega, show c + 1 - b = 3 by omega, show c + 1 - 1 = c by omega]
     exact coReach_one_three_N IH h1 h17
+  · exact coReach_one_two_N8 IH h8 h28
+  · refine coReach3_of_mirror (by omega) (by omega) le_rfl ?_
+    rw [show c + 1 - c = 1 by omega, show c + 1 - b = 2 by omega, show c + 1 - 1 = c by omega]
+    exact coReach_one_two_N8 IH h8 h28
 
 /-- **The residual statement with the families `OneN` removed.** -/
 def Residual3U (N : Nat) : Prop :=

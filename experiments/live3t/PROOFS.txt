@@ -1,0 +1,143 @@
+Live 3-prefixes, part 5: the residual to N = 200, and parametric families beyond {1, 2, c}
+=======================================================================================
+
+Notation as in experiments/live3p, live3q, live3r, live3s PROOFS.txt (valid steps, CoReach,
+Theorem G, near copies = Live3r Theorem 1, Good3, Covered3R, Covered3T, Residual3T).
+"Lean" refers to Folds/Live3t.lean (imports Folds.Live3s; no sorry, no native_decide; 44 s,
+2.75 GB peak with `lean -M 3000`, `Elab.async false`; lean.sh / memtime.py).
+
+STATUS
+  * NOT DONE: `forall N > 50, Residual3T N` is NOT proven (nor Residual3U, below).
+    The obstruction is point (A) of live3s, and it is structural, not a matter of more
+    families: Residual3T N quantifies over every valid non-dead triple of [N] that the rules
+    of Live3q / Live3r / Live3s do not settle, and those rules are existential hint searches
+    (transfers through ~N^2 copies, Theorem G after <= 2 steps, near copies with moves).  The
+    residual of Live3q's rules alone has 200-500 canonical triples per N (table of section 1),
+    in hundreds of corner families (a, b, N + 1 - d) whose covering near copies are centred
+    Beatty copies Z(N, p) with p depending irregularly on b (section 3).  A parametric
+    Residual3T would need a parametric description of that whole residual, i.e. a closed-form
+    analysis of the Live3q rules for every N; this is not attempted.  What is done:
+      - numerically: the residual of Covered3T for every N <= 200 (section 1);
+      - formally: closed-form proofs for all N of the two largest families beyond {1, 2, c}
+        that Live3r could only settle N by N, including the priority family {1, 3, N}.
+  * NUMERICAL (section 1): for N = 51..200 the residual of Covered3T consists ONLY of
+    triples {1, 2, c} (and, for N = 64 and N = 128, the mirror {1, N - 1, N} of {1, 2, N}).
+    The case {1, 3, 73} reported by live3s section 3' was an artefact: resid3t.py ran rcov
+    without YPSI=1, i.e. without the rule nearTrP that Covered3R contains; with it,
+    {1, 3, 73} is settled (and now also by the closed form coReach_one_three_N).
+  * PROVEN (Lean), for every N (given Good3 q for q < N, i.e. inside the induction):
+      coReach_one_three_N : N = 1 mod 4, N >= 17  ->  {1, 3, N} co-reachable
+                            (and {1, N - 2, N} by the mirror)
+      coReach_one_b_N     : N = 2 mod 4, N >= 30, 2 <= b <= N - 1  ->  {1, b, N} co-reachable
+    and the reduction with these families added:
+      Covered3U N a b c := Covered3T N a b c or OneN N a b c,
+      OneN N a b c      := a = 1, c = N, and (N = 2 mod 4, N >= 30, or N = 1 mod 4, N >= 17,
+                           b in {3, N - 2}),
+      Residual3U N      := the valid non-dead triples not settled by Covered3U are co-reachable,
+      residual3T_of_residual3U, good3_of_residual3U, residual3T_all_of_residual3U
+    (the last has the hypothesis shape of Live3Final.extends3_iff_of_residual3T).
+    Together with Live3r.coReach_one_even_N ({1, 2k, N}, N odd) the whole corner family
+    {1, b, N} is now parametric for N = 1, 2, 3 mod 4 wherever it occurs in Live3q's residual
+    ({1, 3, N} occurs there only for N = 1, 2 mod 4; odd b for odd N never occurs, b = 3 aside).
+  * NOT DONE: no new {1, 2, c} family (section 4).
+  * NUMERICAL: both closed forms checked for every N <= 201 (one3N.py, oneBN2.py: injective
+    increasing, irregular panels inside the preimage, preimage valid and not dead, the
+    complement rule), before the Lean proofs, which are for all N.
+
+
+1. The residual of Covered3T for N = 51..200 (resid.py, resid.txt)
+-----------------------------------------------------------------
+Pipeline per N: hints256 (the 256-bit version of live3r/hints128.c, witnesses off: NOWIT=1)
+gives the residual of Live3q's rules (no F3S, no transfer, no Theorem G after <= 2 steps, for
+the triple or its mirror; canonical orientation a + c <= N + 1); the {1, 2, c} in OneTwo are
+dropped; rcov256 (256-bit live3r/rcov.c; base limit raised from 2000 to 12000, which the
+128-bit version silently hit from N ~ 120 on) with YPSI=1 (nearTrP) and <= 4 steps for the
+image searches the Live3r rules.  Everything rcov256 finds is a hint of the Lean rule nearTrB /
+nearTrP / chiXB, so the lists below are UPPER bounds of the residual of Covered3T (rcov's
+search space is a subset of what Covered3R allows).  For N >= 141 the {1, 2, c} triples were
+searched with <= 2 image steps only (K12=2, for time), so those lines may over-report.
+RESULT (resid.txt has every N):
+  every triple left is {1, 2, c} except {1, 63, 64} (N = 64) and {1, 127, 128} (N = 128),
+  the mirror images of {1, 2, N};
+@@TABLE@@
+
+
+2. The two closed forms
+-----------------------
+(a) {1, 3, N}, N = 2p + 1, p even (Live3t.coReach_one_three_N).  Live3r's hint at N = 73 was
+    nearTrP with the right-aligned Beatty copy floor(73 y / 36), panels 1, 2 moved down by one,
+    and the complement through its enumeration (irregular at 2, 37).  In closed form:
+       phi13 : [p] -> [N],  1 -> 1, 2 -> 3, y -> 2y (3 <= y < p), p -> N
+    regular at every panel outside {1, 2, p} (omega on the arm ends); {1, 3, N} is the image of
+    {1, 2, p}, valid and not dead in the even strip [p] (Live3s.coReach_one_two_pre with g = p).
+       psi13 : [p + 1] -> [N],  1 -> 2, 2 -> 4, i -> 2i - 1 (3 <= i <= p), p + 1 -> 2p
+    enumerates the complement {2, 4, 5, 7, ..., 2p - 1, 2p}, regular outside {2, p + 1};
+    [2, p + 1] is valid in [p + 1] (reach 0) and [4, 2p] in [N] (reach 1, arms {2p - 1},
+    {2p + 1}); {2, p + 1} is not a dead pair, so it extends (ThinCover.conjectureC), and
+    Live3r.coReach_compl_nearEmb orders the complement.  The general step is
+    `coReach_image_two` (complement of a closed-form near copy through a second closed-form
+    near copy).
+(b) {1, b, N}, N = 4s + 2 (Live3t.coReach_one_b_N).  The largest family of Live3q's residual
+    for N = 2 mod 4 (about N of the ~300 triples; newfam.py), settled by Live3r with ~N
+    separate hints, all through Z(N, N/2 + 1).  In closed form, p = 2s + 2 (even) and
+       zA s k = 2k - 1 (k <= s + 1), 2k - 2 (k >= s + 2)        ( = floor(k (N + 2)/(p + 1)) )
+    (odd numbers up to 2s + 1, even numbers from 2s + 2: a window copy although it switches
+    class in the middle).  For 2 <= j <= s + 1 and e in {0, 1} the map zAm s j e (zA with
+    j -> 2j - 1 - e) is regular at every panel except j, its image satisfies Theorem G with
+    the centre 1/2 (counting function FA, `inward_of_cnt`, split along the two cases of the
+    reach and the two pieces of zA to keep omega small), and {1, j, p} is valid (ordering j, p,
+    1) and not dead in [p].  So {1, b, N} is the image of {1, b/2 + 1, p} with e = (b + 1) mod 2
+    for 2 <= b <= 2s + 1; the b >= 2s + 2 are the mirror images.  (For N = 0 mod 4 the same
+    copy has p odd and fails; Z(N, N/2 + 2) for N = 4 mod 8 settles the even b and the small
+    odd b with the centre 1/2 but not the odd b in (N/4, N/2] (oneBN3.py); not formalized.)
+
+
+3. Why the rest of Live3q's residual is not parametric here
+----------------------------------------------------------
+fams.py classifies the residual by the corner pair (a, N - c).  Besides {1, b, N} and {1, 2, c}
+it consists of many families {a, b, N - d} with a, d <= ~25 and b running through the middle,
+e.g. at N = 85: (3, 3): 35 triples, (3, 13): 14, (3, 6): 13, (3, 9): 12, (7, 7): 8, ... (about
+60 families).  rcov settles each by a near copy Z(N, p) with one or two moved panels, but p
+depends on b in an irregular, Diophantine way (at N = 77, {3, b, 74}: p = 15..20 as b runs,
+e.g. p = 20, 18, 16, 16, 16, 15, 17, 17, 15, ... for b = 6, 7, 8, 9, 12, 13, 16, 17, 19, ...);
+a closed form needs the window structure of floor(k (N + 2)/(p + 1)) for a b-dependent p,
+which omega cannot handle (division by a variable).  The parametric families now cover about
+13% of the residual of Live3q's rules for N = 51..100 (newfam.py: 1787 of 13345 triples,
+together with chiX), the rest still rests on the per-N hint search.
+
+
+4. {1, 2, c}: what was tried
+---------------------------
+The {1, 2, c} left for N <= 200 follow the patterns of live3s section 2:
+   N = 0 mod 4: nothing, except c = N for N = 64, 128 (the copy Z(N, N/2 + 2^(v-1)),
+                v = v_2(N), that settles {1, 2, N} otherwise would be [N] itself);
+   N = 2 mod 4: c = N - 1;
+   N = 1 mod 4: c = N - 2, N - 3, and some even c >= ~0.8 N (mostly c = 2 mod 4);
+   N = 3 mod 4: c = N - 3, N - 2, and for many N (59, 67, 71, 79, 83, 127, ...) every
+                c = 3 mod 4 above ~0.5 N.
+(a) zA gives a near copy from an EVEN strip for N = 2 mod 4 (the obstruction of live3r
+    section 5 assumed a single residue class): {1, 2, N - 1} = image of {1, 2, p - 1} under zA
+    with 3 -> 2 and 4s -> 4s + 1 (top12.py).  It is regular outside {2, p - 1}, but its image
+    has the two imbalanced panels 3 (pulled left) and N - 2 (pulled right) on the wrong sides,
+    and no <= 6 valid steps make it satisfy Theorem G (gk.c).  The variant with the preimage
+    {1, 2, p} (p -> N - 1) has an image satisfying Theorem G with the centre 1/2, but the
+    panel s + 1 becomes irregular (it sees N - 1 in its right arm, p is not in the right arm of
+    s + 1): the ghost problem of live3q section 4 (i).
+(b) The completions of live3r leftchk.txt for {1, 2, N - 1} start with the halving chain
+    N/2 + 1, N/2, ... and then need 20-50 unstructured steps; no parametric pattern found.
+Not formalized; the dense-top-structure lemma of live3s section 3(c) remains the missing piece.
+
+
+5. Files
+--------
+  resid.py, resid.txt   residual of Covered3T for N = 51..200 (section 1); bin/ (ignored) holds
+                        the binaries and the per-N lists l<N>.txt and hints c<N>.txt
+  hints256.c, rcov256.c 256-bit versions of live3r/hints128.c and rcov.c (clang -std=c2x,
+                        unsigned _BitInt(256)); build: clang -std=c2x -O2 -o bin/X X.c
+  nb.py                 helpers: regularity of a map, increasing, steps + Theorem G
+  one3N.py              check of the {1, 3, N} closed form (N <= 201)
+  oneBN.py, oneBN2.py   {1, b, N} through Z(N, N/2 + 1): search, and the exact Lean rule
+  oneBN3.py             N = 4 mod 8 through Z(N, N/2 + 2) (partial)
+  fams.py, newfam.py    classification of the Live3q residual; coverage by the closed forms
+  top12.py, gk.c        {1, 2, N - 1} through zA, and the step search for its image
+  lean.sh, memtime.py   compile against the prebuilt oleans of the main checkout
