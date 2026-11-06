@@ -1,0 +1,7 @@
+live3
+live3k
+gen
+scan
+*.o
+*.out
+bin/

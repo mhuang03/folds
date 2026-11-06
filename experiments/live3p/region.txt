@@ -1,0 +1,6 @@
+N=20 hard=70 max a=3 max N+1-c=3 hist none=70 k1=272 k2=62 k3=56
+N=24 hard=124 max a=4 max N+1-c=4 hist none=124 k1=500 k2=110 k3=116
+N=28 hard=246 max a=5 max N+1-c=5 hist none=246 k1=832 k2=182 k3=164
+N=32 hard=420 max a=6 max N+1-c=6 hist none=420 k1=1278 k2=272 k3=226
+N=36 hard=582 max a=7 max N+1-c=7 hist none=582 k1=1858 k2=386 k3=380
+N=40 hard=880 max a=8 max N+1-c=8 hist none=880 k1=2604 k2=540 k3=476
