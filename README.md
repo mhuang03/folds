@@ -236,6 +236,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/symrun/PROOFS.txt` | proof of the dyadic opening-run formula (Conjecture F′) via the φ/ψ halving states |
 | `experiments/live3q/PROOFS.txt` | 3-prefix liveness to N = 50, the residual families ({1,2,c}, {1,2k,N}, corner pairs + a middle point) |
 | `experiments/symratio/PROOFS.txt` | 3-AP-free: locality, an O(n³) algorithm for θ(n), **new terms θ(201..300)** beyond the OEIS b-file (`data/theta_exact.txt`), the refined Conjecture R′ (4^{−j} convergence; super-geometric when 3 ∣ x) |
+| `experiments/thetaext/` | **exact A003407 θ(n) for all n ≤ 2000** (`b003407.txt`; the OEIS b-file stops at 200) via an O(n³) window/trie algorithm with 45-prime CRT; r(n) and the Conjecture R′ evidence |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
