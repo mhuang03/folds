@@ -23,7 +23,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 | terms | a(1..38) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
 | congruences | a(N) ≡ c(N) (mod 4) (**proven**); 4 ∣ a(N) for N ≡ 3 (mod 4) (**proven**); no patterns modulo odd primes |
-| growth | **rigorously (N/512)^{N/22} ≤ a(N) ≤ N!·e^{−0.0769N(1+o(1))} (e^{−0.1146N} for even N)** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
+| growth | **rigorously (N/512)^{N/22} ≤ a(N) ≤ N!·e^{−0.0878N(1+o(1))} (e^{−0.1255N} for even N)** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
 | arithmetic effect | multiples of 3 sit above trend (all N ≤ 33). Mechanism: the 2-cycle {N/3, 2N/3} of the doubling map |
 
 Here T(N,k) is the number of valid k-step prefixes, and c(N) is the number of sequences
@@ -116,6 +116,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `PathLemma` (M) | the reduction `PathLemma.eventually_le` (Path Lemma ⇒ a(N) ≤ N!·e^{−ω(N)}); linear variant; the cyclic-defect step identity and the run bound on valid moves |
 | `Live6` (M) | swapped Beatty copies (`coReach_three`: {3,N−3} for N ≥ 37); the {1,4,6,…,N} copy (`coReach_one_half`); `Cov6`; **reduction** `extends_iff_not_dead`: the full liveness iff follows from one arithmetic covering lemma |
 | `MaxMoves` (M) | `card_moves_two_mod_four`: \|S\| ≡ 2 (mod 4) ⇒ at most ⌊2N/3⌋ valid moves (the conjectured ⌈2N/3⌉ for all even \|S\| is **false**: `moves_sixty`); improved upper bounds a(N) ≤ N!·e^{−0.1146N} (even N) and e^{−0.0769N} (odd N) |
+| `MaxMoves2` (M) | 2-adic valid-move bound `card_moves_two_adic` ((a+2)V ≤ (a+1)N for \|S\| = 2^a·odd) and its sharper version with an \|S\| term; upper bounds a(N) ≤ N!·e^{−0.1255N} (even) / e^{−0.0878N} (odd) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -199,6 +200,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/pathlemma/PROOFS.txt` | Path Lemma attempts: the potential identity, minimiser structure, open sub-problems |
 | `experiments/live6/PROOFS.txt` | swapped Beatty copies, the covering reduction for Conjecture C |
 | `experiments/maxmoves/PROOFS.txt` | maximum number of valid moves, the 2-adic bound, upper-bound constants |
+| `experiments/maxmoves2/NOTES.txt` | 2-adic bound, continuum maxima of V/N by \|S\|, constants |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
