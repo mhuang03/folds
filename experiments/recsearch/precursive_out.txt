@@ -2,7 +2,7 @@ a                      L=37  ansatze=146  max K=30  relations=0  max excess=+1 a
 a/N!                   L=37  ansatze=146  max K=30  relations=0  max excess=+1 at ODE r=1 d=0
 binom(a), a0=0         L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
 binom(a), a0=1         L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
-invbinom(a), a0=1      L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
+invbinom(a), a0=1      L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=2
 OGF log(1+A)           L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
 OGF exp(A)             L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
 OGF 1/(1+A)            L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=0
@@ -15,6 +15,6 @@ c(4n+1)                L=11  ansatze=  6  max K= 4  relations=0  max excess=+1 a
 c(4n)                  L=10  ansatze=  5  max K= 4  relations=0  max excess=+0 at REC r=1 d=0
 c(4n+2)                L=10  ansatze=  5  max K= 4  relations=0  max excess=+0 at REC r=1 d=0
 (a+c)/4 orbits         L=37  ansatze=146  max K=30  relations=0  max excess=+0 at REC r=1 d=0
-(a-c)/4                L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=0
+(a-c)/4                L=37  ansatze=146  max K=30  relations=0  max excess=+1 at REC r=1 d=1
 a(2n)                  L=18  ansatze= 31  max K=12  relations=0  max excess=+0 at REC r=1 d=0
 a(2n+1)                L=19  ansatze= 34  max K=12  relations=0  max excess=+0 at REC r=1 d=0

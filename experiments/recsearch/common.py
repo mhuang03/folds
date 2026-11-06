@@ -146,6 +146,23 @@ def analyze(rows, target_cols=None):
         if rk[m - 1] < K:
             nfit = m
     res = dict(K=K, E=E, rank=rank, nfit=nfit, excess=nfit - (K - 1), kernel=[])
+    if target_cols is not None:
+        # genuine near-miss measure: a prefix admits a solution with a non-zero target
+        # coefficient iff rank(prefix) < rank(prefix without target columns) + |T|.
+        keep = [i for i in range(K) if i not in set(target_cols)]
+        sub = [[row[i] for i in keep] for row in rows]
+        s1 = prefix_ranks(sub, P1)
+        s2 = prefix_ranks(sub, P2)
+        sk = [max(x, y) for x, y in zip(s1, s2)]
+        T = len(target_cols)
+        nfg = 0
+        for m in range(1, E + 1):
+            if rk[m - 1] < sk[m - 1] + T:
+                nfg = m
+        keff = sk[-1] + T
+        res['keff'] = keff
+        res['nfit'] = nfg
+        res['excess'] = nfg - (keff - 1)
     if rank < K:
         ker = rational_kernel(rows)
         res['kernel'] = ker
@@ -156,7 +173,8 @@ def analyze(rows, target_cols=None):
 
 def fmt(res):
     s = (f"K={res['K']:3d} E={res['E']:3d} spare={res['E'] - res['K']:3d} "
-         f"rank={res['rank']:3d} nfit={res['nfit']:3d} excess={res['excess']:+d}")
+         f"rank={res['rank']:3d} "
+         f"{('Keff=%d ' % res['keff']) if 'keff' in res else ''}nfit={res['nfit']:3d} excess={res['excess']:+d}")
     if res['kernel']:
         s += f"  KERNEL dim {len(res['kernel'])}"
         if 'genuine' in res:
