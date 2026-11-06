@@ -1,0 +1,8 @@
+N=7 a=256 I=176 J=48
+size #copies #neutral firstNeutralMass firstCopyMass copyPrefixMass
+1 7 0 0 0 256
+2 8 0 0 160 160
+3 4 1 40 40 80
+4 1 1 40 8 40
+5 0 0 0 0 0
+6 0 0 0 0 0

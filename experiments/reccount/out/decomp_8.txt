@@ -1,0 +1,9 @@
+N=8 a=1120 I=920 J=200
+size #copies #neutral firstNeutralMass firstCopyMass copyPrefixMass
+1 8 0 0 0 1120
+2 11 0 0 712 712
+3 4 0 0 148 296
+4 5 2 200 60 300
+5 0 0 0 0 0
+6 0 0 0 0 0
+7 0 0 0 0 0

@@ -1,0 +1,11 @@
+N=10 a=17878 I=14390 J=3006
+size #copies #neutral firstNeutralMass firstCopyMass copyPrefixMass
+1 10 0 0 0 17878
+2 17 0 0 11668 11668
+3 8 0 0 2176 4352
+4 9 1 960 644 3220
+5 2 2 1568 224 1568
+6 1 1 960 160 960
+7 0 0 0 0 0
+8 0 0 0 0 0
+9 0 0 0 0 0

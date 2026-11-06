@@ -1,0 +1,262 @@
+RECURSIVE CONSTRUCTIONS AND RECURSIVE COUNT FORMULAS            (experiments/reccount/)
+=====================================================================================
+
+Question: can recursive construction methods give direct recursive count formulas for a(N)?
+
+Short answer.
+ * Every natural constructible family has an EXACT recursion (sections 1-2), verified
+   against brute-force enumeration of all valid sequences for N <= 15.  Every such family
+   is an exponentially small part of a(N).
+ * a(N) has an EXACT one-level decomposition whose product part is explicit:
+       a(N) = 2 a(⌊N/2⌋) a(⌈N/2⌉) + 2 Σ_{d | N, d odd, 3 <= d < N} a(jN/d) a((j+1)N/d) + I(N),
+   with j = (d-1)/2.  Here I(N) counts the sequences none of whose prefix sets is "neutral".
+   The identity is checked for N <= 24.  Its ingredients are proven in Lean, and the
+   two-term case (parity plus one doubling split) is proven as a theorem.  But I(N)/a(N) -> 1
+   (0.999 at N = 23, 24), so the product part does NOT capture the bulk (section 3).
+ * Replacing "neutral" by "window copy" gives a second exact identity with UNIVERSAL
+   coefficients J(k):  a(N) = J(N) + Σ_{k=2}^{N-1} J(k) C_N(k).  Its remainder J(N)/a(N) is
+   stable at about 0.18-0.19 for N <= 24, but the coefficients C_N(k) are sums of g(Xᶜ),
+   which are not polynomials in a(1..N-1) (section 4).
+ * Conclusion (section 5): any formula a(N) = F(a(1..N-1)) + E(N) in which F is built from
+   exact product constructions has E(N)/a(N) -> 1 on the data.  No such F captures the bulk.
+
+Notation.  V(S, m): the step is valid iff |S ∩ L_m| = |S ∩ R_m| (arms of reach
+min(m-1, N-m)).  g(S) = number of valid orderings of S from scratch.  Reversal gives
+#{w : first k panels = S} = g(S) g(Sᶜ) (Lean: card_prefix_eq).
+ * X is a (window) COPY if X is balanced around each of its own elements; equivalently, its
+   increasing enumeration is a WinEmb (Copies.lean, CountEmb.winEmb_iff).
+ * X is NEUTRAL if X is balanced around every panel of [1, N]; equivalently, X and Xᶜ are
+   both copies.  Since [1, N] is balanced everywhere, Xᶜ is a copy iff X is balanced around
+   every point of Xᶜ.  So neutral = "split" in the sense of Growth.Split.
+
+Files
+ families.c        brute force: enumerates every valid sequence for N <= 15 and tests
+                   membership in each family (rules P, C, H, T, G below; parts are
+                   standardised and looked up recursively).  Output: out/families.txt.
+ r2c.py            the exact recursions for R2, R2c, R3 (Prim constants from class orders).
+                   Output: out/r2c.txt (N <= 22); `python3 r2c.py 18 R3` for R3.
+ decomp.c          subset DP for N <= 24 (about 600 MB at N = 24): copies and neutral sets,
+                   I(N), J(N), first-copy masses.  Outputs: out/decomp_N.txt, sets_N.txt,
+                   copyJ_N.txt.
+ check_identities.py   checks identities (A) and (B) below for N <= 24 from those files.
+ neutral.py        neutral sets via the doubling form; checks the characterisation for N <= 60.
+ copyinfo.c        g(X) versus a(|X|), and g(Xᶜ) versus a(N-|X|) for copies (out/copyinfo.txt).
+ showsets.py       prints the neutral sets.
+
+
+1. THE FAMILIES AND THEIR EXACT RECURSIONS
+------------------------------------------
+Rules: a family F has F(1) = {[1]}.  For N >= 2, w is in F(N) iff w is valid and one of the
+family's rules applies, with every part (standardised by increasing enumeration) in F.
+  P  parity blocks: the first (N+c)/2 panels form parity class c.
+  C  q | N, 2 < q < N: blocks are whole residue classes mod q, and the class order π
+     (read as a sequence of the q-strip) is in F(q).
+  H  any 3 <= q <= N/2: blocks are whole residue classes mod q, in any order such that w is
+     valid (a residue chain; q need not divide N).
+  T  a cut whose prefix set is neutral.
+  G  any cut (both standardised parts in F).
+Families: R1 = {P}, R2 = {P,C}, R2c = {P,C,H}, R3 = {P,C,H,T}, R4 = {P,C,H,T,G}.
+One-level variants (parts only need to be valid): U1 = {P,H,T}, G1 = {G}.
+
+ N        a(N)  R1     R2     R2c     R3        R4       U1        G1
+ 1           1   1      1      1       1         1        1         1
+ 2           2   2      2      2       2         2        2         2
+ 3           4   4      4      4       4         4        4         4
+ 4          10   8      8      8       8        10        8        10
+ 5          28  16     16     16      16        28       16        28
+ 6          96  32     64     64      64        94       72        94
+ 7         256  64     64     96      96       256      112       256
+ 8        1120 128    128    224     224      1068      296      1076
+ 9        4256 256    512    512     768      3910     1328      3982
+10       17878 512   1024   1664    2176     15202     4192     15724
+11       70960 1024  2048   2944    2944     55116     6560     58572
+12      383476 2048 10240  13824   14848    276444    43904    304128
+13     1620328 4096  8192  16896   16896    955152    57312   1096226
+14     9167908 8192 16384  58880   77312   4729884   387904   5713848
+15    47821296 16384 49152 100864 236032  21449768  2416848  27362380
+Fractions at N = 15: R1 3.4e-4, R2 1.0e-3, R2c 2.1e-3, R3 4.9e-3, U1 0.051, G1 0.572,
+R4 0.449.  R4/a falls steadily (0.954 at N = 8, 0.72 at N = 12, 0.45 at N = 15), as does
+G1/a.  R4(N) = a(N) for N <= 5 and for N = 7: every valid 7-sequence has a cut into two
+valid halves.
+
+1.1  R1(N) = 2 R1(⌊N/2⌋) R1(⌈N/2⌉),  so R1(N) = 2^{N-1}.            [Lean: card_parFam]
+     The two block orders give disjoint images (the first panel has a different parity),
+     and blockMap is injective.  Verified N <= 15.
+
+1.2  R2 (residue compositions, outer order recursive).  Exact recursion:
+        R2(1) = 1,   R2(N) = P(N)[N = 2 or N odd] + Σ_{q | N, 1 < q < N} P(q) R2(N/q)^q,
+        P(2) = 2,   P(q) = 0 for even q >= 4,   P(q) = 2 R2((q+1)/2) R2((q-1)/2) for odd q >= 3.
+     Values: 1, 2, 4, 8, 16, 64, 64, 128, 512, 1024, 2048, 10240, 8192, 16384, 49152, 32768,
+     131072, 1703936, 1048576, 2621440, 6291456, 12582912 (N = 1..22).  Matches brute force
+     for N <= 15.
+     Proof (paper).
+      (i) Decompositions mod q and mod q' (both with classes of size >= 2) can coexist only
+          if q' | q or q | q'.  The smaller first block is a prefix of the larger one.  A
+          class mod Q with >= 2 elements lies inside a class mod Q' only if Q' | Q.
+     (ii) A sequence is a q-composition and a q'-composition (q' | q) iff π is a
+          q'-composition of the q-strip, with the inner (q/q')-compositions automatically
+          in the family.
+    (iii) Classify each sequence by its smallest modulus.  The outer orders that are not
+          compositions for a proper divisor are counted by P(q).  For q = 2 that is both
+          orders.  For even q >= 4 there are none, since parity is the divisor-2 composition.
+          For odd q they are exactly the odd-N parity-block orders, because these are never
+          divisor compositions (an odd-modulus class with >= 2 elements has both parities).
+          This gives a DISJOINT sum, with no inclusion-exclusion.
+
+1.3  R2c (residue chains for every q <= N/2, any valid class order, inner orders recursive):
+        R2c(N) = Σ_{q ∈ {2} ∪ [3, N/2]} Prim(N, q) Π_{s=1}^{q} R2c(n_s),
+        n_s = #{x <= N : x ≡ s (mod q)}.
+     Prim(N, q) is the number of class orders π that satisfy two conditions.
+      * ChainOK: the union of the earlier classes is balanced around every panel of the next
+        class.  Given valid inner orders, this is exactly the condition for w to be valid,
+        because classes are window copies (winEmb_res).
+      * Not coarsenable: for no divisor 1 < q' < q of q are the classes contiguous by
+        residue mod q' with a ChainOK q'-level order.
+     Same proof as 1.2: overlaps happen only along divisibility, and every mod-q class has
+     >= 2 elements, so the coarser q'-blocks are automatically admissible chains.
+     Prim values are in out/r2c.txt, e.g. N = 16: q=2:2, 3:2, 4:2, 5:6, 6:2, 7:48, 8:888.
+     For q | N the number of ChainOK orders is a(q) (q = N/2: 1120 = a(8) at N = 16).
+     R2c(1..22) = 1, 2, 4, 8, 16, 64, 96, 224, 512, 1664, 2944, 13824, 16896, 58880, 100864,
+     407552, 483328, 3938304, 3323904, 24688640, 24141824, 174374912.  Matches brute force
+     for N <= 15.
+
+1.4  R3 (adds splits at neutral sets).  The proper neutral sets are exactly
+     E_N = {evens, odds} ∪ {E_d, E_dᶜ : d | N odd, 3 <= d < N}, with
+     E_d = {x : x mod d ∈ {2, 4, ..., d-1}} (section 3), and they form an antichain.  Hence
+        R3(N) = |A| + Σ_{X ∈ E_N, X not a parity class} R3(|X|) R3(N-|X|) - |A ∩ B|,
+     where:
+      * |A| is the R2c sum above with R3 in place of R2c;
+      * |A ∩ B| = Σ_q Σ_{π non-coarsenable ChainOK} #{proper initial segments of π whose
+        union of classes lies in E_N \ parity} · Π_s R3(n_s).
+     Values (r2c.py R3): 1, 2, 4, 8, 16, 64, 96, 224, 768, 2176, 2944, 14848, 16896, 77312,
+     236032, 407552, 598016, 5838848.  Matches brute force for N <= 15.
+
+1.5  R4 / G1 (general two-block splits).  No closed recursion.  The exact recursion is the
+     membership rule itself: R4(N) = #{valid w : some cut has both standardised parts in R4,
+     or rule C/H applies}.  The general slip lemma (SuperExp3) gives the condition on the two
+     parts, but the conditions couple them, so the count is not a product.  The data show
+     R4/a and G1/a decreasing.
+
+
+2. WHICH SETS X HAVE g(X) = a(|X|)?   [data: out/copyinfo.txt, N = 8..22, 2 <= |X| <= N-2]
+------------------------------------
+ * Proven (Lean g_winEmb): every window copy X has g(X) = a(|X|).
+ * Data: g(X) <= a(|X|) for EVERY X, with equality ONLY for copies.  The largest ratio for a
+   non-copy is 0.9414 (N >= 12).  Conjecture (copy maximality): g(X) <= a(|X|), with
+   equality iff X is a copy.
+ * For a copy X, g(Xᶜ) = a(N-|X|) iff X is neutral.  For non-neutral copies the data give
+   g(Xᶜ)/a(N-|X|) <= 0.86, and it is often much smaller.  So g(Xᶜ) for a copy is
+   "recursive" (a single a-value) exactly in the neutral case, and otherwise it is a
+   genuinely new quantity (a completion count).
+ * Copies are rare beyond size 2: at N = 24 there are 96, 128, 273, 136, 300 copies of sizes
+   2..6, and only a handful above N/2.
+
+
+3. THE NEUTRAL DECOMPOSITION  (identity (A))
+--------------------------------------------
+3.1 Characterisation of neutral sets.  Balance around m in the left half reads
+P(2m-1) = P(m-1) + P(m), where P(y) = |X ∩ [1, y]|.  The right half reads the same with the
+cyclic extension P~(N + z) = |X| + P(z).  Taking differences, with x the indicator of X and
+indices mod N:
+        X neutral  <=>  y_{2k} = y_k for all k ∈ Z/N,  where y_k = x_k + x_{k+1}.
+So y is constant on the weakly connected components of the doubling map k -> 2k (mod N).
+Enumerating y ∈ {0,1,2}^components (neutral.py) gives, for every N <= 60 (and by brute force
+over all subsets for N <= 24):
+        proper neutral sets = {evens, odds} ∪ {E_d, E_dᶜ : d | N, d odd, 3 <= d < N}.
+(For odd N the parity classes are E_N and E_Nᶜ.)  The E_d are the doubling sets of
+Copies.lean (evenRes / oddRes, split_res).  In y-language: y ≡ 1 gives the parity classes,
+and y = 1 - [d | k] gives E_d.  For N = 2^L only the parity classes are neutral.  A full
+proof of "only these" is open.  The gap-parity constraints (between consecutive points of
+Z = {y ≠ 1}, x alternates, so equal y-values need odd gaps) together with the invariance of
+Z under doubling should force Z = dZ/N.
+
+3.2 The sets in E_N form an antichain.  2 ∈ E_d and 1 ∉ E_d.  E_d contains the odd panel
+d+2.  E_d misses the even panel d+1.  E_d ⊄ E_{d'} for d < d' (the panel d+2 has residue
+0 or an odd residue mod d').  The complements follow by duality.  Hence a sequence has at
+most one prefix set in E_N, and by Split.card_prefix each X contributes exactly
+a(|X|) a(N-|X|):
+
+  (A)  a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2 Σ_{d|N odd, 3<=d<N} a(jN/d) a((j+1)N/d) + I(N),
+       where I(N) = #{w : no proper prefix set of w is neutral}.
+
+Verified for N <= 24 (check_identities.py).  The neutral sets found by brute force have
+g = a(|X|) and g(Xᶜ) = a(N-|X|), and no nested neutral prefixes ever occur.  Lean proves
+(A) up to the characterisation, in two forms:
+ * semiCount_eq_sum_splits: for any antichain of split sets;
+ * semiCount_eq_parity_add and semiCount_eq_parity_doubling_add: explicit instances
+   (parity only; parity together with one E_d, for N = (2j+1)n, n >= 2).
+
+Behaviour of the remainder:
+ N    a(N)                 product part        I(N)/a(N)
+ 8    1120                 200                 0.8214
+ 12   383476               40832               0.8935
+ 16   276182312            2508800             0.9909
+ 18   10084180418          149901184           0.9851
+ 20   398874108930         1498232008          0.9962
+ 22   18168130281086       23782211056         0.9987
+ 24   979730153850974      912756064032        0.9991
+The product part is dominated by the parity term, whose share falls like a(N/2)²/a(N).
+Multiples of 3 keep the E_3 term (a(N/3)a(2N/3)), which is of the same order as the parity
+term and is the mod-3 bump.  I(N) carries essentially all of a(N).  Since neutral sets never
+nest, iterating the identity inside I(N) gains nothing: chains of length >= 2 do not exist.
+
+3.3 Möbius/first-passage remark.  For a general family closed under differences (neutral
+sets are: X ⊂ Y neutral ⟹ Y \ X neutral), the chain formula
+a(N) = Σ_{chains ∅ ⊂ X1 ⊂ ... ⊂ [N]} (-1)^{k} Π a(|X_i \ X_{i-1}|) + I(N) holds.  Because the
+neutral sets form an antichain, it collapses to (A).
+
+
+4. THE FIRST-COPY DECOMPOSITION  (identity (B))
+-----------------------------------------------
+Classify w by the first time t in [2, N-1] at which S_t is a window copy (singletons are
+always copies and are excluded), or as copy-indecomposable.  Let J(p) be the number of valid
+p-sequences with no copy prefix of size 2..p-1.
+
+Lemma (paper; data: J_N(X) is constant over all copies of size k, N <= 24).  If X is a copy
+with enumeration φ, and S ⊆ X, then S is a copy in the N-strip iff φ⁻¹(S) is a copy in the
+|X|-strip.  Reason: being a copy means being balanced around one's own elements, and
+balance of subsets of X around points of X transfers through the window embedding.  So the
+orderings of X with no earlier copy prefix number exactly J(|X|), for every copy X.
+
+  (B)  a(N) = J(N) + Σ_{k=2}^{N-1} J(k) · C_N(k),     C_N(k) = Σ_{X copy, |X| = k} g(Xᶜ),
+       and #{w : S_k(w) is a copy} = a(k) C_N(k).
+
+Verified for N <= 24.  J(1..24) = 1, 2, 2, 2, 4, 16, 48, 200, 648, 3006, 11568, 67400,
+275252, 1655592, 8582080, 49233728, 261176328, 1898167362, 9961242836, 74418152926,
+470452884698, 3367168722958, 21839435343552, 184122863368742.
+J(N)/a(N) = 0.1758 (N=12), 0.1783 (16), 0.1882 (18), 0.1866 (20), 0.1853 (22), 0.1879 (24):
+STABLE, roughly 0.18-0.19, with no trend to 0.  Copies of size 2 carry about 63% of a(N).
+(B) has universal coefficients J(k), but C_N(k) involves g(Xᶜ), which by section 2 equals
+a(N-k) only for neutral X.  So (B) is a recursion for a in terms of a and completion counts,
+not a closed recursion.
+
+
+5. MIXED FORMULAS  a(N) = F(a(1..N-1)) + E(N)
+--------------------------------------------
+ * Best fully exact, fully proven-type F: the neutral sum in (A).  Then E = I(N), and
+   E/a -> 1 (0.999 at N = 24).
+ * Adding every exact one-level product construction (parity, all residue chains with
+   arbitrary valid inner orders, neutral splits: U1) still gives F/a = 0.05 at N = 15,
+   decreasing (0.32 at N = 9, 0.11 at N = 12).  Each of these is a polynomial in a(·) with
+   chain-order coefficients (section 1.3 with a in place of R2c).
+ * Two-block splits with valid halves (G1) reach 57% at N = 15 but decrease.  Their count is
+   not a polynomial in a(·), because the slip conditions couple the halves.
+ * Identity (B) has a structured remainder J(N) ≈ 0.18 a(N), but its F is not a polynomial
+   in a.
+So, on all the evidence, no "construction polynomial" F captures the bulk of a(N).  The
+typical valid sequence never passes through a neutral set, and its copy prefixes have
+complements whose completion counts are not a-values.  This is consistent with the
+non-D-finiteness and with the super-exponential gap between construction lower bounds
+(exponent <= 1/6) and the true growth.
+
+
+6. LEAN  (Folds/RecCount.lean, no sorry, no native_decide)
+----------------------------------------------------------
+ parFam, parFam_subset, card_parFam : #parFam N = 2^(N-1)  (N >= 1)
+ card_prefix_eq        #{w : first k panels = S} = g(S) g([1,N] \ S)
+ g_winEmb              g(φ[1,p]) = a(p) for a window embedding φ
+ Split.compl_image, Split.card_prefix  #{w starting with X} = a(p) a(q) for a split
+ semiCount_eq_sum_antichain, semiCount_eq_sum_splits   the antichain decompositions
+ semiCount_eq_parity_add            a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + #rest  (N >= 2)
+ semiCount_eq_parity_doubling_add   a((2j+1)n) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2a(jn)a((j+1)n) + #rest
+                                    (j >= 1, n >= 2)

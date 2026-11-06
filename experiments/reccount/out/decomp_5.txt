@@ -1,0 +1,6 @@
+N=5 a=28 I=12 J=4
+size #copies #neutral firstNeutralMass firstCopyMass copyPrefixMass
+1 5 0 0 0 28
+2 4 1 8 20 20
+3 1 1 8 4 8
+4 0 0 0 0 0

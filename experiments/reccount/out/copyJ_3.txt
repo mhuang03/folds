@@ -1,0 +1,1 @@
+2 J[min,max]=2 2 g[min,max]=2 2
