@@ -46,6 +46,7 @@ import Folds.LabellingSAT4CertsH
 import Folds.LabellingSAT4
 import Folds.Live5
 import Folds.Live6
+import Folds.Live7
 import Folds.RecCount
 import Folds.Neutral
 import Folds.Upper

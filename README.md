@@ -118,6 +118,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `MaxMoves` (M) | `card_moves_two_mod_four`: \|S\| ≡ 2 (mod 4) ⇒ at most ⌊2N/3⌋ valid moves (the conjectured ⌈2N/3⌉ for all even \|S\| is **false**: `moves_sixty`); improved upper bounds a(N) ≤ N!·e^{−0.1146N} (even N) and e^{−0.0769N} (odd N) |
 | `MaxMoves2` (M) | 2-adic valid-move bound `card_moves_two_adic` ((a+2)V ≤ (a+1)N for \|S\| = 2^a·odd) and its sharper version with an \|S\| term; upper bounds a(N) ≤ N!·e^{−0.1255N} (even) / e^{−0.0878N} (odd) |
 | `SuperExp4` (M) | upper odd slip positions + reversal averaging; `self_pow_le_semiCount_pow_17`: N^N ≤ 2^{11N}·a(N)^{17} for all N ≥ 1 |
+| `Live7` (M) | centred Beatty copies Z(N,p) = {⌊k(N+2)/(p+1)⌋}; {3,N−2}, {5,N−4} co-reachable; 65 witness orderings via the bitmask checker; **Conjecture C proven for every N ≤ 64** (`extends_iff_not_dead_le_64`); for N ≥ 65 it reduces to `CoverAt E7 N` (checked to N = 2665) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -161,9 +162,9 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
    valid prefixes for N ≤ 31). The Adjacent Lemma, co-reachability of every interval,
    and {1,N} for odd N ≠ 7 are now **proven** (Lean). The Lean family covers every
-   non-dead pair at N = 100 and 130. Lean reduces the full iff to an arithmetic covering
-   lemma about Beatty sets (verified numerically to N = 520), plus the power-of-2
-   families (3, 2^k−2), (5, 2^k−4) and 19 small pairs. See `experiments/live6/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
+   non-dead pair at N = 100 and 130. **Proven in Lean for every N ≤ 64.** For N ≥ 65 it
+   reduces to a Beatty-set covering statement, checked by computer up to N = 2665, with
+   a partial paper proof (same-parity pairs done). See `experiments/live7/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
    `experiments/live2/PROOFS.txt`.
 
 ## Where things are
@@ -203,6 +204,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/maxmoves/PROOFS.txt` | maximum number of valid moves, the 2-adic bound, upper-bound constants |
 | `experiments/maxmoves2/NOTES.txt` | 2-adic bound, continuum maxima of V/N by \|S\|, constants |
 | `experiments/superexp4/PROOFS.txt` | all-N exponent 1/17; why odd N has no free slips; truncation fails for slip chains |
+| `experiments/live7/PROOFS.txt` | centred Beatty copies, the covering statement and its partial proof |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences

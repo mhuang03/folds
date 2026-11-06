@@ -1,0 +1,116 @@
+Live pairs, part 7: centred Beatty copies Z(N, p), the power-of-two pairs, witness orderings,
+Conjecture C for N <= 64, and what remains of the covering statement
+==========================================================================================
+
+Notation as in experiments/live6/PROOFS.txt.  Lean = Folds/Live7.lean (no sorry, no native_decide;
+every `decide` is one witness ordering or one N of the covering search).
+
+STATUS
+  (R2) SOLVED, in a stronger form: {3, N - 2} is co-reachable for every N >= 30 and {5, N - 4}
+       for every N >= 59 (`coReach_three_two`, `coReach_five_four`), in particular for N = 2^k.
+  (R3) SOLVED: explicit witness orderings for all 57 hard-core pairs of live6 with N <= 128 and
+       for 8 more small pairs (N <= 28) that only the doubling splits settle; one small
+       `decide` each with a bitmask checker (`witB`, `coReach_of_witB`).
+  (R1) Reduced and verified, NOT proven for all N:
+       * Lean: Conjecture C for 2-prefixes holds for every N <= 64, unconditionally
+         (`coReach_le_64`, `extends_iff_not_dead_le_64`): the covering statement for
+         13 <= N <= 64 is checked by a verified Boolean search (`coverB`, `cover_of_coverB`).
+       * Lean: for all N, Conjecture C follows from the covering statement for N >= 65 alone
+         (`coReach_of_cover_large`), or from `CoverLemma7 E7` (`coReach_of_cover7_E7`,
+         `extends_iff_not_dead_E7`).
+       * Computation (cover7.c, faithful to Settled7): the covering statement holds for every
+         13 <= N <= 2665 (cover7_2665.txt; the run was stopped by the time limit there), with no exceptions at all beyond N = 35 once Z is
+         available (core7.py: the hard core with Z is 13..35 only).
+       * Paper: the same-parity pairs (u = v mod 2) are covered for all N (section 4); the
+         mixed-parity pairs are the open part.
+
+1. Centred Beatty copies Z(N, p)
+--------------------------------
+For 1 <= p, 2p <= N, M = N + 2, q = p + 1:
+    Z(N, p) = { floor(k M / q) : 1 <= k <= p }
+(the interior division points of [0, N + 2] into p + 1 equal parts).  THEOREM: Z(N, p) is a
+window copy of [p] and satisfies Theorem G with the centre in the middle of the strip.
+This is exactly the "two-sided Beatty copy" asked for: read from the left its elements are
+floor(kM/q), read from the right N + 1 - floor((q - k)M/q) = floor((kM - 1)/q), i.e. a Beatty
+pattern of the same slope from both ends with phases 0 and 1.  (Search: tb4.py/tb6.py found the
+two-sided copies TB with slope (N+2)/(p+1) and phases (0,1) work for ALL N, p, L; the split point L
+turned out irrelevant, TB = Z.  wfam.py: among the windows of Beatty sets with period N + d, d <= 4,
+only d = 0 (the Beatty copies X(N, p, h)) and d = 2 (Z and its mirror) are always inward copies.)
+Proof.  Counting function c(t) = floor((qt + q - 1)/M) = beattyCnt M q 0 t, c(N) = p.
+  Copy condition (Copies.CopyAt): write jM = q z_j + s, 0 <= s < q.
+    left half:  c(2 z_j - 1) = floor((2jM - 2s - 1)/M) = 2j - 1   (1 <= 2s + 1 < 2q <= M);
+    right half: c(2 z_j - N - 1) = floor((2jM - 2s + 2q - 1)/M) - q = 2j - q   (2q - 1 - 2s in [1, M)).
+  Theorem G, m not in Z:  left half (2m <= N + 1): 2c(m - 1) <= c(2m - 1) (Live5 beatty_key for
+  (M, q, 0)); right half: c(2m - N - 1) + p <= 2c(m - 1): with qm - 1 = xM + r, m not in Z gives
+  r + q < M, and c(2m - N - 1) + q = floor((2qm + 2q - 1)/M) <= 2x + 1.  Centre c2 = 2((N+1)/2)+1.
+  Lean: `countEmb_z`, `copyAt_z`, `winEmb_z`, `inward_z`, `coReach_z`, `coReach_z_transfer`.
+Corner pairs (`coReach_z_corner`, `zF_corner`): p odd != 7, c(p+1) < N + 2 < (c+1)(p+1) gives
+{c, N + 1 - c} co-reachable (image of {1, p}).  c = 3, p + 1 = 2 floor((N+10)/8), N >= 30;
+c = 5, p + 1 = 2 floor((N+14)/12), N >= 59.  This settles (R2) for all N, not only 2^k.
+
+2. Witness orderings (R3)
+-------------------------
+dfs.c: DFS for a completion of the prefix [u, v] with the pruning "every unplaced panel can still
+be balanced" and random restarts; it finds orderings for N = 128 in seconds.  mkwit.py reverses
+the completion (an ordering of [N] \ {u, v} from scratch) and checks it; gen_wit.py writes the
+Lean block (witnesses.txt caches the orderings).  Lean checker `witB`: placed panels as a bitmask
+Nat (membership = Nat.testBit), soundness `semiB_sound`, `coReach_of_witB`.  N = 128 checks in a
+few seconds with ~0.2 GB above the Mathlib import (the old `witOK` needed 5.6 GB).
+coreList = live6 core520.txt pairs with N <= 128 (57) + extra.txt (8 pairs, N <= 28, needed
+because the Lean search `coverB` does not use the doubling splits); `E7` = coreList and mirrors.
+
+3. The covering statement
+-------------------------
+Settled7 = Live6.Settled or SettledZ (image of a non-dead pair of [p] under Z(N, p)).
+CoverAt E N: every non-dead pair of [N], or its mirror, is Settled7, or in E.  CoverLemma7 E:
+CoverAt E N for all N >= 13.  `coReach_of_coverAt`: CoverAt for 13 <= N <= B gives all non-dead
+pairs co-reachable for N <= B; `coReach_of_cover7`: the unbounded version.
+coverB N: Boolean search over all pairs u + v <= N + 1 (mirror symmetry), trying Theorem G, {1,N},
+Beatty X(N,p,h) (candidate index floor((p(x+1)+h-1)/N), image re-checked), Z(N,p) (candidate
+index ceil(qx/M)), swapped Beatty (c = N - v), chiY, then E7.  `coverB_13 .. coverB_64` by decide
+(N = 64: ~2.6 GB peak; N = 100 would be ~2.9 GB, N = 128 5.3 GB, hence the bound 64).
+cover7.c: the same statement (plus doubling splits) in C, faithful to the Lean definitions;
+13 <= N <= 2665: no failures.  Rules needed for large N: Beatty + Z + {1,N} + chiY (the family
+(1, N/2 + 2), N = 0 mod 4) + swap (the family (3, N - 3)); everything else is redundant.
+
+4. Towards a proof of the covering statement (paper)
+----------------------------------------------------
+Write u' = N + 1 - v, g = v - u.  Every family is a periodic Beatty set B_{K,s} = {floor(kK/s)}
+(K = N for X(N,s,h), K = N + 2 for Z(N, s - 1)) and x is in B_{K,s} iff (-s x) mod K < s.  The pair
+conditions are "two residues x, y = x - d in B_{K,s}" with d = K - g:
+   Z: (M; u, -(u'+1)),  Z': (M; u', -(u+1)),  X0: (N; u, 1-u'),  X1: (N; -1-u, u'-2),
+   and the mirrors (N; u', 1-u), (N; u-2, -1-u').
+With delta = (s g) mod K and phi = (-s x) mod K: the pair lies in B_{K,s} iff
+   (A) delta < s and phi in [delta, s)   or   (B) K - delta < s and phi < s - (K - delta).
+(a) SAME-PARITY PAIRS (u = v mod 2) are covered for every N by the copies of slope ~2:
+    N = 2n: X(N, n, 0) = evens, X(N, n, 1) = odds; N = 2n + 1: X(N, n + 1, 0) = odds,
+    Z(N, n) = evens; the preimage (u/2, v/2) etc. is dead only for (2, N), (1, N - 1)
+    (N = 0 mod 4) and (2, N - 1) (N = 1 mod 4), which are corners: (2, N) in X(N, p, 0) with
+    p odd != 7 in (N/3, N/2]; (2, N - 1) = Z-corner with c = 2.
+(b) Near an integer slope m (p or q just below K/m) the pair is covered when
+    (u mod m, u' mod m) is in {(0,0), (-1,-1)} (Z), {(0,2), (-1,1), (2,0), (1,-1)} (X) and, if
+    m | N, {(0,1), (-1,2), (1,0), (2,-1)}, provided m u' <= N roughly (interval length).
+    Near slope 2 this re-proves (a) and covers the mixed-parity pairs with u, u' even (Z).
+(c) Rotation argument (u' >= u + 2): fix the index i of u in Z, so q runs through
+    P_i = (iM/(u+1), iM/u]; R(q) = (-u'q) mod M decreases by u' per step and must enter [1, q];
+    this needs |P_i| >= (M - q)/(u'+1) + 2, true for i ~ u/2 when
+    M (u' - u - 1) >= 6 (u+1)(u'+1)  (roughly).  It covers u' >= u + 2 with u (u' + 1) small
+    against N (u' - u), but not the comparable regime u' - u = O(1) with u ~ sqrt(N) or larger.
+What remains (R1): a proof, for all N >= 65, that every MIXED-PARITY wide pair
+(v >= 2u + 2, 2v >= N + u + 3, u = v + 1 mod 2) other than (1, N/2 + 2) and (3, N - 3) lies in
+some X(N, p, h), Z(N, p) or their mirrors with a non-dead preimage.  Heuristically the number of
+witnesses is ~N/24 (counting (s, i, k) in a thin cone); the difficulty is the uniform discrete
+version near the inward boundary (u + 2u' ~ N) and for u' - u small.  A natural route is the
+continued-fraction (Sturmian renormalisation) structure of the conditions; not attempted in Lean.
+
+5. Programs (1 core, < 200 MB except Lean)
+  dfs.c, mkwit.py, gen_wit.py, witnesses.txt, extra.txt   witness orderings (R3)
+  tbexp.py, tbsearch.py, tbcov.py, tb2.py, tb3.py, tb4.py, tb5.py, tb6.py, diag.py
+                        two-sided Beatty copies: fixed slopes fail, slope (N+2)/(p+1) works
+  zcheck.py             Z(N, p) inward copy for all N <= 220, all p
+  wfam.py, wfam2.py     windows of Beatty sets with other periods (only N, N + 2 universal)
+  core7.py              the hard core with Z added (empty for 36 <= N <= 140)
+  cover7.c, core128.txt, cover7_2665.txt   the covering statement, faithful to Lean, N <= 2665
+  a1.py, wit.py, wit7.py  witnesses of single pairs, Beatty-only failures
+  gen_cov.py            the Lean block coverB_13 .. coverB_64
+  memtime.py, splice.py  helpers (Lean time/peak memory; text splicing)
