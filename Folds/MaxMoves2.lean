@@ -1,6 +1,32 @@
 import Folds.MaxMoves
 import Mathlib.Data.Nat.Factorization.Basic
 
+/-!
+# The 2-adic max-moves bound
+
+See `experiments/maxmoves2/NOTES.txt` and `experiments/maxmoves/PROOFS.txt` (section 4).
+
+For `S ⊆ [1, N]` with `|S| = 2^a t`, `t` odd, `a ≥ 1`, and `V(S) = |moves N S|`:
+
+* `card_moves_two_adic : (a + 2) · V(S) ≤ (a + 1) · N`;
+* `card_moves_two_adic_size : 2(a + 2) · V(S) + 2(a - 1) · |S| ≤ 2(a + 1) · N + a`.
+
+**Proof.**  The gap decomposition and the per-gap bounds of `Folds/MaxMoves.lean`
+(`z_k ≤ w_k - 1`, `2 z_k ≤ w_{2k mod s} + 1`, …) are combined with weights depending on the
+*level* `min(v₂(k), a)` of the gap index `k`.  The gap indices `k ∈ [1, s)` are split by level
+(`sum_levels`): level `l < a` is `{2^l (2i + 1) | i < 2^(a-1-l) t}`, level `a` is
+`{2^a (i + 1) | i < t - 1}`.  Doubling mod `s` maps level `l` two-to-one onto level `l + 1`
+(`l + 1 < a`), level `a - 1` bijectively onto level `a` plus the boundary, and level `a` into
+itself; summing the per-gap bounds over each level gives the inequalities of the *chain*
+`chain_two_adic`, a one-parameter family of linear inequalities between the level sums which
+is closed by an induction on the level (`arith_two_adic`).
+
+**Tree bounds.**  `semiCount_even_le_prod_two_adic(_size)`,
+`semiCount_odd_le_prod_two_adic(_size)`:
+`a(N) ≤ N! · exp(-(c + o(1)) N)` with `c = 0.12154…` (even `N`), `0.08386…` (odd `N`), and with
+the size term `c = 0.12552…` (even `N`), `0.08783…` (odd `N`) (`experiments/maxmoves2/constants2.py`).
+-/
+
 namespace Folds
 
 open Finset
@@ -33,14 +59,14 @@ theorem sum_levels (f : Nat → Nat) (t : Nat) : ∀ a : Nat,
 (`a = b + 1`) has `n l` residues, total valid count `Z l` and total gap size `A l`; level `a`
 (nonzero) has `Za`, `Aa`; the boundary gaps `0, s` have `Zb`, `B`. -/
 theorem chain_two_adic (b : Nat) (t : Int) (Z A n : Nat → Int) (Za Aa Zb B : Int)
-    (hn : ∀ l, l < b → n l = 2 * n (l + 1)) (hnb : n b = t) (hpos : 1 ≤ n 0)
+    (hn : ∀ l, l < b → n l = 2 * n (l + 1)) (hnb : n b = t)
     (h1 : ∀ l, l ≤ b → Z l + n l ≤ A l)
     (h2 : ∀ l, l < b → 2 * Z l ≤ 2 * A (l + 1) + n l)
     (h3 : 2 * Z b ≤ Aa + B + t + 1)
     (h4 : 2 * Za ≤ Aa + t - 1)
     (h5 : 2 * Zb ≤ B + 1) :
-    2 * ((b : Int) + 3) * (∑ l ∈ range (b + 1), Z l + Za + Zb) ≤
-      2 * ((b : Int) + 2) * (∑ l ∈ range (b + 1), A l + Aa + B) + 1 := by
+    2 * ((b : Int) + 3) * (∑ l ∈ range (b + 1), Z l + Za + Zb) + 4 * n 0 * b ≤
+      2 * ((b : Int) + 2) * (∑ l ∈ range (b + 1), A l + Aa + B) + b + 1 := by
   have inv : ∀ L, L ≤ b →
       2 * ((b : Int) + 3) * ∑ l ∈ range L, Z l ≤
         2 * ((b : Int) + 2) * ∑ l ∈ range L, A l + 2 * (L : Int) * A L +
@@ -67,8 +93,6 @@ theorem chain_two_adic (b : Nat) (t : Int) (Z A n : Nat → Int) (Za Aa Zb B : I
   have i := inv b le_rfl
   have a1 := h1 b le_rfl
   rw [hnb] at a1 i
-  have hb0 : (0 : Int) ≤ b := by positivity
-  have m1 : (0 : Int) ≤ (n 0 - 1) * b := mul_nonneg (by linarith) hb0
   rw [Finset.sum_range_succ, Finset.sum_range_succ]
   nlinarith
 
@@ -83,8 +107,9 @@ theorem sum_comp_le_of_injOn (n : Nat) (g φ : Nat → Nat) (hφ : ∀ i, i < n 
   obtain ⟨i, hi, rfl⟩ := hx
   exact hφ i hi
 
-/-- **The 2-adic charging inequality** (`s = 2^(b+1) t`, `t` odd): `(b+3) Σ z ≤ (b+2) Σ w`
-for the valid counts `z k` and gap sizes `w k` (`k ∈ [0, s]`). -/
+/-- **The 2-adic charging inequality** (`s = 2^(b+1) t`, `t` odd, `a = b + 1`):
+`2(a+2) Σ z + 2(a-1) s ≤ 2(a+1) Σ w + a` for the valid counts `z k` and gap sizes `w k`
+(`k ∈ [0, s]`). -/
 theorem arith_two_adic (b t : Nat) (ht : t % 2 = 1) (z w : Nat → Nat)
     (h0 : 2 * z 0 ≤ w 0)
     (h1 : ∀ k, 1 ≤ k → 2 * k < 2 ^ (b + 1) * t → 2 * z k ≤ w (2 * k) + 1)
@@ -93,8 +118,8 @@ theorem arith_two_adic (b t : Nat) (ht : t % 2 = 1) (z w : Nat → Nat)
       2 * z k ≤ w (2 * k - 2 ^ (b + 1) * t) + 1)
     (hs : 2 * z (2 ^ (b + 1) * t) ≤ w (2 ^ (b + 1) * t) + 1)
     (hlt : ∀ k, 1 ≤ k → k < 2 ^ (b + 1) * t → z k + 1 ≤ w k) :
-    (b + 3) * ∑ k ∈ range (2 ^ (b + 1) * t + 1), z k ≤
-      (b + 2) * ∑ k ∈ range (2 ^ (b + 1) * t + 1), w k := by
+    2 * (b + 3) * ∑ k ∈ range (2 ^ (b + 1) * t + 1), z k + 2 * b * (2 ^ (b + 1) * t) ≤
+      2 * (b + 2) * ∑ k ∈ range (2 ^ (b + 1) * t + 1), w k + b + 1 := by
   set s := 2 ^ (b + 1) * t with hsdef
   have ht1 : 1 ≤ t := by omega
   have hsP : s = 2 * 2 ^ b * t := by rw [hsdef, pow_succ]; ring
@@ -255,37 +280,35 @@ theorem arith_two_adic (b t : Nat) (ht : t % 2 = 1) (z w : Nat → Nat)
         simp only [n]; rw [← mul_assoc, ← pow_succ']; congr 2; omega
       exact_mod_cast this)
     (by simp [n])
-    (by simp only [n]; exact_mod_cast Nat.mul_pos (by positivity) (by omega))
     (fun l hl => by exact_mod_cast H1 l hl)
     (fun l hl => by exact_mod_cast H2 l hl)
     (by push_cast; exact_mod_cast H3)
     (by have := H4; zify [ht1] at this; linarith)
     (by exact_mod_cast H5)
   rw [dec z, dec w]
-  change (b + 3) * (∑ l ∈ range (b + 1), Z l + Za + (z 0 + z s)) ≤
-    (b + 2) * (∑ l ∈ range (b + 1), A l + Aa + (w 0 + w s))
-  have h : 2 * ((b + 3) * (∑ l ∈ range (b + 1), Z l + Za + (z 0 + z s))) ≤
-      2 * ((b + 2) * (∑ l ∈ range (b + 1), A l + Aa + (w 0 + w s))) + 1 := by
-    zify; push_cast at key ⊢; linarith [key]
-  generalize (b + 3) * (∑ l ∈ range (b + 1), Z l + Za + (z 0 + z s)) = X at h ⊢
-  generalize (b + 2) * (∑ l ∈ range (b + 1), A l + Aa + (w 0 + w s)) = Y at h ⊢
-  omega
+  have e : (n 0 : Int) * 2 = (s : Int) := by
+    have : n 0 * 2 = s := by simp only [n, Nat.sub_zero]; rw [hsP]; ring
+    exact_mod_cast this
+  have e' : (4 : Int) * n 0 * b = 2 * b * s := by rw [← e]; ring
+  change 2 * (b + 3) * (∑ l ∈ range (b + 1), Z l + Za + (z 0 + z s)) + 2 * b * s ≤
+    2 * (b + 2) * (∑ l ∈ range (b + 1), A l + Aa + (w 0 + w s)) + b + 1
+  zify
+  push_cast at key ⊢
+  linarith [key, e']
 
 section Gaps
 
 variable {N : Nat} {S : List Nat} (hnd : S.Nodup) (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N)
 include hnd hS
 
-/-- **2-adic max-moves bound** (`b + 1 = v₂(|S|)`): if `|S| = 2^(b+1) t` with `t` odd, then
-`(b + 3) · V(S) ≤ (b + 2) · N`. -/
-theorem card_moves_two_adic' {b t : Nat} (hs : S.length = 2 ^ (b + 1) * t) (ht : t % 2 = 1) :
-    (b + 3) * (moves N S).card ≤ (b + 2) * N := by
+theorem card_moves_two_adic_aux {b t : Nat} (hs : S.length = 2 ^ (b + 1) * t) (ht : t % 2 = 1) :
+    2 * (b + 3) * (moves N S).card + 2 * b * S.length ≤ 2 * (b + 2) * N + b + 1 := by
   set z : Nat → Nat := fun k => (validIn N S k).card with hz
   set w : Nat → Nat := fun k => (gapSet N S k).card with hw
   have hV := card_moves_eq_sum (N := N) (S := S)
   have hN := sum_gapSet (N := N) (S := S)
   rw [hs] at hV hN
-  rw [hV]
+  rw [hV, hs]
   conv_rhs => rw [hN]
   have lo := validIn_lo_card hnd hS
   have hi := validIn_hi_card hnd hS
@@ -333,7 +356,28 @@ theorem card_moves_two_adic' {b t : Nat} (hs : S.length = 2 ^ (b + 1) * t) (ht :
 theorem card_moves_two_adic {a t : Nat} (ha : 1 ≤ a) (hs : S.length = 2 ^ a * t)
     (ht : t % 2 = 1) : (a + 2) * (moves N S).card ≤ (a + 1) * N := by
   obtain ⟨b, rfl⟩ : ∃ b, a = b + 1 := ⟨a - 1, by omega⟩
-  exact card_moves_two_adic' hnd hS hs ht
+  have h := card_moves_two_adic_aux hnd hS hs ht
+  have hpos : b ≤ b * S.length := Nat.le_mul_of_pos_right b (by rw [hs]; exact Nat.mul_pos (by positivity) (by omega))
+  have e1 : 2 * (b + 3) * (moves N S).card = 2 * ((b + 1 + 2) * (moves N S).card) := by ring
+  have e2 : 2 * (b + 2) * N = 2 * ((b + 1 + 1) * N) := by ring
+  have e3 : 2 * b * S.length = 2 * (b * S.length) := by ring
+  rw [e1, e2, e3] at h
+  generalize (b + 1 + 2) * (moves N S).card = X at h ⊢
+  generalize (b + 1 + 1) * N = Y at h ⊢
+  generalize b * S.length = Q at h hpos
+  omega
+
+/-- **Sharper 2-adic bound** (with the size of `S`): if `|S| = 2^a t` with `t` odd and `a ≥ 1`,
+then `2(a+2) · V(S) + 2(a-1) · |S| ≤ 2(a+1) · N + a`. -/
+theorem card_moves_two_adic_size {a t : Nat} (ha : 1 ≤ a) (hs : S.length = 2 ^ a * t)
+    (ht : t % 2 = 1) :
+    2 * (a + 2) * (moves N S).card + 2 * (a - 1) * S.length ≤ 2 * (a + 1) * N + a := by
+  obtain ⟨b, rfl⟩ : ∃ b, a = b + 1 := ⟨a - 1, by omega⟩
+  have h := card_moves_two_adic_aux hnd hS hs ht
+  rw [Nat.add_sub_cancel]
+  have e1 : 2 * (b + 3) * (moves N S).card = 2 * (b + 1 + 2) * (moves N S).card := by ring
+  have e2 : 2 * (b + 2) * N = 2 * (b + 1 + 1) * N := by ring
+  linarith
 
 end Gaps
 
@@ -394,5 +438,65 @@ theorem semiCount_odd_le_prod_two_adic (h : Nat) :
   · split
     · exact c1
     · next hodd h0 => exact le_min c1 (card_moves_le_two_adic hnd hb h0 (by omega))
+
+/-- At a level `i ≥ 1` (`i = |S|`, even) with `v₂(i) = a`, at most
+`(2(a+1)N + a - 2(a-1)i) / (2(a+2))` panels are valid. -/
+theorem card_moves_le_two_adic_size {N : Nat} {S : List Nat} (hnd : S.Nodup)
+    (hS : ∀ x ∈ S, 1 ≤ x ∧ x ≤ N) (h0 : S.length ≠ 0) (heven : S.length % 2 = 0) :
+    (moves N S).card ≤
+      (2 * (S.length.factorization 2 + 1) * N + S.length.factorization 2 -
+        2 * (S.length.factorization 2 - 1) * S.length) / (2 * (S.length.factorization 2 + 2)) := by
+  set a := S.length.factorization 2
+  set t := S.length / 2 ^ a
+  have hdec : 2 ^ a * t = S.length := Nat.ordProj_mul_ordCompl_eq_self S.length 2
+  have hodd : ¬ 2 ∣ t := Nat.not_dvd_ordCompl Nat.prime_two h0
+  have ha : 1 ≤ a := by
+    rcases Nat.eq_zero_or_pos a with h | h
+    · rw [h, pow_zero, one_mul] at hdec
+      exfalso; apply hodd; rw [hdec]; omega
+    · exact h
+  have := card_moves_two_adic_size hnd hS ha hdec.symm (by omega)
+  rw [Nat.le_div_iff_mul_le (by omega)]
+  have e : (moves N S).card * (2 * (a + 2)) = 2 * (a + 2) * (moves N S).card := by ring
+  rw [e]
+  omega
+
+/-- **Improved upper bound, even `N`** (2-adic levels with the size term).  As
+`semiCount_even_le_prod_two_adic`, with `B_i = min(2h - i, ⌊(2(a+1)·2h + a - 2(a-1) i)/(2(a+2))⌋)`
+at even levels `i ≥ 2`, `a = v₂(i)`.  This is `(2h)! · exp(-(0.1255… + o(1)) · 2h)`. -/
+theorem semiCount_even_le_prod_two_adic_size (h : Nat) :
+    semiCount (2 * h) ≤
+      ∏ i ∈ Finset.range (2 * h),
+        (if i % 2 = 1 then min (2 * h - i) h
+         else if i = 0 then 2 * h - i
+         else min (2 * h - i) ((2 * (i.factorization 2 + 1) * (2 * h) + i.factorization 2 -
+            2 * (i.factorization 2 - 1) * i) / (2 * (i.factorization 2 + 2)))) := by
+  apply semiCount_le_prod
+  intro p _ hnd hb _
+  have c1 := card_moves_le hnd hb
+  split
+  · next hodd => exact le_min c1 (card_moves_odd_le hnd hb hodd)
+  · split
+    · exact c1
+    · next hodd h0 => exact le_min c1 (card_moves_le_two_adic_size hnd hb h0 (by omega))
+
+/-- **Improved upper bound, odd `N`** (2-adic levels with the size term).
+This is `(2h+1)! · exp(-(0.0878… + o(1)) N)`. -/
+theorem semiCount_odd_le_prod_two_adic_size (h : Nat) :
+    semiCount (2 * h + 1) ≤
+      ∏ i ∈ Finset.range (2 * h + 1),
+        (if i % 2 = 1 then min (2 * h + 1 - i) (h + 1 + i / 2)
+         else if i = 0 then 2 * h + 1 - i
+         else min (2 * h + 1 - i)
+          ((2 * (i.factorization 2 + 1) * (2 * h + 1) + i.factorization 2 -
+            2 * (i.factorization 2 - 1) * i) / (2 * (i.factorization 2 + 2)))) := by
+  apply semiCount_le_prod
+  intro p _ hnd hb _
+  have c1 := card_moves_le hnd hb
+  split
+  · next hodd => exact le_min c1 (card_moves_odd_odd_le hnd hb hodd)
+  · split
+    · exact c1
+    · next hodd h0 => exact le_min c1 (card_moves_le_two_adic_size hnd hb h0 (by omega))
 
 end Folds
