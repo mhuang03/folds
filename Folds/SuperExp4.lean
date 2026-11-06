@@ -536,6 +536,255 @@ theorem slipSum_odd_up (h : Nat) :
   rw [lhs] at step3
   exact le_trans step3 step1
 
+
+/-! ## All `N`: `N^N ≤ 2^{11N} a(N)^{17}` -/
+
+section AllN17
+
+/-- Small cases: `(2n)^{2n} 2^{4n} ≤ 2^{22n} B(n)^k` for `n ≤ 256`. -/
+theorem small_slipSum' {n k : Nat} (hn : n ≤ 256) :
+    (2 * n) ^ (2 * n) * 2 ^ (4 * n) ≤ 2 ^ (22 * n) * slipSum n ^ k := by
+  have e1 : (2 * n) ^ (2 * n) * 2 ^ (4 * n) = (8 * n) ^ (2 * n) := by
+    rw [show 8 * n = 2 * n * 4 by ring, Nat.mul_pow (2 * n) 4, Nat.pow_mul 4 2 n,
+      show (4 : Nat) ^ 2 = 2 ^ 4 by norm_num, ← Nat.pow_mul, Nat.mul_comm 4 n]
+  have e2 : (2 : Nat) ^ (22 * n) = 2048 ^ (2 * n) := by
+    rw [show (2048 : Nat) = 2 ^ 11 by norm_num, ← Nat.pow_mul]; ring_nf
+  rw [e1, e2]
+  calc (8 * n) ^ (2 * n) ≤ 2048 ^ (2 * n) := Nat.pow_le_pow_left (by omega) _
+    _ ≤ 2048 ^ (2 * n) * slipSum n ^ k :=
+        Nat.le_mul_of_pos_right _ (Nat.one_le_pow _ _ (slipSum_pos n))
+
+theorem arith17_iv {N y r : Nat} (hy : y = N ∨ y = N + 1) (h3 : N ≤ 2 * r + 2) (hr : 13 ≤ r) :
+    N + y + 2 + 8 * r + 11 * ((N + 1) / 2 + N / 2 + (y + 1) / 2 + y / 2) ≤
+      17 * ((r + 1) / 2) + 8 * (r / 2) + 11 * (N + y) := by
+  rw [show (N + 1) / 2 + N / 2 + (y + 1) / 2 + y / 2 = N + y by omega]
+  have e3 : (r + 1) / 2 + r / 2 = r := by omega
+  have e4 : r ≤ 2 * ((r + 1) / 2) := by omega
+  generalize (r + 1) / 2 = t at e3 e4 ⊢
+  generalize r / 2 = r' at e3 e4 ⊢
+  subst e3
+  have : y ≤ N + 1 := by omega
+  omega
+
+theorem arith17_iii {m : Nat} (hm : 128 ≤ m) :
+    8 * (2 * m + 1) + 36 ≤ 2 * m + 8 * (m / 2) + 17 * ((m + 1) / 2 + (m / 2 + 3) / 4) := by
+  omega
+
+/-- The induction behind `self_pow_le_semiCount_pow_17`: for `N ≥ 1`,
+(i) `N^N ≤ 2^{11N} a(N)^17`, (ii) the same with a surplus `2^{2N}` for even `N`,
+(iii) `(2N)^{2N} 2^{4N} ≤ 2^{22N} B(N)^17`,
+(iv) `N^N y^y 2^{8r} ≤ 2^{11(N+y)} M(N,y,r)^17` for `y ∈ {N, N+1}`, `2r ≤ N`, `2r+1 ≤ y`,
+`N ≤ 2r + 2`. -/
+theorem alln17_aux : ∀ N, 1 ≤ N →
+    N ^ N ≤ 2 ^ (11 * N) * semiCount N ^ 17 ∧
+      (N % 2 = 0 → N ^ N * 2 ^ (2 * N) ≤ 2 ^ (11 * N) * semiCount N ^ 17) ∧
+      (2 * N) ^ (2 * N) * 2 ^ (4 * N) ≤ 2 ^ (22 * N) * slipSum N ^ 17 ∧
+      (∀ y r, (y = N ∨ y = N + 1) → 2 * r ≤ N → 2 * r + 1 ≤ y → N ≤ 2 * r + 2 →
+        N ^ N * y ^ y * 2 ^ (8 * r) ≤ 2 ^ (11 * (N + y)) * mSum N y r ^ 17) := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+  intro hN
+  have hpow : ∀ k, 0 < 2 ^ k := fun k => Nat.two_pow_pos k
+  -- the two children of an odd node, one of them even (with its surplus)
+  have Pair : ∀ n, 1 ≤ n → n + 1 < N →
+      n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) ≤
+        2 ^ (11 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 17 := by
+    intro n hn1 hnN
+    rcases Nat.even_or_odd n with ⟨s, hs⟩ | ⟨s, hs⟩
+    · have E := (ih n (by omega) hn1).2.1 (by omega)
+      have Q1 := (ih (n + 1) (by omega) (by omega)).1
+      calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n) = (n ^ n * 2 ^ (2 * n)) * (n + 1) ^ (n + 1) := by
+            ring
+        _ ≤ (2 ^ (11 * n) * semiCount n ^ 17) * (2 ^ (11 * (n + 1)) * semiCount (n + 1) ^ 17) := by
+            gcongr
+        _ = 2 ^ (11 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 17 := by ring
+    · have E := (ih (n + 1) (by omega) (by omega)).2.1 (by omega)
+      have Q0 := (ih n (by omega) hn1).1
+      calc n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)
+          ≤ n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1)) := by gcongr; omega
+        _ = n ^ n * ((n + 1) ^ (n + 1) * 2 ^ (2 * (n + 1))) := by ring
+        _ ≤ (2 ^ (11 * n) * semiCount n ^ 17) * (2 ^ (11 * (n + 1)) * semiCount (n + 1) ^ 17) := by
+            gcongr
+        _ = 2 ^ (11 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 17 := by ring
+  -- (iv)
+  have IV : ∀ y r, (y = N ∨ y = N + 1) → 2 * r ≤ N → 2 * r + 1 ≤ y → N ≤ 2 * r + 2 →
+      N ^ N * y ^ y * 2 ^ (8 * r) ≤ 2 ^ (11 * (N + y)) * mSum N y r ^ 17 := by
+    intro y r hy h1 h2 h3
+    rcases Nat.lt_or_ge r 13 with hr | hr
+    · have hN32 : N ≤ 32 := by omega
+      have hy32 : y ≤ 32 := by omega
+      calc N ^ N * y ^ y * 2 ^ (8 * r) ≤ 32 ^ N * 32 ^ y * 2 ^ (6 * N + 6 * y) := by
+            gcongr
+            omega
+        _ = 2 ^ (11 * (N + y)) * 1 := by
+            rw [show (32 : Nat) = 2 ^ 5 by norm_num, ← Nat.pow_mul, ← Nat.pow_mul, ← Nat.pow_add,
+              ← Nat.pow_add]; ring_nf
+        _ ≤ 2 ^ (11 * (N + y)) * mSum N y r ^ 17 :=
+            Nat.mul_le_mul_left _ (Nat.one_le_pow _ _ (mSum_pos N y r))
+    · have key := mSum_chain (x := N) (y := y) (r := r) h1 h2
+      have Qx1 := (ih ((N + 1) / 2) (by omega) (by omega)).1
+      have Qy2 := (ih (y / 2) (by omega) (by omega)).1
+      have M' := (ih (N / 2) (by omega) (by omega)).2.2.2 ((y + 1) / 2) (r / 2) (by omega)
+        (by omega) (by omega) (by omega)
+      have sx := self_pow_split N
+      have sy := self_pow_split y
+      have harith := arith17_iv hy h3 hr
+      clear ih Pair
+      set x1 := (N + 1) / 2 with hx1
+      set x2 := N / 2 with hx2
+      set y1 := (y + 1) / 2 with hy1
+      set y2 := y / 2 with hy2
+      set t := (r + 1) / 2 with ht
+      set r' := r / 2 with hr'
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (8 * r')) ?_ (hpow _)
+      calc N ^ N * y ^ y * 2 ^ (8 * r) * 2 ^ (8 * r')
+          ≤ (2 ^ (N + 1) * (x1 ^ x1 * x2 ^ x2)) * (2 ^ (y + 1) * (y1 ^ y1 * y2 ^ y2)) *
+              2 ^ (8 * r) * 2 ^ (8 * r') := by gcongr
+        _ = 2 ^ (N + y + 2 + 8 * r) * (x1 ^ x1 * y2 ^ y2) * (x2 ^ x2 * y1 ^ y1 * 2 ^ (8 * r')) := by
+            ring
+        _ ≤ 2 ^ (N + y + 2 + 8 * r) * ((2 ^ (11 * x1) * semiCount x1 ^ 17) *
+              (2 ^ (11 * y2) * semiCount y2 ^ 17)) *
+              (2 ^ (11 * (x2 + y1)) * mSum x2 y1 r' ^ 17) := by
+            gcongr
+        _ = 2 ^ (N + y + 2 + 8 * r + 11 * (x1 + x2 + y1 + y2)) *
+              (semiCount x1 * semiCount y2 * mSum x2 y1 r') ^ 17 := by ring
+        _ ≤ 2 ^ (17 * t + 8 * r' + 11 * (N + y)) *
+              (semiCount x1 * semiCount y2 * mSum x2 y1 r') ^ 17 := by
+            exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by norm_num) harith)
+        _ = 2 ^ (11 * (N + y)) * (2 ^ t * (semiCount x1 * semiCount y2 * mSum x2 y1 r')) ^ 17 *
+              2 ^ (8 * r') := by ring
+        _ ≤ 2 ^ (11 * (N + y)) * mSum N y r ^ 17 * 2 ^ (8 * r') := by gcongr
+  -- (iii)
+  have III : (2 * N) ^ (2 * N) * 2 ^ (4 * N) ≤ 2 ^ (22 * N) * slipSum N ^ 17 := by
+    rcases Nat.lt_or_ge 256 N with hl | hs
+    swap
+    · exact small_slipSum' hs
+    rcases Nat.even_or_odd N with ⟨m, hm⟩ | ⟨m, hm⟩
+    · -- N = 2m: the chain recursion
+      rw [show N = 2 * m by omega] at ⊢
+      have hm1 : 1 ≤ m := by omega
+      have Qm := (ih m (by omega) hm1).1
+      have Bm := (ih m (by omega) hm1).2.2.1
+      have key := slipSum_chain hm1
+      have e : (2 * (2 * m)) ^ (2 * (2 * m)) * 2 ^ (4 * (2 * m)) * 2 ^ (4 * m) =
+          2 ^ (14 * m) * ((2 * m) ^ (2 * m) * 2 ^ (4 * m)) * (m ^ m) ^ 2 := by
+        rw [show 2 * (2 * m) = 2 * (2 * m) by rfl, Nat.mul_pow 2 (2 * m) (2 * (2 * m)),
+          show (2 * m) ^ (2 * (2 * m)) = (2 * m) ^ (2 * m) * (2 * m) ^ (2 * m) by
+            rw [← Nat.pow_add]; congr 1; ring,
+          show (2 * m) ^ (2 * m) = 2 ^ (2 * m) * (m ^ m) ^ 2 by
+            rw [Nat.mul_pow, ← Nat.pow_mul, Nat.mul_comm m 2, Nat.pow_mul]]
+        rw [show (2 : Nat) ^ (2 * (2 * m)) = 2 ^ (4 * m) by ring_nf]
+        ring
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (4 * m)) ?_ (hpow _)
+      rw [e]
+      calc 2 ^ (14 * m) * ((2 * m) ^ (2 * m) * 2 ^ (4 * m)) * (m ^ m) ^ 2
+          ≤ 2 ^ (14 * m) * (2 ^ (22 * m) * slipSum m ^ 17) *
+              (2 ^ (11 * m) * semiCount m ^ 17) ^ 2 := by
+            gcongr
+        _ = 2 ^ (41 * m) * (2 ^ m * (semiCount m ^ 2 * slipSum m)) ^ 17 := by ring
+        _ ≤ 2 ^ (41 * m) * slipSum (2 * m) ^ 17 := by gcongr
+        _ ≤ 2 ^ (22 * (2 * m)) * slipSum (2 * m) ^ 17 * 2 ^ (4 * m) := by
+            rw [Nat.mul_right_comm, ← Nat.pow_add]
+            exact Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by omega) (by omega))
+    · -- N = 2m+1: upper slips with averaging, the restricted chain below
+      subst hm
+      have hm128 : 128 ≤ m := by omega
+      have hm1 : 1 ≤ m := by omega
+      have P2 := Pair m hm1 (by omega)
+      have Mb := (ih m (by omega) hm1).2.2.2 (m + 1) (m / 2) (Or.inr rfl) (by omega) (by omega)
+        (by omega)
+      have Bup := slipSum_odd_up m
+      have Wg := wSum_ge m
+      have sp := self_pow_split (2 * m + 1)
+      rw [show (2 * m + 1 + 1) / 2 = m + 1 by omega, show (2 * m + 1) / 2 = m by omega] at sp
+      have har := arith17_iii hm128
+      clear ih Pair IV
+      set N := 2 * m + 1 with hN
+      set a0 := semiCount m
+      set a1 := semiCount (m + 1)
+      set M := mSum m (m + 1) (m / 2)
+      set B := slipSum N
+      set W := wSum m
+      set c' := (m / 2 + 3) / 4
+      set u := (m + 1) / 2
+      -- `2^{u + c'} a0 a1 M ≤ 4 B`
+      have hX : 2 ^ (u + c') * (a0 * a1 * M) ≤ 4 * B := by
+        calc 2 ^ (u + c') * (a0 * a1 * M) = 2 ^ u * ((a1 * a0 * 2 ^ c') * M) := by
+              rw [Nat.pow_add]; ring
+          _ ≤ 2 ^ u * ((4 * W) * M) := by gcongr
+          _ = 4 * (2 ^ u * (W * M)) := by ring
+          _ ≤ 4 * B := by gcongr
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (2 * m + 8 * (m / 2) + 17 * (u + c'))) ?_
+        (hpow _)
+      calc (2 * N) ^ (2 * N) * 2 ^ (4 * N) * 2 ^ (2 * m + 8 * (m / 2) + 17 * (u + c'))
+          = 2 ^ (6 * N) * (N ^ N * N ^ N) * 2 ^ (2 * m + 8 * (m / 2) + 17 * (u + c')) := by
+            rw [Nat.mul_pow, show 2 * N = N + N by ring, Nat.pow_add N N N]; ring
+        _ ≤ 2 ^ (6 * N) * ((2 ^ (N + 1) * ((m + 1) ^ (m + 1) * m ^ m)) *
+              (2 ^ (N + 1) * ((m + 1) ^ (m + 1) * m ^ m))) *
+              2 ^ (2 * m + 8 * (m / 2) + 17 * (u + c')) := by gcongr
+        _ = 2 ^ (8 * N + 2) * (m ^ m * (m + 1) ^ (m + 1) * 2 ^ (2 * m)) *
+              (m ^ m * (m + 1) ^ (m + 1) * 2 ^ (8 * (m / 2))) * (2 ^ (u + c')) ^ 17 := by
+            rw [show N + 1 = N + 1 by rfl]; ring
+        _ ≤ 2 ^ (8 * N + 2) * (2 ^ (11 * N) * (a0 * a1) ^ 17) *
+              (2 ^ (11 * (m + (m + 1))) * M ^ 17) * (2 ^ (u + c')) ^ 17 := by gcongr
+        _ = 2 ^ (8 * N + 2 + 22 * N) * (2 ^ (u + c') * (a0 * a1 * M)) ^ 17 := by
+            rw [show 11 * (m + (m + 1)) = 11 * N by omega]; ring
+        _ ≤ 2 ^ (8 * N + 2 + 22 * N) * (4 * B) ^ 17 := by gcongr
+        _ = 2 ^ (22 * N) * B ^ 17 * 2 ^ (8 * N + 36) := by
+            rw [show (4 : Nat) = 2 ^ 2 by norm_num]; ring
+        _ ≤ 2 ^ (22 * N) * B ^ 17 * 2 ^ (2 * m + 8 * (m / 2) + 17 * (u + c')) :=
+            Nat.mul_le_mul_left _ (Nat.pow_le_pow_right (by norm_num) har)
+  refine ⟨?_, ?_, III, IV⟩
+  · -- (i)
+    rcases Nat.even_or_odd N with ⟨n, hn⟩ | ⟨n, hn⟩
+    · rw [show N = 2 * n by omega] at ⊢
+      have hn1 : 1 ≤ n := by omega
+      have Bn := (ih n (by omega) hn1).2.2.1
+      have := slipSum_le hn1
+      calc (2 * n) ^ (2 * n) ≤ (2 * n) ^ (2 * n) * 2 ^ (4 * n) :=
+            Nat.le_mul_of_pos_right _ (hpow _)
+        _ ≤ 2 ^ (22 * n) * slipSum n ^ 17 := Bn
+        _ ≤ 2 ^ (11 * (2 * n)) * semiCount (2 * n) ^ 17 := by
+            rw [show 11 * (2 * n) = 22 * n by ring]; gcongr
+    · rw [hn]
+      rcases Nat.eq_zero_or_pos n with h0 | hn1
+      · subst h0
+        simp only [Nat.mul_zero, Nat.zero_add, Nat.pow_one, Nat.mul_one]
+        exact le_trans (by norm_num) (Nat.le_mul_of_pos_right _ (Nat.one_le_pow _ _ (semiCount_pos 1)))
+      have key := semiCount_odd (n := n) hn1
+      have P := Pair n hn1 (by omega)
+      have hb := odd_self_pow_le n hn1
+      refine Nat.le_of_mul_le_mul_right (c := 2 ^ (2 * n)) ?_ (hpow _)
+      calc (2 * n + 1) ^ (2 * n + 1) * 2 ^ (2 * n)
+          ≤ 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1)) * 2 ^ (2 * n) := by gcongr
+        _ = 2 ^ (2 * n + 2) * (n ^ n * (n + 1) ^ (n + 1) * 2 ^ (2 * n)) := by ring
+        _ ≤ 2 ^ (2 * n + 2) * (2 ^ (11 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 17) := by
+            gcongr
+        _ ≤ 2 ^ (2 * n + 17) * (2 ^ (11 * (2 * n + 1)) * (semiCount n * semiCount (n + 1)) ^ 17) := by
+            gcongr; omega
+        _ = 2 ^ (11 * (2 * n + 1)) * (2 * (semiCount n * semiCount (n + 1))) ^ 17 * 2 ^ (2 * n) := by
+            ring
+        _ ≤ 2 ^ (11 * (2 * n + 1)) * semiCount (2 * n + 1) ^ 17 * 2 ^ (2 * n) := by gcongr
+  · -- (ii)
+    intro he
+    obtain ⟨n, rfl⟩ : ∃ n, N = 2 * n := ⟨N / 2, by omega⟩
+    have hn1 : 1 ≤ n := by omega
+    have Bn := (ih n (by omega) hn1).2.2.1
+    have := slipSum_le hn1
+    calc (2 * n) ^ (2 * n) * 2 ^ (2 * (2 * n)) = (2 * n) ^ (2 * n) * 2 ^ (4 * n) := by ring_nf
+      _ ≤ 2 ^ (22 * n) * slipSum n ^ 17 := Bn
+      _ ≤ 2 ^ (11 * (2 * n)) * semiCount (2 * n) ^ 17 := by
+          rw [show 11 * (2 * n) = 22 * n by ring]; gcongr
+
+/-- **Super-exponential lower bound with exponent 1/17 for all `N`**:
+`N^N ≤ 2^{11N} a(N)^{17}`, i.e. `a(N) ≥ (N/2048)^{N/17}`. -/
+theorem self_pow_le_semiCount_pow_17 {N : Nat} (hN : 1 ≤ N) :
+    N ^ N ≤ 2 ^ (11 * N) * semiCount N ^ 17 :=
+  (alln17_aux N hN).1
+
+end AllN17
+
 end Up
 end Slip
 end Folds
