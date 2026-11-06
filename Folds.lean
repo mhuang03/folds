@@ -62,3 +62,4 @@ import Folds.Residual
 import Folds.CoverAll
 import Folds.Structure2
 import Folds.ThinCover
+import Folds.SymParity
