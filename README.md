@@ -18,7 +18,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 
 | question | status |
 |---|---|
-| closed form for a(N) | **none found; very unlikely**. The prefix-count bivariate generating function is provably not D-finite. No OEIS match; huge prime factors; no holonomic recurrence; even the symmetric analogue A003407 has no known formula (and, per Ho 2026, no exponential growth rate) |
+| closed form for a(N) | **none found; very unlikely**. A systematic search (`experiments/recsearch/REPORT.txt`) found **no recurrence in previous terms**: P-recursive up to 30 unknowns (LLL up to 64), divide-and-conquer, convolution, algebraic and ODE generating functions, OEIS transforms, mod-p, and about 10⁶ expression trees. The OGF is provably not algebraic. a(N) is not P-recursive if the growth conjecture holds. The prefix-count bivariate generating function is provably not D-finite. No OEIS match; huge prime factors; no holonomic recurrence; even the symmetric analogue A003407 has no known formula (and, per Ho 2026, no exponential growth rate) |
 | recursive formula | **proven** (Lean): subset recursion `g`, and a(N) = Σ_{\|S\|=k} g(S)·g(Sᶜ) for every k |
 | terms | a(1..37) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
@@ -186,6 +186,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live5/PROOFS.txt` | {1,N} for odd N, Beatty and split transfers, remaining corner families |
 | `experiments/reccount/NOTES.txt` | exact recursions for constructible families (R1, R2, R2c, R3), neutral sets, decomposition identities (A) and (B) for a(N) |
 | `experiments/labelling_lrat/NOTES.txt` | LRAT certificate pipeline and costs |
+| `experiments/recsearch/REPORT.txt` | search for recurrences in previous terms (all negative), with the proven and conditional non-D-finiteness arguments |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
