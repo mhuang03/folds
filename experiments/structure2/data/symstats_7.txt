@@ -1,0 +1,18 @@
+# sym N=7 (0.00s)
+total 104
+prefixes(k=0..N) 1 7 24 52 82 118 104 104
+reachable_sets(k=0..N) 1 7 16 22 20 12 7 1
+dead_end_sets(k=0..N) 0 0 0 3 2 5 0 0
+dead_end_total 10
+alive_sets(k=0..N) 1 7 7 11 11 7 7 1
+doomed_sets(k=0..N) 0 0 9 11 9 5 0 0
+doomed_total 34
+by_first=by_last(m=1..N) 10 10 16 32 16 10 10
+by_first2[m][x] = #seq starting m,x (rows m=1..N):
+  0 0 0 0 10 0 0
+  0 0 0 0 0 10 0
+  6 0 0 0 0 0 10
+  0 16 0 0 0 16 0
+  10 0 0 0 0 0 6
+  0 10 0 0 0 0 0
+  0 0 10 0 0 0 0

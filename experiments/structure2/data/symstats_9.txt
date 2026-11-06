@@ -1,0 +1,20 @@
+# sym N=9 (0.00s)
+total 496
+prefixes(k=0..N) 1 9 40 108 208 340 432 570 496 496
+reachable_sets(k=0..N) 1 9 27 45 53 45 27 15 9 1
+dead_end_sets(k=0..N) 0 0 0 4 4 11 6 5 0 0
+dead_end_total 30
+alive_sets(k=0..N) 1 9 10 12 14 14 12 10 9 1
+doomed_sets(k=0..N) 0 0 17 33 39 31 15 5 0 0
+doomed_total 140
+by_first=by_last(m=1..N) 24 50 62 74 76 74 62 50 24
+by_first2[m][x] = #seq starting m,x (rows m=1..N):
+  0 0 0 0 0 0 0 0 24
+  0 0 0 0 0 50 0 0 0
+  10 0 0 0 0 0 52 0 0
+  0 24 0 0 0 0 0 50 0
+  38 0 0 0 0 0 0 0 38
+  0 50 0 0 0 0 0 24 0
+  0 0 52 0 0 0 0 0 10
+  0 0 0 50 0 0 0 0 0
+  24 0 0 0 0 0 0 0 0
