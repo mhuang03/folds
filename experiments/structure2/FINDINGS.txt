@@ -1,0 +1,10 @@
+STRUCTURE OF THE REFINED SEQUENCES  (experiments/structure2/)   -- WORK IN PROGRESS
+================================================================================
+Plan: refined triangles F(N,m), F2(N,m1,m2), T(N,k), reachable/live counts (from
+rust `folds stats semi N`, N <= 26); ratio / growth-correction sequences; prime
+factorisations of a(1..38); cross-sequence relations (PSLQ/LLL); comparison with
+the symmetric analogue A003407.
+
+Note (trivial): L(N,m) = F(N,m) by reversal (a valid sequence reversed is valid),
+so the "ending with m" triangle is the same as the "starting with m" one.
+Existing stats for N <= 24 are in rust/results/stats/semi_N.txt.
