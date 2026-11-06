@@ -268,5 +268,61 @@ theorem coReach_one_b_N {N b : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q) 
     refine coReach3_of_mirror (by omega) (by omega) le_rfl ?_
     rwa [show N + 1 - N = 1 by omega, show N + 1 - 1 = N by omega]
 
+/-! ## The enlarged rules and the reduction -/
+
+/-- The parametric families of this file: `{1, b, N}` for `N ≡ 2 (mod 4)`, and `{1, 3, N}`,
+`{1, N - 2, N}` for `N ≡ 1 (mod 4)`. -/
+def OneN (N a b c : Nat) : Prop :=
+  a = 1 ∧ c = N ∧ ((N % 4 = 2 ∧ 30 ≤ N) ∨ (N % 4 = 1 ∧ 17 ≤ N ∧ (b = 3 ∨ b + 2 = N)))
+
+/-- `Covered3T` (Live3s) or one of the families `OneN`. -/
+def Covered3U (N a b c : Nat) : Prop := Covered3T N a b c ∨ OneN N a b c
+
+theorem coReach_of_covered3U {N a b c : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
+    (ha : 1 ≤ a) (hab : a < b) (hbc : b < c) (hcN : c ≤ N) (h : Covered3U N a b c) :
+    CoReach N {a, b, c} := by
+  rcases h with h | ⟨rfl, rfl, ⟨h2, h30⟩ | ⟨h1, h17, rfl | hb⟩⟩
+  · exact coReach_of_covered3T IH ha hab hbc hcN h
+  · exact coReach_one_b_N IH h2 h30 (by omega) (by omega)
+  · exact coReach_one_three_N IH h1 h17
+  · refine coReach3_of_mirror (by omega) (by omega) le_rfl ?_
+    rw [show c + 1 - c = 1 by omega, show c + 1 - b = 3 by omega, show c + 1 - 1 = c by omega]
+    exact coReach_one_three_N IH h1 h17
+
+/-- **The residual statement with the families `OneN` removed.** -/
+def Residual3U (N : Nat) : Prop :=
+  ∀ a b c, 1 ≤ a → a < b → b < c → c ≤ N → valid3B N a b c = true → dead3B N a b c = false →
+    ¬ Covered3U N a b c → CoReach N {a, b, c}
+
+/-- Given the smaller strips, `Residual3U N` implies `Residual3T N`. -/
+theorem residual3T_of_residual3U {N : Nat} (IH : ∀ q, q < N → q ≠ 7 → Good3 q)
+    (h : Residual3U N) : Residual3T N := by
+  intro a b c ha hab hbc hcN hv hd _
+  by_cases hc : Covered3U N a b c
+  · exact coReach_of_covered3U IH ha hab hbc hcN hc
+  · exact h a b c ha hab hbc hcN hv hd hc
+
+/-- **Reduction**: the 3-prefix property for all `N ≠ 7` from the base strips and
+`Residual3U` above them. -/
+theorem good3_of_residual3U {M : Nat} (hbase : ∀ N, N ≤ M → N ≠ 7 → Good3 N)
+    (hres : ∀ N, M < N → Residual3U N) : ∀ N, N ≠ 7 → Good3 N := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro h7
+    by_cases hN : N ≤ M
+    · exact hbase N hN h7
+    intro a b c ha hab hbc hcN hv hd
+    by_cases hc : Covered3U N a b c
+    · exact coReach_of_covered3U ih ha hab hbc hcN hc
+    · exact hres N (by omega) a b c ha hab hbc hcN hv hd hc
+
+/-- `Residual3T N` for all `N > M` (the hypothesis of `Live3s.residual3R_all_of_residual3T` and
+of `Live3Final.extends3_iff_of_residual3T`) from the base strips and `Residual3U N` for all
+`N > M`. -/
+theorem residual3T_all_of_residual3U {M : Nat} (hbase : ∀ N, N ≤ M → N ≠ 7 → Good3 N)
+    (hres : ∀ N, M < N → Residual3U N) : ∀ N, M < N → Residual3T N := fun N hN =>
+  residual3T_of_residual3U (fun q _ hq7 => good3_of_residual3U hbase hres q hq7) (hres N hN)
+
 end Live3t
 end Folds
