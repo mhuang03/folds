@@ -122,6 +122,311 @@ theorem coReach_of_witB {N u v : Nat} {l : List Nat} (h : witB N u v l = true) :
   rw [List.mem_toFinset, hmem, mem_compl2, Finset.mem_sdiff, Finset.mem_Icc]
   simp
 
+/-! ## Centred Beatty copies `Z(N, p)`
+
+`Z(N, p) = {⌊k (N + 2)/(p + 1)⌋ : 1 ≤ k ≤ p}` for `2p ≤ N`: the interior division points of
+`[0, N + 2]` into `p + 1` equal parts.  (It is the two-sided Beatty copy of
+`experiments/live6/PROOFS.txt` section 5: its left elements follow `⌊k M/q⌋` and, read from the
+right end, its right elements follow `⌊(k M - 1)/q⌋`, `M = N + 2`, `q = p + 1`.)  Its counting
+function is `beattyCnt (N + 2) (p + 1) 0`. -/
+
+/-- The `k`-th element of `Z(N, p)`. -/
+def zF (N p k : Nat) : Nat := beatty (N + 2) (p + 1) 0 k
+
+/-- The counting function of `Z(N, p)`. -/
+def zC (N p t : Nat) : Nat := beattyCnt (N + 2) (p + 1) 0 t
+
+theorem zC_top {N p : Nat} (hpN : 2 * p ≤ N) : zC N p N = p := by
+  unfold zC beattyCnt
+  have e1 : (p + 1) * N + (p + 1) + 0 - 1 = p * N + N + p := by rw [Nat.succ_mul]; omega
+  have e2 : p * (N + 2) = p * N + 2 * p := by ring
+  have e3 : (p + 1) * (N + 2) = p * N + N + 2 * p + 2 := by ring
+  rw [e1]
+  exact Nat.div_eq_of_lt_le (by rw [e2]; omega) (by rw [e3]; omega)
+
+theorem countEmb_z {N p : Nat} (hp : 1 ≤ p) (hpN : 2 * p ≤ N) :
+    CountEmb N p (zF N p) (zC N p) := by
+  have hb := countEmb_beatty (N := N + 2) (p := p + 1) (h := 0) (by omega) (by omega)
+  exact ⟨hb.gal, hb.mono, hb.zero, zC_top hpN⟩
+
+/-- Division with remainder for the elements: `k M = q ⌊k M/q⌋ + s`, `s < q`. -/
+theorem zF_spec (N p k : Nat) :
+    k * (N + 2) = (p + 1) * zF N p k + k * (N + 2) % (p + 1) ∧
+      k * (N + 2) % (p + 1) < p + 1 := by
+  unfold zF beatty
+  rw [Nat.sub_zero]
+  exact ⟨(Nat.div_add_mod _ _).symm, Nat.mod_lt _ (by omega)⟩
+
+theorem zC_eq {N p t x : Nat} (lo : x * (N + 2) ≤ (p + 1) * t + p)
+    (hi : (p + 1) * t + p < (x + 1) * (N + 2)) : zC N p t = x := by
+  unfold zC beattyCnt
+  rw [show (p + 1) * t + (p + 1) + 0 - 1 = (p + 1) * t + p by omega]
+  exact Nat.div_eq_of_lt_le lo hi
+
+/-- The copy condition of `Z(N, p)` at every element (left half: doubling; right half: the
+mirrored doubling). -/
+theorem copyAt_z {N p : Nat} (_hp : 1 ≤ p) (hpN : 2 * p ≤ N) {j : Nat} (hj : 1 ≤ j) :
+    CopyAt N p (zF N p) (zC N p) j := by
+  obtain ⟨e, hs⟩ := zF_spec N p j
+  unfold CopyAt
+  generalize zF N p j = z at e ⊢
+  generalize j * (N + 2) % (p + 1) = s at e hs
+  generalize hA : j * (N + 2) = A at e
+  generalize hP : (p + 1) * z = P at e
+  generalize hQ : (p + 1) * (N + 2) = Q
+  have hjM : N + 2 ≤ A := by rw [← hA]; exact Nat.le_mul_of_pos_left _ hj
+  refine ⟨fun h1 => ?_, fun h2 => ?_⟩
+  · -- `c(2z - 1) = 2j - 1`
+    have hz : 1 ≤ z := by
+      by_contra h0; push Not at h0
+      have : z = 0 := by omega
+      subst this; rw [Nat.mul_zero] at hP; omega
+    have f1 : (p + 1) * (2 * z - 1) + (p + 1) = 2 * P := by
+      rw [← hP, ← Nat.mul_succ, show (2 * z - 1).succ = 2 * z by omega, Nat.mul_left_comm]
+    have f2 : (2 * j - 1) * (N + 2) + (N + 2) = 2 * A := by
+      rw [← hA, ← Nat.succ_mul, show (2 * j - 1).succ = 2 * j by omega, Nat.mul_assoc]
+    apply zC_eq
+    · omega
+    · rw [show 2 * j - 1 + 1 = 2 * j by omega, Nat.mul_assoc, hA]; omega
+  · -- `c(2z - N - 1) + p = 2j - 1`
+    have f0 : (p + 1) * (N + 1) ≤ 2 * P := by
+      rw [← hP, Nat.mul_left_comm]; exact Nat.mul_le_mul_left _ (by omega)
+    have f0' : (p + 1) * (N + 1) + (p + 1) = Q := by rw [← hQ, ← Nat.mul_succ]
+    have hle : p + 1 ≤ 2 * j := by
+      by_contra hc; push Not at hc
+      have : (2 * j + 1) * (N + 2) ≤ Q := by rw [← hQ]; exact Nat.mul_le_mul_right _ hc
+      rw [Nat.add_mul, one_mul, Nat.mul_assoc, hA] at this
+      omega
+    have f1 : (p + 1) * (2 * z - N - 1) + Q = 2 * P + (p + 1) := by
+      rw [← hQ, ← hP, ← Nat.mul_add, show 2 * z - N - 1 + (N + 2) = 2 * z + 1 by omega,
+        Nat.mul_add, mul_one, Nat.mul_left_comm]
+    have f2 : (2 * j - (p + 1)) * (N + 2) + Q = 2 * A := by
+      rw [← hQ, ← hA, ← Nat.add_mul, Nat.sub_add_cancel hle, Nat.mul_assoc]
+    have f3 : (2 * j - (p + 1) + 1) * (N + 2) = (2 * j - (p + 1)) * (N + 2) + (N + 2) := by
+      rw [Nat.add_mul, one_mul]
+    have key : zC N p (2 * z - N - 1) = 2 * j - (p + 1) := by
+      apply zC_eq
+      · omega
+      · rw [f3]; omega
+    omega
+
+theorem winEmb_z {N p : Nat} (hp : 1 ≤ p) (hpN : 2 * p ≤ N) : WinEmb N p (zF N p) :=
+  (countEmb_z hp hpN).winEmb fun _ hj _ => copyAt_z hp hpN hj
+
+/-- **`Z(N, p)` satisfies Theorem G** with the centre in the middle of the strip. -/
+theorem inward_z {N p : Nat} (hp : 1 ≤ p) (hpN : 2 * p ≤ N) :
+    Inward N (2 * ((N + 1) / 2) + 1) ((Finset.Icc 1 p).image (zF N p)) := by
+  have hc := countEmb_z hp hpN
+  have hφ := winEmb_z hp hpN
+  have hperm := image_toList_perm hφ
+  have hnd := Finset.nodup_toList ((Finset.Icc 1 p).image (zF N p))
+  intro m hm1 hmN hmB
+  have hnot : ∀ y, 1 ≤ y → y ≤ p → zF N p y ≠ m := fun y hy1 hyp e =>
+    hmB (Finset.mem_image.2 ⟨y, Finset.mem_Icc.2 ⟨hy1, hyp⟩, e⟩)
+  have hcm := hc.c_pred_of_not_mem hm1 hmN hnot
+  rw [leftCount_eq hnd, rightCount_eq hnd, hperm.countP_eq, hperm.countP_eq,
+    hc.countP_left hm1 hmN, hc.countP_right hm1 hmN, hcm]
+  refine ⟨by omega, fun hlt => ?_, fun hgt => ?_⟩
+  · -- left half: `2 c(m - 1) ≤ c(2m - 1)`
+    have hr : reach N m = m - 1 := by unfold reach; omega
+    rw [hr, show m - (m - 1) - 1 = 0 by omega, hc.zero, show m + (m - 1) = 2 * m - 1 by omega]
+    have key := beatty_key (N := N + 2) (p := p + 1) (h := 0) (by omega) (by omega) hm1 (by omega)
+    have e : zC N p (2 * m - 1) = (2 * ((p + 1) * m) + 0 - 1) / (N + 2) := by
+      unfold zC beattyCnt
+      congr 1
+      rw [Nat.mul_sub_one, Nat.mul_left_comm]
+      have : p + 1 ≤ 2 * ((p + 1) * m) := by
+        have := Nat.le_mul_of_pos_right (p + 1) hm1; omega
+      omega
+    have : zC N p (m - 1) = beattyCnt (N + 2) (p + 1) 0 (m - 1) := rfl
+    omega
+  · -- right half: `c(2m - N - 1) + p ≤ 2 c(m - 1)`, using `m ∉ Z`
+    have hr : reach N m = N - m := by unfold reach; omega
+    rw [hr, show m + (N - m) = N by omega, hc.top, show m - (N - m) - 1 = 2 * m - N - 1 by omega]
+    -- `x = c(m - 1)`, `q m - 1 = x M + r`, and `r + q < M` since `m ∉ Z`
+    have e1 : zC N p (m - 1) = ((p + 1) * m - 1) / (N + 2) := by
+      unfold zC beattyCnt; congr 1
+      rw [Nat.mul_sub_one]
+      have := Nat.le_mul_of_pos_right (p + 1) hm1; omega
+    have e2 : zC N p m = ((p + 1) * m - 1 + (p + 1)) / (N + 2) := by
+      unfold zC beattyCnt; congr 1
+      have := Nat.le_mul_of_pos_right (p + 1) hm1; omega
+    have hcm' := hcm
+    rw [e1, e2] at hcm'
+    have hd := Nat.div_add_mod ((p + 1) * m - 1) (N + 2)
+    have hmod := Nat.mod_lt ((p + 1) * m - 1) (show 0 < N + 2 by omega)
+    generalize ((p + 1) * m - 1) / (N + 2) = x at hd hcm' e1
+    generalize ((p + 1) * m - 1) % (N + 2) = r at hd hmod
+    -- `r + q < M`
+    have hrq : r + (p + 1) < N + 2 := by
+      by_contra hcon; push Not at hcon
+      have : x + 1 ≤ ((p + 1) * m - 1 + (p + 1)) / (N + 2) := by
+        rw [Nat.le_div_iff_mul_le (by omega)]; rw [← hd]; nlinarith
+      omega
+    have e3 : zC N p (2 * m - N - 1) + (p + 1) = 2 * x + 1 ∨
+        zC N p (2 * m - N - 1) + (p + 1) ≤ 2 * x + 1 := by
+      right
+      have hpm := Nat.le_mul_of_pos_right (p + 1) hm1
+      have : zC N p (2 * m - N - 1) + (p + 1) = zC N p (2 * m - N - 1 + (N + 2)) := by
+        unfold zC; rw [beattyCnt_add (by omega) (by omega)]
+      rw [this, show 2 * m - N - 1 + (N + 2) = 2 * m + 1 by omega]
+      unfold zC beattyCnt
+      rw [Nat.div_le_iff_le_mul_add_pred (by omega)]
+      have : (p + 1) * (2 * m + 1) + (p + 1) + 0 - 1 = 2 * ((p + 1) * m - 1) + 2 * (p + 1) + 1 := by
+        rw [Nat.mul_add, mul_one, Nat.mul_left_comm]; omega
+      rw [this, ← hd]
+      have : (N + 2) * (2 * x + 1) = 2 * ((N + 2) * x) + (N + 2) := by ring
+      omega
+    rw [e1]; omega
+
+theorem coReach_z {N p : Nat} (hp : 1 ≤ p) (hpN : 2 * p ≤ N) :
+    CoReach N ((Finset.Icc 1 p).image (zF N p)) := by
+  refine coReach_of_inward (fun x hx => ?_) (inward_z hp hpN)
+  obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hx
+  rw [Finset.mem_Icc] at hy ⊢
+  exact (winEmb_z hp hpN).bound y hy.1 hy.2
+
+/-- **Transfer through a centred Beatty copy.** -/
+theorem coReach_z_transfer {N p : Nat} (hp : 1 ≤ p) (hpN : 2 * p ≤ N) {D : Finset Nat}
+    (hDs : D ⊆ Finset.Icc 1 p) (hD : CoReach p D) : CoReach N (D.image (zF N p)) :=
+  coReach_winEmb (winEmb_z hp hpN) (coReach_z hp hpN) hDs hD
+
+/-! ## (R2) Corner pairs through `Z(N, p)`; the pairs `(3, N - 2)` and `(5, N - 4)` -/
+
+theorem zF_one (N p : Nat) : zF N p 1 = (N + 2) / (p + 1) := by
+  unfold zF beatty; rw [Nat.one_mul, Nat.sub_zero]
+
+/-- **Corner pairs of `Z(N, p)`**: for `p` odd, `p ≠ 7`, `2p ≤ N`, the pair formed by the first
+and the last element of `Z(N, p)` is co-reachable (image of `{1, p}`). -/
+theorem coReach_z_corner {N p : Nat} (hp3 : 3 ≤ p) (hpN : 2 * p ≤ N) (hodd : p % 2 = 1)
+    (h7 : p ≠ 7) : CoReach N {zF N p 1, zF N p p} := by
+  have := coReach_z_transfer (by omega) hpN (D := {1, p}) (pair_sub le_rfl (by omega) le_rfl)
+    (coReach_one_N p hodd h7)
+  rwa [Finset.image_insert, Finset.image_singleton] at this
+
+/-- The first element is `c` and the last `N + 1 - c` when `c (p + 1) < N + 2 < (c + 1)(p + 1)`. -/
+theorem zF_corner {N p c : Nat} (h1 : c * (p + 1) < N + 2) (h2 : N + 2 < (c + 1) * (p + 1)) :
+    zF N p 1 = c ∧ zF N p p = N + 1 - c := by
+  rw [zF_one]
+  refine ⟨Nat.div_eq_of_lt_le (by omega) (by omega), ?_⟩
+  unfold zF beatty
+  rw [Nat.sub_zero]
+  have e1 : (N + 1 - c) * (p + 1) + c * (p + 1) = (N + 1) * (p + 1) := by
+    rw [← Nat.add_mul, Nat.sub_add_cancel (by nlinarith)]
+  have e2 : p * (N + 2) + (N + 2) = (N + 2) * (p + 1) := by ring
+  have e3 : (N + 1) * (p + 1) + (p + 1) = (N + 2) * (p + 1) := by ring
+  have e4 : (c + 1) * (p + 1) = c * (p + 1) + (p + 1) := by ring
+  apply Nat.div_eq_of_lt_le
+  · omega
+  · have e5 : (N + 1 - c + 1) * (p + 1) = (N + 1 - c) * (p + 1) + (p + 1) := by ring
+    omega
+
+/-- **`{3, N - 2}` is co-reachable for every `N ≥ 30`** (in particular for `N = 2^k`, `k ≥ 5`):
+the corner pair of `Z(N, p)`, `p + 1 = 2⌊(N + 10)/8⌋`. -/
+theorem coReach_three_two {N : Nat} (hN : 30 ≤ N) : CoReach N {3, N - 2} := by
+  obtain ⟨p, hp⟩ : ∃ p, p = 2 * ((N + 10) / 8) - 1 := ⟨_, rfl⟩
+  have h1 : 3 * (p + 1) < N + 2 := by omega
+  have h2 : N + 2 < (3 + 1) * (p + 1) := by omega
+  have := coReach_z_corner (N := N) (p := p) (by omega) (by omega) (by omega) (by omega)
+  obtain ⟨e1, e2⟩ := zF_corner h1 h2
+  rwa [e1, e2, show N + 1 - 3 = N - 2 by omega] at this
+
+/-- **`{5, N - 4}` is co-reachable for every `N ≥ 59`** (in particular for `N = 2^k`, `k ≥ 6`):
+the corner pair of `Z(N, p)`, `p + 1 = 2⌊(N + 14)/12⌋`. -/
+theorem coReach_five_four {N : Nat} (hN : 59 ≤ N) : CoReach N {5, N - 4} := by
+  obtain ⟨p, hp⟩ : ∃ p, p = 2 * ((N + 14) / 12) - 1 := ⟨_, rfl⟩
+  have h1 : 5 * (p + 1) < N + 2 := by omega
+  have h2 : N + 2 < (5 + 1) * (p + 1) := by omega
+  have := coReach_z_corner (N := N) (p := p) (by omega) (by omega) (by omega) (by omega)
+  obtain ⟨e1, e2⟩ := zF_corner h1 h2
+  rwa [e1, e2, show N + 1 - 5 = N - 4 by omega] at this
+
+/-! ## Conjecture C modulo a covering statement, with the copies `Z(N, p)` -/
+
+/-- The pair `u < v` is the image of a non-dead pair of `[p]` under `Z(N, p)`. -/
+def SettledZ (N u v : Nat) : Prop :=
+  ∃ p a b, 1 ≤ p ∧ 2 * p ≤ N ∧ 1 ≤ a ∧ a < b ∧ b ≤ p ∧ deadB p a b = false ∧
+    zF N p a = u ∧ zF N p b = v
+
+/-- Directly settled: `Live6.Settled` (Theorem G, `{1, N}`, Beatty, swapped Beatty, `chiY`,
+doubling splits) or a centred Beatty copy `Z(N, p)`. -/
+def Settled7 (N u v : Nat) : Prop := Settled N u v ∨ SettledZ N u v
+
+/-- The covering statement with the centred Beatty copies and an exceptional set `E`. -/
+def CoverLemma7 (E : Nat → Nat → Nat → Prop) : Prop :=
+  ∀ N u v, 13 ≤ N → 1 ≤ u → u < v → v ≤ N → deadB N u v = false →
+    Settled7 N u v ∨ Settled7 N (N + 1 - v) (N + 1 - u) ∨ E N u v
+
+theorem settled_imp {N : Nat}
+    (ih : ∀ m < N, ∀ u v, 1 ≤ u → u < v → v ≤ m → deadB m u v = false → CoReach m {u, v})
+    (h12 : 13 ≤ N) {u v : Nat} (hu : 1 ≤ u) (huv : u < v) (hv : v ≤ N) (hS : Settled7 N u v) :
+    CoReach N {u, v} := by
+  rcases hS with hS | ⟨p, a, b, hp, hpN, ha, hab, hb, hdp, e1, e2⟩
+  · rcases hS with hS | hS | ⟨p, h, a, b, hp, hh, h1, ha, hab, hb, hdp, e1, e2⟩ |
+      ⟨p, h, c, a, b, H, ha, hab, hb, hdp, e1, e2⟩ | ⟨a, b, h4, h8, ha, hab, hb, hdp, e1, e2⟩ |
+      ⟨j, n, a, b, hj, hN, ha, hab, hS⟩
+    · exact coReach_pair_inward hu huv hv hS
+    · obtain ⟨rfl, rfl, hodd, h7⟩ := hS
+      exact coReach_one_N _ hodd h7
+    · exact coReach_image_pair (coReach_beatty_transfer hp hh h1 (pair_sub ha hab hb)
+        (ih p (by omega) a b ha hab hb hdp)) e1 e2
+    · have := H.N4
+      exact coReach_image_pair (coReach_swap_transfer H (pair_sub ha hab hb)
+        (ih p (by omega) a b ha hab hb hdp)) e1 e2
+    · have := coReach_chiY_transfer (n := N / 2) (by omega) (by omega) (pair_sub ha hab hb)
+        (ih (N / 2) (by omega) a b ha hab hb hdp)
+      rw [show 2 * (N / 2) = N by omega] at this
+      exact coReach_image_pair this e1 e2
+    · have hn : 1 ≤ n := by
+        rcases Nat.eq_zero_or_pos n with h0 | h0
+        · rw [h0, Nat.mul_zero] at hN; omega
+        · exact h0
+      have hjn : 1 ≤ j * n := Nat.mul_pos hj hn
+      have e : (2 * j + 1) * n = (j + 1) * n + j * n := by ring
+      have : j * n ≤ (j + 1) * n := Nat.mul_le_mul_right n (by omega)
+      rcases hS with ⟨hb, hdp, e1, e2⟩ | ⟨hb, hdp, e1, e2⟩
+      · have := coReach_split (split_res hj n).symm (pair_sub ha hab hb)
+          (ih ((j + 1) * n) (by omega) a b ha hab hb hdp)
+        rw [← hN] at this
+        exact coReach_image_pair this e1 e2
+      · have := coReach_split (split_res hj n) (pair_sub ha hab hb)
+          (ih (j * n) (by omega) a b ha hab hb hdp)
+        rw [← hN] at this
+        exact coReach_image_pair this e1 e2
+  · exact coReach_image_pair (coReach_z_transfer hp hpN (pair_sub ha hab hb)
+      (ih p (by omega) a b ha hab hb hdp)) e1 e2
+
+/-- **Conjecture C modulo `CoverLemma7`**: every non-dead pair is co-reachable. -/
+theorem coReach_of_cover7 {E : Nat → Nat → Nat → Prop}
+    (hX : ∀ N u v, E N u v → CoReach N {u, v}) (hcov : CoverLemma7 E) :
+    ∀ N u v, 1 ≤ u → u < v → v ≤ N → deadB N u v = false → CoReach N {u, v} := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro u v hu huv hv hd
+    by_cases h12 : N ≤ 12
+    · exact coReach_base h12 hu huv hv hd
+    rcases hcov N u v (by omega) hu huv hv hd with hS | hS | hS
+    · exact settled_imp ih (by omega) hu huv hv hS
+    · have := coReach_mirror (settled_imp ih (by omega) (u := N + 1 - v) (v := N + 1 - u)
+        (by omega) (by omega) (by omega) hS)
+      rw [Finset.image_insert, Finset.image_singleton,
+        show N + 1 - (N + 1 - v) = v by omega, show N + 1 - (N + 1 - u) = u by omega,
+        Finset.pair_comm] at this
+      exact this
+    · exact hX N u v hS
+
+/-- **Conjecture C for valid 2-prefixes, modulo `CoverLemma7 E`** (with the pairs of `E`
+co-reachable). -/
+theorem extends_iff_not_dead7 {E : Nat → Nat → Nat → Prop}
+    (hX : ∀ N u v, E N u v → CoReach N {u, v}) (hcov : CoverLemma7 E) {N m₁ m₂ : Nat}
+    (h1 : 1 ≤ m₁ ∧ m₁ ≤ N) (h2 : 1 ≤ m₂ ∧ m₂ ≤ N) (h12 : m₁ ≠ m₂)
+    (hval : SemiSymmetric N [m₁, m₂]) :
+    Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false :=
+  extends_iff_not_dead (E := fun N u v => 1 ≤ u ∧ u < v ∧ v ≤ N ∧ deadB N u v = false)
+    (fun N u v h => coReach_of_cover7 hX hcov N u v h.1 h.2.1 h.2.2.1 h.2.2.2)
+    (fun _ _ _ _ hu huv hv hd => Or.inr (Or.inr ⟨hu, huv, hv, hd⟩)) h1 h2 h12 hval
+
 /-! ## (R3) The small hard core: explicit witness orderings -/
 
 -- BEGIN WITNESSES (generated by experiments/live7/gen_wit.py)
