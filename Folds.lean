@@ -47,3 +47,4 @@ import Folds.LabellingSAT4
 import Folds.Live5
 import Folds.RecCount
 import Folds.Neutral
+import Folds.Upper

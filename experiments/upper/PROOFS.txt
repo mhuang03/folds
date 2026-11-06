@@ -1,0 +1,265 @@
+UPPER BOUNDS ON a(N): WHAT IS PROVEN, WHAT BLOCKS e^{-omega(N)}        (experiments/upper/)
+=========================================================================================
+
+Notation as in ../growth/PROOFS.txt and ../asymptotics/NOTES.txt.  S = set of panels placed so far,
+k = s = |S|, f = N - k free panels, V(S) = number of valid next panels.  P(y) = |S ∩ [1,y]|,
+P~(y) = P(y mod N) + floor(y/N) s,  E(y) = P(y) - s y/N (discrepancy),
+I_S(m) = P~(2m-1) - 2 P(m-1)  (cyclic defect, Lean `cycDefect`; defined for EVERY m),
+J_S(m) = #(S in right arm) - #(S in left arm) (imbalance).  For free m, I_S(m) = J_S(m), and m is
+valid iff I_S(m) = 0 (Lean `semiStep_iff_cycDefect`).
+"[Lean]" = Folds/Upper.lean (no sorry, no native_decide; axioms propext, Classical.choice,
+Quot.sound).  "[paper]" = proved here.  "[cited]" = classical theorem used as a black box.
+"[data]" = computation in this directory.
+
+
+SUMMARY
+-------
+GOAL (a(N) <= N! e^{-omega(N)}): NOT ACHIEVED.  The best rigorous upper bound is unchanged in
+order of magnitude:
+     a(N) <= N! exp(-0.0966 N (1+o(1)))   (N even)   [Lean, Growth.lean, already known]
+     a(N) <= N! exp(-0.0589 N (1+o(1)))   (N odd)    [Lean, NEW here: semiCount_odd_le_prod]
+     a(N) <= N! exp(-(floor((N+1)/2)-1)/16)  (all N) [paper, growth/PROOFS.txt 2.3]
+so Lean now has an exponential saving over N! for EVERY N (before: even N only).
+Non-P-recursiveness of a(N) therefore remains CONDITIONAL; see section 6 for exactly what is
+missing.  New rigorous results and findings:
+
+ (1) Odd-N parity bound [Lean]: for N = 2h+1 and |S| odd, V(S) <= h + 1 + floor(|S|/2) (sharp,
+     exhaustive N <= 15), hence a(2h+1) <= prod_{i<N} (i odd ? min(N-i, h+1+floor(i/2)) : N-i).
+ (2) Discrepancy transfer [Lean, sup form; paper, L2 form]: if |I_S(m)| <= B for every m, then
+     |P(y) - s y/N| <= B + 1 for all y; and ||E||_2 <= ||I||_2 + 2 sqrt(N).
+ (3) Consequence via Schmidt's and Roth's irregularity-of-distribution theorems [paper + cited]:
+     along EVERY ordering of [1..N] (valid or not) the imbalance field is large:
+       max_k max_m |I_{S_k}(m)| >= c_S ln N - 2,
+       ( (1/N^2) sum_k sum_m I_{S_k}(m)^2 )^{1/2} >= sqrt(c_R ln N) - 3.
+     This is the rigorous half "(b) the statistic cannot stay flat" of the potential strategy:
+     the imbalance field of a valid sequence cannot stay bounded, in sup or in mean square.
+ (4) Obstruction to the other half "(a) many valid moves force flatness" [paper + data]: an
+     explicit family (N = 8n, S = evens of [1,4n] + multiples of 4 in (4n,8n]) has
+     V(S) >= (N - |S|)/5 while disc(S) = N/16 and rms(J) ~ 0.05 N.  No statistic of the STATE
+     alone (discrepancy, ||J||_2, ||J||_inf) bounds V(S) below a constant fraction.  A proof of
+     e^{-omega(N)} must use the history of the path (or averaging over paths), not the state.
+ (5) Reduction + evidence [paper + data]: by the tree bound, a(N) <= N! e^{-omega(N)} follows
+     from the deterministic PATH LEMMA "every valid sequence has sum_k ln((N-k)/V(S_k)) =
+     omega(N)".  The minimal such deficit (exact DP for N <= 22, converged beam search to
+     N = 256) is 0.157, 0.220, 0.247, 0.283, 0.326, 0.420, 0.514, 0.599 per panel at
+     N = 8, 12, 16, 22, 32, 64, 128, 256: it grows by ~0.09 per doubling of N, about 0.107 N ln N
+     on this range.  The Path Lemma is therefore very likely TRUE, and it would give the target
+     (the deficit must eventually bend below the true N d(N) ~ 1.7 N ln ln N).
+ (6) Lower-bound question: ln a(N) ~ N ln N CANNOT be obtained from the known constructions:
+     composition, splits and doubling sets give exponential growth, and every slip-lemma
+     recursion is capped at exponent 1/2 because B(n) <= 2^{n-1} a(n)^2 (section 5).
+
+
+=========================================================================================
+1. THE PARITY BOUND FOR ODD N                                     [Lean: Folds/Upper.lean]
+=========================================================================================
+Let N = 2h+1, S a set of odd size, valid = free and semi-symmetric step.  Recall
+window_count_even (Growth.lean): a valid m has |S ∩ W_m| even.
+(i) middle_not_valid: W_{h+1} = [1, N], |S ∩ W_{h+1}| = |S| odd, so h+1 is never valid.
+(ii) odd_pair_even: 1 <= m <= h.  W_m = [1, 2m-1] (reach m-1) and W_{m+h+1} = [2m+1, N]
+     (reach h-m).  They partition [1,N] \ {2m}.  If both are valid and 2m is not in S, the two
+     even counts add up to |S|, which is odd.  So both valid => 2m in S.
+(iii) odd_pair_odd: 2 <= m <= h.  W_m = [1, 2m-1], W_{m+h} = [2m-1, N] (reach h+1-m); they
+     overlap only in 2m-1.  If both are valid and 2m-1 is not in S, again |S| would be even.
+     So both valid => 2m-1 in S.
+Counting (card_moves_odd_odd_le).  Let Z = valid set, A = Z ∩ [1,h], B = Z ∩ [h+2, N]
+(by (i), Z = A ⊔ B).  First pairing: B1 = B - (h+1) ⊆ [1,h], A ∩ B1 ⊆ E := {m <= h : 2m in S},
+so |Z| = |A| + |B1| = |A ∪ B1| + |A ∩ B1| <= h + |E|.  Second pairing: B2 = B - h ⊆ [2, h+1],
+A ∪ B2 ⊆ [1, h+1], A ∩ B2 ⊆ O := {2 <= m <= h : 2m-1 in S}, so |Z| <= h + 1 + |O|.  The maps
+m -> 2m on E and m -> 2m-1 on O have disjoint images in S, so |E| + |O| <= |S|.  Adding:
+2|Z| <= 2h + 1 + |S|, i.e.  |Z| <= h + 1 + floor(|S|/2)  (|S| odd).
+semiCount_odd_le_prod (branching bound semiCount_le_prod):
+     a(2h+1) <= prod_{i < 2h+1} (i odd ? min(2h+1-i, h+1+floor(i/2)) : 2h+1-i).
+Saving: sum over odd i < N/3 of ln((N-i)/(h+1+floor(i/2))) = 0.05889 N (oddparity_check.py; the
+even bound saves 0.09657 N).  [data] oddparity_check.py: the bound and both pair lemmas hold
+for all sets of odd size, N <= 15 odd, and the bound is attained.
+
+
+=========================================================================================
+2. DISCREPANCY TRANSFER AND THE IRREGULARITY OF THE IMBALANCE FIELD
+=========================================================================================
+2.1 Lemma (sup transfer)                [Lean: cycDefect_identity, disc_le_of_cycDefect_le]
+With e(y) = N P(y) - s y (an integer, e(N) = 0), for 0 <= y < N:
+     N I(y+1) = e((2y+1) mod N) - 2 e(y) + s.                                (*)
+Proof: write 2y+1 = qN + z, z = (2y+1) mod N.  N P~(2y+1) = N P(z) + qNs = e(z) + s z + qNs
+= e(z) + s(2y+1), and N P(y) = e(y) + s y.
+Lemma: if |I(m)| <= B for all 1 <= m <= N, then |e(y)| <= N (B+1) for all 0 <= y <= N,
+i.e.  max_y |P(y) - s y/N| <= max_m |I(m)| + 1.
+Proof: let y0 < N maximise |e|.  By (*), 2|e(y0)| <= |e(z0)| + N B + s <= |e(y0)| + N B + N.
+[data] transfer_check.py: exhaustive N <= 14, max(maxE - maxI) = 0.71 < 1.
+
+2.2 Lemma (L2 transfer)                                                             [paper]
+||e||_2 <= N ||I||_2 + 2 N sqrt(N)   (norms over y in [0,N-1], m in [1,N]), i.e.
+rms_y E <= rms_m I + 2.
+Proof: by (*), 2||e|| <= ||e∘z|| + N ||I|| + s sqrt(N), z(y) = (2y+1) mod N.  For N odd, z is a
+bijection of Z_N and ||e∘z|| = ||e||.  For N even, z is 2-to-1 onto the odd residues:
+||e∘z||^2 = 2 sum_{w odd} e(w)^2.  Since e(w) - e(w-1) = N[w in S] - s, |e(w)| <= |e(w-1)| + N,
+so with u = (e(w))_{w odd}, v = (e(w-1))_{w odd}: ||u|| <= ||v|| + N sqrt(N/2) and
+sqrt(2)||u|| <= sqrt(||u||^2 + (||v|| + N sqrt(N/2))^2) <= ||e|| + N sqrt(N/2).  Hence
+||e∘z|| <= ||e|| + N sqrt(N), and 2||e|| <= ||e|| + N sqrt N + N||I|| + N sqrt N.
+[data] transfer_check.py: max (||E|| - ||I||)/sqrt(N) = 0.28 (exhaustive N <= 14).
+Remark (the inverse of the doubling defect).  Iterating (*) gives
+E(y) = -sum_{j>=0} 2^{-j-1} I(T^j y + 1) + O(1) along the doubling orbit T y = (2y+1) mod N:
+the discrepancy is a geometric average of the imbalance field along doubling orbits.
+If I vanishes on a set Z, only the visits of the orbit to the complement of Z contribute.
+
+2.3 Corollary (the field cannot stay flat)                         [paper, using cited theorems]
+Let a_1..a_N be ANY ordering of [1..N], S_k = {a_1..a_k}.  The N points
+p_k = ((a_k - 1/2)/N, (k - 1/2)/N) in the unit square have anchored-box discrepancy
+D(x,t) = #{p in [0,x)x[0,t)} - N x t, and D(y/N, k/N) = P_{S_k}(y) - k y/N = E_k(y) exactly;
+moving (x,t) inside its grid cell changes D by at most 1.
+ [cited] Schmidt (1972, Irregularities of distribution VII): sup |D| >= c_S ln N for every
+         N-point set (c_S > 0 an absolute constant).
+ [cited] Roth (1954): integral of D^2 over the square >= c_R ln N.
+Hence, by 2.1 and 2.2 (the latter applied for each k, then Minkowski over k):
+     max_k max_m |I_{S_k}(m)| >= c_S ln N - 2,
+     ( N^{-2} sum_{k,m} I_{S_k}(m)^2 )^{1/2} >= sqrt(c_R ln N) - 3.
+For a VALID sequence this says: the imbalance field cannot stay bounded; it reaches c_S ln N
+somewhere at some time, and its space-time quadratic mean grows at least like sqrt(ln N).
+This is the rigorous counterpart of the observed sigma_J ~ ln N (asymptotics/NOTES.txt); it is
+part (b) of idea 1 ("the statistic cannot stay flat"), with statistic = sup or L2 norm of I.
+Caveat: these norms run over ALL positions m (also occupied ones) and over all times.
+
+2.4 Lipschitz property (used in the discussion)                                       [paper]
+I(m+1) - I(m) = [2m in S] + [2m+1 in S] - 2[m in S]  (positions mod N in the wrapped part), so
+|I(m+1) - I(m)| <= 2: a value |I(m)| = H forces |I| >= H/2 on ~H/2 neighbouring positions.
+
+
+=========================================================================================
+3. WHY PART (a) FAILS FOR EVERY STATE STATISTIC: AN EXPLICIT OBSTRUCTION
+=========================================================================================
+Proposition 3.1 [paper; data obstruction.py].  N = 8n, S = {2,4,...,4n} ∪ {4n+4, 4n+8, ..., 8n},
+|S| = 3n, f = 5n free panels.  Then
+  * every odd m <= 2n is valid: W_m = [1, 2m-1] ⊆ [1, 4n], and S ∩ [1,m-1], S ∩ [m+1,2m-1] both
+    consist of (m-1)/2 even numbers.  So V(S) >= n = f/5 (numerically V = 2n+2, V/f -> 0.40);
+  * disc(S) >= |P(4n) - 4n s/N| = |2n - 3n/2| = n/2 = N/16;
+  * J(m) ~ n - m/2 for m in [2n, 4n] (half of the panels have |J| of order N), rms J ~ 0.051 N.
+So neither the discrepancy nor any norm of the imbalance field (sup, L2, restricted to free
+panels or not) forces V(S)/f -> 0: the state can be "maximally irregular" and still have a
+constant fraction of valid moves (all of them in the outer quarter, where S is locally a
+Beatty set and the doubling defect is 0).  More generally (obstruction.py): two-slope Beatty
+sets with slopes r1 != r2 on the two halves have disc ~ |r1-r2| N/4, rms J ~ 0.04-0.06 N and
+V/f ~ 0.27-0.40 for all N tested (400..10000).
+Consequence.  Idea 1 (statistic + per-state bound) cannot be completed with a function of the
+current set alone.  Combining with 2.3: valid paths must become irregular (2.3), but irregular
+states need not have few valid moves (3.1).  What would close the gap is a DYNAMIC statement:
+a path cannot keep a constant fraction of valid moves for most of its length; i.e. irregular
+states with many valid moves (like 3.1, whose moves all lie in one region) cannot persist.
+
+
+=========================================================================================
+4. REDUCTIONS, RELAXATIONS AND NUMERICAL EVIDENCE
+=========================================================================================
+4.1 The Path Lemma suffices.  The tree bound (Growth.lean semiCount_le_prod, and its path
+form: #leaves <= max over root-leaf paths of the product of degrees) gives
+     a(N) <= max over valid sequences of prod_k V(S_k) = N! exp(-Dmin(N)),
+     Dmin(N) := min over valid sequences of sum_k ln((N-k)/V(S_k)).
+PATH LEMMA (conjecture): Dmin(N) = omega(N).  It implies a(N) <= N! e^{-omega(N)}.
+Data (maxpath.c: exact subset DP; beam.c: beam search maximising sum ln V with one-step
+look-ahead, converged in the beam width; pathdef.c: explicit sequences):
+     N      8     10     12     16     20     22   |  24     32     48     64     96    128   192   256
+  Dmin/N .157  .191  .220  .247  .275  .283  | .291  .326  .375  .420  .470  .514  .568  .599
+          exact (maxpath.c)                       beam B = 5000-20000 (N=24: equals the exact DP)
+Increase per doubling of N: 0.079, 0.094, 0.094, 0.085 (N = 16..256): Dmin(N) ~ 0.107 N ln N on
+this range.  The optimal paths are NOT structured: they keep sigma_J ~ 0.7-0.85 and
+discrepancy ~ 1.5 (analyze.py on the N = 128 optimum best128.txt), with the loss spread
+evenly over time (mean loss 0.5-0.6 per step until k ~ 0.7 N).  The bit-reversal order
+(valid, Generate.lean) has deficit 0.383, 0.698, 1.021, 1.346, 1.671, 1.996 per panel at
+N = 16, 64, ..., 16384: 0.235 N ln N.
+Consistency: since Dmin(N) <= N d(N) with d(N) = (ln N! - ln a(N))/N ~ 1.7 ln ln N
+(asymptotics), the observed 0.107 N ln N growth must bend for astronomically large N
+(ln N ~ 50).  So the Path Lemma is consistent with the conjecture, and its natural strength
+is Dmin(N) ~ c N ln ln N.  Proving it is a Schmidt-type "irregularity of distribution"
+statement for the zero set of the doubling defect along a sequence; 2.3 gives the
+corresponding statement for the size of the field, 3.1 shows the two are different.
+
+4.2 Relaxations.  relaxdp.c (exact, N <= 25) and relax.c (SMC; reliable only with large
+populations) count orderings in which only a subset C of the panels must be valid:
+  C = all (a(N)), left half (L(N)), the block (n1/2, n1] (n1 = ceil(N/2)), lower quarter.
+Deficit per panel, block relaxation: 0.263, 0.288, 0.305, 0.318, 0.329 (N = 9..25, exact),
+0.36 (N = 64), 0.414 (N = 128, P = 100000; P = 30000 gives 0.416).  Even the block of N/4
+constraints with all other panels free has a deficit that keeps growing, so a proof could in
+principle use only O(N) "nested" constraints with windows [1, 2m-1], m in (N/4, N/2].
+For N <= 25 each added block constraint costs 1.37-1.55 nats, close to the single-constraint
+Wallis cost (1/2) ln(pi r) ~ 1.6: at these sizes the block constraints are nearly independent.
+
+4.3 Why the conditioning / second-moment route (idea 2) does not work as stated  [paper]
+Fix the block relaxation: constraints C_m, m in B = (M/2, M] (windows [1, 2m-1]), panels
+U = (M, 2M-1] unconstrained.  Conditioning on the times of all panels outside U, the U-times
+are i.i.d. and the constraints become
+     Y_m := #{u in U, u <= 2m-1 : t_u < t_m} = target_m      (m in B),
+i.e. prescribed counts of a random point set in anchored boxes with corners (2m-1, t_m).  So
+P(all C_m) <= E_t[ max_y P(Y = y | t) ].
+ * For a WORST-CASE corner configuration (t_m increasing in m and clustered), the increments
+   Y_{m+1} - Y_m are essentially independent Bin(2, 1/2) and max_y P(Y=y|t) = e^{-Theta(M)}:
+   private randomness per constraint is O(1) (every pair of new U-points is shared by all
+   later corners), so any argument that conditions to make constraints independent saves
+   only O(1) per constraint (Halasz/Littlewood-Offord-type bounds give the same).
+ * For TYPICAL corners a Gaussian (kriging) heuristic gives conditional variances ~ sqrt(M)
+   and P(Y = y | t) ~ M^{-M/8}, i.e. a(N) <= N! N^{-cN}; this is FALSE (a(N) >= N!/(C ln N)^N
+   numerically), which shows that the expectation over t is dominated by atypical,
+   low-discrepancy configurations and atypical targets.  A rigorous averaging proof must
+   therefore control the large deviations "U is a low-discrepancy set", whose probability
+   is itself of the size (ln N)^{-Theta(N)}: this is the original problem again.
+4.4 Arithmetic obstructions give only constants.  Integer combinations sum_i c_i r_{m_i} of
+the window functionals that are constant mod p outside {m_i} force a forbidden pattern when
+p does not divide |S| (p = 2 is the parity lemma).  For p odd, the centre jump 2c_i must be
+cancelled by window ends, which forces coefficients c(halving preimage) = 2 c(m) mod p along
+doubling orbits, i.e. cycles of the doubling map with 2^len = 1 mod p (e.g. {N/3, 2N/3} for
+p = 3).  Each such group forbids one pattern among O(1) panels; with disjoint groups this
+yields at most a constant-factor saving per step at early steps: e^{-Theta(N)} at best.
+Likewise block symmetries (permuting the times inside a dyadic block that no other window
+edge splits, e.g. the pairs {2j, 2j+1} for even N) factor the count exactly over blocks but
+save at most a constant per panel unless the block problem itself has growing deficit.
+
+
+=========================================================================================
+5. CAN ln a(N) ~ N ln N BE PROVEN FROM THE KNOWN LOWER-BOUND CONSTRUCTIONS?   No.
+=========================================================================================
+* Composition a(qn) >= a(q) a(n)^q, doubling splits a((2j+1)n) >= 2 a(jn) a((j+1)n), and the
+  residue-chain / copy constructions only reproduce exponential growth from exponential
+  input (growth/PROOFS.txt 1.1: c q log q + c qn log n falls short of c qn log(qn)).
+* Every slip-lemma recursion is built on a(2n) >= B(n) with B(n) <= 2^{n-1} a(n)^2 (each of
+  the n-1 slip positions contributes at most a factor 2).  If b(2n) = 2^{n-1} b(n)^2 then
+  f(L) = ln b(2^L)/2^L satisfies f(L+1) = f(L) + (ln 2)/2 - (ln 2)/2^{L+1}, so
+  ln b(N) = (1/2) N ln N + O(N): exponent at most 1/2 (superexp2/PROOFS.txt 6.1; the proven
+  chain reaches 1/6 along
+  N = 2^L and 1/22 for all N).  General slips (superexp3) with certifiable inputs are within a
+  constant factor of the chain (superexp3 2.3).
+So the lower-bound side needs a new idea as well: the conjectured exponent 1 requires
+super-constant freedom per element per level, which binary slip choices cannot give.
+
+
+=========================================================================================
+6. NON-P-RECURSIVENESS: STATUS
+=========================================================================================
+Perron-Kreuser (recsearch/REPORT.txt T2): if a(N) were P-recursive, then for the rational
+slope kappa = limsup ln a/(N ln N) one would have limsup (a(N)/N!^kappa)^{1/N} in (0, inf).
+To refute this unconditionally one needs BOTH
+  (A) an upper bound a(N) <= N! e^{-omega(N)}  [open; reduced here to the Path Lemma 4.1 or to
+      a dynamic anti-concentration statement for the zero set of the imbalance field], and
+  (B) limsup ln a(N)/(N ln N) = 1 (or irrational)  [open; proven >= 1/6 (powers of 2) and
+      liminf >= 1/22; the known constructions cannot give more than 1/2 (section 5)].
+(A) alone does not suffice: e.g. kappa = 1/2 and a(N) = N!^{1/2} C^N is compatible with (A) and
+with every proven lower bound.  Neither (A) nor (B) is proven, so "a(N) is not P-recursive"
+remains conditional.  What this round adds: (B') the field-size half of the (A) mechanism is
+now rigorous (2.3), the state-only approach to (A) is ruled out (3.1), and the remaining step
+is isolated as the Path Lemma, numerically strongly supported (4.1).
+
+
+=========================================================================================
+7. FILES
+=========================================================================================
+maxpath.c         exact min-deficit path (subset DP; N <= ~26, 2^N floats), prints a path
+beam.c            beam search for valid sequences with large prod V(S_k) (any N); optional
+                  4th argument writes the best path (best128.txt: N = 128, B = 20000)
+pathdef.c         deficit of the (truncated) bit-reversal order
+analyze.py        per-segment loss, sigma_J, discrepancy along a path
+relaxdp.c         exact counts for constraint relaxations (subset DP, N <= 25)
+relax.c           SMC counts for constraint relaxations (needs large populations)
+transfer_check.py Lemmas 2.1 and 2.2 (exhaustive N <= 14 + random)
+obstruction.py    Proposition 3.1 and the two-slope Beatty family
+oddparity_check.py  section 1 (exhaustive) and the constants 0.0589 / 0.0966
+Lean: Folds/Upper.lean  (middle_not_valid, odd_pair_even, odd_pair_odd, card_moves_odd_odd_le,
+      semiCount_odd_le_prod, cycDefect, semiStep_iff_cycDefect, length_le_of_bounds,
+      cycDefect_identity, disc_le_of_cycDefect_le).
