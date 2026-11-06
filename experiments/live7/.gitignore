@@ -1,0 +1,4 @@
+dfs
+*.o
+__pycache__/
+T.lean
