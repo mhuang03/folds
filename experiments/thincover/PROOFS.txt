@@ -1,0 +1,106 @@
+ThinCover: the thin sets of CoverAll, and Conjecture C for all N
+=================================================================
+
+Lean: Folds/ThinCover.lean (assembly, `thinCover`, `residual2`, `conjectureC`, `coverAll`), generic
+lemmas in Folds/ThinCoverBase.lean, generated certificates in Folds/ThinCover{Diag,StripA,StripB,
+StripC,Shapes,Small,Cluster0-2,ClusterAsm}.lean, kernel checks in Folds/ThinCoverKernel*.lean.
+No sorry, no native_decide (only `decide +kernel`).  Notation as in
+experiments/coverall/PROOFS.txt: pair (u, u'), u <= u', u + 2u' + 1 <= N; Lean variables N u v.
+
+1. Certificate types (ThinCoverBase.lean)
+-----------------------------------------
+* sliceH / sliceH': a slice (a = p c + j resp. c = p a + j) of a family contains the parallelogram
+  with corners (s0, c0), (s0 + 1, c0), (s1, c0 + 1), (s1 + 1, c0 + 1) (side (1, 0)): the lower
+  bounds of s at s0 / s1, the upper bounds at s0 + 1 / s1 + 1, the c-bound at c0: 15 conditions.
+* sliceG / sliceG': a slice with any side w1 = (p1, q1), w2 = (p2, q2), corners P, P + w1,
+  P + w2 + delta w1, P + w1 + w2 + delta w1: 32 conditions (`Corners (sliceQ ...)`).
+* pfC: the witness polygon famCons itself (RegionPF), any side; the 13 constraints are used in the
+  cleared form famConsC (multiplied by their positive denominators L(L+1), L(R+1), ...), so all
+  52 corner conditions are polynomial (corners_famConsQ converts back).
+In every piece the corner data are explicit: a bottom line nu0 = c0 (along w2) linear in the piece
+variables with rational coefficients, and t0, t1 = the active lower bound (constraint i0 resp. i1)
+on the lines nu0, nu0 + 1.  In Lean the three corner numbers are introduced as variables x0, x1, x2
+with x_i * D_i = n_i (D_i > 0 products of linear forms), each condition E (affine in x) is shown
+via `nonneg_of_cleared`: E * D = P by `linear_combination` (polynomial coefficients, no field_simp),
+P >= 0 by `linarith` with products of the piece's linear constraints (Handelman-type certificate;
+linear factors of P that are positive on the piece are split off).  The products are found by an
+LP (../coverall/handel.py) and re-solved exactly (gen.py, certify_exact2).
+
+2. The pieces
+-------------
+Designs: design2.py fits nu0 inside the exact windows (slicelib.window: the nu-interval where both
+chords have length >= 1) of all integer points of a sample (N <= 30002) of the piece domain (all
+integer points, not only pairs: the Lean statements are over the real relaxation), restricted so
+that the chosen lower constraints are the active ones; an LP maximises the slack, then the
+coefficients are rounded to small denominators and the windows re-checked exactly.  Every
+certificate is then a proof (Handelman) for the whole real polyhedron.
+
+(a) u <= 3 (gensmall.py, ThinCoverSmall.lean + shapes): u = 2: RegionS for u' = 4, 5, region D0
+    for u' >= 6.  u = 3: RegionS (u' in [5, 8], |N - 3u'| <= 5), slices for (3, 9), (3, 10), D0 for
+    N >= 3u' + 7, B2 for N + 7 <= 3u' and 8u' <= 3N + 2, B for 8u' >= 3N + 2 (then 2u' + 5 <= N by
+    parity and non-specialness).  Checked exactly for 301 <= N <= 3000 (small2.c: 0 failures).
+(b) the diagonal lines u' = u + d (pieces.py DIAG): one slice per line, side (1, 0):
+       d  slice (o f t p : j)   u >=
+       0  1001:0 (Z (u',u) a = c)        6     2  1001:1                4
+       3  1201:2 (X1 (u',u) a = c + 2)   6     4  0111:1 (X0 (u,u') c = a + 1)  4
+       5  1011:-2                        4     6  0101:-2                6
+       7  0101:-2                        4     8  1011:-3                8
+       9  0111:3                         5
+    (code: o = 1 orientation (u', u); f = 0 Z, 1 X0, 2 X1; t = 0 a = p c + j, 1 c = p a + j),
+    fixed shapes (u, u + d) for the smaller u (slices with constant c0, all N >= 301), and for d = 1
+    (beyond d1_line): u = 4 shape, N = 3u + 3 RegionS, 3u + 4 <= N <= 3u + 20 one slice X0 a = c + 1
+    with side (3, 1) (d1_corner).
+(c) the strip u' = 2u + e, e in [-12, 15], N <= 8u + 320 (pieces.py STRIP): one slice per line,
+    variables (N, w) with u = w + a (no truncated subtraction); where no single linear c0 fits,
+    the line is split along N = 6.5u (and 7.25u, 7.625u) -- e in {-12, -10, -8, -1, 10, 15}; for
+    e = -1 the last piece uses the slice 0012:-1.  Small u (only N <= 8u + 320 <= 376): shapes
+    sshape_u_u' on 301 <= N <= 8u + 320 with the slice Z (u, u') a = 2.
+(d) the cluster box N <= 4u + 80, 4u <= N + 40, delta = N - 1 - u - 2u' <= 80 (outside (b), (c);
+    there u' + 13 <= 2u since N >= 301), r = 4u - N:
+    * N >= 1000 (clpieces.py, ThinCoverCluster{0,1,2}.lean, `cluster_cover`): famCons parallelograms
+      (RegionPF, side w1, bottom line nu0 along w2 linear in (N, u, u')):
+        A  X0 (u, u')  side (1, 1)   on 50 delta + 31 r >= 825        nu0 = -9N/880 - 29u/55 + 6u'/11 - 49/22
+        B  X0 (u', u)  side (2, 1)   on 10 delta + 13 r + 130 <= 0    nu0 = -19N/1232 + 90u/77 - 4u'/7 - 39/14
+        D  X0 (u', u)  side (3, 2)   between, delta + r <= -1         nu0 = 6u/5 - 4u'/5 - 3
+        C  X0 (u, u')  side (2, 3)   between, 0 <= delta + r <= 10    nu0 = -9u/8 + 3u'/4 - 21/8
+                                              delta + r >= 10         nu0 = -3u/2 + u' - 3/2
+      (clwidth.c / clregtune.py: the minimal nu-window over these regions is >= 0.28 for N >= 1000;
+      C and D each fail on a diagonal stripe, delta + r in [-8, -3] resp. [0, 7], so the split at
+      delta + r = -1/0 uses each where it is good.)  The Handelman LPs for these 3-variable pieces
+      are run in the coordinates (T, r, delta), N = 1000 + T (conditioning), cert3.py rounds the
+      float LP exactly (free columns kept at their float values, interior point if needed).
+    * 301 <= N < 1000: no polyhedral pieces (the windows get as narrow as 0.06 near the core
+      delta + r = 0, r in [-20, 0], and the linear fits / LPs fail).  Instead a kernel check:
+      `clCheck N = true := by decide +kernel` for each N (ThinCoverKernel01..28.lean, 25 values per
+      file, about 4 s per N, each file within lean -M 3000), where clCheck N evaluates the exact
+      test `dirAny` (Live8) on every pair of the box, the witness search in the orientation (u, u')
+      starting at a = 0.34u - 8 (clcost2.c: the first witness is within [0.34u - 7.6, 0.34u + 11.6]
+      for 301 <= N <= 999).  Hence for these N the cluster pairs are settled directly, and
+      `residual2_small` proves `Residual2 N` (bulk and thin parts via Proven2, the cluster via
+      clCheck), which is all `conjectureC_of_residual2` needs.
+
+3. Result (Folds/ThinCover.lean)
+--------------------------------
+    theorem thinCover {N} (hN : 1000 ≤ N) : ThinCover N
+    theorem coverAll {N} (hN : 1000 ≤ N) : CoverAll N
+    theorem residual2 {N} (hN : 300 < N) : Residual2 N
+    theorem conjectureC {N m₁ m₂ : ℕ} (h1 : 1 ≤ m₁ ∧ m₁ ≤ N) (h2 : 1 ≤ m₂ ∧ m₂ ≤ N) (h12 : m₁ ≠ m₂)
+        (hval : SemiSymmetric N [m₁, m₂]) :
+        Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false
+  (all N; N <= 300 through Live8.extends_iff_not_dead_le_300 inside conjectureC_of_residual2).
+  ThinCover N for 301 <= N < 1000 is not claimed (the cluster there is settled by dirAny, not by a
+  Proven2 certificate).
+
+4. Programs (C: 1 core, binaries in bin/ are ignored; Python 3 + sympy/scipy)
+  explore.c, lines.py, lines2.py, shapes.py, corner.py, stripsmall.py   which slices work where
+  slicelib.py, design.py, design2.py, fitc0.py     exact windows and the c0 fits
+  gen.py         Piece: conditions, clearing, Handelman, Lean text
+  pieces.py      line pieces (diagonal, strip, shapes), designs saved to tmp/designs*.pkl
+  clpieces.py    cluster pieces; cluster.c, cluster2.c, clwidth.c, cl*.py   cluster exploration
+  small.c, small2.c, gensmall.py   the class u <= 3
+  cert3.py       exact rounding of the Handelman LPs
+  clcost.c, clcost2.c   cost of the kernel check, witness position
+  genall.py (lines | cluster), genasm.py, genkernel.py   Lean generation; chk.sh   elaborate one
+                 file (lean -M 3000); kbuild.sh   build the kernel files sequentially
+  The designs (c0 / nu0 and active constraints) are cached in tmp/designs*.pkl and the LP results
+  in tmp/lpcache.pkl (both ignored); they are also visible in the generated Lean files.
