@@ -124,6 +124,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live8` (M) | **Conjecture C proven for every N ≤ 300** (`extends_iff_not_dead_le_300`); for all N it holds modulo the purely arithmetic `ArithCover N` for N > 300 (`conjectureC_of_arith`), checked to N = 3000. Same-parity pairs and several families are settled for all N |
 | `ArithCover` (M) | two-class slide (Theorem B): the near-boundary crux `dirAny_nearBoundary` for all N ≥ 301; five proven regions; `conjectureC_of_residual` reduces Conjecture C to a smaller `Residual N` (about 40% of mixed wide pairs: the near-diagonal wedge and the corner) |
 | `Residual` (M) | lattice-parallelogram and slice lemmas; regions `RegionPF`, `RegionSL`, `RegionS`; `conjectureC_of_coverAll`: Conjecture C for all N follows from the semialgebraic covering statement `CoverAll N` (N > 300), which has an empty residual for 301 ≤ N ≤ 3000 |
+| `CoverAll` (M) | **the whole 2-D bulk** of the pair triangle for all N ≥ 301 (`bulk`, three cells, 11 LP-certified leaves); `d1_line`; `conjectureC_of_thinCover`: Conjecture C for all N reduces to `ThinCover`, a statement about lines with bounded offsets and a bounded box |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -168,9 +169,10 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    valid prefixes for N ≤ 31). The Adjacent Lemma, co-reachability of every interval,
    and {1,N} for odd N ≠ 7 are now **proven** (Lean). The Lean family covers every
    non-dead pair at N = 100 and 130. **Proven in Lean for every N ≤ 300.** For larger N it
-   reduces to `CoverAll N`: explicit polynomial regions must cover all pairs. This is
-   now a semialgebraic covering problem, not a Diophantine one, and it is verified for
-   301 ≤ N ≤ 3000. See `experiments/residual/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
+   reduces to `ThinCover N`. The 2-D bulk is proven, so what remains are thin sets:
+   lines u′ − u ≤ 9, u′ = 2u + e for |e| ≤ 15, u ≤ 3, and a box near (N/4, 3N/8). Each
+   line has a constant-slice certificate found numerically. See
+   `experiments/coverall/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
    `experiments/live2/PROOFS.txt`.
 
 ## Where things are
@@ -216,6 +218,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live8/PROOFS.txt` | Conjecture C to N = 300, the reduction to ArithCover, the route to a proof |
 | `experiments/arithcover/PROOFS.txt` | Theorem B, regions, the residual and the route via three-gap / lattice flatness |
 | `experiments/residual/PROOFS.txt` | lattice and slice regions, the reduction to CoverAll, the cell decomposition |
+| `experiments/coverall/PROOFS.txt` | bulk cell decomposition and certificates, the remaining thin sets and their slices |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
