@@ -321,37 +321,120 @@ theorem wit_of_slice {K L R α β smax amin p : ℕ} {j s c : ℤ} (hK : 0 < K)
   refine ⟨a', c', s', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> zify <;>
     (rw [← ha'] at *; nlinarith)
 
-/-- Slice of `Z(N, s - 1)` in orientation `(x, y)`. -/
-def sliceZ (N x y p : ℕ) (j : ℤ) : List Aff := sliceCons (N + 2) x y 0 1 ((N + 2) / 2) 2 p j
-/-- Slice of `X(N, s, 0)`. -/
-def sliceX0 (N x y p : ℕ) (j : ℤ) : List Aff := sliceCons N x (y - 2) 0 1 ((N + 1) / 2) 1 p j
-/-- Slice of `X(N, s, 1)`. -/
-def sliceX1 (N x y p : ℕ) (j : ℤ) : List Aff := sliceCons N x (y - 2) 1 0 (N / 2) 2 p j
+/-- The swapped slice `c = p a + j`, in the variables `(s, a)`. -/
+def sliceCons' (K L R α β smax amin p : ℕ) (j : ℤ) : List Aff :=
+  [⟨-(L : ℚ), K, -(α : ℚ)⟩, ⟨(L : ℚ) + 1, -(K : ℚ), (α : ℚ) - 1⟩,
+    ⟨-(R : ℚ), (p : ℚ) * K, (j : ℚ) * K - β⟩, ⟨(R : ℚ) + 1, -((p : ℚ) * K), (β : ℚ) - 1 - j * K⟩,
+    ⟨1, 0, -2⟩, ⟨1, 0, -(R : ℚ)⟩, ⟨-1, 0, smax⟩, ⟨0, 1, -(amin : ℚ)⟩]
 
-/-- **Region SL**: some slice `a = p c + j` of some family and orientation contains a
-fundamental parallelogram of `ℤ²` in the variables `(s, c)`. -/
+theorem wit_of_slice' {K L R α β smax amin p : ℕ} {j s a : ℤ} (hK : 0 < K)
+    (h : ∀ f ∈ sliceCons' K L R α β smax amin p j, 0 ≤ f.eval s a) : Wit K L R α β smax amin := by
+  simp only [sliceCons', List.mem_cons, List.not_mem_nil, or_false, forall_eq_or_imp,
+    forall_eq, Aff.eval] at h
+  obtain ⟨g1, g2, g3, g4, g5, g6, g7, g8⟩ := h
+  have e1 : 0 ≤ a * (K : ℤ) - s * L - α := by
+    have : (0 : ℚ) ≤ ((a * (K : ℤ) - s * L - α : ℤ) : ℚ) := by push_cast; linarith
+    exact_mod_cast this
+  have e2 : 0 ≤ s * ((L : ℤ) + 1) + α - 1 - a * K := by
+    have : (0 : ℚ) ≤ ((s * ((L : ℤ) + 1) + α - 1 - a * K : ℤ) : ℚ) := by push_cast; linarith
+    exact_mod_cast this
+  have e3 : 0 ≤ (p : ℤ) * a * K + j * K - s * R - β := by
+    have : (0 : ℚ) ≤ (((p : ℤ) * a * K + j * K - s * R - β : ℤ) : ℚ) := by push_cast; linarith
+    exact_mod_cast this
+  have e4 : 0 ≤ s * (R : ℤ) + β + s - 1 - ((p : ℤ) * a * K + j * K) := by
+    have : (0 : ℚ) ≤ ((s * (R : ℤ) + β + s - 1 - ((p : ℤ) * a * K + j * K) : ℤ) : ℚ) := by
+      push_cast; linarith
+    exact_mod_cast this
+  have e5 : 2 ≤ s := by exact_mod_cast (show (2 : ℚ) ≤ s by linarith)
+  have e6 : (R : ℤ) ≤ s := by exact_mod_cast (show (R : ℚ) ≤ s by linarith)
+  have e7 : s ≤ (smax : ℤ) := by exact_mod_cast (show (s : ℚ) ≤ smax by linarith)
+  have e8 : (amin : ℤ) ≤ a := by exact_mod_cast (show (amin : ℚ) ≤ a by linarith)
+  have hc0 : 0 ≤ p * a + j := by
+    by_contra hc
+    push Not at hc
+    have : (p * a + j) * (K : ℤ) < 0 := Int.mul_neg_of_neg_of_pos hc (by exact_mod_cast hK)
+    have : (0 : ℤ) ≤ s * R := mul_nonneg (by omega) (by positivity)
+    have : (0 : ℤ) ≤ β := by positivity
+    nlinarith
+  obtain ⟨s', rfl⟩ := Int.eq_ofNat_of_zero_le (show (0 : ℤ) ≤ s by omega)
+  obtain ⟨a', rfl⟩ := Int.eq_ofNat_of_zero_le (show (0 : ℤ) ≤ a by omega)
+  obtain ⟨c', hc'⟩ := Int.eq_ofNat_of_zero_le hc0
+  refine ⟨a', c', s', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> zify <;>
+    (rw [← hc'] at *; nlinarith)
+
+/-- Some slice (`a = p c + j` or `c = p a + j`) of the family contains a fundamental
+parallelogram. -/
+def SliceOK (K L R α β smax amin : ℕ) : Prop :=
+  ∃ (p : ℕ) (j : ℤ), ParOK (sliceCons K L R α β smax amin p j) ∨
+    ParOK (sliceCons' K L R α β smax amin p j)
+
+theorem wit_of_sliceOK {K L R α β smax amin : ℕ} (hK : 0 < K)
+    (h : SliceOK K L R α β smax amin) : Wit K L R α β smax amin := by
+  obtain ⟨p, j, h | h⟩ := h
+  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
+    exact wit_of_slice hK hsc
+  · obtain ⟨s, a, hsa⟩ := exists_lattice_point h
+    exact wit_of_slice' hK hsa
+
+/-- **Region SL**: some slice of some family, in some orientation, contains a fundamental
+parallelogram of `ℤ²`. -/
 def RegionSL (N u u' : ℕ) : Prop :=
-  ∃ (p : ℕ) (j : ℤ),
-    ParOK (sliceZ N u' u p j) ∨ (2 ≤ u ∧ ParOK (sliceX0 N u' u p j)) ∨
-      (2 ≤ u ∧ ParOK (sliceX1 N u' u p j)) ∨ ParOK (sliceZ N u u' p j) ∨
-      (2 ≤ u' ∧ ParOK (sliceX0 N u u' p j)) ∨ (2 ≤ u' ∧ ParOK (sliceX1 N u u' p j))
+  SliceOK (N + 2) u' u 0 1 ((N + 2) / 2) 2 ∨ (2 ≤ u ∧ SliceOK N u' (u - 2) 0 1 ((N + 1) / 2) 1) ∨
+    (2 ≤ u ∧ SliceOK N u' (u - 2) 1 0 (N / 2) 2) ∨ SliceOK (N + 2) u u' 0 1 ((N + 2) / 2) 2 ∨
+    (2 ≤ u' ∧ SliceOK N u (u' - 2) 0 1 ((N + 1) / 2) 1) ∨ (2 ≤ u' ∧ SliceOK N u (u' - 2) 1 0 (N / 2) 2)
 
 theorem covered_of_regionSL {N u u' : ℕ} (hN : 0 < N) (hu : 1 ≤ u) (hu' : 1 ≤ u')
     (h : RegionSL N u u') : dirAny N u u' = true ∨ dirAny N u' u = true := by
-  obtain ⟨p, j, h | ⟨h2, h⟩ | ⟨h2, h⟩ | h | ⟨h2, h⟩ | ⟨h2, h⟩⟩ := h
-  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
-    exact Or.inr (dirAny_of_witZ' hu' (wit_of_slice (by omega) hsc))
-  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
-    exact Or.inr (dirAny_of_witX0 hu' h2 hN (wit_of_slice (by omega) hsc))
-  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
-    exact Or.inr (dirAny_of_witX1 hu' h2 hN (wit_of_slice (by omega) hsc))
-  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
-    exact Or.inl (dirAny_of_witZ' hu (wit_of_slice (by omega) hsc))
-  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
-    exact Or.inl (dirAny_of_witX0 hu h2 hN (wit_of_slice (by omega) hsc))
-  · obtain ⟨s, c, hsc⟩ := exists_lattice_point h
-    exact Or.inl (dirAny_of_witX1 hu h2 hN (wit_of_slice (by omega) hsc))
+  rcases h with h | ⟨h2, h⟩ | ⟨h2, h⟩ | h | ⟨h2, h⟩ | ⟨h2, h⟩
+  · exact Or.inr (dirAny_of_witZ' hu' (wit_of_sliceOK (by omega) h))
+  · exact Or.inr (dirAny_of_witX0 hu' h2 hN (wit_of_sliceOK hN h))
+  · exact Or.inr (dirAny_of_witX1 hu' h2 hN (wit_of_sliceOK hN h))
+  · exact Or.inl (dirAny_of_witZ' hu (wit_of_sliceOK (by omega) h))
+  · exact Or.inl (dirAny_of_witX0 hu h2 hN (wit_of_sliceOK hN h))
+  · exact Or.inl (dirAny_of_witX1 hu h2 hN (wit_of_sliceOK hN h))
 
+
+/-! ## Fixed small shapes: uniform witnesses (`shapes.c`)
+
+Each fixed shape `(u, u')` left over by the regions has a witness with constant `a`, `c` and
+`s = ⌊σ K⌋` for a fixed rational `σ`, valid for every `N ≥ 301` of the right parity. -/
+
+/-- `(2, 5)`, `N` odd: `Z`, orientation `(5, 2)`, `a = 2`, `c = 1`, `s = ⌊2(N + 2)/5⌋`. -/
+theorem shape_2_5 {N : ℕ} (hN : 301 ≤ N) : dirAny N 5 2 = true :=
+  dirAny_of_witZ' (by norm_num) ⟨2, 1, 2 * (N + 2) / 5, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
+
+/-- `(2, 4)`: `Z`, orientation `(4, 2)`, `a = 2`, `c = 1`, `s = ⌊3(N + 2)/7⌋`. -/
+theorem shape_2_4 {N : ℕ} (hN : 301 ≤ N) : dirAny N 4 2 = true :=
+  dirAny_of_witZ' (by norm_num) ⟨2, 1, 3 * (N + 2) / 7, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
+
+/-- `(3, 5)`: `X(N, s, 0)`, orientation `(3, 5)`, `a = 1`, `c = 1`, `s = ⌊2N/7⌋`. -/
+theorem shape_3_5 {N : ℕ} (hN : 301 ≤ N) : dirAny N 3 5 = true :=
+  dirAny_of_witX0 (by norm_num) (by norm_num) (by omega)
+    ⟨1, 1, 2 * N / 7, by omega, by omega, by omega, by omega, by omega, by omega, by omega,
+      by omega⟩
+
+/-- `(3, 6)`: `Z`, orientation `(6, 3)`, `a = 2`, `c = 1`, `s = ⌊3(N + 2)/10⌋`. -/
+theorem shape_3_6 {N : ℕ} (hN : 301 ≤ N) : dirAny N 6 3 = true :=
+  dirAny_of_witZ' (by norm_num) ⟨2, 1, 3 * (N + 2) / 10, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
+
+/-- `(3, 7)`: `Z`, orientation `(7, 3)`, `a = 2`, `c = 1`, `s = ⌊2(N + 2)/7⌋`. -/
+theorem shape_3_7 {N : ℕ} (hN : 301 ≤ N) : dirAny N 7 3 = true :=
+  dirAny_of_witZ' (by norm_num) ⟨2, 1, 2 * (N + 2) / 7, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
+
+/-- `(3, 8)`: `X(N, s, 0)`, orientation `(3, 8)`, `a = 1`, `c = 2`, `s = ⌊3N/10⌋`. -/
+theorem shape_3_8 {N : ℕ} (hN : 301 ≤ N) : dirAny N 3 8 = true :=
+  dirAny_of_witX0 (by norm_num) (by norm_num) (by omega)
+    ⟨1, 2, 3 * N / 10, by omega, by omega, by omega, by omega, by omega, by omega, by omega,
+      by omega⟩
+
+/-- `(5, 5)`: `Z`, orientation `(5, 5)`, `a = 2`, `c = 2`, `s = ⌊3(N + 2)/8⌋`. -/
+theorem shape_5_5 {N : ℕ} (hN : 301 ≤ N) : dirAny N 5 5 = true :=
+  dirAny_of_witZ' (by norm_num) ⟨2, 2, 3 * (N + 2) / 8, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
 
 /-! ## The parallelogram region and the new residual -/
 

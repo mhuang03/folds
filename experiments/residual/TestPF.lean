@@ -11,8 +11,8 @@ example : RegionPF 301 60 70 := by
 
 -- cert.c 3001 900 901 : SL o=1 f=1 (X0, orientation (u', u)), p = 1, j = 1, w1 = (1,0), w2 = (0,1)
 example : RegionSL 3001 900 901 := by
-  refine ⟨1, 1, Or.inr (Or.inl ⟨by norm_num, 1010956 / 1000, 302836 / 1000, 3334 / 1000,
-    1, 0, 0, 1, by norm_num, ?_⟩)⟩
-  simp only [sliceX0, sliceCons, List.mem_cons, List.not_mem_nil, or_false, forall_eq_or_imp,
+  refine Or.inr (Or.inl ⟨by norm_num, 1, 1, Or.inl ⟨1010956 / 1000, 302836 / 1000, 3334 / 1000,
+    1, 0, 0, 1, by norm_num, ?_⟩⟩)
+  simp only [sliceCons, List.mem_cons, List.not_mem_nil, or_false, forall_eq_or_imp,
     forall_eq, Aff.eval]
   norm_num

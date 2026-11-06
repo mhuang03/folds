@@ -22,29 +22,62 @@ static void buildSlice(ll K, ll L, ll R, ll al, ll be, ll smax, ll amin, ll p, l
   ADDG(0, p, j - amin);
 #undef ADDG
 }
-static int SLQ = 4, SLS = 16;
+/* the swapped slice c = p a + j, in the variables (s, a) (Lean `sliceCons'`) */
+static void buildSliceB(ll K, ll L, ll R, ll al, ll be, ll smax, ll amin, ll p, ll j) {
+  ng = 0;
+#define ADDG(a_, c_, d_) do { gs[ng].A = (a_); gs[ng].C = (c_); gs[ng].D = (d_); ng++; } while (0)
+  ADDG(-L, K, -al);
+  ADDG(L + 1, -K, al - 1);
+  ADDG(-R, (LL)p * K, (LL)j * K - be);
+  ADDG(R + 1, -(LL)p * K, be - 1 - (LL)j * K);
+  ADDG(1, 0, -2);
+  ADDG(1, 0, -R);
+  ADDG(-1, 0, smax);
+  ADDG(0, 1, -amin);
+#undef ADDG
+}
+static int SLQ = 4, SLS = 16, SLB = 1;
 static int sliceAnyDir(void) {
   for (ll k = 0; k <= SLQ; k++)
     for (ll sg = (k == 0 ? 1 : 0); sg <= (k == 0 ? 1 : SLS); sg++)
       if (parOKdir(sg, k)) return 1;
   return 0;
 }
-/* RegionSL: some family, orientation, p in {1, 2}, j, direction */
+/* RegionSL: some family, orientation, slice (a = p c + j or c = p a + j, p <= 3) and direction.
+   Only the slices through at least one witness are tried (a slice containing a fundamental
+   parallelogram contains a lattice point, i.e. a witness). */
+#define MAXW 20000
+static ll wa[MAXW], wc[MAXW];
+static int seenj(ll *js, int n, ll j) { for (int i = 0; i < n; i++) if (js[i] == j) return 1; return 0; }
 static int regionSL(ll N, ll u, ll up) {
+  static ll js[MAXW];
   for (int o = 0; o < 2; o++) {
     ll x = o ? up : u, y = o ? u : up;
     for (int f = 0; f < 3; f++) {
       if (f > 0 && y < 3) continue;
       ll K, R, al, be, smax, amin;
       comboParams(N, y, f, &K, &R, &al, &be, &smax, &amin);
-      for (ll p = 0; p <= 3; p++) {
-        /* j range: a - p c over s in [R, smax], a ~ s x / K, c ~ s R / K */
-        ll jlo = -(p * smax * (R + 1)) / K - 2, jhi = (smax * (x + 1)) / K + 2;
-        for (ll j = jlo; j <= jhi; j++) {
-          buildSlice(K, x, R, al, be, smax, amin, p, j);
-          if (sliceAnyDir()) return 1;
-        }
+      int nw = 0;
+      for (ll s = (R > 2 ? R : 2); s <= smax && nw < MAXW; s++) {
+        ll a = cdiv(s * x + al, K);
+        if (a * K > s * x + al + s - 1 || a < amin) continue;
+        ll c = cdiv(s * R + be, K);
+        if (c * K > s * R + be + s - 1) continue;
+        wa[nw] = a; wc[nw] = c; nw++;
       }
+      for (ll p = 0; p <= 3; p++)
+        for (int t = 0; t < 2; t++) {
+          if (t == 1 && !SLB) continue;
+          int nj = 0;
+          for (int i = 0; i < nw; i++) {
+            ll j = t == 0 ? wa[i] - p * wc[i] : wc[i] - p * wa[i];
+            if (seenj(js, nj, j)) continue;
+            js[nj++] = j;
+            if (t == 0) buildSlice(K, x, R, al, be, smax, amin, p, j);
+            else buildSliceB(K, x, R, al, be, smax, amin, p, j);
+            if (sliceAnyDir()) return 1;
+          }
+        }
     }
   }
   return 0;
