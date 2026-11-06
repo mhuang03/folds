@@ -436,6 +436,124 @@ theorem shape_5_5 {N : ℕ} (hN : 301 ≤ N) : dirAny N 5 5 = true :=
   dirAny_of_witZ' (by norm_num) ⟨2, 2, 3 * (N + 2) / 8, by omega, by omega, by omega, by omega,
     by omega, by omega, by omega, by omega⟩
 
+/-! ## The family `u = 3`, `u' ≈ N/3` (`u3.c`)
+
+Write `N = 3u' + m` (`m` odd, `|m| ≤ 5`).  For `m < 0`: family `Z`, orientation `(u', 3)`,
+right distance `c = 1` and `s = 3a + t` (`t = 0` or `-1`), since `aM - su' = a(m + 2) - tu'`.
+For `m > 0`: family `X(N, s, 0)`, orientation `(3, u')`, `a = 1`, `s ≡ 2` resp. `0 (mod 3)` in
+`[u' - 2, u']`, `c = (s - 2)/3` resp. `(s - 3)/3`. -/
+
+/-- `u = 3`, `N = 3u' - 1`: `Z`, `a = ⌈M/12⌉`, `c = 1`, `s = 3a`. -/
+theorem u3_m1 {N u' : ℕ} (hN : 301 ≤ N) (h : N + 1 = 3 * u') : dirAny N u' 3 = true := by
+  set a := (N + 2 + 11) / 12 with ha
+  have e1 : a * (N + 2) = 3 * (a * u') + a := by
+    have : N + 2 = 3 * u' + 1 := by omega
+    rw [this]; ring
+  have e2 : 3 * a * u' = 3 * (a * u') := by ring
+  have e3 : 3 * a * (u' + 1) = 3 * (a * u') + 3 * a := by ring
+  exact dirAny_of_witZ' (by omega) ⟨a, 1, 3 * a, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
+
+/-- `u = 3`, `N = 3u' - 3`: `Z`, `a = b + 1` with `b = ⌊(u' + 1)/4⌋`, `c = 1`, `s = 3b + 2`. -/
+theorem u3_m3 {N u' : ℕ} (hN : 301 ≤ N) (h : N + 3 = 3 * u') : dirAny N u' 3 = true := by
+  set b := (u' + 1) / 4 with hb
+  have e1 : (b + 1) * (N + 2) + (b + 1) = 3 * (b * u') + 3 * u' := by
+    have : (b + 1) * (N + 2) + (b + 1) = (b + 1) * (N + 3) := by ring
+    rw [this, h]; ring
+  have e2 : (3 * b + 2) * u' = 3 * (b * u') + 2 * u' := by ring
+  have e3 : (3 * b + 2) * (u' + 1) = 3 * (b * u') + 2 * u' + 3 * b + 2 := by ring
+  exact dirAny_of_witZ' (by omega) ⟨b + 1, 1, 3 * b + 2, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
+
+/-- `u = 3`, `N = 3u' - 5`: `Z`, `a = b + 1` with `b = ⌊u'/4⌋`, `c = 1`, `s = 3b + 2`. -/
+theorem u3_m5 {N u' : ℕ} (hN : 301 ≤ N) (h : N + 5 = 3 * u') : dirAny N u' 3 = true := by
+  set b := u' / 4 with hb
+  have e1 : (b + 1) * (N + 2) + 3 * (b + 1) = 3 * (b * u') + 3 * u' := by
+    have : (b + 1) * (N + 2) + 3 * (b + 1) = (b + 1) * (N + 5) := by ring
+    rw [this, h]; ring
+  have e2 : (3 * b + 2) * u' = 3 * (b * u') + 2 * u' := by ring
+  have e3 : (3 * b + 2) * (u' + 1) = 3 * (b * u') + 2 * u' + 3 * b + 2 := by ring
+  exact dirAny_of_witZ' (by omega) ⟨b + 1, 1, 3 * b + 2, by omega, by omega, by omega, by omega,
+    by omega, by omega, by omega, by omega⟩
+
+/-- `u = 3`, `u' = w + 2`, `N = 3u' + 1` or `3u' + 3`: `X(N, s, 0)`, orientation `(3, u')`,
+`a = 1`, `s = 3q + 2 ∈ [w, w + 2]`, `c = q`. -/
+theorem u3_p13 {N w q : ℕ} (hN : 301 ≤ N) (hs1 : w ≤ 3 * q + 2) (hs2 : 3 * q ≤ w)
+    (hm : N = 3 * w + 7 ∨ N = 3 * w + 9) : dirAny N 3 (w + 2) = true := by
+  have e1 : (3 * q + 2) * w = 3 * (q * w) + 2 * w := by ring
+  have e2 : q * N = 3 * (q * w) + 7 * q ∨ q * N = 3 * (q * w) + 9 * q := by
+    rcases hm with h | h
+    · left; rw [h]; ring
+    · right; rw [h]; ring
+  refine dirAny_of_witX0 (by norm_num) (by omega) (by omega)
+    ⟨1, q, 3 * q + 2, le_rfl, by omega, by omega, by omega, by omega, by omega, ?_, ?_⟩ <;>
+    simp only [Nat.add_sub_cancel] <;> omega
+
+/-- `u = 3`, `u' = w + 2`, `N = 3u' + 5`: `X(N, s, 0)`, orientation `(3, u')`, `a = 1`,
+`s = 3q + 3 ∈ [w, w + 2]`, `c = q`. -/
+theorem u3_p5 {N w q : ℕ} (hN : 301 ≤ N) (hs1 : w ≤ 3 * q + 3) (hs2 : 3 * q + 1 ≤ w)
+    (hm : N = 3 * w + 11) : dirAny N 3 (w + 2) = true := by
+  have e1 : (3 * q + 3) * w = 3 * (q * w) + 3 * w := by ring
+  have e2 : q * N = 3 * (q * w) + 11 * q := by rw [hm]; ring
+  refine dirAny_of_witX0 (by norm_num) (by omega) (by omega)
+    ⟨1, q, 3 * q + 3, le_rfl, by omega, by omega, by omega, by omega, by omega, ?_, ?_⟩ <;>
+    simp only [Nat.add_sub_cancel] <;> omega
+
+/-- The family `u = 3`, `N = 3u' + m`, `m ∈ {±1, ±3, ±5}`, in one statement. -/
+theorem u3_covered {N u' : ℕ} (hN : 301 ≤ N)
+    (hm : N + 1 = 3 * u' ∨ N + 3 = 3 * u' ∨ N + 5 = 3 * u' ∨ N = 3 * u' + 1 ∨ N = 3 * u' + 3 ∨
+      N = 3 * u' + 5) :
+    dirAny N 3 u' = true ∨ dirAny N u' 3 = true := by
+  rcases hm with h | h | h | h | h | h
+  · exact Or.inr (u3_m1 hN h)
+  · exact Or.inr (u3_m3 hN h)
+  · exact Or.inr (u3_m5 hN h)
+  · obtain ⟨w, rfl⟩ : ∃ w, u' = w + 2 := ⟨u' - 2, by omega⟩
+    exact Or.inl (u3_p13 (q := w / 3) hN (by omega) (by omega) (Or.inl (by omega)))
+  · obtain ⟨w, rfl⟩ : ∃ w, u' = w + 2 := ⟨u' - 2, by omega⟩
+    exact Or.inl (u3_p13 (q := w / 3) hN (by omega) (by omega) (Or.inr (by omega)))
+  · obtain ⟨w, rfl⟩ : ∃ w, u' = w + 2 := ⟨u' - 2, by omega⟩
+    exact Or.inl (u3_p5 (q := (w - 1) / 3) hN (by omega) (by omega) (by omega))
+
+/-! ## The corner `d = 1`, `δ = 0`: `N = 3u'`, `u = u' - 1`
+
+`X(N, s, 0)`, orientation `(u', u)`, `u' = w + 3`, `a = b + 1`, `c = b`, `s = 3b + 3` with
+`b = ⌊(w + 3)/3⌋` (then `aN = su'`). -/
+theorem corner_d1 {N w : ℕ} (hN : 301 ≤ N) (h : N = 3 * w + 9) : dirAny N (w + 3) (w + 2) = true := by
+  set b := (w + 3) / 3 with hb
+  have e1 : (3 * b + 3) * (w + 3) = 3 * (b * w) + 3 * w + 9 * b + 9 := by ring
+  have e2 : (b + 1) * N = 3 * (b * w) + 3 * w + 9 * b + 9 := by rw [h]; ring
+  have e3 : (3 * b + 3) * w = 3 * (b * w) + 3 * w := by ring
+  have e4 : b * N = 3 * (b * w) + 9 * b := by rw [h]; ring
+  have e5 : (3 * b + 3) * (w + 3 + 1) = 3 * (b * w) + 3 * w + 12 * b + 12 := by ring
+  refine dirAny_of_witX0 (by omega) (by omega) (by omega)
+    ⟨b + 1, b, 3 * b + 3, by omega, by omega, by omega, ?_, by omega, by omega, ?_, ?_⟩ <;>
+    simp only [show w + 2 - 2 = w by omega] <;> omega
+
+/-- **Region S**: the fixed shapes, the family `u = 3`, `|N - 3u'| ≤ 5` (odd), and the corner
+`N = 3u'`, `u = u' - 1`, for `N ≥ 301`. -/
+def RegionS (N u u' : ℕ) : Prop :=
+  301 ≤ N ∧ ((u = 2 ∧ (u' = 4 ∨ u' = 5)) ∨ (u = 3 ∧ 5 ≤ u' ∧ u' ≤ 8) ∨ (u = 5 ∧ u' = 5) ∨
+    (u = 3 ∧ (N + 1 = 3 * u' ∨ N + 3 = 3 * u' ∨ N + 5 = 3 * u' ∨ N = 3 * u' + 1 ∨
+      N = 3 * u' + 3 ∨ N = 3 * u' + 5)) ∨ (N = 3 * u' ∧ u + 1 = u'))
+
+theorem covered_of_regionS {N u u' : ℕ} (h : RegionS N u u') :
+    dirAny N u u' = true ∨ dirAny N u' u = true := by
+  obtain ⟨hN, h⟩ := h
+  rcases h with ⟨rfl, rfl | rfl⟩ | ⟨rfl, h5, h8⟩ | ⟨rfl, rfl⟩ | ⟨rfl, hm⟩ | ⟨h3, hc⟩
+  · exact Or.inr (shape_2_4 hN)
+  · exact Or.inr (shape_2_5 hN)
+  · interval_cases u'
+    · exact Or.inl (shape_3_5 hN)
+    · exact Or.inr (shape_3_6 hN)
+    · exact Or.inr (shape_3_7 hN)
+    · exact Or.inl (shape_3_8 hN)
+  · exact Or.inr (shape_5_5 hN)
+  · exact u3_covered hN hm
+  · obtain ⟨w, rfl⟩ : ∃ w, u' = w + 3 := ⟨u' - 3, by omega⟩
+    obtain rfl : u = w + 2 := by omega
+    exact Or.inr (corner_d1 hN (by omega))
+
 /-! ## The parallelogram region and the new residual -/
 
 /-- **Region PF**: in some family and orientation the witness polygon contains a fundamental
@@ -461,14 +579,16 @@ theorem covered_of_regionPF {N u u' : ℕ} (hN : 0 < N) (hu : 1 ≤ u) (hu' : 1 
     exact Or.inl (dirAny_of_consX1 hu h3 hN hac)
 
 /-- The proven regions: those of `ArithCover` and the new ones. -/
-def Proven2 (N u u' : ℕ) : Prop := Proven N u u' ∨ RegionPF N u u' ∨ RegionSL N u u'
+def Proven2 (N u u' : ℕ) : Prop :=
+  Proven N u u' ∨ RegionPF N u u' ∨ RegionSL N u u' ∨ RegionS N u u'
 
 theorem covered_of_proven2 {N u u' : ℕ} (hN : 0 < N) (hu : 1 ≤ u) (hu' : 1 ≤ u')
     (h : Proven2 N u u') : dirAny N u u' = true ∨ dirAny N u' u = true := by
-  rcases h with h | h | h
+  rcases h with h | h | h | h
   · exact covered_of_proven h
   · exact covered_of_regionPF hN hu hu' h
   · exact covered_of_regionSL hN hu hu' h
+  · exact covered_of_regionS h
 
 /-- **The new residual statement**: `ArithCover N` for the pairs outside `Proven2`. -/
 def Residual2 (N : ℕ) : Prop :=
