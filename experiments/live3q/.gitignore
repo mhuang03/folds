@@ -1,0 +1,7 @@
+*
+!*.c
+!*.py
+!*.txt
+!*.sh
+!*.lean
+!.gitignore
