@@ -39,12 +39,42 @@ static int regB(ll N, ll u, ll up) {
   if (2 * (u + 1) > c * up) return 0;                            /* B4 */
   return 1;
 }
+/* Region B2: as B but s1 = n - 1 (contiguity is then automatic) */
+static int regB2(ll N, ll u, ll up) {
+  ll M = N + 2, n = M - 2 * up, c = u / 2;
+  if (u < 3 || n < u + 3) return 0;
+  if (c * M > (n - 1) * (u + 1)) return 0;                                   /* s1 = n - 1 valid */
+  if ((c * M - 2 * u) * n < u * (n * (n - 2) + M + 1)) return 0;            /* length */
+  if (2 * M > (n - 1) * up) return 0;                                       /* a >= 2 */
+  return 1;
+}
 static int regD(ll N, ll u, ll up) {
   ll M = N + 2, r = u % 2;
   if (u < 4 || up < u || u + up > N) return 0;
   if ((u - r) * M * (u + up + 1) < 2 * (u + 1) * (M * u + 2 * u * up + u)) return 0;
   if ((u * M - r * M - 2 * u + 2) * (up + 1) < 2 * u * (up * up + M)) return 0;
   return 1;
+}
+/* Region D0: orientation (u, u'), X(N, s, 0), a = 1 */
+static int regD0(ll N, ll u, ll up) {
+  ll R = up - 2;
+  if (u < 2 || up < u || up < 4 || u + up > N) return 0;
+  if (u * (N + 1 + u) * R + u * (u + 1) * N > (u + 1) * (N - u + 1) * (R + 1)) return 0;
+  if (u * (R * R + N) > (N - u + 1) * (R + 1)) return 0;
+  return 1;
+}
+/* Region W: orientation (u', u), X(N, s, 0), some a >= 2 with c = a - 1 */
+static int regW(ll N, ll u, ll up) {
+  ll R = u - 2;
+  if (u < 2 || up < u || u + up > N) return 0;
+  for (ll a = 2; 2 * a <= up; a++) {
+    if (R * (up + 1) > a * N) continue;
+    if (2 * up * up + up > a * N + 1 || up > N) continue;
+    if ((a * N + up + 1) * R + (up + 1) > (a - 1) * N * (up + 1)) continue;
+    if ((a - 1) * N * up > (a * N - up + 1) * (R + 1)) continue;
+    return 1;
+  }
+  return 0;
 }
 int main(int argc, char **argv) {
   ll N1 = atoll(argv[1]), N2 = atoll(argv[2]);
@@ -56,7 +86,7 @@ int main(int argc, char **argv) {
       for (ll up = u; u + 2 * up <= N - 1; up++) {
         if ((u + N + 1 - up) % 2 != 1 || special(N, u, up)) continue;
         tot++;
-        int b = regB(N, u, up), d = regD(N, u, up);
+        int b = regB(N, u, up) || regB2(N, u, up) || regW(N, u, up), d = regD(N, u, up) || regD0(N, u, up);
         if (b) { nb++; if (!dirAny(N, up, u)) { bad++; printf("BAD-B N=%lld u=%lld u'=%lld\n", N, u, up); } }
         if (d) { nd++; if (!dirAny(N, u, up)) { bad++; printf("BAD-D N=%lld u=%lld u'=%lld\n", N, u, up); } }
         if (!b && !d) {

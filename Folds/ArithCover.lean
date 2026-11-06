@@ -66,6 +66,88 @@ theorem dirOK_of_wit {K L R α β smax a s c : Nat} (hK : 0 < K) (hL : 1 ≤ L)
   have := Nat.mul_le_mul_right K hc
   omega
 
+
+/-- `dirOK` from an `s`-range inside the true range and a multiple `cK` inside the union of its
+windows. -/
+theorem dirOK_of_cover {K L R α β smax a s₁ s₂ c : Nat} (hK : 0 < K) (hL : 1 ≤ L)
+    (hs : 2 ≤ s₁) (hRs : R ≤ s₁) (h12 : s₁ ≤ s₂) (hsm : s₂ ≤ smax)
+    (h1 : s₂ * L + α ≤ a * K) (h2 : a * K + 1 ≤ s₁ * (L + 1) + α)
+    (hc1 : s₁ * R + β ≤ c * K) (hc2 : c * K + 1 ≤ s₂ * R + β + s₂) :
+    dirOK K L R α β smax a = true := by
+  unfold dirOK
+  simp only [Bool.and_eq_true, decide_eq_true_eq]
+  have hS2 : s₂ ≤ min ((a * K - α) / L) smax := by
+    refine le_min ?_ hsm
+    rw [Nat.le_div_iff_mul_le hL]; omega
+  have hS1 : max (max ((a * K - α + 1 + L) / (L + 1)) R) 2 ≤ s₁ := by
+    refine max_le (max_le ?_ hRs) hs
+    rw [Nat.div_le_iff_le_mul_add_pred (by omega)]
+    have : (L + 1) * s₁ = s₁ * (L + 1) := Nat.mul_comm _ _
+    omega
+  refine ⟨le_trans hS1 (le_trans h12 hS2), ?_⟩
+  set S1 := max (max ((a * K - α + 1 + L) / (L + 1)) R) 2 with hS1d
+  set S2 := min ((a * K - α) / L) smax with hS2d
+  have a1 : S1 * R ≤ s₁ * R := Nat.mul_le_mul_right _ hS1
+  have a2 : s₂ * R ≤ S2 * R := Nat.mul_le_mul_right _ hS2
+  have hc : c ≤ (S2 * R + β + S2 - 1) / K := by
+    rw [Nat.le_div_iff_mul_le hK]; omega
+  have := Nat.mul_le_mul_right K hc
+  omega
+
+/-- **The direct lemma with polynomial hypotheses** (`α = 0`, index `a`, `T = aK`):
+`hA` covers the branch `s₁ = ⌈(T + 1)/(L + 1)⌉`, `hB` the branch `s₁ = R`. -/
+theorem dirOK_direct {K L R β smax a : Nat} (hK : 0 < K) (hL : 1 ≤ L) (hR : 2 ≤ R)
+    (hT : L ≤ a * K + 1) (hsm : a * K / L ≤ smax) (hsmK : smax ≤ K)
+    (hA : L * (a * K + 1 + L) * R + L * (L + 1) * K ≤ (L + 1) * (a * K + 1 - L) * (R + 1))
+    (hB : L * (R * R + K) ≤ (a * K + 1 - L) * (R + 1)) :
+    dirOK K L R 0 β smax a = true := by
+  set T := a * K with hTd
+  set S2 := T / L with hS2
+  set S1 := (T + 1 + L) / (L + 1) with hS1
+  have fS2 : T < L * (S2 + 1) := Nat.lt_mul_div_succ T (by omega)
+  have fS2' : S2 * L ≤ T := Nat.div_mul_le_self T L
+  have fS1 : S1 * (L + 1) ≤ T + 1 + L := Nat.div_mul_le_self _ _
+  have fS1' : T + 1 + L < (L + 1) * (S1 + 1) := Nat.lt_mul_div_succ _ (by omega)
+  have g2 : T + 1 - L ≤ L * S2 := by
+    have : L * (S2 + 1) = L * S2 + L := by ring
+    omega
+  -- branch A: S1 * R + K ≤ S2 * (R + 1)
+  have key1 : S1 * R + K ≤ S2 * (R + 1) := by
+    refine Nat.le_of_mul_le_mul_left ?_ (show 0 < L * (L + 1) by positivity)
+    calc L * (L + 1) * (S1 * R + K) = L * R * (S1 * (L + 1)) + L * (L + 1) * K := by ring
+      _ ≤ L * R * (T + 1 + L) + L * (L + 1) * K := by
+          have := Nat.mul_le_mul_left (L * R) fS1; omega
+      _ = L * (T + 1 + L) * R + L * (L + 1) * K := by ring
+      _ ≤ (L + 1) * (T + 1 - L) * (R + 1) := hA
+      _ ≤ (L + 1) * (L * S2) * (R + 1) := by
+          apply Nat.mul_le_mul_right; exact Nat.mul_le_mul_left _ g2
+      _ = L * (L + 1) * (S2 * (R + 1)) := by ring
+  -- branch B: R * R + K ≤ S2 * (R + 1)
+  have key2 : R * R + K ≤ S2 * (R + 1) := by
+    refine Nat.le_of_mul_le_mul_left ?_ (show 0 < L by omega)
+    calc L * (R * R + K) ≤ (T + 1 - L) * (R + 1) := hB
+      _ ≤ L * S2 * (R + 1) := Nat.mul_le_mul_right _ g2
+      _ = L * (S2 * (R + 1)) := by ring
+  have e2 : S2 * (R + 1) = S2 * R + S2 := by ring
+  have hmax : max S1 R * R + β + K ≤ S2 * R + β + S2 := by
+    rcases le_total S1 R with h | h
+    · rw [max_eq_right h]; omega
+    · rw [max_eq_left h]; omega
+  have h12 : max S1 R ≤ S2 := by
+    by_contra hc
+    push Not at hc
+    have h3 := Nat.mul_le_mul_right R (show S2 + 1 ≤ max S1 R from hc)
+    have e3 : (S2 + 1) * R = S2 * R + R := by ring
+    have := le_trans hsm hsmK
+    omega
+  have hS1u : T + 1 ≤ max S1 R * (L + 1) := by
+    calc T + 1 ≤ S1 * (L + 1) := by
+          have : (L + 1) * (S1 + 1) = S1 * (L + 1) + L + 1 := by ring
+          omega
+      _ ≤ max S1 R * (L + 1) := Nat.mul_le_mul_right _ (le_max_left _ _)
+  exact dirOK_of_slide (s₁ := max S1 R) (s₂ := S2) hK hL (le_trans hR (le_max_right _ _))
+    (le_max_right _ _) h12 hsm (by simpa using fS2') (by simpa using hS1u) hmax
+
 /-! ## From `dirAll` to `dirAny` -/
 
 theorem dirAny_of_dirAll {N x y a : Nat} (ha : 1 ≤ a) (hax : a ≤ x + 1)
@@ -450,6 +532,172 @@ theorem dirAny_diff {N x y d j Δ s₁ s₂ a : Nat} (hd : x + d = y) (hx : 1 �
     (by omega) (by have : s * (x + 1) = s * x + s := by ring
                    omega) (by omega) (by omega)
 
+
+/-- **Region B2**: Theorem B with `s₁ = n - 1` (the contiguity is then automatic). -/
+theorem dirAny_regionB2 {N u u' n : Nat} (hu : 3 ≤ u) (hn : 2 * u' + n = N + 2)
+    (hn3 : u + 3 ≤ n)
+    (hs : u / 2 * (N + 2) ≤ (n - 1) * (u + 1))
+    (hlen : u * (n * (n - 2) + (N + 2) + 1) ≤ (u / 2 * (N + 2) - 2 * u) * n)
+    (ha : 2 * (N + 2) ≤ (n - 1) * u') : dirAny N u' u = true := by
+  have hu' : 1 ≤ u' := Nat.pos_of_ne_zero (by rintro rfl; simp at ha)
+  set c := u / 2 with hc
+  set M := N + 2 with hM
+  set T := c * M with hT
+  have hc2 : 2 * c ≤ u := by omega
+  have hcpos : 1 ≤ c := by omega
+  have hTpos : 1 ≤ T := Nat.one_le_iff_ne_zero.2 (by positivity)
+  set s₂ := (T - 1) / u with hs₂
+  have f3 : s₂ * u ≤ T - 1 := Nat.div_mul_le_self _ _
+  have f4 : T - u ≤ s₂ * u := by
+    have := Nat.lt_mul_div_succ (T - 1) (show 0 < u by omega)
+    rw [← hs₂] at this
+    have e : u * (s₂ + 1) = s₂ * u + u := by ring
+    omega
+  have hs2M : 2 * s₂ ≤ M := by
+    have : 2 * s₂ * u < M * u := by
+      have : M * u ≥ 2 * c * M := by
+        calc M * u ≥ M * (2 * c) := Nat.mul_le_mul_left _ hc2
+          _ = 2 * c * M := by ring
+      have e : 2 * s₂ * u = 2 * (s₂ * u) := by ring
+      have e2 : 2 * c * M = 2 * T := by rw [hT]; ring
+      omega
+    exact le_of_lt (Nat.lt_of_mul_lt_mul_right this)
+  -- (s₂ - 1) n ≥ n (n - 2) + M + 1
+  have hl : n * (n - 2) + M + 1 ≤ (s₂ - 1) * n := by
+    refine Nat.le_of_mul_le_mul_left ?_ (show 0 < u by omega)
+    calc u * (n * (n - 2) + M + 1) ≤ (T - 2 * u) * n := hlen
+      _ ≤ (u * (s₂ - 1)) * n := by
+          apply Nat.mul_le_mul_right
+          have hTM : M ≤ T := Nat.le_mul_of_pos_left M hcpos
+          have hs2pos : 1 ≤ s₂ := by
+            by_contra h
+            push Not at h
+            have h0 : s₂ = 0 := by omega
+            rw [h0] at f4
+            omega
+          have : u * (s₂ - 1) + u = s₂ * u := by
+            have h5 := Nat.sub_add_cancel hs2pos
+            calc u * (s₂ - 1) + u = u * (s₂ - 1 + 1) := by ring
+              _ = u * s₂ := by rw [h5]
+              _ = s₂ * u := by ring
+          omega
+      _ = u * ((s₂ - 1) * n) := by ring
+  have h12 : n - 1 + 1 ≤ s₂ := by
+    by_contra hcon
+    push Not at hcon
+    have : (s₂ - 1) * n ≤ (n - 2) * n := Nat.mul_le_mul_right _ (by omega)
+    have e : n * (n - 2) = (n - 2) * n := Nat.mul_comm _ _
+    omega
+  set A := (n - 1 + 1) * (n - 2) + 2 with hA
+  set t := (A + M - 1) / M with ht
+  have ht1 : A ≤ t * M := by
+    have := Nat.lt_mul_div_succ (A + M - 1) (show 0 < M by omega)
+    rw [← ht] at this
+    have e : M * (t + 1) = t * M + M := by ring
+    omega
+  have ht2 : t * M ≤ (s₂ - 1) * n := by
+    have h1 : t * M ≤ A + M - 1 := Nat.div_mul_le_self _ _
+    have e2 : A = n * (n - 2) + 2 := by rw [hA, Nat.sub_add_cancel (by omega)]
+    omega
+  exact dirAny_twoClass (c := c) (n := n) (s₁ := n - 1) (s₂ := s₂) (t := t) hn (by omega) hu'
+    (by omega) (by omega) h12 hs2M hs (by show s₂ * u + 1 ≤ T; omega) ht1 ht2 ha
+
+/-- **Region D0**: orientation `(u, u')`, family `X(N, s, 0)`, left index `a = 1`. -/
+theorem dirAny_regionD0 {N u u' : Nat} (hu : 2 ≤ u) (hu' : 4 ≤ u') (hN : u ≤ N)
+    (hA : u * (N + 1 + u) * (u' - 2) + u * (u + 1) * N ≤ (u + 1) * (N + 1 - u) * (u' - 2 + 1))
+    (hB : u * ((u' - 2) * (u' - 2) + N) ≤ (N + 1 - u) * (u' - 2 + 1)) :
+    dirAny N u u' = true := by
+  refine dirAny_of_dirAll (a := 1) le_rfl (by omega) (dirAll_X0 (by omega) ?_)
+  refine dirOK_direct (by omega) (by omega) (by omega) (by omega) ?_ (by omega) (by simpa using hA)
+    (by simpa using hB)
+  simp only [Nat.one_mul]
+  rw [Nat.div_le_iff_le_mul_add_pred (by omega)]
+  have : u * ((N + 1) / 2) + (u - 1) ≥ N := by
+    have := Nat.div_add_mod (N + 1) 2
+    have := Nat.mod_lt (N + 1) (show 0 < 2 by omega)
+    nlinarith
+  omega
+
+/-- **Region W**: orientation `(u', u)`, family `X(N, s, 0)`, left index `a`, right distance
+`c = a - 1` (the near-diagonal pairs with small `u' - u`). -/
+theorem dirAny_regionW {N u u' a : Nat} (hu : 2 ≤ u) (ha : 2 ≤ a) (ha2 : 2 * a ≤ u')
+    (hu'N : u' ≤ N) (hW3 : 2 * u' * u' + u' ≤ a * N + 1) (hR : (u - 2) * (u' + 1) ≤ a * N)
+    (hW1 : (a * N + u' + 1) * (u - 2) + (u' + 1) ≤ (a - 1) * N * (u' + 1))
+    (hW2 : (a - 1) * N * u' ≤ (a * N + 1 - u') * (u - 2 + 1)) :
+    dirAny N u' u = true := by
+  have hu' : 4 ≤ u' := by omega
+  have hN : 1 ≤ N := by
+    rcases Nat.eq_zero_or_pos N with h | h
+    · subst h; simp at hW1
+    · exact h
+  set T := a * N with hT
+  set s₁ := (T + 1 + u') / (u' + 1) with hs₁
+  set s₂ := T / u' with hs₂
+  have f1 : s₁ * (u' + 1) ≤ T + 1 + u' := Nat.div_mul_le_self _ _
+  have f1' : T + 1 + u' < (u' + 1) * (s₁ + 1) := Nat.lt_mul_div_succ _ (by omega)
+  have f2 : s₂ * u' ≤ T := Nat.div_mul_le_self _ _
+  have f2' : T < u' * (s₂ + 1) := Nat.lt_mul_div_succ _ (by omega)
+  have g1 : T + 1 ≤ s₁ * (u' + 1) := by
+    have : (u' + 1) * (s₁ + 1) = s₁ * (u' + 1) + u' + 1 := by ring
+    omega
+  have g2 : T + 1 - u' ≤ s₂ * u' := by
+    have : u' * (s₂ + 1) = s₂ * u' + u' := by ring
+    omega
+  have hTN : 2 * N ≤ T := Nat.mul_le_mul_right _ ha
+  -- containment
+  have hc1 : s₁ * (u - 2) + 1 ≤ (a - 1) * N := by
+    refine Nat.le_of_mul_le_mul_right ?_ (show 0 < u' + 1 by omega)
+    calc (s₁ * (u - 2) + 1) * (u' + 1) = (s₁ * (u' + 1)) * (u - 2) + (u' + 1) := by ring
+      _ ≤ (T + 1 + u') * (u - 2) + (u' + 1) := by
+          have := Nat.mul_le_mul_right (u - 2) f1; omega
+      _ = (a * N + u' + 1) * (u - 2) + (u' + 1) := by rw [hT]; ring
+      _ ≤ (a - 1) * N * (u' + 1) := hW1
+  have hc2 : (a - 1) * N ≤ s₂ * (u - 2 + 1) := by
+    refine Nat.le_of_mul_le_mul_right ?_ (show 0 < u' by omega)
+    calc (a - 1) * N * u' ≤ (T + 1 - u') * (u - 2 + 1) := hW2
+      _ ≤ s₂ * u' * (u - 2 + 1) := Nat.mul_le_mul_right _ g2
+      _ = s₂ * (u - 2 + 1) * u' := by ring
+  have hs1 : 2 ≤ s₁ := by
+    by_contra hcon
+    push Not at hcon
+    have : s₁ * (u' + 1) ≤ 1 * (u' + 1) := Nat.mul_le_mul_right _ (by omega)
+    omega
+  have hRs : u - 2 ≤ s₁ := by
+    by_contra hcon
+    push Not at hcon
+    have : s₁ * (u' + 1) + (u' + 1) ≤ (u - 2) * (u' + 1) := by
+      have := Nat.mul_le_mul_right (u' + 1) (show s₁ + 1 ≤ u - 2 by omega)
+      have e : (s₁ + 1) * (u' + 1) = s₁ * (u' + 1) + (u' + 1) := by ring
+      omega
+    omega
+  have h12 : s₁ ≤ s₂ := by
+    by_contra hcon
+    push Not at hcon
+    have h3 : (s₂ + 1) * (u' + 1) ≤ s₁ * (u' + 1) := Nat.mul_le_mul_right _ hcon
+    have e3 : (s₂ + 1) * (u' + 1) = s₂ * u' + s₂ + u' + 1 := by ring
+    have h4 : s₂ * u' + s₂ ≤ T := by omega
+    have h5 : (T + 1 - u') * (u' + 1) ≤ s₂ * u' * (u' + 1) := Nat.mul_le_mul_right _ g2
+    have h6 : s₂ * u' * (u' + 1) ≤ T * u' := by
+      have := Nat.mul_le_mul_right u' h4
+      nlinarith
+    have hTu : u' ≤ T + 1 := by nlinarith
+    zify [hTu] at h5 h6 hW3
+    nlinarith
+  have hsm : s₂ ≤ (N + 1) / 2 := by
+    rw [Nat.le_div_iff_mul_le (by omega)]
+    have : s₂ * u' * 2 ≤ T * 2 := Nat.mul_le_mul_right _ f2
+    have : T * 2 ≤ (N + 1) * u' := by
+      calc T * 2 = 2 * a * N := by rw [hT]; ring
+        _ ≤ u' * N := Nat.mul_le_mul_right _ ha2
+        _ ≤ (N + 1) * u' := by nlinarith
+    have : s₂ * 2 * u' ≤ (N + 1) * u' := by nlinarith
+    exact Nat.le_of_mul_le_mul_right this (by omega)
+  refine dirAny_of_dirAll (a := a) (by omega) (by omega) (dirAll_X0 (by omega) ?_)
+  exact dirOK_of_cover (s₁ := s₁) (s₂ := s₂) (c := a - 1) (by omega) (by omega) hs1 hRs h12 hsm
+    (by simpa using f2) (by simpa using g1) hc1
+    (by have e : s₂ * (u - 2 + 1) = s₂ * (u - 2) + s₂ := by ring
+        omega)
+
 /-! ## The proven regions and the residual statement -/
 
 /-- Region B (`u' = N + 1 - v`, `n = N + 2 - 2u'`): Theorem B's hypotheses. -/
@@ -475,21 +723,53 @@ theorem dirAny_of_RegionD {N u u' : Nat} (h : RegionD N u u') : dirAny N u u' = 
   obtain ⟨h1, h2, h3, h4, h5⟩ := h
   exact dirAny_regionD h1 h2 h3 h4 h5
 
+/-- Region B2 (`n = N + 2 - 2u'`): the hypotheses of `dirAny_regionB2`. -/
+def RegionB2 (N u u' : Nat) : Prop :=
+  3 ≤ u ∧ u + 3 + 2 * u' ≤ N + 2 ∧
+    u / 2 * (N + 2) ≤ (N + 2 - 2 * u' - 1) * (u + 1) ∧
+    u * ((N + 2 - 2 * u') * (N + 2 - 2 * u' - 2) + (N + 2) + 1) ≤
+      (u / 2 * (N + 2) - 2 * u) * (N + 2 - 2 * u') ∧
+    2 * (N + 2) ≤ (N + 2 - 2 * u' - 1) * u'
+
+/-- Region D0: the hypotheses of `dirAny_regionD0`. -/
+def RegionD0 (N u u' : Nat) : Prop :=
+  2 ≤ u ∧ 4 ≤ u' ∧ u ≤ N ∧
+    u * (N + 1 + u) * (u' - 2) + u * (u + 1) * N ≤ (u + 1) * (N + 1 - u) * (u' - 2 + 1) ∧
+    u * ((u' - 2) * (u' - 2) + N) ≤ (N + 1 - u) * (u' - 2 + 1)
+
+/-- Region W: the hypotheses of `dirAny_regionW` for some `a`. -/
+def RegionW (N u u' : Nat) : Prop :=
+  ∃ a, 2 ≤ u ∧ 2 ≤ a ∧ 2 * a ≤ u' ∧ u' ≤ N ∧ 2 * u' * u' + u' ≤ a * N + 1 ∧
+    (u - 2) * (u' + 1) ≤ a * N ∧
+    (a * N + u' + 1) * (u - 2) + (u' + 1) ≤ (a - 1) * N * (u' + 1) ∧
+    (a - 1) * N * u' ≤ (a * N + 1 - u') * (u - 2 + 1)
+
+/-- The union of the proven regions. -/
+def Proven (N u u' : Nat) : Prop :=
+  RegionB N u u' ∨ RegionB2 N u u' ∨ RegionD N u u' ∨ RegionD0 N u u' ∨ RegionW N u u'
+
+theorem covered_of_proven {N u u' : Nat} (h : Proven N u u') :
+    dirAny N u u' = true ∨ dirAny N u' u = true := by
+  rcases h with h | ⟨h1, h2, h3, h4, h5⟩ | h | ⟨h1, h2, h3, h4, h5⟩ |
+      ⟨a, h1, h2, h3, h4, h5, h6, h7, h8⟩
+  · exact Or.inr (dirAny_of_RegionB h)
+  · exact Or.inr (dirAny_regionB2 (n := N + 2 - 2 * u') h1 (by omega) (by omega) h3 h4 h5)
+  · exact Or.inl (dirAny_of_RegionD h)
+  · exact Or.inl (dirAny_regionD0 h1 h2 h3 h4 h5)
+  · exact Or.inr (dirAny_regionW h1 h2 h3 h4 h5 h6 h7 h8)
+
 /-- **The residual statement**: `ArithCover N` restricted to the pairs outside the proven
-regions B and D. -/
+regions. -/
 def Residual (N : Nat) : Prop :=
   ∀ u v, 2 ≤ u → u < v → u + v ≤ N + 1 → (u + v) % 2 = 1 → 2 * u + 2 ≤ v →
-    N + u + 3 ≤ 2 * v → ¬ Special N u (N + 1 - v) → ¬ RegionB N u (N + 1 - v) →
-      ¬ RegionD N u (N + 1 - v) →
+    N + u + 3 ≤ 2 * v → ¬ Special N u (N + 1 - v) → ¬ Proven N u (N + 1 - v) →
         dirAny N u (N + 1 - v) = true ∨ dirAny N (N + 1 - v) u = true
 
 theorem arithCover_of_residual {N : Nat} (h : Residual N) : ArithCover N := by
   intro u v h1 h2 h3 h4 h5 h6 h7
-  by_cases hB : RegionB N u (N + 1 - v)
-  · exact Or.inr (dirAny_of_RegionB hB)
-  by_cases hD : RegionD N u (N + 1 - v)
-  · exact Or.inl (dirAny_of_RegionD hD)
-  exact h u v h1 h2 h3 h4 h5 h6 h7 hB hD
+  by_cases hP : Proven N u (N + 1 - v)
+  · exact covered_of_proven hP
+  exact h u v h1 h2 h3 h4 h5 h6 h7 hP
 
 /-- **Conjecture C (2-prefixes) for all `N`, modulo the residual statement for `N > 300`.** -/
 theorem conjectureC_of_residual (hR : ∀ N, 300 < N → Residual N) {N m₁ m₂ : Nat}
