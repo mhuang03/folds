@@ -1,0 +1,297 @@
+import Folds.Upper
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.Data.Nat.Factorial.BigOperators
+import Mathlib.Algebra.BigOperators.Field
+import Mathlib.Order.Filter.AtTopBot.Basic
+
+/-!
+# The Path Lemma reduction
+
+See `experiments/pathlemma/PROOFS.txt`.
+
+For a prefix `p` (a list of panels) let `V_k = |moves N (p.take k)|` be the number of valid
+next panels after the first `k` panels, and let the *path product* be
+`pathProd N p = ∏_{k < |p|} V_k`.  For a full valid sequence `a` of `[1..N]` the
+*path deficit* is
+`pathDeficit N a = ∑_{k < N} ln ((N - k) / V_k)`,
+so that `pathProd N a = N! · exp (-pathDeficit N a)` (`pathProd_eq_factorial_mul_exp`).
+
+## 1. The path form of the tree bound
+
+`semiCount_le_of_pathProd_le`: if every valid sequence has path product at most `B`, then
+`a(N) ≤ B`.  Proof: a uniformly random descent in the tree of valid prefixes reaches a given
+leaf `a` with probability `1 / pathProd N a`, and distinct leaves are disjoint events, so
+`∑_{a} 1 / pathProd N a ≤ 1` (`sum_inv_pathProd_le`).
+
+Consequences:
+* `semiCount_le_of_deficit_ge`: if every valid sequence has `pathDeficit ≥ D`, then
+  `a(N) ≤ N! · e^{-D}`;
+* `PathLemma` (the conjecture: the minimal deficit is `ω(N)`) implies
+  `a(N) ≤ N! · e^{-c N}` eventually, for every `c` (`PathLemma.eventually_le`), i.e.
+  `a(N) = N! · e^{-ω(N)}`.
+
+## 2. Local structure of the cyclic defect
+
+`cycDefect_succ`: `I(m+1) - I(m) = [2m ∈ S] + [2m+1 ∈ S] - 2 [m ∈ S]` (panels mod `N`).
+Hence `I` is non-decreasing across free panels (`cycDefect_mono_of_free`), and two consecutive
+free valid panels `m, m+1` force both panels `2m, 2m+1` (mod `N`) to be free
+(`consecutive_valid`).  Two zeros `y < y'` of `I` satisfy the doubling relation
+`P̃(2y'-1) - P̃(2y-1) = 2 (P(y'-1) - P(y-1))` (`doubling_of_zeros`).
+-/
+
+namespace Folds
+
+open Finset
+
+/-! ## 1. Path products -/
+
+/-- The product of the numbers of valid moves along the prefix `p`. -/
+def pathProd (N : Nat) (p : List Nat) : Nat :=
+  ∏ i ∈ Finset.range p.length, (moves N (p.take i)).card
+
+theorem pathProd_append (N : Nat) (p : List Nat) (m : Nat) :
+    pathProd N (p ++ [m]) = pathProd N p * (moves N p).card := by
+  unfold pathProd
+  rw [List.length_append, List.length_singleton, Finset.prod_range_succ]
+  congr 1
+  · apply Finset.prod_congr rfl
+    intro i hi
+    rw [Finset.mem_range] at hi
+    rw [List.take_append_of_le_length (by omega)]
+  · rw [List.take_append_of_le_length le_rfl, List.take_length]
+
+theorem pathProd_pos (N : Nat) : ∀ k, ∀ p ∈ prefixes N k, 0 < pathProd N p
+  | 0, p, hp => by
+    simp only [prefixes, Finset.mem_singleton] at hp; subst hp; simp [pathProd]
+  | k + 1, p, hp => by
+    simp only [prefixes, Finset.mem_biUnion, Finset.mem_image] at hp
+    obtain ⟨q, hq, m, hm, rfl⟩ := hp
+    rw [pathProd_append]
+    exact Nat.mul_pos (pathProd_pos N k q hq) (Finset.card_pos.2 ⟨m, hm⟩)
+
+/-- **Random descent.**  `∑_{p valid of length k} 1 / pathProd N p ≤ 1`. -/
+theorem sum_inv_pathProd_le (N : Nat) :
+    ∀ k, ∑ p ∈ prefixes N k, (1 : ℝ) / pathProd N p ≤ 1
+  | 0 => by simp [prefixes, pathProd]
+  | k + 1 => by
+    have hdisj : (prefixes N k : Set (List Nat)).PairwiseDisjoint
+        (fun p => (moves N p).image fun m => p ++ [m]) := by
+      intro p hp p' hp' hne
+      simp only [Function.onFun]
+      rw [Finset.disjoint_left]
+      intro q hq hq'
+      simp only [Finset.mem_image] at hq hq'
+      obtain ⟨m, _, rfl⟩ := hq
+      obtain ⟨m', _, e⟩ := hq'
+      have l1 := (mem_prefixes (Finset.mem_coe.1 hp)).1
+      have l2 := (mem_prefixes (Finset.mem_coe.1 hp')).1
+      have := (List.append_inj e (by rw [l1, l2])).1
+      exact hne this.symm
+    rw [prefixes, Finset.sum_biUnion hdisj]
+    calc ∑ p ∈ prefixes N k, ∑ q ∈ (moves N p).image (fun m => p ++ [m]),
+          (1 : ℝ) / pathProd N q
+        = ∑ p ∈ prefixes N k, ∑ _m ∈ moves N p,
+          (1 : ℝ) / ((pathProd N p : ℝ) * (moves N p).card) := by
+          apply Finset.sum_congr rfl
+          intro p _
+          rw [Finset.sum_image (fun x _ y _ e => by simpa using e)]
+          apply Finset.sum_congr rfl
+          intro m _
+          rw [pathProd_append]; push_cast; rfl
+      _ ≤ ∑ p ∈ prefixes N k, (1 : ℝ) / pathProd N p := by
+          apply Finset.sum_le_sum
+          intro p _
+          rw [Finset.sum_const, nsmul_eq_mul]
+          rcases Nat.eq_zero_or_pos (moves N p).card with h0 | hpos
+          · rw [h0]; simp
+          · have hc : ((moves N p).card : ℝ) ≠ 0 := by exact_mod_cast hpos.ne'
+            rw [mul_one_div, mul_comm (pathProd N p : ℝ), ← div_div, div_self hc]
+      _ ≤ 1 := sum_inv_pathProd_le N k
+
+/-- A full-length valid prefix is a valid fold sequence. -/
+theorem prefixes_subset_semiSeqs (N : Nat) : prefixes N N ⊆ semiSeqs N := by
+  intro a ha
+  obtain ⟨hl, hnd, hb, hs⟩ := mem_prefixes ha
+  refine mem_semiSeqs.2 ⟨?_, hs⟩
+  apply List.perm_of_nodup_nodup_toFinset_eq hnd List.nodup_range'
+  apply Finset.eq_of_subset_of_card_le
+  · intro x hx
+    rw [List.mem_toFinset] at hx ⊢
+    rw [List.mem_range'_1]
+    have := hb x hx; omega
+  · rw [List.toFinset_card_of_nodup hnd, List.toFinset_card_of_nodup List.nodup_range',
+      List.length_range', hl]
+
+theorem semiSeqs_eq_prefixes (N : Nat) : semiSeqs N = prefixes N N := by
+  apply Finset.Subset.antisymm _ (prefixes_subset_semiSeqs N)
+  intro a ha
+  have := take_mem_prefixes ha N le_rfl
+  rw [mem_semiSeqs] at ha
+  rwa [List.take_of_length_le (by rw [ha.1.length_eq]; simp)] at this
+
+/-- **Path form of the tree bound** (real bound `B ≥ 0`). -/
+theorem semiCount_le_of_pathProd_le_real (N : Nat) (B : ℝ) (hB : 0 ≤ B)
+    (h : ∀ a ∈ semiSeqs N, (pathProd N a : ℝ) ≤ B) : (semiCount N : ℝ) ≤ B := by
+  unfold semiCount
+  rw [semiSeqs_eq_prefixes] at h ⊢
+  rcases (prefixes N N).eq_empty_or_nonempty with he | ⟨a0, ha0⟩
+  · rw [he]; simpa using hB
+  have hBpos : 0 < B := lt_of_lt_of_le (by exact_mod_cast pathProd_pos N N a0 ha0) (h a0 ha0)
+  have key : ∑ _a ∈ prefixes N N, (1 : ℝ) / B ≤ ∑ a ∈ prefixes N N, (1 : ℝ) / pathProd N a := by
+    apply Finset.sum_le_sum
+    intro a ha
+    apply one_div_le_one_div_of_le (by exact_mod_cast pathProd_pos N N a ha) (h a ha)
+  have := key.trans (sum_inv_pathProd_le N N)
+  rw [Finset.sum_const, nsmul_eq_mul, mul_one_div, div_le_one hBpos] at this
+  exact this
+
+/-- **Path form of the tree bound.**  If every valid fold sequence of `[1..N]` has path
+product at most `B`, then `a(N) ≤ B`. -/
+theorem semiCount_le_of_pathProd_le (N B : Nat) (h : ∀ a ∈ semiSeqs N, pathProd N a ≤ B) :
+    semiCount N ≤ B := by
+  have := semiCount_le_of_pathProd_le_real N B (by positivity)
+    (fun a ha => by exact_mod_cast h a ha)
+  exact_mod_cast this
+
+/-! ### The deficit form -/
+
+/-- The path deficit `∑_{k < N} ln ((N - k) / V_k)` of a sequence `a`. -/
+noncomputable def pathDeficit (N : Nat) (a : List Nat) : ℝ :=
+  ∑ k ∈ Finset.range N, Real.log (((N - k : Nat) : ℝ) / (moves N (a.take k)).card)
+
+theorem prod_sub_eq_factorial (N : Nat) :
+    ∏ k ∈ Finset.range N, ((N - k : Nat) : ℝ) = (N.factorial : ℝ) := by
+  rw [← Finset.prod_range_reflect, ← Finset.prod_range_add_one_eq_factorial]
+  push_cast
+  apply Finset.prod_congr rfl
+  intro j hj
+  rw [Finset.mem_range] at hj
+  have : N - (N - 1 - j) = j + 1 := by omega
+  rw [this]; push_cast; ring
+
+/-- Every valid sequence has `V_k ≥ 1` at every step `k < N`. -/
+theorem card_moves_take_pos {N : Nat} {a : List Nat} (ha : a ∈ semiSeqs N) {k : Nat}
+    (hk : k < N) : 0 < (moves N (a.take k)).card := by
+  rw [semiSeqs_eq_prefixes] at ha
+  have hpos := pathProd_pos N N a ha
+  have hl := (mem_prefixes ha).1
+  unfold pathProd at hpos
+  rw [hl] at hpos
+  exact Nat.pos_of_ne_zero
+    ((Finset.prod_ne_zero_iff.1 hpos.ne') k (Finset.mem_range.2 hk))
+
+/-- `pathProd N a = N! · exp (-pathDeficit N a)` for every valid sequence. -/
+theorem pathProd_eq_factorial_mul_exp {N : Nat} {a : List Nat} (ha : a ∈ semiSeqs N) :
+    (pathProd N a : ℝ) = N.factorial * Real.exp (-pathDeficit N a) := by
+  have hl : a.length = N := by
+    have := (mem_semiSeqs.1 ha).1.length_eq; simpa using this
+  unfold pathDeficit
+  rw [← Finset.sum_neg_distrib, Real.exp_sum, ← prod_sub_eq_factorial, ← Finset.prod_mul_distrib]
+  unfold pathProd
+  rw [hl]; push_cast
+  apply Finset.prod_congr rfl
+  intro k hk
+  rw [Finset.mem_range] at hk
+  have hV : (0 : ℝ) < (moves N (a.take k)).card := by
+    exact_mod_cast card_moves_take_pos ha hk
+  have hN : (0 : ℝ) < ((N - k : Nat) : ℝ) := by
+    have : 0 < N - k := by omega
+    exact_mod_cast this
+  rw [Real.exp_neg, Real.exp_log (div_pos hN hV)]
+  field_simp
+
+/-- **Deficit form of the tree bound.**  If every valid fold sequence has path deficit at
+least `D`, then `a(N) ≤ N! · e^{-D}`. -/
+theorem semiCount_le_of_deficit_ge (N : Nat) (D : ℝ)
+    (h : ∀ a ∈ semiSeqs N, D ≤ pathDeficit N a) :
+    (semiCount N : ℝ) ≤ N.factorial * Real.exp (-D) := by
+  apply semiCount_le_of_pathProd_le_real N _ (by positivity)
+  intro a ha
+  rw [pathProd_eq_factorial_mul_exp ha]
+  have : Real.exp (-pathDeficit N a) ≤ Real.exp (-D) := Real.exp_le_exp.2 (by linarith [h a ha])
+  have hf : (0 : ℝ) ≤ N.factorial := by positivity
+  exact mul_le_mul_of_nonneg_left this hf
+
+/-- **The Path Lemma** (conjecture): some lower bound `D(N)` on the path deficit of every
+valid fold sequence of `[1..N]` satisfies `D(N) / N → ∞`. -/
+def PathLemma : Prop :=
+  ∃ D : ℕ → ℝ, Filter.Tendsto (fun N => D N / N) Filter.atTop Filter.atTop ∧
+    ∀ N, ∀ a ∈ semiSeqs N, D N ≤ pathDeficit N a
+
+/-- **Path Lemma ⇒ `a(N) ≤ N! e^{-ω(N)}`.**  Under the Path Lemma, for every `c` we
+eventually have `a(N) ≤ N! · e^{-c N}`. -/
+theorem PathLemma.eventually_le (hP : PathLemma) (c : ℝ) :
+    ∀ᶠ N : ℕ in Filter.atTop, (semiCount N : ℝ) ≤ N.factorial * Real.exp (-(c * N)) := by
+  obtain ⟨D, hD, hpath⟩ := hP
+  filter_upwards [hD.eventually_ge_atTop c, Filter.eventually_ge_atTop 1] with N hN hN1
+  have hNpos : (0 : ℝ) < N := by exact_mod_cast hN1
+  have hcD : c * N ≤ D N := by rwa [le_div_iff₀ hNpos] at hN
+  refine (semiCount_le_of_deficit_ge N (D N) (hpath N)).trans ?_
+  have : Real.exp (-D N) ≤ Real.exp (-(c * N)) := Real.exp_le_exp.2 (by linarith)
+  exact mul_le_mul_of_nonneg_left this (by positivity)
+
+/-! ### Linearisation (Jensen) -/
+
+/-- **Linearisation.**  If the mean acceptance `(1/N) ∑_k V_k / (N - k)` of a valid sequence
+is at most `ε`, then its deficit is at least `N ln (1/ε)`. -/
+theorem pathDeficit_ge_of_mean_le {N : Nat} {a : List Nat} (ha : a ∈ semiSeqs N) {ε : ℝ}
+    (hε : 0 < ε)
+    (h : ∑ k ∈ Finset.range N, ((moves N (a.take k)).card : ℝ) / ((N - k : Nat) : ℝ) ≤ ε * N) :
+    N * Real.log (1 / ε) ≤ pathDeficit N a := by
+  unfold pathDeficit
+  have key : ∀ k ∈ Finset.range N,
+      Real.log (1 / ε) + 1 - (((moves N (a.take k)).card : ℝ) / ((N - k : Nat) : ℝ)) / ε ≤
+        Real.log (((N - k : Nat) : ℝ) / (moves N (a.take k)).card) := by
+    intro k hk
+    rw [Finset.mem_range] at hk
+    have hV : (0 : ℝ) < (moves N (a.take k)).card := by
+      exact_mod_cast card_moves_take_pos ha hk
+    have hN : (0 : ℝ) < ((N - k : Nat) : ℝ) := by
+      have : 0 < N - k := by omega
+      exact_mod_cast this
+    set x := ((moves N (a.take k)).card : ℝ) / ((N - k : Nat) : ℝ) / ε with hx
+    have hxpos : 0 < x := by positivity
+    have hl := Real.log_le_sub_one_of_pos hxpos
+    have e1 : Real.log x = Real.log ((moves N (a.take k)).card) - Real.log ((N - k : Nat) : ℝ)
+        - Real.log ε := by
+      rw [hx, Real.log_div (by positivity) hε.ne', Real.log_div hV.ne' hN.ne']
+    have e2 : Real.log (((N - k : Nat) : ℝ) / (moves N (a.take k)).card) =
+        Real.log ((N - k : Nat) : ℝ) - Real.log ((moves N (a.take k)).card) :=
+      Real.log_div hN.ne' hV.ne'
+    have e3 : Real.log (1 / ε) = - Real.log ε := by rw [one_div, Real.log_inv]
+    rw [e2, e3]
+    linarith
+  have hsum := Finset.sum_le_sum key
+  rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range, nsmul_eq_mul,
+    ← Finset.sum_div] at hsum
+  have hdiv : (∑ k ∈ Finset.range N,
+      ((moves N (a.take k)).card : ℝ) / ((N - k : Nat) : ℝ)) / ε ≤ N := by
+    rw [div_le_iff₀ hε]; linarith
+  have : (N : ℝ) * (Real.log (1 / ε) + 1) - N ≤ (N : ℝ) * (Real.log (1 / ε) + 1) -
+      (∑ k ∈ Finset.range N, ((moves N (a.take k)).card : ℝ) / ((N - k : Nat) : ℝ)) / ε := by
+    linarith
+  nlinarith
+
+/-- **Linear form of the Path Lemma**: the mean acceptance `(1/N) ∑_k V_k/(N-k)` of every
+valid sequence is at most `ε(N)`, with `ε(N) → 0`.  It implies the Path Lemma. -/
+def LinearPathLemma : Prop :=
+  ∃ ε : ℕ → ℝ, (∀ N, 0 < ε N) ∧ Filter.Tendsto ε Filter.atTop (nhds 0) ∧
+    ∀ N, ∀ a ∈ semiSeqs N,
+      ∑ k ∈ Finset.range N, ((moves N (a.take k)).card : ℝ) / ((N - k : Nat) : ℝ) ≤ ε N * N
+
+theorem LinearPathLemma.pathLemma (h : LinearPathLemma) : PathLemma := by
+  obtain ⟨ε, hpos, hlim, hb⟩ := h
+  refine ⟨fun N => N * Real.log (1 / ε N), ?_, fun N a ha => pathDeficit_ge_of_mean_le ha (hpos N) (hb N a ha)⟩
+  have h1 : Filter.Tendsto ε Filter.atTop (nhdsWithin 0 (Set.Ioi 0)) :=
+    tendsto_nhdsWithin_iff.2 ⟨hlim, Filter.Eventually.of_forall hpos⟩
+  have h2 : Filter.Tendsto (fun N => Real.log (1 / ε N)) Filter.atTop Filter.atTop := by
+    have := (Real.tendsto_log_atTop.comp (tendsto_inv_nhdsGT_zero.comp h1))
+    refine this.congr (fun N => ?_)
+    simp [Function.comp, one_div]
+  refine h2.congr' ?_
+  filter_upwards [Filter.eventually_ge_atTop 1] with N hN
+  have h1N : (1 : ℝ) ≤ N := by exact_mod_cast hN
+  have : (N : ℝ) ≠ 0 := by linarith
+  field_simp
+
+end Folds
