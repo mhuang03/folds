@@ -1,0 +1,13 @@
+# compiled C programs
+rules
+rot
+rot2
+rot2z
+gencert
+*.o
+*.out
+__pycache__/
+dircheck
+smallcheck
+dirk
+dircheck2
