@@ -19,6 +19,8 @@ elements, *neutral* if it is balanced around every panel.
   are exactly the odd panels (odd `N`) and the sets `E_dᶜ`.
 * `CN_large`: hence `C_N(k) = #{X ∈ NFam N : |X| = k} · a(N - k)` for `N < 2k`, `k < N`: the
   part `k > N/2` of identity (B) is explicit.
+* `copies_nonempty_iff`: copies of size `k` exist iff `2k ≤ N + 1` (Beatty copies), `k = N`,
+  or `2kd = (d + 1)N` for an odd divisor `3 ≤ d < N` of `N`.
 * `identity_B_split`: `a(N) = J(N) + ∑_{k=2}^{⌊N/2⌋} J(k) C_N(k) +
   ∑_{X ∈ NFam N, |X| > N/2} J(|X|) a(N - |X|)`.
 
@@ -303,6 +305,63 @@ theorem identity_B_split (hN : 2 ≤ N) :
     smul_eq_mul]
   · ring
   · intro X hX; rw [(Finset.mem_filter.1 hX).2]
+
+/-- **Which sizes occur.**  For `N ≥ 2` and `1 ≤ k ≤ N` there is a copy of size `k` iff
+`2k ≤ N + 1` (Beatty copies), or `k = N`, or `2kd = (d + 1)N` for an odd divisor `3 ≤ d < N`
+of `N` (the sets `E_dᶜ`). -/
+theorem copies_nonempty_iff {k : Nat} (hN : 2 ≤ N) (hk1 : 1 ≤ k) (hkN : k ≤ N) :
+    (copies N k).Nonempty ↔
+      2 * k ≤ N + 1 ∨ k = N ∨ ∃ d ∈ oddDivs N, 2 * k * d = (d + 1) * N := by
+  constructor
+  · rintro ⟨X, hX⟩
+    simp only [copies, Finset.mem_filter, Finset.mem_powersetCard] at hX
+    obtain ⟨⟨hsub, hcard⟩, hc⟩ := hX
+    by_cases hsmall : 2 * k ≤ N + 1
+    · exact Or.inl hsmall
+    rcases Nat.lt_or_ge k N with hlt | hge
+    · right; right
+      obtain ⟨d, hdN, hodd, hd3, he⟩ := copy_size (by omega) hsub hc (by omega) (by omega)
+      rw [hcard] at he
+      refine ⟨d, ?_, he⟩
+      simp only [oddDivs, Finset.mem_filter, Finset.mem_Ico]
+      refine ⟨⟨hd3, ?_⟩, hdN, hodd⟩
+      rcases Nat.lt_or_ge d N with h | h
+      · exact h
+      · exfalso
+        have hdle := Nat.le_of_dvd (by omega) hdN
+        have hd : d = N := by omega
+        rw [hd] at he
+        have := Nat.eq_of_mul_eq_mul_right (show 0 < N by omega) he
+        omega
+    · exact Or.inr (Or.inl (by omega))
+  · rintro (h | h | ⟨d, hd, he⟩)
+    · have hφ := winEmb_beatty (N := N) (p := k) (h := 0) hk1 (by omega)
+      refine ⟨(Finset.Icc 1 k).image (beatty N k 0), ?_⟩
+      simp only [copies, Finset.mem_filter, Finset.mem_powersetCard]
+      exact ⟨⟨winEmb_image_sub hφ, winEmb_image_card hφ⟩, isCopy_winEmb hφ⟩
+    · subst h
+      refine ⟨Finset.Icc 1 k, ?_⟩
+      simp only [copies, Finset.mem_filter, Finset.mem_powersetCard]
+      exact ⟨⟨subset_refl _, by rw [Nat.card_Icc]; omega⟩, isCopy_full k⟩
+    · obtain ⟨hj, hn2, hjn⟩ := oddDivs_facts hd
+      have hd3 : 3 ≤ d := by
+        simp only [oddDivs, Finset.mem_filter, Finset.mem_Ico] at hd; exact hd.1.1
+      have hodd : d % 2 = 1 := by
+        simp only [oddDivs, Finset.mem_filter, Finset.mem_Ico] at hd; exact hd.2.2
+      have hdj : d = 2 * ((d - 1) / 2) + 1 := by omega
+      generalize (d - 1) / 2 = j at hj hjn hdj
+      generalize N / d = n at hn2 hjn
+      subst hdj
+      refine ⟨Finset.Icc 1 N \ resE j n, ?_⟩
+      simp only [copies, Finset.mem_filter, Finset.mem_powersetCard]
+      refine ⟨⟨Finset.sdiff_subset, ?_⟩,
+        isCopy_of_neutral Finset.sdiff_subset (neutral_compl_resE hj hjn)⟩
+      rw [card_compl_resE hj hjn]
+      rw [← hjn] at he
+      have : (2 * (2 * j + 1)) * k = (2 * (2 * j + 1)) * ((j + 1) * n) := by
+        have e2 : 2 * j + 1 + 1 = 2 * (j + 1) := by ring
+        rw [e2] at he; nlinarith
+      exact (Nat.eq_of_mul_eq_mul_left (by omega) this).symm
 
 /-! ## Copies of size 2 -/
 

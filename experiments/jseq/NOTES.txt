@@ -264,6 +264,11 @@ and only the terms k ≤ N/2 involve completion counts.  Checked against the DP 
    dominated by sizes ~N/4..N/2.  The Beatty-type structure appears only at the top: above
    N/2 there are only the neutral sets E_dᶜ (sizes (d+1)N/(2d)), at N/2 the 2-adic closed
    sets, just below N/2 universal near-class counts.
+ * WHICH SIZES OCCUR (proven, copies_nonempty_iff): for 1 ≤ k ≤ N there is a copy of size k
+   iff 2k ≤ N + 1 (the Beatty copy {⌊rN/k⌋}, Copies.winEmb_beatty), k = N, or k = (d+1)N/(2d)
+   for an odd divisor 3 ≤ d < N of N, i.e. (2k - N) | N with N/(2k - N) odd.  So the number of
+   sizes is ⌈N/2⌉ + #{odd d | N : 3 ≤ d < N} + 1 (N ≥ 2), and every size k > N/2 that occurs
+   occurs exactly once.  (Checked against copies.c for N ≤ 64.)
 
 
 7. IS THERE AN EXACT RECURSION THROUGH a AND J?
@@ -295,3 +300,4 @@ and only the terms k ≤ N/2 involve completion counts.  Checked against the DP 
  copy_half_P, copy_half_iff       the half-size characterisation (5.2)
  copy_half_odd                   N ≡ 2 (mod 4): only the parity classes have size N/2
  identity_B_split                (B) with the explicit tail k > N/2
+ copies_nonempty_iff             the sizes of copies (section 6)
