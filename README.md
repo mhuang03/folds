@@ -111,6 +111,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `LabellingSAT*` (M) | kernel-checked LRAT certificates (own sound checker, no `ofReduceBool`): the labelling bound for t = 3, 4 for **all N**, hence des + 1 ≥ min(⌊log₂(N+1)⌋, 5) and the same for LDS |
 | `Live5` (M) | `coReach_one_N`: {1,N} is co-reachable for every odd N ≠ 7; transfers through Beatty copies and splits; family `Cov5` (every non-dead 2-set for N = 100 and 130) |
 | `RecCount` (M) | `card_parFam`: the recursive parity family has 2^{N−1} members; `g_winEmb`: g(X) = a(\|X\|) for window copies; antichain decomposition `semiCount_eq_sum_antichain`; a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2a(jn)a((j+1)n) + rest |
+| `Neutral` (M) | **classification of neutral sets** (`neutral_classification`: only the parity classes and E_d, E_dᶜ for odd d ∣ N); **identity (A)** in full (`identity_A`); J(k) universality and **identity (B)** (`identity_B`) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -188,6 +189,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/reccount/NOTES.txt` | exact recursions for constructible families (R1, R2, R2c, R3), neutral sets, decomposition identities (A) and (B) for a(N) |
 | `experiments/labelling_lrat/NOTES.txt` | LRAT certificate pipeline and costs |
 | `experiments/recsearch/REPORT.txt` | search for recurrences in previous terms (all negative), with the proven and conditional non-D-finiteness arguments |
+| `experiments/neutral/PROOFS.txt` | neutral-set classification, identities (A) and (B) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
@@ -208,10 +210,11 @@ See `experiments/generate/NOTES.txt`.
 See `experiments/reccount/NOTES.txt`.
 - Every constructible family has an exact recursion. For example, R1(N) = 2^{N−1} (Lean), and R2(N) = P(N) + Σ_{q|N} P(q)·R2(N/q)^q. But these families are a vanishing share of a(N).
 - **Identity (A):** a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2Σ_{odd d|N, 3≤d<N} a(jN/d)a((j+1)N/d) + I(N), with j = (d−1)/2. It comes from the "neutral" sets: the parity classes and the doubling-split sets E_d.
-  - Partly in Lean.
+  - **Proven in Lean** (`Neutral.identity_A`), including the classification of neutral sets.
   - The remainder I(N)/a(N) → 1 (0.999 at N = 24).
 - **Identity (B):** a(N) = J(N) + Σ_k J(k)·C_N(k), split by the first prefix that is a window copy.
   - J(N)/a(N) stays near 0.18.
+  - **Proven in Lean** (`Neutral.identity_B`), including J(k) universality.
   - C_N(k) involves completion counts, not values of a, so it is not a closed recursion.
 
 ## Practical note for folders
