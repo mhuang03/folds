@@ -1,0 +1,155 @@
+Residual: lattice points in the witness polygon, slices, and the remaining covering statement
+==========================================================================================
+
+Lean: Folds/Residual.lean (imports Folds.ArithCover; no sorry, no native_decide).
+Notation as in experiments/arithcover/PROOFS.txt: a mixed-parity wide pair (u, u'), u <= u',
+u + 2u' <= N - 1, M = N + 2, d = u' - u, delta = N - 1 - u - 2u'.  A family is a tuple
+(K, L, R, alpha, beta, smax, amin) of Live8.dirOK: Z (K = M, R = y, 0, 1, M/2, 2),
+X0 (K = N, R = y - 2, 0, 1, (N+1)/2, 1), X1 (K = N, R = y - 2, 1, 0, N/2, 2), in an orientation
+(x, y) = (u, u') or (u', u), L = x.  A witness is (s, a, c) with
+     2 <= s <= smax,  R <= s,  sL + alpha <= aK <= s(L + 1) + alpha - 1,
+     sR + beta <= cK <= sR + beta + s - 1,  a >= amin                                     (W)
+and gives dirAny (Lean `Wit`, `dirAny_of_witZ'`, `dirAny_of_witX0`, `dirAny_of_witX1`).
+
+STATUS
+  * NOT proven: forall N > 300, Residual N.  What is proven (Lean, all N):
+      - `conjectureC_of_coverAll`: Conjecture C (2-prefixes) for all N follows from
+            CoverAll N := every mixed wide non-special pair (u >= 2) lies in Proven2 N u u'
+        for N > 300, where Proven2 = Proven (the old regions B, B2, D, D0, W)
+                                    or RegionPF or RegionSL or RegionS.
+        (Also `residual_of_residual2`, `conjectureC_of_residual2`: Residual2 N, the
+        ArithCover statement restricted to the pairs outside Proven2, implies Residual N.)
+      - RegionPF, RegionSL are position-free: membership is the feasibility of finitely many
+        linear inequalities in a few rational unknowns (a fundamental parallelogram inside a
+        polygon whose edges are explicit in N, u, u'); no fractional part enters, except through
+        the integer slice parameter j of RegionSL.  RegionS is a list of explicit families.
+  * Numerically (residual2.c, exact rational arithmetic, faithful to the Lean definitions):
+        CoverAll N holds for every 301 <= N <= 3000 and on the sample N = 3001 + 997k <= 30000,
+    i.e. Residual2 is vacuous there.  Over 301 <= N <= 3000 (3.73e8 pairs): the old residual
+    was 1.508e8 pairs (40.4%); RegionPF alone leaves 585758 (0.157% of all pairs); RegionSL and
+    RegionS leave none (section 6).
+  * What is missing for a proof of Residual for all N: a proof of CoverAll N for N > 300, i.e.
+    explicit certificates (parallelogram corners as functions of N, u, u') on a cell
+    decomposition of the pair triangle, with the polynomial inequalities proven; section 7.
+
+1. The witness polygon and the pair lemma (Lean: Aff, famCons, wit_of_cons)
+---------------------------------------------------------------------------
+For fixed (a, c) the witnesses s of (W) are the integers in [max lower, min upper] with
+   lower bounds  (aK - alpha + 1)/(L + 1),  (cK - beta + 1)/(R + 1),  R,  2
+   upper bounds  (aK - alpha)/L,  (cK - beta)/R,  smax.
+If every upper bound exceeds every lower bound by at least 1 (twelve conditions, each affine in
+(a, c) over Q), then s = ceil(max lower) is a witness.  So with
+   Pi = {(a, c) in R^2 : the twelve "gap" conditions and a >= amin}       (Lean `famCons`)
+every lattice point of Pi gives dirAny (`wit_of_cons`, `dirAny_of_consZ/X0/X1`).
+Shape of Pi: a thin triangle along the ray a/c ~ L/(R + 1); its width in the a-direction at the
+far end (c ~ (R + 1)/2, s ~ K/2) is about (1 + x/y)/2 - 2x/M (for Z), between 1/3 (the corner
+u ~ u' ~ M/3) and ~1 (near the old regions); its length is of order N.  Its area is of order N,
+so it contains lattice points unless the lattice Z^2 is "flat" relative to Pi, i.e. unless the
+slope L/(R + 1) is very close to a rational p/q with small q and the offset is unlucky: these are
+the resonances (three-gap / flatness picture of arithcover/PROOFS.txt section 8).
+
+2. Fundamental parallelograms (Lean: exists_lattice, ParOK, exists_lattice_point)
+-------------------------------------------------------------------------------
+Lemma.  Let w1 = (p1, q1), w2 = (p2, q2) in Z^2 with p1 q2 - p2 q1 = 1, delta in Q, P in Q^2.
+The parallelogram P + [0,1] w1 + [0,1] (w2 + delta w1) contains a lattice point.
+Proof.  Write P = l1 w1 + l2 w2.  Put t2 = ceil(l2) - l2 in [0, 1); then
+P + t2 (w2 + delta w1) = (l1 + t2 delta) w1 + ceil(l2) w2; put t1 = ceil(l1 + t2 delta) - (l1 + t2 delta). []
+An affine function nonnegative at the four corners is nonnegative on the parallelogram
+(bilinear interpolation of an affine function is exact: `Aff.nonneg_par`).  Hence
+   ParOK(cs) := some such parallelogram has its four corners in {f >= 0 : f in cs}
+implies a lattice point in the polygon (`exists_lattice_point`).  ParOK is position-free: it is
+the feasibility of 4|cs| linear inequalities in (P, delta) for a fixed direction (w1, w2).
+Exact test (parok.h): for the direction w1 parametrise the plane by (nu, t) (nu along w2, t along
+w1); the chord of the polygon on the line nu = const has length >= 1 iff a finite list of linear
+inequalities in nu holds (lower bound i, upper bound k: upper_k(nu) - lower_i(nu) >= 1);
+ParOK with side w1 holds iff this nu-interval has length >= 1 (take its two ends as the two
+sides of the parallelogram; the shear delta absorbs the drift of the chord).
+
+3. Region PF (Lean: RegionPF, covered_of_regionPF)
+--------------------------------------------------
+RegionPF N u u' := ParOK of the witness polygon of Z, X0 or X1 in orientation (u', u) or (u, u')
+(X only when the right value is >= 3).  Numerics (res3.c, cells.c; directions w1 = (p, q),
+q <= 3): RegionPF contains all but 585758 of the 1.508e8 old residual pairs over
+301 <= N <= 3000 (N = 301: 69 of 1553 left; N = 1001: 129 of 16824; N = 3001: 320 of 150871).
+Two "cells" do almost all of it (cells.c 3001): orientation (u', u), family Z,
+   w1 = (1, 1)  (lines a - c = const):   113876 pairs, the near-diagonal wedge u' < ~1.6u;
+   w1 = (2, 1)  (lines a - 2c = const):  35666 pairs, the band ~1.6u < u' < ~2.1u;
+X0 with the same directions, and w1 = (3, 2), fill the seams.  What RegionPF leaves are exactly
+the resonances, where the slope L/(R + 1) of Pi is (nearly) an integer:
+   - d = 1 for N/4 <~ u <= N/3 (Z: slope u'/(u + 1) = 1 exactly; X: slope (u + 1)/(u - 1),
+     too close to 1 for the length of Pi),  d = 3 near the corner;
+   - u' ~ 2u near the inward boundary (Z: slope 2 when u' = 2u + 2);
+   - fixed small shapes and u = 3, u' ~ N/3 (Pi too small).
+
+4. Slices (Lean: sliceCons, sliceCons', wit_of_slice, wit_of_slice', SliceOK, RegionSL)
+--------------------------------------------------------------------------------------
+On a resonance the projection to (a, c) loses the information carried by s.  Fix instead a
+lattice line in (a, c): a = p c + j (or c = p a + j), p, j integers.  Then (W) is eight affine
+conditions in (s, c) (resp. (s, a)) with integer coefficients, and a lattice point of this
+polygon IS a witness (no "length >= 1" condition).  RegionSL := for some family, orientation and
+slice, the slice polygon contains a fundamental parallelogram.  (The slice polygon is a thin
+needle along c/s ~ R/K; on the d = 1 line, e.g., the witnesses have a - c = 1 and s in three
+residue classes mod 3 with a slow drift: in the (s, c) plane this is a needle of slope ~1/3,
+which is not resonant for the lattice.)  Numerics (res5.c on the 585758 pairs left by PF;
+slices through a witness, p <= 3, directions with c-step <= 4, s-step <= 16): all are covered
+except about five pairs per N, which are exactly the explicit families of section 5.
+
+5. Explicit families (Lean: shape_*, u3_*, corner_d1, RegionS, covered_of_regionS)
+-----------------------------------------------------------------------------------
+For N >= 301 (omega / short ring identities; u3.c checks 301 <= N <= 200000):
+  shapes (constant a, c; s = floor(sigma K)):
+     (2,4): Z, (4,2),  a = 2, c = 1, s = floor(3M/7)      (2,5): Z, (5,2), a = 2, c = 1, s = floor(2M/5)
+     (3,5): X0, (3,5), a = 1, c = 1, s = floor(2N/7)      (3,6): Z, (6,3), a = 2, c = 1, s = floor(3M/10)
+     (3,7): Z, (7,3),  a = 2, c = 1, s = floor(2M/7)      (3,8): X0, (3,8), a = 1, c = 2, s = floor(3N/10)
+     (5,5): Z, (5,5),  a = 2, c = 2, s = floor(3M/8)
+  u = 3, N = 3u' + m, m odd, |m| <= 5:
+     m < 0: Z, orientation (u', 3), c = 1, s = 3a + t; then aM - su' = a(m + 2) - tu', and
+        m = -1: t = 0,  a = ceil(M/12);   m = -3: t = -1, a = floor((u' + 1)/4) + 1;
+        m = -5: t = -1, a = floor(u'/4) + 1.
+     m > 0: X0, orientation (3, u'), a = 1, u' = w + 2, N = 3w + 6 + m:
+        m = 1, 3: s = 3q + 2 in [w, w + 2], c = q   (s(u' - 2) + 1 <= cN <= s(u' - 1) reduces to
+                  2w + 1 <= (m + 6) q and (m + 3) q <= 2w + 2);
+        m = 5:    s = 3q + 3 in [w, w + 2], c = q.
+  corner d = 1, delta = 0 (N = 3u', u = u' - 1, u' = w + 3): X0, orientation (u', u),
+     a = b + 1, c = b, s = 3b + 3, b = floor((w + 3)/3); then aN = su' exactly and
+     sR + 1 <= cN <= sR + s reduces to 3w + 1 <= 9b, 2b <= w + 1.
+
+6. Numerics (residual2.c: the pipeline old regions -> PF -> S -> SL, exact, with a dirAny
+   sanity check of every SL pair; regions.c semantics for the old regions)
+-----------------------------------------------------------------------------------------
+  301 <= N <= 3000:   see the "all:" line of `residual2 301 3000 1` (recorded below).
+  sample 3001 <= N <= 30000 (step 997): see `residual2 3001 30000 997`.
+  RESULTS: (filled in below)
+
+7. What remains: the covering statement CoverAll N for N > 300
+--------------------------------------------------------------
+CoverAll is a statement about explicit semialgebraic regions (plus the integer slice parameter
+and the explicit families), no longer about fractional parts.  A proof needs, on a decomposition
+of the pair triangle {(u, u')} into finitely many cells (with N as a parameter), explicit
+certificates (family, orientation, w1, w2, and P, delta as functions of N, u, u') and proofs of
+the 4 x 13 (PF) or 4 x 8 (SL) polynomial inequalities on each cell:
+  - the bulk: cells "Z, (u', u), w1 = (1,1)" and "Z, (u', u), w1 = (2,1)" (section 3), with
+    seams covered by X0 or by w1 = (3, 2);
+  - the resonance lines d = 1 (u >= N/4), d = 3 at the corner, u' ~ 2u at the boundary: slices
+    a = c + 1 (X0, (u', u)) resp. a = 2c + j; one needs the slice parallelograms explicitly;
+  - near the old regions (the boundary of the residual), either the old regions or PF.
+The asymptotic picture (why it works): for a fixed direction w1 = (p, q) the chord of Pi along
+w1 has length ~ (width)/|slope - p/q| and the band condition needs width >~ 1/q + |q slope - p|;
+in the residual the width of Pi is between ~1/3 and 1 and the slope ranges over [1, ~2.2], so the
+directions 1/1, 2/1, 3/2 (and the families X0, X1, whose slope differs by O(1/u)) leave only
+neighbourhoods of the lines slope = 1, 2 of width O(1/N) in u'/u, which are the resonance lines
+above.  This is uniform in N (the cell structure of cells.c is the same at N = 1001, 3001, 6001),
+so a finite certificate atlas should exist; it has not been written down.
+
+8. Programs (C, 1 core; binaries are .gitignored)
+  common.h, regs.h      dirOK/dirAny (faithful) and the old regions (copied from arithcover/regions.c)
+  pi.h, scan.c          the pair test (real gap conditions) and its coverage
+  pf.c, pfcore.h        floating-point lattice-direction test (exploration)
+  parok.h               exact ParOK test for one direction (Lean ParOK / famCons)
+  slice.h               slice polygons (Lean sliceCons / sliceCons') and RegionSL test
+  res3.c, res5.c        residual after PF, after SL;  res2.c, res4.c, cover.c, cmap.c, cells.c maps
+  shapes.c, u3.c, regS.c  the explicit families of section 5
+  residual2.c           the whole pipeline (Lean Residual2 / CoverAll)
+  cert.c                prints a certificate for one pair; TestPF.lean checks two of them in Lean
+  wit.c, fam.c          all witnesses of one pair
+  chk.sh                elaborates a Lean file with lean -M 3000

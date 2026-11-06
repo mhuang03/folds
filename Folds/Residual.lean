@@ -609,5 +609,23 @@ theorem conjectureC_of_residual2 (hR : ∀ N, 300 < N → Residual2 N) {N m₁ m
     Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false :=
   conjectureC_of_residual (fun N hN => residual_of_residual2 (hR N hN)) h1 h2 h12 hval
 
+/-- **The covering statement**: every mixed-parity wide non-special pair lies in `Proven2`.
+(Numerically `Residual2 N` is vacuous: `CoverAll N` holds for `301 ≤ N ≤ 3000` and on a sample
+up to `30000`, `experiments/residual/residual2.c`.) -/
+def CoverAll (N : ℕ) : Prop :=
+  ∀ u v, 2 ≤ u → u < v → u + v ≤ N + 1 → (u + v) % 2 = 1 → 2 * u + 2 ≤ v →
+    N + u + 3 ≤ 2 * v → ¬ Special N u (N + 1 - v) → Proven2 N u (N + 1 - v)
+
+theorem residual2_of_coverAll {N : ℕ} (h : CoverAll N) : Residual2 N := by
+  intro u v h1 h2 h3 h4 h5 h6 h7 h8
+  exact absurd (h u v h1 h2 h3 h4 h5 h6 h7) h8
+
+/-- **Conjecture C (2-prefixes) for all `N`, modulo the covering statement for `N > 300`.** -/
+theorem conjectureC_of_coverAll (hC : ∀ N, 300 < N → CoverAll N) {N m₁ m₂ : ℕ}
+    (h1 : 1 ≤ m₁ ∧ m₁ ≤ N) (h2 : 1 ≤ m₂ ∧ m₂ ≤ N) (h12 : m₁ ≠ m₂)
+    (hval : SemiSymmetric N [m₁, m₂]) :
+    Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false :=
+  conjectureC_of_residual2 (fun N hN => residual2_of_coverAll (hC N hN)) h1 h2 h12 hval
+
 end Residual
 end Folds
