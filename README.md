@@ -107,6 +107,9 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Labelling` (M) | finite reduction for each label count t (`bound_of_checks`, via left-half monotonicity); t ≤ 2 settled for all N, so des + 1 ≥ min(⌊log₂(N+1)⌋, 3) |
 | `Adjacent` (M) | **Theorem G** (inward-sign criterion ⇒ co-reachable, via a greedy-then-reverse construction); **every interval is co-reachable** (`coReach_interval`), hence the **Adjacent Lemma**; multiples of q are co-reachable when q ∣ N+1; family `Cov3` (4409 of 4949 non-dead 2-sets at N = 100) |
 | `Generate` | **truncation theorem** (`truncation`, `gen_filter`): the truncated bit-reversal order, and every member of the recursive odds/evens-first tree family, is symmetric and semi-symmetric for every N; O(log N) direct access `genAt_eq`; Montgomery-ladder construction `ladder_valid` |
+| `LabellingSAT*` (M) | kernel-checked LRAT certificates (own sound checker, no `ofReduceBool`): the labelling bound for t = 3, 4 for **all N**, hence des + 1 ≥ min(⌊log₂(N+1)⌋, 5) and the same for LDS |
+| `Live5` (M) | `coReach_one_N`: {1,N} is co-reachable for every odd N ≠ 7; transfers through Beatty copies and splits; family `Cov5` (every non-dead 2-set for N = 100 and 130) |
+| `RecCount` (M) | `card_parFam`: the recursive parity family has 2^{N−1} members; `g_winEmb`: g(X) = a(\|X\|) for window copies; antichain decomposition `semiCount_eq_sum_antichain`; a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2a(jn)a((j+1)n) + rest |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -148,9 +151,10 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    see `experiments/labelling/PROOFS.txt`.
 5. **Liveness (Conjecture C).** Every 2-set is co-reachable (its complement can be
    ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
-   valid prefixes for N ≤ 31). The Adjacent Lemma, and co-reachability of every
-   interval, are now **proven** (Lean, Theorem G). Still open: {1,N} for odd N, and
-   some wide pairs (v − u odd and large) from N = 31 on. See
+   valid prefixes for N ≤ 31). The Adjacent Lemma, co-reachability of every interval,
+   and {1,N} for odd N ≠ 7 are now **proven** (Lean). The Lean family covers every
+   non-dead pair at N = 100 and 130. Still open: a few sparse corner families, e.g.
+   (3, N−3), and a uniform proof for all N. See `experiments/live5/PROOFS.txt`. See
    `experiments/live2/PROOFS.txt`.
 
 ## Where things are
@@ -179,6 +183,9 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live3/PROOFS.txt` | RS for primes (partial), the Adjacent Lemma obstruction, near classes |
 | `experiments/live4/PROOFS.txt` | enlarged proven live family, uniform transfers, exceptional-class attempts |
 | `experiments/adjacent/PROOFS.txt` | Theorem G and the interval / Adjacent Lemma proof |
+| `experiments/live5/PROOFS.txt` | {1,N} for odd N, Beatty and split transfers, remaining corner families |
+| `experiments/reccount/NOTES.txt` | exact recursions for constructible families (R1, R2, R2c, R3), neutral sets, decomposition identities (A) and (B) for a(N) |
+| `experiments/labelling_lrat/NOTES.txt` | LRAT certificate pipeline and costs |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
@@ -193,6 +200,17 @@ O(log N). Modes:
 - `slip`: N^{(1/8+o(1))N} members.
 
 See `experiments/generate/NOTES.txt`.
+
+## Recursive count formulas from constructions
+
+See `experiments/reccount/NOTES.txt`.
+- Every constructible family has an exact recursion. For example, R1(N) = 2^{N−1} (Lean), and R2(N) = P(N) + Σ_{q|N} P(q)·R2(N/q)^q. But these families are a vanishing share of a(N).
+- **Identity (A):** a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2Σ_{odd d|N, 3≤d<N} a(jN/d)a((j+1)N/d) + I(N), with j = (d−1)/2. It comes from the "neutral" sets: the parity classes and the doubling-split sets E_d.
+  - Partly in Lean.
+  - The remainder I(N)/a(N) → 1 (0.999 at N = 24).
+- **Identity (B):** a(N) = J(N) + Σ_k J(k)·C_N(k), split by the first prefix that is a window copy.
+  - J(N)/a(N) stays near 0.18.
+  - C_N(k) involves completion counts, not values of a, so it is not a closed recursion.
 
 ## Practical note for folders
 
