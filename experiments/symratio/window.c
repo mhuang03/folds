@@ -12,11 +12,16 @@
    E_p = E[Pi_{m,p}] for independent uniform sigma in Theta(d), tau in Theta(c).
 
    Build: gcc -O3 -march=native -o window.bin window.c -lm          (double, normalised)
-          gcc -O3 -march=native -DMODP -o window_mod.bin window.c -lm   (exact mod 2^61-1)
+          gcc -O3 -march=native -DMODP -o window_mod.bin window.c -lm   (exact mod 2^61-1,
+          or mod the prime in the environment variable PRIME, < 2^62)
    Usage: window.bin all NMAX          r(n) for 19 <= n <= NMAX
           window.bin chain n1 n2 ...   r(n) for the listed n only
           window.bin stats NMAX        also head-tail correlation and state counts
-   Output lines: "n r(n) log(theta(n)) nh nt corr"  (mod build: "n theta(n) mod 2^61-1").
+   Output lines: "n r(n) log(theta(n)) nh nt maxPi Pr(Pi=1) Pr(tie) [corr]"
+   (nh, nt = numbers of head / tail windows of Theta(n); maxPi = max of Pi over the window
+   pairs that occur; Pr(tie) = probability that some 3-AP through a window pair has its
+   third term at 0 or n+1, the only pairs whose linkage changes under lifting; corr (stats mode) = total variation between J_n and the product of its
+   marginals).  Mod build: "n theta(n) mod PRIME".
    Uses one core; memory ~ 84 * (NMAX/4)^3 doubles in "all" mode. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,14 +35,25 @@
 
 #ifdef MODP
 typedef uint64_t num;
-static const uint64_t PR = (1ULL << 61) - 1;
+/* Montgomery arithmetic modulo an odd prime PR < 2^62 (default 2^61-1; override with the
+   environment variable PRIME).  Values are stored as x*2^64 mod PR. */
+static uint64_t PR = (1ULL << 61) - 1, PINV, R2;
 static inline num nadd(num a, num b) { num s = a + b; return s >= PR ? s - PR : s; }
-static inline num nmul(num a, num b) {
-    unsigned __int128 z = (unsigned __int128)a * b;
-    uint64_t lo = (uint64_t)(z & PR), hi = (uint64_t)(z >> 61);
-    uint64_t s = lo + hi; return s >= PR ? s - PR : s;
+static inline uint64_t redc(unsigned __int128 t) {
+    uint64_t m = (uint64_t)t * PINV;
+    unsigned __int128 u = (t + (unsigned __int128)m * PR) >> 64;
+    return u >= PR ? (uint64_t)(u - PR) : (uint64_t)u;
 }
-static inline num nfrom(uint64_t x) { return x % PR; }
+static inline num nmul(num a, num b) { return redc((unsigned __int128)a * b); }
+static inline num nfrom(uint64_t x) { return redc((unsigned __int128)(x % PR) * R2); }
+static uint64_t nto(num a) { return redc(a); }
+static void minit(void) {
+    uint64_t inv = PR;                       /* Newton: inv = PR^-1 mod 2^64 */
+    for (int i = 0; i < 6; i++) inv *= 2 - PR * inv;
+    PINV = -inv;
+    unsigned __int128 r = ((unsigned __int128)1 << 64) % PR;
+    R2 = (uint64_t)((r * r) % PR);
+}
 #else
 typedef double num;
 static inline num nadd(num a, num b) { return a + b; }
@@ -53,6 +69,9 @@ typedef struct {
     num *th[2], *hh[2];       /* tail / head marginals */
     long double logth;        /* log theta(m) */
     double r;
+    int maxpi;                /* max of Pi over window pairs in the support (both p) */
+    double p1;                /* probability (averaged over p) that Pi = 1 */
+    double tie;               /* probability (averaged over p) of a boundary tie */
     num tot;                  /* MODP: theta(m) mod p */
 } Size;
 
@@ -71,6 +90,14 @@ static inline int linked(int N, int y, int u) {
 
 /* Pi: the number of interleavings of Y[0..5] (D, in order) and U[0..5] (C, in order) with
    y before u on every linked pair.  c_j = #Y before U_j, nondecreasing, c_j >= M_j. */
+/* a boundary tie: some 3-AP through a window pair has its third term at 0 or N+1 */
+static int tie(int N, const int *Y, const int *U) {
+    for (int i = 0; i < W; i++) for (int j = 0; j < W; j++) {
+        int a = 2 * Y[i] - U[j], b = 2 * U[j] - Y[i];
+        if (a == 0 || a == N + 1 || b == 0 || b == N + 1) return 1;
+    }
+    return 0;
+}
 static int piv(int N, const int *Y, const int *U) {
     int M = 0, ways[W + 1], nw[W + 1];
     for (int c = 0; c <= W; c++) ways[c] = (c == 0);
@@ -155,6 +182,7 @@ static void compute(int m, int level) {
     Size *s = &S[m];
     num E[2]; num *Jb[2] = {0, 0}, *thb[2] = {0, 0}, *hhb[2] = {0, 0};
     int nhp[2], ntp[2]; uint64_t *hkp[2], *tkp[2];
+    s->maxpi = 0; s->p1 = 0; s->tie = 0;
     for (int p = 0; p < 2; p++) {
         int d = (m + p) / 2, c = (m + 1 - p) / 2;
         Size *D = &S[d], *Cc = &S[c];
@@ -166,21 +194,38 @@ static void compute(int m, int level) {
             for (int k = 0; k < W; k++) Y[o][k] = 2 * getv(D->tk[q][i], k) - p;
         for (int q = 0, o = 0; q < 2; q++) for (int i = 0; i < Cc->nh[q]; i++, o++)
             for (int k = 0; k < W; k++) U[o][k] = 2 * getv(Cc->hk[q][i], k) - (1 - p);
-        num *Pi = malloc(sizeof(num) * (size_t)ntD * nhC);
-        for (int i = 0; i < ntD; i++) for (int j = 0; j < nhC; j++)
-            Pi[(size_t)i * nhC + j] = nfrom(piv(m, Y[i], U[j]));
-        free(Y); free(U);
         /* marginal vectors of the children */
         num *tD = malloc(sizeof(num) * ntD), *hC = malloc(sizeof(num) * nhC);
         memcpy(tD, D->th[0], sizeof(num) * D->nt[0]); memcpy(tD + D->nt[0], D->th[1], sizeof(num) * D->nt[1]);
         memcpy(hC, Cc->hh[0], sizeof(num) * Cc->nh[0]); memcpy(hC + Cc->nh[0], Cc->hh[1], sizeof(num) * Cc->nh[1]);
-        /* v = t_D Pi (over heads of C), w = Pi h_C (over tails of D) */
+        /* Pi row by row (stored only when J is wanted); v = t_D Pi, w = Pi h_C */
+        num *Pi = level >= 2 ? malloc(sizeof(num) * (size_t)ntD * nhC) : NULL;
+        num *row = malloc(sizeof(num) * nhC);
         num *v = calloc(nhC, sizeof(num)), *w = calloc(ntD, sizeof(num));
-        for (int i = 0; i < ntD; i++) for (int j = 0; j < nhC; j++) {
-            num x = Pi[(size_t)i * nhC + j];
-            v[j] = nadd(v[j], nmul(tD[i], x)); w[i] = nadd(w[i], nmul(x, hC[j]));
+        double one = 0, tt = 0;
+        for (int i = 0; i < ntD; i++) {
+            num *pr = Pi ? Pi + (size_t)i * nhC : row;
+            num acc = 0;
+            for (int j = 0; j < nhC; j++) {
+                int pv = piv(m, Y[i], U[j]);
+                if (pv > s->maxpi) s->maxpi = pv;
+                num x = nfrom(pv); pr[j] = x;
+                v[j] = nadd(v[j], nmul(tD[i], x)); acc = nadd(acc, nmul(x, hC[j]));
+#ifndef MODP
+                if (pv == 1) one += tD[i] * hC[j];
+                if (tie(m, Y[i], U[j])) tt += tD[i] * hC[j];
+#endif
+            }
+            w[i] = acc;
         }
+        free(row); free(Y);
         E[p] = 0; for (int j = 0; j < nhC; j++) E[p] = nadd(E[p], nmul(v[j], hC[j]));
+#ifndef MODP
+        { double tsum = 0, hsum = 0;
+          for (int i = 0; i < ntD; i++) tsum += tD[i];
+          for (int j = 0; j < nhC; j++) hsum += hC[j];
+          s->p1 += one / (tsum * hsum) / 2; s->tie += tt / (tsum * hsum) / 2; }
+#endif
         nhp[p] = nhD; ntp[p] = ntC;
         hkp[p] = malloc(8 * (size_t)nhD); tkp[p] = malloc(8 * (size_t)ntC);
         for (int q = 0, o = 0; q < 2; q++) for (int i = 0; i < D->nh[q]; i++) hkp[p][o++] = liftkey(D->hk[q][i], p);
@@ -224,7 +269,7 @@ static void compute(int m, int level) {
             }
             free(X);
         }
-        free(Pi); free(tD); free(hC); free(v); free(w);
+        free(Pi); free(tD); free(hC); free(v); free(w); free(U);
     }
     num tot = nadd(E[0], E[1]);
     int h0 = m / 2, h1 = (m + 1) / 2;
@@ -263,6 +308,10 @@ static double corr(int m) {
 
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s all NMAX | chain n... | stats NMAX\n", argv[0]); return 1; }
+#ifdef MODP
+    if (getenv("PRIME")) PR = strtoull(getenv("PRIME"), NULL, 10);
+    minit();
+#endif
     int stats = !strcmp(argv[1], "stats");
     int top = 0;
     for (int i = 0; i <= MAXN; i++) need[i] = -1;
@@ -284,10 +333,11 @@ int main(int argc, char **argv) {
         if (m <= BASE) base(m); else compute(m, need[m]);
         if (m >= 19 && (need[m] == 0 || !strcmp(argv[1], "chain") || stats || 1)) {
 #ifdef MODP
-            printf("%d %llu\n", m, (unsigned long long)S[m].tot);
+            printf("%d %llu\n", m, (unsigned long long)nto(S[m].tot));
 #else
             int nh = S[m].nh[0] + S[m].nh[1], nt = S[m].nt[0] + S[m].nt[1];
-            printf("%d %.12f %.10Lf %d %d", m, S[m].r, S[m].logth, nh, nt);
+            printf("%d %.12f %.10Lf %d %d %d %.6f %.3e", m, S[m].r, S[m].logth, nh, nt,
+                   S[m].maxpi, S[m].p1, S[m].tie);
             if (stats && S[m].have == 2) printf(" %.3e", corr(m));
             printf("\n");
 #endif
