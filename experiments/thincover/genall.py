@@ -137,6 +137,65 @@ def gen_lines():
         print('wrote', k, len(parts))
 
 
+def gen_cluster(plan):
+    """plan: list of (range condition forms (>= 0, in N u v), [(region name, cluster piece name)]) ;
+    in each range the regions are tried in order A, B, D, C (the A, B, CD lines of the pieces)."""
+    import clpieces as CP
+    D = PC.all_designs()
+    V = [CP.N, CP.u, CP.v]
+    parts = []
+    nfile = 0
+    for rng, names in plan:
+        for nm in names:
+            extra, c0, act = D[('cl', nm)][:3]
+            pc = CP.cl_piece(nm)
+            parts.append(leaf(pc, c0, act))
+            save_cache()
+    # write the leaves in chunks of 2 per file
+    files = []
+    for i in range(0, len(parts), 2):
+        fn = 'ThinCoverCluster%d' % (i // 2)
+        open(os.path.join(ROOT, fn + '.lean'), 'w').write(HEADER + '\n'.join(parts[i:i + 2]) + FOOTER)
+        files.append(fn)
+    # the assembly
+    out = ['\n'.join('import Folds.%s' % f for f in files), HEADER.split('\n', 1)[1].replace(
+        'set_option maxHeartbeats 1000000', 'set_option maxHeartbeats 1000000')]
+    out.append('theorem p2_PF\' {N u v : ℕ} (h : RegionPF N u v) : Proven2 N u v := Or.inr (Or.inl h)\n')
+    out.append('/-- The cluster box (outside the diagonal and the strip). -/')
+    out.append('theorem cluster_cover {N u v : ℕ} (hN : 1000 ≤ N) (hu : 4 ≤ u) (hd : u + 10 ≤ v) '
+               '(hns : v + 13 ≤ 2 * u)\n    (c1 : N ≤ 4 * u + 80) (c2 : 4 * u ≤ N + 40) (c3 : N ≤ u + 2 * v + 81) '
+               '(ht : u + 2 * v + 1 ≤ N) :\n    Proven2 N u v := by')
+    ind = '  '
+    for k, (rng, names) in enumerate(plan):
+        last_rng = k == len(plan) - 1
+        if not last_rng:
+            out.append('%sby_cases hr%d : %s' % (ind, k, ' ∧ '.join(nat_ineq(f, V) for f in rng)))
+            out.append('%s· have hr := hr%d' % (ind, k))
+            sub = ind + '  '
+        else:
+            sub = ind
+        for j, nm in enumerate(names):
+            pc = CP.cl_piece(nm)
+            args = ' '.join('(by omega)' for _ in pc.hyps)
+            if j < len(names) - 1:
+                # the region constraint(s) of this piece beyond the box and the range
+                regf = [h for h in pc.hyps[len(CP.BOX):] if h not in [sp.expand(x) for x in rng]]
+                cond = ' ∧ '.join(nat_ineq(f, V) for f in regf)
+                out.append('%sby_cases hc%d_%d : %s' % (sub, k, j, cond))
+                out.append('%s· exact p2_PF\' (%s %s)' % (sub, pc.name, args))
+                sub_next = sub
+            else:
+                out.append('%sexact p2_PF\' (%s %s)' % (sub, pc.name, args))
+        if not last_rng:
+            pass
+    txt = '\n'.join(out) + '\n' + FOOTER
+    open(os.path.join(ROOT, 'ThinCoverClusterAsm.lean'), 'w').write(txt)
+    print('cluster files', files)
+
+
 if __name__ == '__main__':
     if sys.argv[1] == 'lines':
         gen_lines()
+    elif sys.argv[1] == 'cluster':
+        import clpieces as CP
+        gen_cluster([([CP.N - 1000], ['clA1000', 'clB1000', 'clD1000', 'clC1000a', 'clC1000b'])])

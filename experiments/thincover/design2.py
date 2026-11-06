@@ -163,6 +163,17 @@ def best_fit(pc, opt, Ns=NS, combos=None, verbose=False):
     dirn = getattr(pc, 'dirn', None)
     wins = [(pt, tforms(opt, N, u, v, dirn, getattr(pc, 'kind', 'slice'))) for pt, (N, u, v) in pts]
     wins = [(pt, cs, window(cs)) for pt, cs in wins]
+    if combos is None and getattr(pc, 'kind', 'slice') == 'pf':
+        # the most frequent active lower forms at the window centres
+        from collections import Counter
+        from slicelib import maxlow
+        cnt = Counter()
+        for pt, cs, w in wins:
+            if w is None or w[0] > w[1]:
+                continue
+            c = (w[0] + w[1]) / 2
+            cnt[(maxlow(cs, c)[1], maxlow(cs, c + 1)[1])] += 1
+        combos = [k for k, _ in cnt.most_common(3)]
     if combos is None:
         pt, cs, w = wins[len(wins) // 2]
         lows = [i for i, (A, C, D) in enumerate(cs) if A > 0]

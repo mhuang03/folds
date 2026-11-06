@@ -69,16 +69,22 @@ def certify_exact2(P, forms, vars_, maxdeg=4, scales=(1000, 1, 30)):
     return None
 
 
+RETRY_FAILED = os.environ.get('RETRY_FAILED') == '1'
+
+
 def handelman(P, forms, vars_, maxdeg=4):
     key = hashlib.sha1(repr((sp.srepr(sp.expand(P)), [sp.srepr(sp.expand(f)) for f in forms],
                              [str(v) for v in vars_], maxdeg)).encode()).hexdigest()
     c = cache()
-    if key in c:
+    if key in c and (c[key] is not None or not RETRY_FAILED):
         return c[key]
     if sp.expand(P).is_number:
         r = (0, []) if sp.expand(P) >= 0 else None
     else:
-        r = certify_exact2(sp.expand(P), forms, tuple(vars_), maxdeg)
+        from cert3 import certify3
+        r = certify3(sp.expand(P), forms, tuple(vars_), maxdeg)
+        if r is None:
+            r = certify_exact2(sp.expand(P), forms, tuple(vars_), maxdeg)
     c[key] = r
     return r
 
@@ -352,7 +358,14 @@ class Piece:
         for k, E in enumerate(conds):
             n, d, coefs, nd = clear_cond(E, defs, self.vars, smp)
             pulled, Q = pull_linear(n, smp)
-            r = handelman(Q, self.forms(), self.vars, maxdeg)
+            lp = getattr(self, 'lp_sub', None)
+            if lp is None:
+                r = handelman(Q, self.forms(), self.vars, maxdeg)
+            else:
+                sub, nv = lp
+                r = handelman(sp.expand(Q.subs(sub)), [sp.expand(f.subs(sub)) for f in self.forms()], nv, maxdeg)
+                if r is None:
+                    r = handelman(Q, self.forms(), self.vars, maxdeg)
             if r is None:
                 ok = False
                 if verbose:
@@ -471,7 +484,7 @@ class Piece:
             wrap = 'Or.inr (%s)' % wrap
         L.append('  refine %s' % wrap)
         if not (self.kind == 'slice' and self.dirn == ID):
-            lst = {'pf': 'famConsC', 'slice': 'sliceQ' if self.opt[2] == 0 else "sliceQ'"}[self.kind]
+            lst = 'famConsC' if self.kind == 'pf' else ('sliceQ' if self.opt[2] == 0 else "sliceQ'")
             L.append("  simp only [Corners, %s, List.mem_cons, List.not_mem_nil, or_false, forall_eq_or_imp," % lst)
             L.append("    forall_eq, Aff.eval]")
             L.append("  refine ⟨%s⟩" % ', '.join(['⟨?_, ?_, ?_, ?_⟩'] * (13 if self.kind == 'pf' else 8)))

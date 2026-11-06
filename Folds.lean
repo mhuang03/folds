@@ -60,3 +60,4 @@ import Folds.Live8
 import Folds.ArithCover
 import Folds.Residual
 import Folds.CoverAll
+import Folds.ThinCover
