@@ -619,5 +619,247 @@ theorem neutral_antichain {Y : Finset Nat} (hN : 0 < N) (hX : X ⊆ Finset.Icc 1
     exact (Finset.mem_sdiff.1 this).2 hx
   rw [this] at pX; simp at pX
 
+/-! ## Copies and window embeddings -/
+
+/-- **Transfer of balance through a window embedding.**  For `Y ⊆ [1, p]` and `j ∈ [1, p]`,
+`φ(Y)` is balanced around `φ j` in the `N`-strip iff `Y` is balanced around `j` in the
+`p`-strip. -/
+theorem balF_image_iff {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) {Y : Finset Nat}
+    (hY : Y ⊆ Finset.Icc 1 p) {j : Nat} (hj1 : 1 ≤ j) (hjp : j ≤ p) :
+    BalF N (Y.image φ) (φ j) ↔ BalF p Y j := by
+  unfold BalF
+  have inj : ∀ (q : Nat → Prop) [DecidablePred q], Set.InjOn φ (Y.filter q : Set Nat) :=
+    fun q _ => hφ.injOn_Icc.mono (Finset.coe_subset.2 ((Finset.filter_subset _ _).trans hY))
+  rw [Finset.filter_image, Finset.filter_image, Finset.card_image_of_injOn (inj _),
+    Finset.card_image_of_injOn (inj _)]
+  have e1 : Y.filter (fun y => φ j - reach N (φ j) ≤ φ y ∧ φ y < φ j) =
+      Y.filter (fun y => j - reach p j ≤ y ∧ y < j) := by
+    apply Finset.filter_congr; intro y hy
+    have := Finset.mem_Icc.1 (hY hy)
+    exact hφ.left j y hj1 hjp this.1 this.2
+  have e2 : Y.filter (fun y => φ j < φ y ∧ φ y ≤ φ j + reach N (φ j)) =
+      Y.filter (fun y => j < y ∧ y ≤ j + reach p j) := by
+    apply Finset.filter_congr; intro y hy
+    have := Finset.mem_Icc.1 (hY hy)
+    exact hφ.right j y hj1 hjp this.1 this.2
+  rw [e1, e2]
+
+/-- **Copies transfer through a window embedding:** for `Y ⊆ [1, p]`, `φ(Y)` is a copy in the
+`N`-strip iff `Y` is a copy in the `p`-strip. -/
+theorem isCopy_image_iff {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) {Y : Finset Nat}
+    (hY : Y ⊆ Finset.Icc 1 p) : IsCopy N (Y.image φ) ↔ IsCopy p Y := by
+  constructor
+  · intro h j hj
+    have hj' := Finset.mem_Icc.1 (hY hj)
+    exact (balF_image_iff hφ hY hj'.1 hj'.2).1 (h _ (Finset.mem_image_of_mem φ hj))
+  · intro h m hm
+    obtain ⟨j, hj, rfl⟩ := Finset.mem_image.1 hm
+    have hj' := Finset.mem_Icc.1 (hY hj)
+    exact (balF_image_iff hφ hY hj'.1 hj'.2).2 (h j hj)
+
+theorem isCopy_full (p : Nat) : IsCopy p (Finset.Icc 1 p) := fun _ hm => balF_full hm
+
+/-- The image of a window embedding is a copy. -/
+theorem isCopy_winEmb {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) :
+    IsCopy N ((Finset.Icc 1 p).image φ) :=
+  (isCopy_image_iff hφ (subset_refl _)).2 (isCopy_full p)
+
+theorem winEmb_image_sub {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) :
+    (Finset.Icc 1 p).image φ ⊆ Finset.Icc 1 N :=
+  (Finset.mem_powersetCard.1 hφ.image_mem_powersetCard).1
+
+theorem winEmb_image_card {p : Nat} {φ : Nat → Nat} (hφ : WinEmb N p φ) :
+    ((Finset.Icc 1 p).image φ).card = p :=
+  (Finset.mem_powersetCard.1 hφ.image_mem_powersetCard).2
+
+/-- Two window copies with complementary images: both images are neutral. -/
+theorem neutral_of_pair {p q : Nat} {φ ψ : Nat → Nat} (hφ : WinEmb N p φ) (hψ : WinEmb N q ψ)
+    (hc : Finset.Icc 1 N \ (Finset.Icc 1 p).image φ = (Finset.Icc 1 q).image ψ) :
+    IsNeutral N ((Finset.Icc 1 p).image φ) :=
+  (neutral_iff_copy_compl (winEmb_image_sub hφ)).2 ⟨isCopy_winEmb hφ, hc ▸ isCopy_winEmb hψ⟩
+
+/-! ## The explicit neutral sets -/
+
+theorem parCls_winEmb {s : Nat} (hs1 : 1 ≤ s) (hs2 : s ≤ 2) (hsN : s ≤ N) :
+    WinEmb N (ccount 2 s N) (cls 2 s) := Live2.winEmb_res (by omega) hs1 hs2 hsN
+
+theorem card_parCls {s : Nat} (hs1 : 1 ≤ s) (hs2 : s ≤ 2) (hsN : s ≤ N) :
+    (parCls N s).card = ccount 2 s N := winEmb_image_card (parCls_winEmb hs1 hs2 hsN)
+
+theorem compl_parCls2 (N : Nat) : Finset.Icc 1 N \ parCls N 2 = parCls N 1 := by
+  ext x
+  rw [Finset.mem_sdiff, Finset.mem_Icc, mem_parCls le_rfl (by omega),
+    mem_parCls (by omega) le_rfl]
+  omega
+
+theorem neutral_parCls1 (hN : 2 ≤ N) : IsNeutral N (parCls N 1) :=
+  neutral_of_pair (parCls_winEmb le_rfl (by omega) (by omega))
+    (parCls_winEmb (by omega) le_rfl hN) compl_parCls
+
+theorem neutral_parCls2 (hN : 2 ≤ N) : IsNeutral N (parCls N 2) :=
+  neutral_of_pair (parCls_winEmb (by omega) le_rfl hN)
+    (parCls_winEmb le_rfl (by omega) (by omega)) (compl_parCls2 N)
+
+theorem card_parCls1 (hN : 1 ≤ N) : (parCls N 1).card = (N + 1) / 2 := by
+  rw [card_parCls le_rfl (by omega) hN]; unfold ccount; omega
+
+theorem card_parCls2 (hN : 2 ≤ N) : (parCls N 2).card = N / 2 := by
+  rw [card_parCls (by omega) le_rfl hN]; unfold ccount; omega
+
+theorem parCls_sub (N s : Nat) (hs1 : 1 ≤ s) (hs2 : s ≤ 2) : parCls N s ⊆ Finset.Icc 1 N := by
+  intro x hx; rw [mem_parCls hs1 hs2] at hx; exact Finset.mem_Icc.2 ⟨hx.1, hx.2.1⟩
+
+theorem resE_sub {j n : Nat} (hj : 1 ≤ j) (h : (2 * j + 1) * n = N) : resE j n ⊆ Finset.Icc 1 N :=
+  h ▸ winEmb_image_sub (split_res hj n).emb₁
+
+theorem card_resE {j n : Nat} (hj : 1 ≤ j) : (resE j n).card = j * n :=
+  winEmb_image_card (split_res hj n).emb₁
+
+theorem compl_resE {j n : Nat} (hj : 1 ≤ j) (h : (2 * j + 1) * n = N) :
+    Finset.Icc 1 N \ resE j n = (Finset.Icc 1 ((j + 1) * n)).image (oddRes j) :=
+  h ▸ (split_res hj n).compl_image
+
+theorem card_compl_resE {j n : Nat} (hj : 1 ≤ j) (h : (2 * j + 1) * n = N) :
+    (Finset.Icc 1 N \ resE j n).card = (j + 1) * n := by
+  rw [compl_resE hj h]; exact winEmb_image_card (split_res hj n).emb₂
+
+theorem neutral_resE {j n : Nat} (hj : 1 ≤ j) (h : (2 * j + 1) * n = N) :
+    IsNeutral N (resE j n) := by
+  subst h; exact neutral_of_pair (split_res hj n).emb₁ (split_res hj n).emb₂
+    (split_res hj n).compl_image
+
+theorem neutral_compl_resE {j n : Nat} (hj : 1 ≤ j) (h : (2 * j + 1) * n = N) :
+    IsNeutral N (Finset.Icc 1 N \ resE j n) :=
+  neutral_sdiff (resE_sub hj h) (neutral_resE hj h) (neutral_full N)
+
+/-- `E_d` is `{x ∈ [1, N] : x mod d ∈ {2, 4, …, d - 1}}`. -/
+theorem mem_resE {j n x : Nat} (hj : 1 ≤ j) :
+    x ∈ resE j n ↔ 1 ≤ x ∧ x ≤ (2 * j + 1) * n ∧ x % (2 * j + 1) ≠ 0 ∧
+      x % (2 * j + 1) % 2 = 0 := by
+  unfold resE
+  rw [Finset.mem_image]
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    rw [Finset.mem_Icc] at hy
+    have hsub := winEmb_image_sub (split_res hj n).emb₁
+    have hm := Finset.mem_Icc.1 (hsub (Finset.mem_image_of_mem _ (Finset.mem_Icc.2 hy)))
+    obtain ⟨u, v, hv, rfl⟩ : ∃ u v, v < j ∧ y = j * u + v + 1 :=
+      ⟨(y - 1) / j, (y - 1) % j, Nat.mod_lt _ (by omega), by
+        have := Nat.div_add_mod (y - 1) j; omega⟩
+    rw [evenRes_eq hv] at hm ⊢
+    refine ⟨hm.1, hm.2, ?_⟩
+    have e : 2 * (j * u) + u + 2 * v + 2 = (2 * j + 1) * u + (2 * v + 2) := by ring
+    rw [e, Nat.mul_add_mod, Nat.mod_eq_of_lt (by omega)]
+    omega
+  · rintro ⟨h1, h2, h3, h4⟩
+    have hq : 0 < 2 * j + 1 := by omega
+    set u := x / (2 * j + 1)
+    set r := x % (2 * j + 1)
+    have hx : x = (2 * j + 1) * u + r := (Nat.div_add_mod x _).symm
+    have hr : r < 2 * j + 1 := Nat.mod_lt _ hq
+    have hun : u < n := by
+      by_contra hc; push_neg at hc
+      have := Nat.mul_le_mul_left (2 * j + 1) hc
+      omega
+    refine ⟨j * u + (r / 2 - 1) + 1, Finset.mem_Icc.2 ⟨by omega, ?_⟩, ?_⟩
+    · have := Nat.mul_le_mul_left j (show u + 1 ≤ n by omega)
+      rw [Nat.mul_add, Nat.mul_one] at this; omega
+    · have e : (2 * j + 1) * u = 2 * (j * u) + u := by ring
+      rw [evenRes_eq (by omega)]; omega
+
+/-! ## Classification -/
+
+/-- Odd divisors `3 ≤ d < N` of `N`. -/
+def oddDivs (N : Nat) : Finset Nat := (Finset.Ico 3 N).filter (fun d => d ∣ N ∧ d % 2 = 1)
+
+/-- The explicit proper neutral sets: the two parity classes, and `E_d`, `E_dᶜ` for every odd
+`d ∣ N` with `3 ≤ d < N`. -/
+def NFam (N : Nat) : Finset (Finset Nat) :=
+  {parCls N 1, parCls N 2} ∪ (oddDivs N).biUnion (fun d =>
+    {resE ((d - 1) / 2) (N / d), Finset.Icc 1 N \ resE ((d - 1) / 2) (N / d)})
+
+theorem oddDivs_facts {d : Nat} (hd : d ∈ oddDivs N) :
+    1 ≤ (d - 1) / 2 ∧ 2 ≤ N / d ∧ (2 * ((d - 1) / 2) + 1) * (N / d) = N := by
+  simp only [oddDivs, Finset.mem_filter, Finset.mem_Ico] at hd
+  obtain ⟨⟨h3, hlt⟩, hdv, hodd⟩ := hd
+  have e : 2 * ((d - 1) / 2) + 1 = d := by omega
+  rw [e, Nat.mul_div_cancel' hdv]
+  refine ⟨by omega, ?_, rfl⟩
+  obtain ⟨n, rfl⟩ := hdv
+  rw [Nat.mul_div_cancel_left _ (by omega)]
+  by_contra hc
+  have : n ≤ 1 := by omega
+  interval_cases n <;> omega
+
+theorem mem_NFam {X : Finset Nat} :
+    X ∈ NFam N ↔ X = parCls N 1 ∨ X = parCls N 2 ∨ ∃ d ∈ oddDivs N,
+      X = resE ((d - 1) / 2) (N / d) ∨ X = Finset.Icc 1 N \ resE ((d - 1) / 2) (N / d) := by
+  simp [NFam]
+
+/-- **Classification of neutral sets.**  For `N ≥ 2`, the proper (nonempty, not everything)
+neutral subsets of `[1, N]` are exactly the two parity classes and `E_d`, `E_dᶜ` for the odd
+divisors `3 ≤ d < N` of `N`. -/
+theorem neutral_classification (hN : 2 ≤ N) (hX : X ⊆ Finset.Icc 1 N) :
+    (IsNeutral N X ∧ 0 < X.card ∧ X.card < N) ↔ X ∈ NFam N := by
+  have hN0 : 0 < N := by omega
+  rw [mem_NFam]
+  constructor
+  · rintro ⟨hn, h0, h1⟩
+    by_cases h2 : 2 * X.card = N
+    · rcases neutral_half hN0 hX hn h2 with h | h
+      · exact Or.inl h
+      · exact Or.inr (Or.inl h)
+    obtain ⟨d, hdN, hodd, hd3, he⟩ := size_odd hN0 hX hn h0 h1 h2
+    have hdle : d ≤ N := Nat.le_of_dvd hN0 hdN
+    rcases Nat.lt_or_ge d N with hlt | hge
+    · have hd : d ∈ oddDivs N := by
+        simp only [oddDivs, Finset.mem_filter, Finset.mem_Ico]; exact ⟨⟨hd3, hlt⟩, hdN, hodd⟩
+      obtain ⟨hj, hn2, hjn⟩ := oddDivs_facts hd
+      refine Or.inr (Or.inr ⟨d, hd, ?_⟩)
+      have hdj : d = 2 * ((d - 1) / 2) + 1 := by omega
+      generalize (d - 1) / 2 = j at hj hjn hdj ⊢
+      generalize N / d = n at hn2 hjn ⊢
+      subst hdj
+      have hs2 : (2 * j + 1 - 1) = 2 * j := by omega
+      rw [hs2, ← hjn] at he
+      rcases he with he | he
+      · left
+        have : (2 * (2 * j + 1)) * X.card = (2 * (2 * j + 1)) * (j * n) := by linarith
+        have hc := Nat.eq_of_mul_eq_mul_left (by omega) this
+        exact neutral_unique hN0 hX (resE_sub hj hjn) hn (neutral_resE hj hjn)
+          (by rw [card_resE hj]; exact hc) h2
+      · right
+        have : (2 * (2 * j + 1)) * X.card = (2 * (2 * j + 1)) * ((j + 1) * n) := by linarith
+        have hc := Nat.eq_of_mul_eq_mul_left (by omega) this
+        exact neutral_unique hN0 hX Finset.sdiff_subset hn (neutral_compl_resE hj hjn)
+          (by rw [card_compl_resE hj hjn]; exact hc) h2
+    · have hdN' : d = N := by omega
+      subst hdN'
+      rcases he with he | he
+      · have hc := Nat.eq_of_mul_eq_mul_right hN0 he
+        exact Or.inr (Or.inl (neutral_unique hN0 hX (parCls_sub d 2 (by omega) le_rfl) hn
+          (neutral_parCls2 hN) (by rw [card_parCls2 hN]; omega) h2))
+      · have hc := Nat.eq_of_mul_eq_mul_right hN0 he
+        exact Or.inl (neutral_unique hN0 hX (parCls_sub d 1 le_rfl (by omega)) hn
+          (neutral_parCls1 hN) (by rw [card_parCls1 (by omega)]; omega) h2)
+  · rintro (rfl | rfl | ⟨d, hd, rfl | rfl⟩)
+    · rw [card_parCls1 (by omega)]; exact ⟨neutral_parCls1 hN, by omega, by omega⟩
+    · rw [card_parCls2 hN]; exact ⟨neutral_parCls2 hN, by omega, by omega⟩
+    · obtain ⟨hj, hn2, hjn⟩ := oddDivs_facts hd
+      generalize (d - 1) / 2 = j at hj hjn ⊢
+      generalize N / d = n at hn2 hjn ⊢
+      have e : (2 * j + 1) * n = j * n + (j * n + n) := by ring
+      have p : 0 < j * n := Nat.mul_pos (by omega) (by omega)
+      rw [card_resE hj]
+      exact ⟨neutral_resE hj hjn, p, by omega⟩
+    · obtain ⟨hj, hn2, hjn⟩ := oddDivs_facts hd
+      generalize (d - 1) / 2 = j at hj hjn ⊢
+      generalize N / d = n at hn2 hjn ⊢
+      have e : (2 * j + 1) * n = j * n + (j * n + n) := by ring
+      have e' : (j + 1) * n = j * n + n := by ring
+      have p : 0 < j * n := Nat.mul_pos (by omega) (by omega)
+      rw [card_compl_resE hj hjn]
+      exact ⟨neutral_compl_resE hj hjn, by omega, by omega⟩
+
 end Neutral
 end Folds
