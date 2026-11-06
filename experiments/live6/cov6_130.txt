@@ -1,0 +1,236 @@
+13 78 Cov3 77 Cov6 78
+   missing: []
+14 90 Cov3 90 Cov6 90
+   missing: []
+15 105 Cov3 104 Cov6 105
+   missing: []
+16 119 Cov3 119 Cov6 119
+   missing: []
+17 136 Cov3 136 Cov6 136
+   missing: []
+18 152 Cov3 152 Cov6 152
+   missing: []
+19 171 Cov3 170 Cov6 171
+   missing: []
+20 189 Cov3 189 Cov6 189
+   missing: []
+21 210 Cov3 210 Cov6 210
+   missing: []
+22 230 Cov3 230 Cov6 230
+   missing: []
+23 253 Cov3 252 Cov6 253
+   missing: []
+24 275 Cov3 275 Cov6 275
+   missing: []
+25 300 Cov3 299 Cov6 300
+   missing: []
+26 324 Cov3 324 Cov6 324
+   missing: []
+27 351 Cov3 350 Cov6 351
+   missing: []
+28 377 Cov3 377 Cov6 377
+   missing: []
+29 406 Cov3 405 Cov6 406
+   missing: []
+30 434 Cov3 434 Cov6 434
+   missing: []
+31 465 Cov3 462 Cov6 465
+   missing: []
+32 495 Cov3 492 Cov6 495
+   missing: []
+33 528 Cov3 522 Cov6 528
+   missing: []
+34 560 Cov3 552 Cov6 560
+   missing: []
+35 595 Cov3 582 Cov6 593
+   missing: [(3, 32), (4, 33)]
+36 629 Cov3 614 Cov6 629
+   missing: []
+37 666 Cov3 645 Cov6 664
+   missing: [(3, 32), (6, 35)]
+38 702 Cov3 682 Cov6 702
+   missing: []
+39 741 Cov3 716 Cov6 741
+   missing: []
+40 779 Cov3 748 Cov6 779
+   missing: []
+41 820 Cov3 786 Cov6 818
+   missing: [(3, 32), (10, 39)]
+42 860 Cov3 825 Cov6 860
+   missing: []
+43 903 Cov3 858 Cov6 901
+   missing: [(3, 34), (10, 41)]
+44 945 Cov3 905 Cov6 945
+   missing: []
+45 990 Cov3 945 Cov6 990
+   missing: []
+46 1034 Cov3 978 Cov6 1034
+   missing: []
+47 1081 Cov3 1024 Cov6 1081
+   missing: []
+48 1127 Cov3 1065 Cov6 1127
+   missing: []
+49 1176 Cov3 1099 Cov6 1174
+   missing: [(3, 44), (6, 47)]
+50 1224 Cov3 1151 Cov6 1224
+   missing: []
+51 1275 Cov3 1194 Cov6 1275
+   missing: []
+52 1325 Cov3 1231 Cov6 1325
+   missing: []
+53 1378 Cov3 1281 Cov6 1376
+   missing: [(5, 46), (8, 49)]
+54 1430 Cov3 1326 Cov6 1430
+   missing: []
+55 1485 Cov3 1366 Cov6 1485
+   missing: []
+56 1539 Cov3 1420 Cov6 1539
+   missing: []
+57 1596 Cov3 1483 Cov6 1596
+   missing: []
+58 1652 Cov3 1544 Cov6 1652
+   missing: []
+59 1711 Cov3 1586 Cov6 1709
+   missing: [(5, 52), (8, 55)]
+60 1769 Cov3 1625 Cov6 1769
+   missing: []
+61 1830 Cov3 1686 Cov6 1830
+   missing: []
+62 1890 Cov3 1768 Cov6 1890
+   missing: []
+63 1953 Cov3 1811 Cov6 1953
+   missing: []
+64 2015 Cov3 1843 Cov6 2013
+   missing: [(3, 62), (5, 60)]
+65 2080 Cov3 1912 Cov6 2080
+   missing: []
+66 2144 Cov3 1965 Cov6 2144
+   missing: []
+67 2211 Cov3 2014 Cov6 2211
+   missing: []
+68 2277 Cov3 2084 Cov6 2277
+   missing: []
+69 2346 Cov3 2142 Cov6 2346
+   missing: []
+70 2414 Cov3 2190 Cov6 2414
+   missing: []
+71 2485 Cov3 2257 Cov6 2483
+   missing: [(5, 64), (8, 67)]
+72 2555 Cov3 2329 Cov6 2555
+   missing: []
+73 2628 Cov3 2396 Cov6 2626
+   missing: [(3, 64), (10, 71)]
+74 2700 Cov3 2496 Cov6 2700
+   missing: []
+75 2775 Cov3 2546 Cov6 2775
+   missing: []
+76 2849 Cov3 2577 Cov6 2849
+   missing: []
+77 2926 Cov3 2678 Cov6 2926
+   missing: []
+78 3002 Cov3 2722 Cov6 3002
+   missing: []
+79 3081 Cov3 2780 Cov6 3081
+   missing: []
+80 3159 Cov3 2863 Cov6 3159
+   missing: []
+81 3240 Cov3 2952 Cov6 3240
+   missing: []
+82 3320 Cov3 3029 Cov6 3320
+   missing: []
+83 3403 Cov3 3096 Cov6 3399
+   missing: [(3, 74), (5, 76), (8, 79), (10, 81)]
+84 3485 Cov3 3149 Cov6 3485
+   missing: []
+85 3570 Cov3 3222 Cov6 3570
+   missing: []
+86 3654 Cov3 3355 Cov6 3654
+   missing: []
+87 3741 Cov3 3443 Cov6 3741
+   missing: []
+88 3827 Cov3 3457 Cov6 3827
+   missing: []
+89 3916 Cov3 3532 Cov6 3916
+   missing: []
+90 4004 Cov3 3609 Cov6 4004
+   missing: []
+91 4095 Cov3 3666 Cov6 4095
+   missing: []
+92 4185 Cov3 3774 Cov6 4185
+   missing: []
+93 4278 Cov3 3899 Cov6 4278
+   missing: []
+94 4370 Cov3 3978 Cov6 4370
+   missing: []
+95 4465 Cov3 4029 Cov6 4465
+   missing: []
+96 4559 Cov3 4086 Cov6 4559
+   missing: []
+97 4656 Cov3 4161 Cov6 4656
+   missing: []
+98 4752 Cov3 4251 Cov6 4752
+   missing: []
+99 4851 Cov3 4330 Cov6 4851
+   missing: []
+100 4949 Cov3 4409 Cov6 4949
+   missing: []
+101 5050 Cov3 4496 Cov6 5048
+   missing: [(5, 94), (8, 97)]
+102 5150 Cov3 4589 Cov6 5150
+   missing: []
+103 5253 Cov3 4670 Cov6 5253
+   missing: []
+104 5355 Cov3 4761 Cov6 5355
+   missing: []
+105 5460 Cov3 4875 Cov6 5460
+   missing: []
+106 5564 Cov3 4974 Cov6 5564
+   missing: []
+107 5671 Cov3 5058 Cov6 5671
+   missing: []
+108 5777 Cov3 5122 Cov6 5777
+   missing: []
+109 5886 Cov3 5202 Cov6 5886
+   missing: []
+110 5994 Cov3 5324 Cov6 5994
+   missing: []
+111 6105 Cov3 5429 Cov6 6105
+   missing: []
+112 6215 Cov3 5513 Cov6 6214
+   missing: [(5, 108)]
+113 6328 Cov3 5599 Cov6 6328
+   missing: []
+114 6440 Cov3 5726 Cov6 6440
+   missing: []
+115 6555 Cov3 5829 Cov6 6555
+   missing: []
+116 6669 Cov3 5928 Cov6 6669
+   missing: []
+117 6786 Cov3 6052 Cov6 6786
+   missing: []
+118 6902 Cov3 6173 Cov6 6902
+   missing: []
+119 7021 Cov3 6217 Cov6 7021
+   missing: []
+120 7139 Cov3 6274 Cov6 7139
+   missing: []
+121 7260 Cov3 6415 Cov6 7260
+   missing: []
+122 7380 Cov3 6594 Cov6 7380
+   missing: []
+123 7503 Cov3 6707 Cov6 7503
+   missing: []
+124 7625 Cov3 6767 Cov6 7624
+   missing: [(5, 120)]
+125 7750 Cov3 6844 Cov6 7750
+   missing: []
+126 7874 Cov3 6919 Cov6 7874
+   missing: []
+127 8001 Cov3 7004 Cov6 8000
+   missing: [(5, 123)]
+128 8127 Cov3 7151 Cov6 8125
+   missing: [(3, 126), (5, 124)]
+129 8256 Cov3 7261 Cov6 8256
+   missing: []
+130 8384 Cov3 7347 Cov6 8384
+   missing: []

@@ -1,0 +1,335 @@
+13 1 10 :: total 1: p3=1
+13 1 12 :: total 1: p5=1
+13 2 9 :: total 0:
+13 2 11 :: total 1: p4=1
+13 3 10 :: total 1: p3=1
+14 1 10 :: total 0:
+14 1 12 :: total 1: p4=1
+14 1 14 :: total 2: p8=1 p14=1
+14 2 11 :: total 1: p3=1
+14 2 13 :: total 1: p5=1
+14 3 10 :: total 0:
+14 3 12 :: total 1: p4=1
+14 4 11 :: total 0:
+15 1 10 :: total 0:
+15 1 12 :: total 1: p3=1
+15 1 14 :: total 1: p5=1
+15 2 11 :: total 1: p3=1
+15 2 13 :: total 2: p4=1 p5=1
+15 3 12 :: total 1: p3=1
+15 4 11 :: total 0:
+16 1 10 :: total 0:
+16 1 12 :: total 1: p3=1
+16 1 14 :: total 1: p5=1
+16 1 16 :: total 1: p16=1
+16 2 11 :: total 0:
+16 2 13 :: total 0:
+16 2 15 :: total 5: p6=3 p7=2
+16 3 12 :: total 1: p3=1
+16 3 14 :: total 3: p4=3
+16 4 13 :: total 1: p3=1
+16 5 12 :: total 0:
+17 1 12 :: total 0:
+17 1 14 :: total 1: p4=1
+17 1 16 :: total 3: p6=1 p7=1 p8=1
+17 2 11 :: total 0:
+17 2 13 :: total 1: p3=1
+17 2 15 :: total 1: p5=1
+17 3 12 :: total 0:
+17 3 14 :: total 0:
+17 4 13 :: total 1: p3=1
+18 1 12 :: total 0:
+18 1 14 :: total 1: p3=1
+18 1 16 :: total 1: p5=1
+18 1 18 :: total 3: p10=1 p12=1 p18=1
+18 2 13 :: total 1: p3=1
+18 2 15 :: total 1: p4=1
+18 2 17 :: total 4: p6=1 p7=2 p8=1
+18 3 12 :: total 0:
+18 3 14 :: total 1: p3=1
+18 3 16 :: total 1: p5=1
+18 4 13 :: total 0:
+18 4 15 :: total 0:
+18 5 14 :: total 0:
+19 1 12 :: total 0:
+19 1 14 :: total 1: p3=1
+19 1 16 :: total 1: p4=1
+19 1 18 :: total 3: p7=1 p8=1 p9=1
+19 2 13 :: total 0:
+19 2 15 :: total 0:
+19 2 17 :: total 1: p5=1
+19 3 14 :: total 1: p3=1
+19 3 16 :: total 1: p4=1
+19 4 13 :: total 0:
+19 4 15 :: total 1: p3=1
+19 5 14 :: total 0:
+20 1 12 :: total 0:
+20 1 14 :: total 0:
+20 1 16 :: total 1: p4=1
+20 1 18 :: total 1: p5=1
+20 1 20 :: total 2: p12=1 p20=1
+20 2 13 :: total 0:
+20 2 15 :: total 1: p3=1
+20 2 17 :: total 2: p4=1 p5=1
+20 2 19 :: total 8: p7=6 p8=1 p9=1
+20 3 14 :: total 0:
+20 3 16 :: total 0:
+20 3 18 :: total 1: p5=1
+20 4 15 :: total 1: p3=1
+20 4 17 :: total 1: p4=1
+20 5 14 :: total 0:
+20 5 16 :: total 1: p3=1
+20 6 15 :: total 0:
+21 1 14 :: total 0:
+21 1 16 :: total 1: p3=1
+21 1 18 :: total 1: p5=1
+21 1 20 :: total 4: p7=2 p8=1 p9=1
+21 2 13 :: total 0:
+21 2 15 :: total 1: p3=1
+21 2 17 :: total 1: p4=1
+21 2 19 :: total 4: p6=2 p7=2
+21 3 14 :: total 0:
+21 3 16 :: total 1: p3=1
+21 3 18 :: total 2: p4=1 p5=1
+21 4 15 :: total 1: p3=1
+21 4 17 :: total 0:
+21 5 16 :: total 1: p3=1
+21 6 15 :: total 0:
+22 1 14 :: total 0:
+22 1 16 :: total 1: p3=1
+22 1 18 :: total 1: p4=1
+22 1 20 :: total 2: p6=1 p7=1
+22 1 22 :: total 2: p12=1 p22=1
+22 2 15 :: total 0:
+22 2 17 :: total 0:
+22 2 19 :: total 1: p5=1
+22 2 21 :: total 5: p8=4 p9=1
+22 3 14 :: total 0:
+22 3 16 :: total 1: p3=1
+22 3 18 :: total 1: p4=1
+22 3 20 :: total 3: p6=3
+22 4 15 :: total 0:
+22 4 17 :: total 0:
+22 4 19 :: total 3: p4=3
+22 5 16 :: total 0:
+22 5 18 :: total 0:
+22 6 17 :: total 0:
+22 7 16 :: total 0:
+23 1 14 :: total 0:
+23 1 16 :: total 0:
+23 1 18 :: total 0:
+23 1 20 :: total 1: p5=1
+23 1 22 :: total 2: p8=1 p9=1
+23 2 15 :: total 0:
+23 2 17 :: total 1: p3=1
+23 2 19 :: total 1: p4=1
+23 2 21 :: total 3: p6=1 p7=2
+23 3 16 :: total 0:
+23 3 18 :: total 0:
+23 3 20 :: total 1: p5=1
+23 4 15 :: total 0:
+23 4 17 :: total 1: p3=1
+23 4 19 :: total 2: p4=2
+23 5 16 :: total 0:
+23 5 18 :: total 1: p3=1
+23 6 17 :: total 0:
+24 1 14 :: total 0:
+24 1 16 :: total 0:
+24 1 18 :: total 1: p3=1
+24 1 20 :: total 0:
+24 1 22 :: total 3: p6=1 p7=1 p8=1
+24 1 24 :: total 2: p16=1 p24=1
+24 2 15 :: total 0:
+24 2 17 :: total 1: p3=1
+24 2 19 :: total 0:
+24 2 21 :: total 1: p5=1
+24 2 23 :: total 2: p8=1 p9=1
+24 3 16 :: total 0:
+24 3 18 :: total 1: p3=1
+24 3 20 :: total 1: p4=1
+24 3 22 :: total 7: p6=5 p7=2
+24 4 17 :: total 1: p3=1
+24 4 19 :: total 0:
+24 4 21 :: total 1: p5=1
+24 5 16 :: total 0:
+24 5 18 :: total 1: p3=1
+24 5 20 :: total 1: p4=1
+24 6 17 :: total 0:
+24 6 19 :: total 1: p3=1
+24 7 18 :: total 0:
+25 1 16 :: total 0:
+25 1 18 :: total 1: p3=1
+25 1 20 :: total 1: p4=1
+25 1 22 :: total 1: p5=1
+25 1 24 :: total 1: p9=1
+25 2 15 :: total 0:
+25 2 17 :: total 0:
+25 2 19 :: total 0:
+25 2 21 :: total 1: p5=1
+25 2 23 :: total 3: p7=1 p8=2
+25 3 16 :: total 0:
+25 3 18 :: total 1: p3=1
+25 3 20 :: total 0:
+25 3 22 :: total 1: p5=1
+25 4 17 :: total 0:
+25 4 19 :: total 0:
+25 4 21 :: total 2: p4=2
+25 5 18 :: total 1: p3=1
+25 5 20 :: total 0:
+25 6 17 :: total 0:
+25 6 19 :: total 1: p3=1
+25 7 18 :: total 0:
+26 1 16 :: total 0:
+26 1 18 :: total 0:
+26 1 20 :: total 0:
+26 1 22 :: total 1: p5=1
+26 1 24 :: total 2: p7=1 p8=1
+26 1 26 :: total 2: p14=1 p26=1
+26 2 17 :: total 0:
+26 2 19 :: total 1: p3=1
+26 2 21 :: total 1: p4=1
+26 2 23 :: total 1: p6=1
+26 2 25 :: total 1: p9=1
+26 3 16 :: total 0:
+26 3 18 :: total 0:
+26 3 20 :: total 0:
+26 3 22 :: total 1: p5=1
+26 3 24 :: total 6: p6=1 p7=4 p8=1
+26 4 17 :: total 0:
+26 4 19 :: total 1: p3=1
+26 4 21 :: total 0:
+26 4 23 :: total 1: p5=1
+26 5 18 :: total 0:
+26 5 20 :: total 0:
+26 5 22 :: total 3: p4=3
+26 6 19 :: total 0:
+26 6 21 :: total 0:
+26 7 18 :: total 0:
+26 7 20 :: total 0:
+26 8 19 :: total 0:
+27 1 16 :: total 0:
+27 1 18 :: total 0:
+27 1 20 :: total 1: p3=1
+27 1 22 :: total 1: p4=1
+27 1 24 :: total 2: p6=2
+27 1 26 :: total 1: p9=1
+27 2 17 :: total 0:
+27 2 19 :: total 1: p3=1
+27 2 21 :: total 0:
+27 2 23 :: total 1: p5=1
+27 2 25 :: total 3: p7=1 p8=1 p9=1
+27 3 18 :: total 0:
+27 3 20 :: total 1: p3=1
+27 3 22 :: total 1: p4=1
+27 3 24 :: total 4: p6=4
+27 4 17 :: total 0:
+27 4 19 :: total 1: p3=1
+27 4 21 :: total 0:
+27 4 23 :: total 1: p5=1
+27 5 18 :: total 0:
+27 5 20 :: total 1: p3=1
+27 5 22 :: total 0:
+27 6 19 :: total 0:
+27 6 21 :: total 1: p3=1
+27 7 20 :: total 0:
+27 8 19 :: total 0:
+28 1 16 :: total 0:
+28 1 18 :: total 0:
+28 1 20 :: total 1: p3=1
+28 1 22 :: total 1: p4=1
+28 1 24 :: total 1: p5=1
+28 1 26 :: total 4: p7=2 p8=1 p9=1
+28 1 28 :: total 2: p16=1 p28=1
+28 2 17 :: total 0:
+28 2 19 :: total 0:
+28 2 21 :: total 0:
+28 2 23 :: total 1: p4=1
+28 2 25 :: total 3: p6=1 p7=2
+28 2 27 :: total 5: p10=4 p11=1
+28 3 18 :: total 0:
+28 3 20 :: total 1: p3=1
+28 3 22 :: total 0:
+28 3 24 :: total 1: p5=1
+28 3 26 :: total 12: p7=6 p8=6
+28 4 19 :: total 0:
+28 4 21 :: total 0:
+28 4 23 :: total 1: p4=1
+28 4 25 :: total 3: p6=3
+28 5 18 :: total 0:
+28 5 20 :: total 1: p3=1
+28 5 22 :: total 0:
+28 5 24 :: total 0:
+28 6 19 :: total 0:
+28 6 21 :: total 1: p3=1
+28 6 23 :: total 0:
+28 7 20 :: total 0:
+28 7 22 :: total 1: p3=1
+28 8 21 :: total 0:
+28 9 20 :: total 0:
+29 1 18 :: total 0:
+29 1 20 :: total 0:
+29 1 22 :: total 0:
+29 1 24 :: total 0:
+29 1 26 :: total 2: p6=1 p7=1
+29 1 28 :: total 2: p10=1 p11=1
+29 2 17 :: total 0:
+29 2 19 :: total 0:
+29 2 21 :: total 1: p3=1
+29 2 23 :: total 1: p4=1
+29 2 25 :: total 1: p5=1
+29 2 27 :: total 2: p8=1 p9=1
+29 3 18 :: total 0:
+29 3 20 :: total 0:
+29 3 22 :: total 0:
+29 3 24 :: total 1: p4=1
+29 3 26 :: total 5: p6=2 p7=3
+29 4 19 :: total 0:
+29 4 21 :: total 1: p3=1
+29 4 23 :: total 0:
+29 4 25 :: total 1: p5=1
+29 5 20 :: total 0:
+29 5 22 :: total 0:
+29 5 24 :: total 2: p4=2
+29 6 19 :: total 0:
+29 6 21 :: total 1: p3=1
+29 6 23 :: total 0:
+29 7 20 :: total 0:
+29 7 22 :: total 1: p3=1
+29 8 21 :: total 0:
+30 1 18 :: total 0:
+30 1 20 :: total 0:
+30 1 22 :: total 1: p3=1
+30 1 24 :: total 1: p4=1
+30 1 26 :: total 1: p5=1
+30 1 28 :: total 2: p8=1 p9=1
+30 1 30 :: total 4: p16=1 p18=1 p20=1 p30=1
+30 2 19 :: total 0:
+30 2 21 :: total 1: p3=1
+30 2 23 :: total 0:
+30 2 25 :: total 1: p5=1
+30 2 27 :: total 2: p6=1 p7=1
+30 2 29 :: total 2: p10=1 p11=1
+30 3 18 :: total 0:
+30 3 20 :: total 0:
+30 3 22 :: total 1: p3=1
+30 3 24 :: total 1: p4=1
+30 3 26 :: total 1: p5=1
+30 3 28 :: total 6: p8=5 p9=1
+30 4 19 :: total 0:
+30 4 21 :: total 1: p3=1
+30 4 23 :: total 0:
+30 4 25 :: total 1: p4=1
+30 4 27 :: total 5: p6=5
+30 5 20 :: total 0:
+30 5 22 :: total 1: p3=1
+30 5 24 :: total 0:
+30 5 26 :: total 1: p5=1
+30 6 21 :: total 0:
+30 6 23 :: total 0:
+30 6 25 :: total 1: p4=1
+30 7 20 :: total 0:
+30 7 22 :: total 0:
+30 7 24 :: total 0:
+30 8 21 :: total 0:
+30 8 23 :: total 0:
+30 9 22 :: total 0:
