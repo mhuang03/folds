@@ -17,3 +17,24 @@
 251 checks
 59 time 48.6 s, peak 2016 MB
 136 checks
+60 time 31.3 s, peak 2018 MB
+263 checks
+61 time 59.2 s, peak 2016 MB
+241 checks
+62 time 75.5 s, peak 2047 MB
+217 checks
+63 time 56.7 s, peak 2047 MB
+154 checks
+64 time 45.7 s, peak 2046 MB
+261 checks
+65 time 72.7 s, peak 2048 MB
+214 checks
+66 time 81.7 s, peak 2049 MB
+300 checks
+67 time 78.1 s, peak 2045 MB
+155 checks
+68 time 48.8 s, peak 2048 MB
+272 checks
+69 time 71.9 s, peak 2048 MB
+229 checks
+70 time 87.7 s, peak 2049 MB

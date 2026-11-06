@@ -1,0 +1,195 @@
+Live 3-prefixes, part 3: near copies, and what is left of the residual
+=====================================================================
+
+Notation as in experiments/live3p/PROOFS.txt and experiments/live3q/PROOFS.txt (valid steps,
+I_X(m) = |X n L(m)| - |X n R(m)|, CoReach, Theorem G, Theorem 2 = "a valid step may be added
+to the background", Good3, Covered3S, Residual3).  "Lean" refers to Folds/Live3r.lean (no
+sorry, no native_decide; 13 s, 2.4 GB peak with `lean -M 3000`).  Live3r restates the
+definitions of Live3q verbatim (namespace Live3r) and does not import Live3q.
+
+STATUS
+  * NOT DONE: `forall N > 50, Residual3 N`.  The family {1, 2, c} (and its mirror image
+    {N+1-c, N-1, N}) is not settled for all N; see section 5 for exactly which members remain
+    for N <= 70 and why the tools below do not reach them.
+  * PROVEN (Lean), new transfer tools valid for every N:
+      - near copies (`NearEmb`, `coReach_nearEmb`, section 1);
+      - the copy X_N = {1, 4, 6, ..., N-3, N} for every odd N >= 17 (`coReach_X_odd`,
+        `coReach_chiX_transfer`, section 2), Live5 had only N = 3 mod 4;
+      - two decidable near-copy rules `nearTrB`, `nearTrP` and the rule `chiXB` (section 3).
+  * PROVEN (Lean), families for ALL N (given the smaller strips, i.e. inside the induction of
+    Live3q):
+      - {1, 2k, N}, N odd >= 17, 4 <= 2k <= N - 3, except 2k in {4, N-3} when N = 3 mod 4
+        (`coReach_one_even_N`);
+      - {1, 2, c}, N = 1 mod 4, N >= 17, c odd, 7 <= c <= N - 4 (`coReach_one_two_odd`).
+  * PROVEN (Lean), the reduction with the enlarged rules: `Covered3R` (= Covered3S or a new
+    rule, for the triple or its mirror), `Residual3R N` (the triples not settled by
+    Covered3R are co-reachable), and
+       residual3_of_residual3R  : (forall q < N, q != 7 -> Good3 q) -> Residual3R N -> Residual3 N
+       good3_of_residual3R      : base strips + (forall N > M, Residual3R N) -> forall N != 7, Good3 N
+       residual3_all_of_residual3R : base strips + (forall N > M, Residual3R N)
+                                     -> forall N > M, Residual3 N
+    (the last one has exactly the hypothesis shape of Live3q.good3_of_residual).
+  * NUMERICAL (rcov.c, every N = 51..70; hints kernel-checked in Lean by `decide +kernel`,
+    chkall.py / chkall.txt): every residual triple of Live3q (resid51_70.txt, 4294 canonical
+    triples) is settled by Covered3R except the 86 members of {1, 2, c} listed in section 5.
+
+
+1. Near copies (Lean `NearEmb`, `coReach_nearEmb`)
+-------------------------------------------------
+A map phi : [p] -> [N] (injective, into [N]) is REGULAR at a panel j of [p] if for every
+y in [p], phi(y) lies in the left (right) arm of phi(j) in [N] iff y lies in the left (right)
+arm of j in [p].  A window copy is regular everywhere; a near copy only outside a small set.
+
+THEOREM 1 (near transfer).  If the complement Y = [N] \ phi([p]) has an ordering from scratch
+(CoReach N phi([p])), D is co-reachable in [p] and phi is regular at every panel of [p] \ D,
+then phi(D) is co-reachable in [N].
+Proof: order Y first, then phi(beta), beta an ordering of [p] \ D from scratch.  Around a
+regular panel phi(j), the image phi([p]) is balanced (its arms are the images of the arms of j,
+which have equally many panels), the full strip is balanced, so Y is balanced; and the arms of
+phi(j) restricted to the image are the images of the arms of j.  So the step phi(j) is valid
+iff j is.  The panels of D are never stepped, so phi need not be regular there.  QED
+(This is coReach_winEmb of Live2 with the regularity required only outside D.)
+
+Typical near copies: a copy (Beatty, centred Beatty, residue class) with one or two panels
+moved by one.  Moving the panel y0 of the odd class y -> 2y - 1 (N = 2p - 1) by d = +-1 makes
+y0 itself irregular and at most one more panel: for d = -1 the panel j with 2j - p = y0
+(left end of its arm), for d = +1 the panel j = (y0 + 1)/2 (right end of its arm); none when
+the parities do not allow it.  If the moved panels and these exceptions lie in D, Theorem 1
+applies.
+
+THEOREM 2 (complement through a second near copy; Lean `coReach_compl_nearEmb`).  If
+psi : [q] -> [N] is regular except at i1, i2, [i1, i2] is a live 2-prefix of [q] and
+[psi i1, psi i2] a valid 2-prefix of [N], then psi([q]) has an ordering from scratch: the image
+of a completion [i1, i2, ...] of the prefix (steps after the first two are at regular panels,
+so near_step of Live4 applies).  Liveness of [i1, i2] is Conjecture C (ThinCover.conjectureC).
+
+
+2. X_N for all odd N (Lean `coReach_X_odd`, `coReach_chiX_transfer`)
+-------------------------------------------------------------------
+Live5 showed X_N = chiX([n-1]) = {1, 4, 6, ..., N-3, N} co-reachable for N = 2n - 1, n even,
+through psiX (1 -> 2, n -> N - 1, y -> 2y - 1), which needs a full sequence of [n] placing 1
+before 2 and n before n - 1.  For n odd (N = 1 mod 4) take [1, n] ++ sigma.reverse, sigma an
+ordering of [n] \ {1, n} from scratch ({1, n} is co-reachable for odd n != 7, Live5
+coReach_one_N; [1, n] is valid since both panels have reach 0).  So chiX transfers for every
+n >= 6, n != 7 (coReach_winEmb).
+Consequence (`coReach_one_even_N`): {1, 2k, N} = chiX({1, k, n-1}); {1, k, n-1} is always
+valid in [n-1] and is dead only for odd n-1 and k in {2, n-2}.
+
+
+3. The decidable rules (Lean `nearTrB`, `nearTrP`, `chiXB`; C: rcov.c)
+--------------------------------------------------------------------
+nearTrB N a b c k p u v y1 e1 y2 e2 i j l c2 ms: phi = copyF k N p u v with the panels y1, y2
+moved by +1 (e = 1) or -1 (e = 2) (y = 0: no move); phi increasing into [N]; (a, b, c) =
+phi(i, j, l) with (i, j, l) valid and not dead in [p], p < N, p != 7 (so co-reachable by the
+induction hypothesis Good3 p); phi regular outside {i, j, l} (regB, O(p^2)); and the image
+satisfies Theorem G after the explicit valid steps ms (stepsB), so its complement is ordered
+from scratch.  nearTrP: the same with Theorem 2 for the complement (psi = the increasing
+enumeration of Y, irregular at most at i1, i2).  chiXB: the transfer of section 2.
+copyOK is NOT required: regularity is checked directly, so any base map can be used.
+rcov.c searches these hints (bases: centred Beatty Z(N,p), right-aligned Beatty, residue
+classes; moves only on the panels i, j, l; up to 4 steps for the image; the triple or its
+mirror image).  genchk.py / chkall.py turn the hints of rcall.txt into `decide +kernel`
+examples against Folds.Live3r; all 4208 hints for N = 51..70 check (chkall.txt).
+
+Coverage of the residual of Live3q (canonical triples, resid51_70.txt from hints128.c, the
+128-bit version of live3q/hints.c with witnesses switched off):
+      N  resid  nearTrB  nearTrP  chiX  left
+     51   203     177       2    21     3
+     52   116     115       1     0     0
+     53   233     203       3    24     3
+     54   170     168       1     0     1
+     55   211     184       2    23     2
+     56   127     126       1     0     0
+     57   251     220       0    26     5
+     58   219     217       1     0     1
+     59   274     226       0    25    23
+     60   136     135       1     0     0
+     61   268     232       3    28     5
+     62   242     239       2     0     1
+     63   221     188       2    27     4
+     64   156     154       0     0     2
+     65   263     228       3    30     2
+     66   215     212       2     0     1
+     67   327     271       0    29    27
+     68   155     153       2     0     0
+     69   277     240       0    32     5
+     70   230     227       2     0     1
+So the corner families of live3q section 4 ({a, b, c} with a fixed corner pair {a, c} and b
+in the middle, {1, 3, c}, {1, 5, c}, ...) and {1, 2k, N} are all settled for N <= 70 by
+near copies, mostly residue classes mod 2 and centred Beatty copies with one or two moved
+panels.  The set {1, 3, N} (N = 1 mod 4) needs nearTrP.
+
+
+4. A closed-form family for all N: {1, 2, c}, N = 1 mod 4, c odd (`coReach_one_two_odd`)
+---------------------------------------------------------------------------------------
+phi12: 1 -> 1, 2 -> 2, y -> 2y - 1 (the odd class of N = 2p - 1 with 3 moved to 2), p odd.
+  * phi12 is regular at every panel except 2 (omega on the closed forms; for p even the
+    panel (p+2)/2 would be irregular too, its arm ends at 2 in [p] but not in [N]).
+  * Its image B = {1, 2, 5, 7, ..., N}: 4 is a valid step (arms {1,2,3}, {5,6,7}: 2 and 2),
+    and B + {4} pulls no panel to the left: with F(t) = #(B+{4}) n [0, t) =
+    t/2 + 1 (t >= 5), 2 (t = 3, 4), t - 1 (t <= 2), the arms of m count F(m) - F(m - r)
+    and F(m + 1 + r) - F(m + 1), and the left count is never smaller (omega).  Theorem G
+    with the centre 1/2, then Theorem 2.
+  * {1, 2, c} = phi12({1, 2, (c+1)/2}); {1, 2, g} is valid in [p], and not dead for
+    g <= p - 2 (the dead sets {1, 2, p-1}, {1, 2, p} of the odd strip p).
+Checked numerically for every N = 1 mod 4 up to 201 (fam12odd.c).
+The even c = 0 mod 4 (same N) work with a second move (c - 1 -> c, panel c/2) and the steps
+4, (N+3)/2 (rcov hints), but that is not formalized in closed form.
+
+
+5. What is left: the family {1, 2, c}
+------------------------------------
+The 86 triples (N <= 70) not settled by Covered3R, all of the form {1, 2, c} (canonical
+orientation; the mirror image {N+1-c, N-1, N} is the same set up to mirror):
+   N=51: c = 44 48 49        N=53: 46 50 51            N=54: 53
+   N=55: 52 53               N=57: 46 50 52 54 55      N=58: 57
+   N=59: 33..57 except 39 42 (23 values)                N=61: 50 54 56 58 59
+   N=62: 61                  N=63: 56 58 60 61         N=64: c = 64, and {1, 63, 64}
+   N=65: 62 63               N=66: 65
+   N=67: 37..65 except 43 46 (27 values)                N=69: 58 62 64 66 67
+   N=70: 69
+Pattern: {1, 2, N-2} for every odd N; {1, 2, N-1} for N = 2 mod 4; {1, 2, N}, {1, N-1, N}
+for N = 64; for N = 1 mod 4 and N = 7 mod 8 some even c close to N (mostly c = 2 mod 4);
+for N = 3 mod 8 (59, 67; 51 is saved by accidents of Z(51, p)) essentially every
+c >= 0.55 N.
+
+Why the tools stop here.  Any (near) copy containing the adjacent panels 1, 2 starts with
+phi(1) = 1, phi(2) = 2 and has ratio about 2.  For N = 2p - 1 with p even (N = 3 mod 4) the
+odd class with 3 -> 2 is irregular at j* = (p + 2)/2 (partner 2), and j* is not in the
+preimage {1, 2, g}; the other ratio-2 maps (Z(N, p) for p near N/2) have irregular panels
+in pairs (e.g. N = 59, Z(59, 31): panels 11 and 21 irregular against each other).  rcov
+with the complement condition dropped (NOY=1) still finds no admissible near map for 66 of
+the 86 triples, so no better proof of the complement can help; one valid step before the
+near copy (step4.c, preimage a 4-set made inward in [p] by <= 2 steps) finds nothing
+either.  Theorem G after k explicit steps needs k >= 5 for c >= 0.75 N (steps.c, depth.c);
+the DFS completions (pfx.c) show a halving chain of steps
+   (N+c)/2 + 1, about half of it, ..., 3   (e.g. N = 59, c = 50: 53 27 23 14 12 8 7 5 4 3 37 36)
+after which the background is inward.  A proof for all N would have to formalize such a
+chain of length ~log N (an induction on the chain), or a ghost transfer: at the irregular
+panel j* the condition becomes I_T(j*) = -1 instead of 0, i.e. co-reachability of
+{1, 2, g} in [p] in a strip where 2 is invisible from j*; neither is carried out.
+
+So: Residual3R N for all N > 50 is equivalent to the co-reachability of the triples of
+{1, 2, c} type (and their mirrors) that Covered3R misses, which for N <= 70 are exactly the
+list above.  All 86 are co-reachable numerically: leftchk.txt gives for each a list of
+valid steps after which the background satisfies Theorem G (pfx.c, checked by vsteps.py),
+except {1, 2, 67} at N = 69, found by a longer DFS (hard69.txt, 57 steps).  The members
+{1, 2, N-2} (N odd) are the hardest: the near copy of section 4 maps them to the DEAD set
+{1, 2, p-1} of [p].  `forall N > 50, Residual3 N` is NOT proven.
+
+
+Files
+-----
+  rcov.c          hints for the new rules (and the coverage table); env YPSI=1 enables
+                  nearTrP, argument 2 = maximal steps for the image (4 used for rcall.txt)
+  rcall.txt       the hints for N = 51..70 (LEFT = not settled)
+  genchk.py, chkall.py, chkall.txt   kernel checks of all hints against Folds.Live3r
+  hints128.c, resid128.py   128-bit residual lists (Live3q's rules), resid51_70.txt, rall.txt
+  tolines.py      residual lists to "N a b c" lines
+  nearcp.c        first exploration of near copies (DFS for the complement)
+  step4.c         one or two valid steps before a near copy (no success on {1,2,c})
+  steps.c, depth.c, pfx.c   Theorem G after steps, depth, DFS prefixes for {1,2,c}
+  leftchk.py, leftchk.txt, hard69.py, hard69.txt, vsteps.py   completions of the 86 left
+                  triples (valid steps, then Theorem G)
+  fam12odd.c      the closed-form family of section 4, checked to N = 201
+  lean.sh, memtime.py   compile against the prebuilt oleans of the main checkout
