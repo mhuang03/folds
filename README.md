@@ -121,6 +121,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live7` (M) | centred Beatty copies Z(N,p) = {⌊k(N+2)/(p+1)⌋}; {3,N−2}, {5,N−4} co-reachable; 65 witness orderings via the bitmask checker; **Conjecture C proven for every N ≤ 64** (`extends_iff_not_dead_le_64`); for N ≥ 65 it reduces to `CoverAt E7 N` (checked to N = 2665) |
 | `SuperExp5` (M) | odd-N slip lemma `oddSlip_mem_semiSeqs` (with the wrap condition); odd-node gain; `self_pow_le_semiCount_pow_16`: N^N ≤ 2^{12N}·a(N)^{16} for all N ≥ 1 |
 | `Copies2` (M) | copies larger than N/2 are neutral (`copy_large_neutral`); which copy sizes occur (`copies_nonempty_iff`); ⌊(N²+2)/6⌋ copies of size 2; half-size copies; explicit tail of identity (B) (`identity_B_split`) |
+| `Live8` (M) | **Conjecture C proven for every N ≤ 300** (`extends_iff_not_dead_le_300`); for all N it holds modulo the purely arithmetic `ArithCover N` for N > 300 (`conjectureC_of_arith`), checked to N = 3000. Same-parity pairs and several families are settled for all N |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -164,9 +165,9 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
    ordered validly) except {1,N} for even N and {1,7} at N = 7. Checked for N ≤ 28 (and
    valid prefixes for N ≤ 31). The Adjacent Lemma, co-reachability of every interval,
    and {1,N} for odd N ≠ 7 are now **proven** (Lean). The Lean family covers every
-   non-dead pair at N = 100 and 130. **Proven in Lean for every N ≤ 64.** For N ≥ 65 it
-   reduces to a Beatty-set covering statement, checked by computer up to N = 2665, with
-   a partial paper proof (same-parity pairs done). See `experiments/live7/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
+   non-dead pair at N = 100 and 130. **Proven in Lean for every N ≤ 300.** For larger N it
+   reduces to `ArithCover N`, a floor-function statement about mixed-parity wide pairs,
+   checked by computer up to N = 3000. See `experiments/live8/PROOFS.txt`. See `experiments/live5/PROOFS.txt`. See
    `experiments/live2/PROOFS.txt`.
 
 ## Where things are
@@ -209,6 +210,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live7/PROOFS.txt` | centred Beatty copies, the covering statement and its partial proof |
 | `experiments/superexp5/PROOFS.txt` | odd-N slip lemma, exponent 1/16, the binding constraints (limit about 1/15.2) |
 | `experiments/jseq/NOTES.txt` | J(N) to 33, I(N) to 38, copy counts, the J/a limit, the renewal form of (B) |
+| `experiments/live8/PROOFS.txt` | Conjecture C to N = 300, the reduction to ArithCover, the route to a proof |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
