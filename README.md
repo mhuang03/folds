@@ -23,7 +23,7 @@ Two corrections to the informal statement: the window size depends on the *panel
 | terms | a(1..38) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
 | congruences | a(N) ≡ c(N) (mod 4) (**proven**); 4 ∣ a(N) for N ≡ 3 (mod 4) (**proven**); no patterns modulo odd primes |
-| growth | **rigorously (N/2048)^{N/17} ≤ a(N) ≤ N!·e^{−0.0878N(1+o(1))} (e^{−0.1255N} for even N)** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
+| growth | **rigorously (N/4096)^{N/16} ≤ a(N) ≤ N!·e^{−0.0878N(1+o(1))} (e^{−0.1255N} for even N)** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
 | arithmetic effect | multiples of 3 sit above trend (all N ≤ 33). Mechanism: the 2-cycle {N/3, 2N/3} of the doubling map |
 
 Here T(N,k) is the number of valid k-step prefixes, and c(N) is the number of sequences
@@ -119,13 +119,14 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `MaxMoves2` (M) | 2-adic valid-move bound `card_moves_two_adic` ((a+2)V ≤ (a+1)N for \|S\| = 2^a·odd) and its sharper version with an \|S\| term; upper bounds a(N) ≤ N!·e^{−0.1255N} (even) / e^{−0.0878N} (odd) |
 | `SuperExp4` (M) | upper odd slip positions + reversal averaging; `self_pow_le_semiCount_pow_17`: N^N ≤ 2^{11N}·a(N)^{17} for all N ≥ 1 |
 | `Live7` (M) | centred Beatty copies Z(N,p) = {⌊k(N+2)/(p+1)⌋}; {3,N−2}, {5,N−4} co-reachable; 65 witness orderings via the bitmask checker; **Conjecture C proven for every N ≤ 64** (`extends_iff_not_dead_le_64`); for N ≥ 65 it reduces to `CoverAt E7 N` (checked to N = 2665) |
+| `SuperExp5` (M) | odd-N slip lemma `oddSlip_mem_semiSeqs` (with the wrap condition); odd-node gain; `self_pow_le_semiCount_pow_16`: N^N ≤ 2^{12N}·a(N)^{16} for all N ≥ 1 |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
 
 1. **Asymptotics.** a(N) = N!/(κ_N ln N)^N, i.e. ln a = N ln N − N ln ln N − O(N).
    Evidence: debiased SMC to N = 4096 and a Feynman–Kac model; see
-   `experiments/asymptotics/NOTES.txt`. Rigorously 1/17 ≤ liminf ln a/(N ln N), and
+   `experiments/asymptotics/NOTES.txt`. Rigorously 1/16 ≤ liminf ln a/(N ln N), and
    limsup ≥ 1/6 (slip chains, `Folds/SuperExp2.lean`). Slip methods are capped at 1/2. The upper side is only
    N!·e^{−Θ(N)}.
 2. **Mod-3 effect.** Relative to the independence model, a(N) is above trend exactly
@@ -205,6 +206,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/maxmoves2/NOTES.txt` | 2-adic bound, continuum maxima of V/N by \|S\|, constants |
 | `experiments/superexp4/PROOFS.txt` | all-N exponent 1/17; why odd N has no free slips; truncation fails for slip chains |
 | `experiments/live7/PROOFS.txt` | centred Beatty copies, the covering statement and its partial proof |
+| `experiments/superexp5/PROOFS.txt` | odd-N slip lemma, exponent 1/16, the binding constraints (limit about 1/15.2) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
