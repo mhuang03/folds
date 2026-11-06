@@ -1,0 +1,169 @@
+PARITY BALANCE OF SYMMETRIC (3-AP-FREE) FOLD SEQUENCES                (experiments/symparity/)
+==========================================================================================
+Status: PROVEN on paper (below) and in Lean (Folds/SymParity.lean, no sorry, no
+native_decide; axioms propext, Classical.choice, Quot.sound only).
+
+By Folds.symmetric_iff_apFree, a symmetric fold sequence of [N] is a permutation
+a = a_1 ... a_N of {1..N} with no 3-term arithmetic progression as a subsequence
+(no i < j < k with a_i + a_k = 2 a_j).  Write "x < y" for "x comes before y in a".
+
+THEOREM A (the conjecture).  For every N >= 2 exactly half of the symmetric fold sequences
+of [N] start with an odd panel.                      [Lean: two_mul_card_head_odd]
+
+THEOREM B (k-th panel).  If 4k <= N+1, i.e. k <= floor((N+1)/4), exactly half of them
+have an odd panel at step k.  By reversal the same holds at step N+1-k.
+                                                     [Lean: two_mul_card_getElem_odd]
+
+Both follow from structure theorems about a single 3-AP-free permutation:
+
+LEMMA 1 (ends).  N >= 2: a_1 and a_N have different parities.   [Lean: head_last_parity]
+THEOREM C (orientation).  Let a be a 3-AP-free list whose entries are exactly the integers
+of an interval [lo, hi], with first entry w.  For every progression x, x+t, x+2t in
+[lo, hi] with t ODD, the one of the three entries that comes first in a has the parity
+of w.  Equivalently: the middle term x+t comes first iff x+t = w (mod 2), and it comes
+last otherwise.                                                    [Lean: orient]
+COROLLARY D (prefix purity).  The first floor((N+1)/4) panels all have the parity of
+a_1 (and, by reversal and Lemma 1, the last floor((N+1)/4) all have the other parity).
+                                                                   [Lean: prefix_parity]
+
+------------------------------------------------------------------------------------------
+1. PROOF OF LEMMA 1 AND THEOREM A
+------------------------------------------------------------------------------------------
+If a_1 = a_N (mod 2) then m = (a_1 + a_N)/2 is an integer in [1, N], different from a_1 and
+a_N, so it sits strictly between them: a_1, m, a_N is a 3-AP subsequence.  Contradiction.
+
+Reversal is a bijection of the 3-AP-free permutations.  It maps the sequences starting
+with an odd panel to those ENDING with an odd panel, which by Lemma 1 are exactly those
+starting with an even panel.  Hence #odd-first = #even-first = s(N)/2.          QED
+
+(So the "obvious involution" is simply reversal.  For the semi-symmetric rule Lemma 1 fails
+- the midpoint argument needs the full 3-AP-free condition - and indeed the balance fails
+for odd N >= 7; for even N it holds there because of the mirror.)
+
+------------------------------------------------------------------------------------------
+2. PROOF OF THEOREM C (orientation)
+------------------------------------------------------------------------------------------
+Call a progression with odd difference "mixed": its middle term has the other parity
+than its ends.  Since the middle term of any 3-AP is never positioned between the ends,
+it comes first or last.  Theorem C says: in a mixed progression the terms of the parity
+of w ("D-terms") come before the other terms ("C-terms").
+
+Tools.  (i) Restricting a to a sub-interval of values keeps it 3-AP-free and the interval
+property.  (ii) Parities are only used relative to each other, so shifting is harmless.
+
+Strong induction on hi - lo.  Fix a mixed progression T = (x, b = x+t, x+2t).
+
+Step 1 (reduction).  If x != lo and w != lo, delete the value lo: the list stays an
+interval list with the same first entry w and contains T; by induction T is oriented.
+Likewise if x+2t != hi and w != hi (delete hi).  Remaining cases:
+  (II)  w = lo (or symmetrically w = hi), and
+  (I)   w is not an end, x = lo, x+2t = hi.
+
+Case II, w = lo.  If x = lo then x = w is first and b != w (mod 2): fine.  Otherwise T lies
+in [lo+1, hi]; let a' = a without its first entry (the interval list on [lo+1, hi]) and f
+its first entry.  If f = w (mod 2), the induction hypothesis for a' orients T correctly.
+If f != w: apply the induction hypothesis to a' and the mixed progression
+(lo+1, lo+2, lo+3) (which exists because x >= lo+1, x+2t <= hi, t >= 1):  lo+2 = w != f, so
+lo+2 does not come first, hence lo+1 < lo+2.  But lo = w is first overall, so
+lo < lo+1 < lo+2 is a 3-AP subsequence.  Contradiction.
+The case w = hi is the same with (hi-3, hi-2, hi-1): hi-2 does not come first, hence
+comes last, so hi-1 < hi-2, and hi < hi-1 < hi-2 is a 3-AP.
+
+Case I, T = (lo, beta = lo+t, hi), w in (lo, hi).  If t = 1 then w = beta is first: fine.
+Let t >= 3 and Y = { y : y = lo (mod 2), lo+2 <= y <= hi-2 } (nonempty).  For y in Y the
+progression (y, beta, 2beta - y) is mixed (|beta - y| odd), avoids lo, so by induction
+(through deleting lo) it is oriented:
+     beta < y   iff   beta = w (mod 2).                                         (*)
+  zeta-LEMMA.  It is impossible that lo and hi both come before every element of Y.
+    Proof: let zeta be the first element of Y.  If 2zeta < lo+hi then z = 2zeta - lo is in
+    Y (parity, and z <= hi-2 because 2zeta != lo+hi, as hi-lo = 2t with t odd), z != zeta,
+    so zeta < z, and lo < zeta < z is a 3-AP.  If 2zeta > lo+hi use z = 2zeta - hi and the
+    3-AP hi < zeta < z.                                                          QED
+  Applied to the reversed list (still 3-AP-free) it also says: lo and hi cannot both come
+  after every element of Y.
+  Now suppose T is mis-oriented.
+   (a) beta = w (mod 2) but beta does not come first.  Then beta comes last: lo, hi < beta.
+       By (*) beta < y for all y in Y, so lo, hi < every y in Y: impossible (zeta-lemma).
+   (b) beta != w (mod 2) but beta comes first: beta < lo, hi.  By (*) y < beta for all y in
+       Y, so lo, hi come after every y in Y: impossible (zeta-lemma, reversed).     QED
+
+Remark.  Theorem C is the conjunction of two statements checked by brute force for
+N <= 11 before the proof was found (explore6.py, data/explore6_out.txt):
+  S1: x in C, y in D, 2y - x in [1,N]  =>  y < x;   S2: x in C, y in D, 2x - y in [1,N] => y < x.
+
+------------------------------------------------------------------------------------------
+3. PROOF OF COROLLARY D AND THEOREM B
+------------------------------------------------------------------------------------------
+Let u = a_{k+1} (0-based index k) have the other parity than w = a_1.  Let y have the other
+parity than u and lie in a common progression with u inside [1, N], i.e.
+   u < 2y <= N+u  (progression u, y, 2y-u)   or   y < 2u <= N+y  (progression y, u, 2u-y).
+These progressions are mixed.  If y is the middle term, the D-term y comes first by
+Theorem C, so y < u.  If u is the middle term, u (a C-term) is not first, so it is last,
+and again y < u.  So every such y is among the k panels before u.
+
+Counting such y: if 2u <= N+1 the values y = 2j + 1 + (u mod 2), j = 0..K-1,
+K = floor((N+1)/4), all qualify (y <= 2K <= (N+1)/2; if 2y > u then 2y <= N+1 <= N+u, else
+y < 2u <= N+1 <= N+y); if 2u > N+1 use the mirror images N+1-y.  Hence k >= K, i.e. every
+panel at a step <= K has the parity of a_1.
+
+Theorem B: for k <= K the parity of a_k equals that of a_1 in every sequence, so the
+number with a_k odd equals the number with a_1 odd = s(N)/2 (Theorem A).         QED
+
+Sharpness.  f(N) = min over sequences of the length of the constant-parity prefix
+(purity.c, data/purity_out.txt):
+   N   3-6  7-10  11-14  15-17  18  19-22  23-26  27-29  30-31  32-33  34-35
+   f    1    2     3      4     5    6      7      9      10     11     12
+So floor((N+1)/4) is exact for N <= 17 and too small from N = 18 on (f grows like N/3
+here; Sharma's asymptotic bound is about N/2).  Theorem B therefore holds for all
+k <= f(N).  (For even N every step is balanced anyway, by the mirror x -> N+1-x.)  For
+odd N <= 11 (data/explore1_out.txt) the balance fails at step f(N)+1, so the data range
+of the conjecture ("k <= (N+1)/4") matches f(N) there.  The same-parity count
+#(a_k = a_{N+1-k} mod 2) is 0 exactly for k <= f(N) in the data.
+
+------------------------------------------------------------------------------------------
+4. LEAN (Folds/SymParity.lean)
+------------------------------------------------------------------------------------------
+ Bef a x y := [x, y] <+ a ("x comes before y");  APF a: no [x,y,z] <+ a with x + z = 2y.
+ orient                     Theorem C for interval lists (induction on hi - lo)
+ zeta                       the zeta-lemma
+ apf_of_apFree              APFree (index form, Folds.Defs) -> APF
+ bef_of_window              the "y comes before u" step of Corollary D
+ prefix_parity              Corollary D:  4(k+1) <= N+1  ->  a[k] % 2 = a[0] % 2
+ head_last_parity           Lemma 1
+ symSeqs N                  Finset of symmetric fold sequences (filter of permutations)
+ card_head_odd_eq_even      #odd-first = #even-first (N >= 2), via reversal
+ two_mul_card_head_odd      2 * #odd-first = s(N)            (Theorem A)
+ two_mul_card_getElem_odd   2 * #(odd at index k) = s(N) for 4(k+1) <= N+1   (Theorem B)
+ ParAt k r a                "a[k] exists and is = r mod 2"
+
+------------------------------------------------------------------------------------------
+5. THE SEMI-SYMMETRIC PARITY EXCESS (negative)
+------------------------------------------------------------------------------------------
+X(N) = #even-first - #odd-first for odd N:  20, 148, 2312, 56344, 1680608, 41779316, ...
+(N = 7, 9, ..., 29).  By reversal X = EE - OO (first and last both even / both odd);
+the semi rule allows first and last of the same parity (OO = 24, EE = 44 at N = 7;
+data/semi1_out.txt), which is where the symmetric argument breaks.
+ * Factorisations are unstructured (e.g. X(13) = 2^3 * 7043, X(21) = 2 * 11 * 19 *
+   127839053); 4 | X(N) except X(21) = 2 mod 4.
+ * X/a(N) = 0.078, 0.035, 0.033, 0.035, 0.035, 0.028, 0.030, 0.021, 0.022, 0.022, 0.019,
+   0.019 and X/a(N-1) = 0.13-0.21 without a trend: X is of the order of a(N) itself, while
+   a((N-1)/2) a((N+1)/2) and all symmetric counts are smaller by many orders of magnitude,
+   so no formula in terms of a((N+-1)/2) or s can hold with bounded coefficients.
+ * semi_excess.py: exact search for X(N) as a rational linear combination of <= 3 of
+   24 features (a and s at N-2..N+1, at n and n+1 where N = 2n+1, their squares and
+   products, 2^N, 1), fitted on all 12 points (>= 9 spare equations): NO relation
+   (data/semi_excess_out.txt).  Together with the 1838 searches of ../structure2 (section
+   4 there), X has no simple formula in these terms.
+
+Files
+ apfree.py        enumerators (3-AP-free and semi-symmetric), small N
+ explore1.py      same-parity counts of (a_k, a_{N+1-k}) and position balance, N <= 12
+ explore2.py      positions of same-parity pairs (outside counts), N <= 12
+ explore3.py      prefix purity: first/last floor((N+1)/4) panels, f(N), N <= 13
+ explore4.py      the first test of Corollary D's mechanism (u = first other-parity panel)
+ explore5.py      gap structure of the prefix values (an abandoned idea)
+ explore6.py      S1, S2 (Theorem C) by brute force, N <= 11
+ purity.c         f(N) by depth-first search (gcc -O2 -o purity.bin purity.c; ./purity.bin 3 35)
+ semi1.py         semi rule: E - O, EE, OO and position balance, odd N <= 11
+ semi_excess.py   formula search for X(N)
+ data/            outputs of the above

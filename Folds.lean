@@ -61,3 +61,4 @@ import Folds.ArithCover
 import Folds.Residual
 import Folds.CoverAll
 import Folds.Structure2
+import Folds.SymParity
