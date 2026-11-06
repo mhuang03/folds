@@ -171,3 +171,13 @@ and {1, N}) is in Lean.
   coReach_corner : SwapHyp N p h c → p ≠ 7 → CoReach N {c + 1, N + 1 - (N - h) / p}
   coReach_three : 37 ≤ N → CoReach N {3, N - 3}
   Cov6 (cov5 / res / mult / beatty / split / swap / chiY / mirror), Cov6.coReach, Cov6.extends
+  Settled N u v : inward ∨ {1, N} (N odd ≠ 7) ∨ image of a non-dead pair of [p] under
+      beatty N p h / swapF N p h c / chiY (N = 0 mod 4) / oddRes j, evenRes j (N = (2j+1) n)
+  CoverLemma E : ∀ N ≥ 13, non-dead u < v ≤ N → Settled N u v ∨ Settled N (N+1-v) (N+1-u) ∨ E N u v
+  coReach_of_cover : (∀ N u v, E N u v → CoReach N {u, v}) → CoverLemma E →
+      ∀ N u v, 1 ≤ u → u < v → v ≤ N → deadB N u v = false → CoReach N {u, v}
+  extends_iff_not_dead : (same hypotheses) → valid prefix [m₁, m₂] →
+      (Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false)
+  So Conjecture C is reduced IN LEAN to (R1) = `CoverLemma E` (core.py computes exactly the
+  pairs violating `CoverLemma (fun _ _ _ => False)`, i.e. the minimal E, for N <= 520) and to
+  co-reachability of the pairs in E ((R2), (R3)).

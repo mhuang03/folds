@@ -19,6 +19,13 @@ import Folds.Live5
 * `coReach_corner`: `{c + 1, N + 1 - ⌊(N - h)/p⌋}` is co-reachable for such `p ≠ 7`;
   `coReach_three`: `{3, N - 3}` is co-reachable for every `N ≥ 37`.
 * `Cov6`: `Cov5` closed under the two new transfers.
+* `coReach_of_cover`, `extends_iff_not_dead`: **Conjecture C modulo a covering statement.**
+  If every non-dead pair of `[N]`, `N ≥ 13`, or its mirror is `Settled` (Theorem G, `{1, N}`,
+  or the image of a non-dead pair of a smaller strip under a Beatty, swapped Beatty, `chiY` or
+  doubling-split copy) or lies in a set `E` of pairs known to be co-reachable
+  (`CoverLemma E`), then every non-dead pair is co-reachable, and a valid 2-prefix is live iff
+  it is not dead.  The covering statement is purely arithmetic; numerically it holds for
+  `N ≤ 520` with `E` = 55 small pairs and the pairs `(3, 2^k - 2)`, `(5, 2^k - 4)`.
 -/
 
 namespace Folds
@@ -601,6 +608,138 @@ theorem Cov6.extends {N u v : Nat} (h : Cov6 N {u, v}) (hu : 1 ≤ u ∧ u ≤ N
     rcases hx with rfl | rfl <;> assumption) hval]
   convert h.coReach using 2
   ext x; simp
+
+/-! ## Conjecture C modulo a covering statement -/
+
+/-- A pair `u < v` of `[N]` is *directly settled* if it satisfies Theorem G, is `{1, N}`
+(`N` odd, `N ≠ 7`), or is the image of a NON-DEAD pair of a smaller strip under a
+right-aligned Beatty copy, a swapped Beatty copy, the copy `chiY` or a doubling split. -/
+def Settled (N u v : Nat) : Prop :=
+  (v ≤ 2 * u + 1 ∨ 2 * v ≤ N + u + 2) ∨
+  (u = 1 ∧ v = N ∧ N % 2 = 1 ∧ N ≠ 7) ∨
+  (∃ p h a b, 1 ≤ p ∧ h + 2 * p ≤ N + 1 ∧ h ≤ 1 ∧ 1 ≤ a ∧ a < b ∧ b ≤ p ∧
+    deadB p a b = false ∧ beatty N p h a = u ∧ beatty N p h b = v) ∨
+  (∃ p h c a b, SwapHyp N p h c ∧ 1 ≤ a ∧ a < b ∧ b ≤ p ∧
+    deadB p a b = false ∧ swapF N p h c a = u ∧ swapF N p h c b = v) ∨
+  (∃ a b, N % 4 = 0 ∧ 8 ≤ N ∧ 1 ≤ a ∧ a < b ∧ b ≤ N / 2 ∧
+    deadB (N / 2) a b = false ∧ chiY a = u ∧ chiY b = v) ∨
+  (∃ j n a b, 1 ≤ j ∧ N = (2 * j + 1) * n ∧ 1 ≤ a ∧ a < b ∧
+    ((b ≤ (j + 1) * n ∧ deadB ((j + 1) * n) a b = false ∧ oddRes j a = u ∧ oddRes j b = v) ∨
+     (b ≤ j * n ∧ deadB (j * n) a b = false ∧ evenRes j a = u ∧ evenRes j b = v)))
+
+/-- The covering statement with an exceptional set `E`: from `N = 13` on, every non-dead pair
+or its mirror is directly settled, or lies in `E`.  (Numerically, for `13 ≤ N ≤ 520` the pairs
+settled by neither are exactly 55 pairs (up to the mirror) with `N ≤ 103` and, for `N = 2^k`,
+the pairs `(3, N - 2)` and `(5, N - 4)`: `experiments/live6/core.py`.) -/
+def CoverLemma (E : Nat → Nat → Nat → Prop) : Prop :=
+  ∀ N u v, 13 ≤ N → 1 ≤ u → u < v → v ≤ N → deadB N u v = false →
+    Settled N u v ∨ Settled N (N + 1 - v) (N + 1 - u) ∨ E N u v
+
+theorem coReach_image_pair {N : Nat} {φ : Nat → Nat} {a b u v : Nat}
+    (h : CoReach N (({a, b} : Finset Nat).image φ)) (ha : φ a = u) (hb : φ b = v) :
+    CoReach N {u, v} := by
+  rwa [Finset.image_insert, Finset.image_singleton, ha, hb] at h
+
+theorem pair_sub {a b p : Nat} (ha : 1 ≤ a) (hab : a < b) (hb : b ≤ p) :
+    ({a, b} : Finset Nat) ⊆ Finset.Icc 1 p := fun x hx => by
+  simp only [Finset.mem_insert, Finset.mem_singleton] at hx
+  rw [Finset.mem_Icc]; omega
+
+/-- **Conjecture C modulo the covering statement**: if `CoverLemma` holds, every non-dead pair
+is co-reachable.  Strong induction on `N`; base `N ≤ 12` (`Live2.coReach_base`). -/
+theorem coReach_of_cover {E : Nat → Nat → Nat → Prop}
+    (hX : ∀ N u v, E N u v → CoReach N {u, v}) (hcov : CoverLemma E) :
+    ∀ N u v, 1 ≤ u → u < v → v ≤ N → deadB N u v = false → CoReach N {u, v} := by
+  intro N
+  induction N using Nat.strong_induction_on with
+  | _ N ih =>
+    intro u v hu huv hv hd
+    by_cases h12 : N ≤ 12
+    · exact coReach_base h12 hu huv hv hd
+    have key : ∀ u v, 1 ≤ u → u < v → v ≤ N → Settled N u v → CoReach N {u, v} := by
+      intro u v hu huv hv hS
+      rcases hS with hS | hS | ⟨p, h, a, b, hp, hh, h1, ha, hab, hb, hdp, e1, e2⟩ |
+        ⟨p, h, c, a, b, H, ha, hab, hb, hdp, e1, e2⟩ | ⟨a, b, h4, h8, ha, hab, hb, hdp, e1, e2⟩ |
+        ⟨j, n, a, b, hj, hN, ha, hab, hS⟩
+      · exact coReach_pair_inward hu huv hv hS
+      · obtain ⟨rfl, rfl, hodd, h7⟩ := hS
+        exact coReach_one_N _ hodd h7
+      · exact coReach_image_pair (coReach_beatty_transfer hp hh h1 (pair_sub ha hab hb)
+          (ih p (by omega) a b ha hab hb hdp)) e1 e2
+      · have := H.N4
+        exact coReach_image_pair (coReach_swap_transfer H (pair_sub ha hab hb)
+          (ih p (by omega) a b ha hab hb hdp)) e1 e2
+      · have := coReach_chiY_transfer (n := N / 2) (by omega) (by omega) (pair_sub ha hab hb)
+          (ih (N / 2) (by omega) a b ha hab hb hdp)
+        rw [show 2 * (N / 2) = N by omega] at this
+        exact coReach_image_pair this e1 e2
+      · have hn : 1 ≤ n := by
+          rcases Nat.eq_zero_or_pos n with h0 | h0
+          · rw [h0, Nat.mul_zero] at hN; omega
+          · exact h0
+        have hjn : 1 ≤ j * n := Nat.mul_pos hj hn
+        have e : (2 * j + 1) * n = (j + 1) * n + j * n := by ring
+        have : j * n ≤ (j + 1) * n := Nat.mul_le_mul_right n (by omega)
+        rcases hS with ⟨hb, hdp, e1, e2⟩ | ⟨hb, hdp, e1, e2⟩
+        · have := coReach_split (split_res hj n).symm (pair_sub ha hab hb)
+            (ih ((j + 1) * n) (by omega) a b ha hab hb hdp)
+          rw [← hN] at this
+          exact coReach_image_pair this e1 e2
+        · have := coReach_split (split_res hj n) (pair_sub ha hab hb)
+            (ih (j * n) (by omega) a b ha hab hb hdp)
+          rw [← hN] at this
+          exact coReach_image_pair this e1 e2
+    rcases hcov N u v (by omega) hu huv hv hd with hS | hS | hS
+    · exact key u v hu huv hv hS
+    · have := coReach_mirror (key (N + 1 - v) (N + 1 - u) (by omega) (by omega) (by omega) hS)
+      rw [Finset.image_insert, Finset.image_singleton,
+        show N + 1 - (N + 1 - v) = v by omega, show N + 1 - (N + 1 - u) = u by omega,
+        Finset.pair_comm] at this
+      exact this
+    · exact hX N u v hS
+
+/-- **Conjecture C for valid 2-prefixes, modulo `CoverLemma E`** (with the pairs of `E`
+co-reachable): a valid prefix `[m₁, m₂]` is live iff `{m₁, m₂}` is not one of the dead pairs
+`{1, N}` (`N` even `≥ 4`) and `{1, 7}` (`N = 7`).  (The direction "dead ⇒ not live" is
+unconditional: `WindowRule.not_extends_one_N`, `not_extends_seven`.) -/
+theorem extends_iff_not_dead {E : Nat → Nat → Nat → Prop}
+    (hX : ∀ N u v, E N u v → CoReach N {u, v}) (hcov : CoverLemma E) {N m₁ m₂ : Nat}
+    (h1 : 1 ≤ m₁ ∧ m₁ ≤ N)
+    (h2 : 1 ≤ m₂ ∧ m₂ ≤ N) (h12 : m₁ ≠ m₂) (hval : SemiSymmetric N [m₁, m₂]) :
+    Extends N [m₁, m₂] ↔ deadB N (min m₁ m₂) (max m₁ m₂) = false := by
+  constructor
+  · intro hE
+    by_contra hd
+    rw [Bool.not_eq_false] at hd
+    unfold deadB at hd
+    simp only [Bool.and_eq_true, beq_iff_eq, Bool.or_eq_true, decide_eq_true_eq] at hd
+    obtain ⟨⟨hmin, hmax⟩, hN⟩ := hd
+    rcases hN with ⟨hev, h4⟩ | h7
+    · have := not_extends_one_N (N := N) hev (by omega)
+      rcases Nat.lt_or_ge m₁ m₂ with hlt | hge
+      · rw [min_eq_left hlt.le] at hmin; rw [max_eq_right hlt.le] at hmax
+        subst hmin hmax; exact this.1 hE
+      · rw [min_eq_right hge] at hmin; rw [max_eq_left hge] at hmax
+        subst hmin hmax; exact this.2 hE
+    · subst h7
+      have := not_extends_seven
+      rcases Nat.lt_or_ge m₁ m₂ with hlt | hge
+      · rw [min_eq_left hlt.le] at hmin; rw [max_eq_right hlt.le] at hmax
+        subst hmin hmax; exact this.1 hE
+      · rw [min_eq_right hge] at hmin; rw [max_eq_left hge] at hmax
+        subst hmin hmax; exact this.2 hE
+  · intro hd
+    rw [extends_iff_coReach (by simp [h12]) (by
+      intro x hx; simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
+      rcases hx with rfl | rfl <;> assumption) hval]
+    have hset : [m₁, m₂].toFinset = {min m₁ m₂, max m₁ m₂} := by
+      ext x; simp only [List.toFinset_cons, List.toFinset_nil, Finset.mem_insert,
+        Finset.mem_singleton, insert_empty_eq]
+      rcases Nat.lt_or_ge m₁ m₂ with hlt | hge
+      · rw [min_eq_left hlt.le, max_eq_right hlt.le]
+      · rw [min_eq_right hge, max_eq_left hge]; tauto
+    rw [hset]
+    exact coReach_of_cover hX hcov N _ _ (by omega) (by omega) (by omega) hd
 
 end Live6
 end Folds
