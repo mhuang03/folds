@@ -132,6 +132,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live3p` (M) | 3-prefix liveness: **iff for every N ≤ 30, N ≠ 7** (`extends3_iff_le_30`); dead 3-sets proven dead for all N; Theorem G for 3-sets in closed form (`F3S`, `coReach3_of_F`) |
 | `SymStructure2` (M) | symmetric case: recursive extension test **Theorem E** (`ext_iff_cond`, decidable via `extB`), prefix-count recursion **Theorem L** (`live_rec`; L_k(N) = O(N)), exact shuffle-count identity for θ(N), and **Sharma's bound for all N** (`ends_parity`: a[k] has a[0]'s parity whenever k+6 < N/2; sharp at N = 26) |
 | `PeriodLaw` (M) | arithmetic bookkeeping for the period-law exactness proofs (closed-form weights never vanish) |
+| `SymRun` (M) | symmetric case: the **exact minimal opening parity run** f(N) for all N ≥ 36 (`fRun_block`: δ = ⌊N/2⌋ − f ∈ {4,5,6} by an explicit dyadic block pattern); Sharma's bound is attained exactly at the δ = 6 points (`fRun_eq_sub_six_iff`) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -230,6 +231,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/symstruct/PROOFS.txt` | 3-AP-free structure: an exact merge-count identity for θ(n), the prefix-extension test, Sharma's ⌊N/2⌋−6 bound for all N (sharp), the dyadic pattern of the opening run, L_k(N) recursion, log-periodic ratio θ(n)/(2θθ) |
 | `experiments/live3p/PROOFS.txt` | 3-prefix liveness: the classification to N = 44, Theorem G for 3-sets, the route to all N |
 | `experiments/periods3/PROOFS.txt` | period-law exactness: Theorems D1/D2, exact periods of T(N,8), T(N,9), non-simple vertices |
+| `experiments/symrun/PROOFS.txt` | proof of the dyadic opening-run formula (Conjecture F′) via the φ/ψ halving states |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
