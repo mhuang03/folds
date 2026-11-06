@@ -1,0 +1,282 @@
+J(N), I(N), C_N(k) AND THE STRUCTURE OF WINDOW COPIES                  (experiments/jseq/)
+=======================================================================================
+
+Background: experiments/reccount/NOTES.txt (identities (A), (B)), experiments/neutral/PROOFS.txt,
+Folds/Neutral.lean.  Notation: X ⊆ [N] is a (window) COPY if it is balanced around each of its
+own elements; NEUTRAL if balanced around every panel.  g(S) = #valid orderings of S from
+scratch.  C_N(k) = Σ_{X copy, |X|=k} g(Xᶜ).  J(k) = #valid k-sequences with no copy prefix of
+size 2..k-1.  I(N) = #valid N-sequences with no neutral proper prefix.
+   (A)  a(N) = 2a(⌊N/2⌋)a(⌈N/2⌉) + 2 Σ_{d|N odd, 3≤d<N} a(jN/d)a((j+1)N/d) + I(N)
+   (B)  a(N) = J(N) + Σ_{k=2}^{N-1} J(k) C_N(k)
+
+Summary
+ * J(N) extended from N = 24 to N = 34 (sections 1-2), I(N) to N = 38 (it is explicit by (A)).
+ * J(N)/a(N) is stable: ρ ≈ 0.18358 for N ≡ ±1 (mod 6), higher for even N (≈ 0.1853-0.1860)
+   and for 3 | N (≈ 0.1868-0.1880), i.e. the same mod-6 arithmetic effect as a(N) (section 3).
+ * Exact renewal form of (B): 1 = ρ_N + Σ_k ρ_k q_k(N), with ρ_k = J(k)/a(k) and
+   q_k(N) = a(k)C_N(k)/a(N) = P(first k panels form a copy); q_k(N) converges fast
+   (q_2 ≈ 0.634, q_3 ≈ 0.274, q_4 ≈ 0.141, q_5 ≈ 0.053, q_6 ≈ 0.031).
+ * PROVEN (paper + Lean, Folds/Copies2.lean):
+     - every copy with |X| > N/2 is neutral, so the copies of size > N/2 are exactly the
+       odd panels (odd N), the E_dᶜ (odd d | N) and [N]; hence C_N(k) for k > N/2 is
+       a(N-k) or 0 and the tail k > N/2 of (B) is explicit (section 4);
+     - the number of copies of size 2 is ⌊N²/2⌋ - ⌊N²/3⌋ = ⌊(N²+2)/6⌋ (OEIS A156040(N-2));
+     - copies of size N/2 (N even) = subsets of Z/(N/2) closed under i ↦ 2i and 2i+1 ↦ i;
+       in particular (paper) only the two parity classes when N ≡ 2 (mod 4) (section 5).
+ * Copies of size 3: (fitted, exact for N ≤ 200) N³/108 + period-6 linear + period-12
+   constant term.  Size k ≥ 4: degree k, no quasi-polynomial of small period (section 6).
+ * No exact recursion for a(N) through smaller a, J: C_N(k) for k ≤ N/2 is a sum of
+   completion counts g(Xᶜ) with large prime factors; fixed linear combinations of products of
+   smaller a's and J's miss C_N(2..4) by 2-19% on held-out N (section 7).
+ * No OEIS hits for J, I, the total copy counts, the size-3 counts, or the half-size counts.
+
+Files
+ copies.c      DFS enumeration/counting of all copies of [N] (prefix form, size fixed); N ≤ 399.
+               `copies N` (all sizes), `copies N c K`, `copies N list [K]` (masks, N ≤ 64).
+ copycounts.txt  "N k #copies" for N ≤ 64 (copycounts.sh).
+ copyfit.sh, out/fitK.txt   counts of size-K copies, K = 2..6, N up to 240/200/150/120/100.
+ qpfit.py      quasi-polynomial search for the size-K counts.
+ jdp.c         full layered subset DP for g (two colex-ranked layers, OpenMP) that collects
+               g(Xᶜ) and g(X) for every copy X; arithmetic mod 2^64, mod a 61-bit prime, or mod
+               primes < 2^32 / 2^16 / 2^8 stored in 4/2/1-byte words.  Memory 2·C(N,N/2) words.
+ runall.sh, run3031.sh, run_big.sh, run34.sh   the runs (outputs out/jdp_N_MOD.txt, ignored by
+               git; N ≤ 28: one run mod 2^64; 29-31: 2^64, 2^61-1, 4294967291; 32: four u32
+               primes; 33: six u16 primes; 34: twelve u8 primes).
+ analyse.py    CRT, the redundancy check, C_N(k), J(N) by (B), I(N) by (A) -> out/data.txt
+               (lines "N ...", "C N k C_N(k)", "X N k mask g(Xᶜ)" for every copy X).
+ halfcopies.py the closed-set count for copies of size N/2 (checked against copies.c, N ≤ 80).
+ nearhalf.sh, out/nearhalf.txt   copy counts just below N/2.
+ relfit.py     the linear-relation test of section 7.
+ oeis.py       OEIS lookups.
+
+
+1. METHOD
+---------
+Identity (B) gives J(N) = a(N) - Σ_{k=2}^{N-1} J(k) C_N(k), and a(N) is known to N = 38.  So J(N)
+only needs C_N(k) = Σ_{copies X, |X|=k} g(Xᶜ) for all k.  Copies are rare (6262 of the 2^32
+subsets at N = 32), so jdp.c runs the plain forward DP for g over ALL layers (not just up to
+N/2), keeping two colex-ranked layers, and reads g at the ranks of the copy complements as
+each layer is finished.  Only ONE array is needed (no J-type kill state), so memory is
+2·C(N, N/2) words:
+   N = 31: u64, 4.8 GB, 45 s per modulus;   N = 32: u32, 4.8 GB, ~1.7 min per modulus;
+   N = 33: u16, 4.7 GB, ~3.2 min;           N = 34: u8, 4.7 GB.
+Every run also returns g([N]) = a(N) mod p, which matched the known a(N) in every run.  The
+copy enumeration (copies.c) is a left-to-right DFS on the prefix form
+   left half  (2m-1 ≤ N):  P(2m-1) = P(m-1) + P(m),
+   right half (2m-1 > N):  P(m-1) - P(2m-1-N) = |X| - P(m),
+and is instant for N ≤ 64 (it reproduces decomp.c's copy counts for N ≤ 24).
+J(1..24) from (B) reproduce the values of experiments/reccount exactly.
+
+Alternative (not implemented, for larger N): a meet-in-the-middle form follows from section 4:
+   J(N) = Σ_{|S|=⌊N/2⌋, S not a copy} gJ(S)·g(Sᶜ) - Σ_{X∈NFam, |X|>N/2} J(|X|)·a(N-|X|),
+with gJ the forward DP that kills copy prefixes; it needs gJ and g on layers ≤ N/2 only (half
+the time, but two arrays, so no memory gain over the full-layer g run).
+
+
+2. NEW DATA
+-----------
+J(N) (no copy prefix of size 2..N-1):
+ N   J(N)                                J/a        I/a
+ 25  1204896961080256                    0.18355    0.9995502
+ 26  10336372308319804                   0.18597    0.9997790
+ 27  77158852854145256                   0.18678    0.9996315
+ 28  669156850695520438                  0.18572    0.9998946
+ 29  5056478072368437964                 0.18357    0.9999682
+ 30  49343907482690273870                0.18771    0.9998797
+ 31  374001928577015582864               0.18358    0.9999870
+ 32  3747283718972645073238              0.18530    0.9999925
+ 33  31941655789962876066952              0.18607    0.9999746
+ J34
+
+I(N) = a(N) - (product part of (A)) for N = 25..38:
+ 6561496898227356, 55569700979541916, 412957532114523992, 3602694716415488846,
+ 27544204156107224320, 262846862648765401410, 2037220892523850664016,
+ 20222338172213694065278, 171664217870159028489824, 1711967396209172599113948,
+ 14916242483117214368598980, 162917373011104396565252172, 1435458492008155284255774966,
+ 15884940092084922994573740402.
+1 - I(N)/a(N) = 1.2e-4 (30), 7.5e-6 (32), 2.5e-5 (33), 5.8e-6 (34), 7.2e-6 (36), 8.9e-7 (38):
+the parity term (and the E_3 term when 3 | N) is all that is left.
+
+Number of copies of [N] (all sizes 1..N, including singletons and [N]), N = 1..40:
+ 1 3 5 8 11 16 21 29 37 48 62 83 100 126 155 209 251 319 389 491 599 748 908 1221 1355 1752
+ 2077 2703 3142 4156 4760 6262 7234 9153 10219 14405 15868 20764 24347 30357
+(N ≤ 64 in copycounts.txt; 3796210 at N = 64.)  By size (N = 1..40):
+ k=2: 0 1 1 3 4 6 8 11 13 17 20 24 28 33 37 43 48 54 60 67 73 81 88 96 104 113 121 131 140 150
+      160 171 181 193 204 216 228 241 253 267                                 = ⌊(N²+2)/6⌋
+ k=3: 0 0 1 0 1 2 4 4 8 8 13 16 21 24 34 36 46 54 65 72 89 96 114 128 146 160 187 200 227 250
+      278 300 338 360 399 432 471 504 556 588
+ k=4: 0 0 0 1 0 1 1 5 4 9 12 17 20 34 37 59 63 89 101 134 148 200 224 273 309 380 416 513 567
+      666 737 871 938 1104 1207 1377 1508 1716 1852 2106
+ k=5: 0 0 0 0 1 0 0 0 1 2 4 4 12 8 8 18 35 28 53 52 84 88 121 136 183 212 268 308 409 402 539
+      592 732 820 988 1036 1312 1428 1623 1848
+ k=6: 0 0 0 0 0 1 0 0 1 1 1 8 4 9 16 20 24 54 49 76 116 136 145 300 253 388 510 583 656 998
+      1010 1310 1669 1900 2100 2905 2977 3716 4417 5024
+C_N(k) for all N ≤ 34, k and the completion count g(Xᶜ) of every copy are in out/data.txt.
+
+
+3. J(N)/a(N): CONVERGENCE AND ARITHMETIC EFFECT
+------------------------------------------------
+J/a by N mod 6 (N = 11..34):
+ N ≡ 1:  13 0.16987  19 0.18084  25 0.18355  31 0.18358
+ N ≡ 5:  11 0.16302  17 0.17623  23 0.18351  29 0.18357
+ N ≡ 2:  14 0.18059  20 0.18657  26 0.18597  32 0.18530
+ N ≡ 4:  16 0.17827  22 0.18533  28 0.18572  34 J34R
+ N ≡ 0:  12 0.17576  18 0.18823  24 0.18793  30 0.18771
+ N ≡ 3:  15 0.17946  21 0.18775  27 0.18678  33 0.18607
+ * For gcd(N, 6) = 1 the ratio has converged to 4 digits: 0.18351, 0.18355, 0.18357, 0.18358
+   (N = 23, 25, 29, 31).  Conjecture: ρ = lim J/a over N ≡ ±1 (mod 6) is ≈ 0.1836.
+ * Even N sit ≈ 0.002 higher and multiples of 3 ≈ 0.002-0.004 higher (the 3 | N bump of a(N)
+   is amplified, not cancelled, in J).  Whether these classes converge to the same ρ slowly
+   or have their own limits cannot be decided from N ≤ 34.  All the other classes drift DOWN
+   towards 0.1836: even N 0.18657, 0.18597, 0.18533 (N ≡ 2) / 0.18572, 0.18530 (N ≡ 4, 2);
+   odd multiples of 3: 0.18775, 0.18678, 0.18607 (N = 21, 27, 33); even multiples of 3 drift
+   slowest: 0.18823, 0.18793, 0.18771 (18, 24, 30).  Conjecture (weak): one common limit
+   ρ ≈ 0.1836, approached from above with an arithmetic correction that decays slowly.
+ * Mechanism: the first-copy distribution f_k(N) = J(k)C_N(k)/a(N) (the probability that the
+   first copy prefix has size k) converges quickly:
+     N    J/a     f2     f3     f4     f5     f6     f7     f8     Σ_{k>N/2}
+     29 0.18357 0.6350 0.1368 0.0289 0.0077 0.0051 0.0016 0.0008  2.9e-6
+     30 0.18771 0.6296 0.1396 0.0278 0.0070 0.0055 0.0012 0.0010  9.6e-6
+     31 0.18358 0.6354 0.1368 0.0282 0.0078 0.0053 0.0014 0.0010  1.2e-6
+     32 0.18530 0.6335 0.1374 0.0283 0.0074 0.0052 0.0014 0.0011  0
+   The arithmetic effect is already in f_2: P(the first two panels form a copy) is lower for
+   3 | N (0.6296 at N = 30 against 0.6350/0.6354 at 29/31) and slightly lower for even N.
+   f_6 is HIGHER for 3 | N (0.0055-0.0067): the E_3-type small copies.  Almost all of the
+   mass is decided in the first ~8 steps: a positive fraction ρ of sequences never passes
+   through a copy prefix, and the rest meets one early.
+ * Renewal form.  Dividing (B) by a(N):
+        1 = ρ_N + Σ_{k=2}^{N-1} ρ_k q_k(N),    ρ_k = J(k)/a(k),  q_k(N) = a(k) C_N(k)/a(N),
+   where q_k(N) = P(S_k(w) is a copy) (identity (B) of reccount: #{w : S_k copy} = a(k)C_N(k)).
+   ρ_k = 1, 0.5, 0.2, 0.143, 0.167, 0.1875, 0.179, 0.152, ... (k = 2, 3, ...), and
+     N    q2     q3     q4     q5     q6     q7     q8     q9     q10
+     29 0.6350 0.2736 0.1445 0.0536 0.0303 0.0083 0.0046 0.0015 0.0012
+     31 0.6354 0.2737 0.1412 0.0545 0.0316 0.0076 0.0056 0.0014 0.0008
+     32 0.6335 0.2748 0.1413 0.0521 0.0311 0.0073 0.0063 0.0013 0.0008
+   So "a(N) ≈ J(N)/(1-ρ)" is not the right shape; the exact relation is the renewal identity,
+   and ρ = 1 - Σ_k ρ_k q_k(∞) if the q_k(N) converge (they do, numerically, per class).
+ * a/J (N = 2..): 1, 2, 5, 7, 6, 5.33, 5.6, 6.57, 5.95, 6.13, 5.69, 5.89, 5.54, 5.57, 5.61, 5.67,
+   5.31, 5.53, 5.36, 5.33, 5.40, 5.45, 5.32, 5.45, 5.38, 5.35, 5.38, 5.45, 5.33, 5.45, 5.40:
+   ≈ 1/0.1836 = 5.447 for N ≡ ±1 (mod 6).
+
+
+4. LARGE COPIES ARE NEUTRAL   (proven; Lean: Folds/Copies2.lean)
+-------------------------------------------------------------------
+Notation as in experiments/neutral/PROOFS.txt: x_k the N-periodic indicator, P(t) = x_1+...+x_t
+(P(t+N) = P(t) + s, s = |X|), h(t) = N·P(t) - s·t (N-periodic, h(t+1) - h(t) = N x_{t+1} - s).
+By Lemma 1.1 there (balF_iff_P), X is balanced around m ∈ [N] iff D(m-1): P(2m-1) = P(m-1)+P(m),
+and D(k) ⇔ D(k+N).  So
+   X is a copy  ⇔  D(k) for every k with x_{k+1} = 1.                          [copy_dbl]
+
+Lemma 4.1 (discrepancy bound for copies).  For a copy X:  -(N-s) ≤ h(t) ≤ N - s for all t.
+                                                                              [hd_bounds_copy]
+Proof.  s = 0 is trivial.  Let M = max h = h(t0).  If x_{t0} = 0 (read t0 + N for t0 = 0) then
+h(t0 - 1) = M + s > M; so x_{t0} = 1 and D(t0 - 1) holds: h(2t0 - 1) = h(t0 - 1) + h(t0) ≤ M
+gives h(t0 - 1) ≤ 0, hence M = h(t0 - 1) + N - s ≤ N - s.  Let L = min h = h(t1).  If
+x_{t1+1} = 0 then h(t1 + 1) = L - s < L; so x_{t1+1} = 1 and D(t1) holds:
+h(2t1 + 1) = h(t1) + h(t1 + 1) ≥ L gives h(t1 + 1) ≥ 0, hence L = h(t1 + 1) - (N - s) ≥ -(N-s). □
+(The neutral bound |h| ≤ min(s, N-s) needs D at the other neighbours too; a copy only has the
+half that uses its own elements.)
+
+Lemma 4.2 (size).  If |h| ≤ μ everywhere then g·⌊d/2⌋ ≤ μ, where g = gcd(s, N), d = N/g.
+                                                                             [size_bound_gen]
+Proof: as Lemma 2.3 of PROOFS.txt (h(t) ≡ -s t (mod N) takes the value g⌊d/2⌋ mod N).       □
+
+Theorem 4.3.  A copy X ⊆ [N] with 2|X| > N is neutral.  Hence the copies of size k > N/2 are:
+[N] (k = N), the odd panels (N odd, k = (N+1)/2), and E_dᶜ (k = (d+1)N/(2d), d | N odd, 3 ≤ d < N);
+each size occurs at most once.                     [copy_large_neutral, copy_large_mem]
+Proof.  Let s = |X| < N, s = g a, N = g d.  Lemmas 4.1-4.2 with μ = N - s: ⌊d/2⌋ ≤ d - a.  With
+2a > d this forces d odd and 2a = d + 1, d ≥ 3 (a < d), i.e. 2sd = (d+1)N.  [copy_size]
+Uniqueness: two copies X, X' of size s > N/2 have |h - h'| ≤ 2(N - s) < N, and h - h' =
+N(P - P'), so P = P' and X = X'.  [copy_unique]  The odd panels (d = N) and E_dᶜ (d < N) are
+neutral copies of exactly these sizes, so X is one of them.                               □
+
+Corollary 4.4.  For N/2 < k < N:  C_N(k) = a(N - k) if k = (N+1)/2 (N odd) or k = (j+1)N/d for an
+odd d | N, 3 ≤ d < N (j = (d-1)/2); otherwise C_N(k) = 0.                       [CN_large]
+So identity (B) becomes
+   a(N) = J(N) + Σ_{k=2}^{⌊N/2⌋} J(k) C_N(k) + Σ_{X ∈ NFam(N), |X| > N/2} J(|X|) a(N - |X|),
+and only the terms k ≤ N/2 involve completion counts.  Checked against the DP for all N ≤ 34.
+(The tail is tiny: Σ_{k>N/2} f_k ≈ 1e-6 of a(N) at N = 31.)
+
+
+5. COPIES OF SIZE 2 AND OF SIZE N/2   (proven; Lean: Folds/Copies2.lean)
+------------------------------------------------------------------------
+5.1  {x < y} is a copy iff 2x ≤ y (balance at x) and x + N + 1 ≤ 2y (balance at y).
+     [isCopy_pair]  These are exactly "y then x is a valid 2-prefix" and "x then y is valid".
+     Hence #copies of size 2 = #valid 2-prefixes - #reachable 2-sets = ⌊N²/2⌋ - ⌊N²/3⌋
+     = ⌊(N²+2)/6⌋ (Prefix.lean: card_prefixTwo, card_reachTwo).            [card_copies_two]
+     OEIS: A156040(N-2) = A007590(N) - A000212(N) (g.f. x²(1+x²)/((1-x)(1-x²)(1-x³))).
+
+5.2  Half-size copies.  Let N = 2n and |X| = n.  Lemma 4.1 gives |h| ≤ n, i.e. |2P(t) - t| ≤ 1,
+     so P(2u) = u: X has exactly one panel in each pair {2i+1, 2i+2}.        [copy_half_P]
+     Write B(i) = x_{2i+1} (i ∈ Z/n).  With P(2i) = i, P(2i+1) = i + B(i):
+       D(2i)   (needed when B(i) = 1):  P(4i+1) = 2i + B(2i)  =  2i + 1   ⇔  B(2i) = 1;
+       D(2i+1) (needed when B(i) = 0):  P(4i+3) = 2i+1 + B(2i+1) = 2i+1  ⇔  B(2i+1) = 0.
+     Theorem 5.2.  The copies of size N/2 are exactly X_U = {2i+1 : i ∈ U} ∪ {2i+2 : i ∉ U} for
+     the U ⊆ Z/n closed under i ↦ 2i and under 2i+1 ↦ i (equivalently: m ∈ X ⇒ 2m - [m odd] ∈ X,
+     panels mod N).                                                          [copy_half_iff]
+     Corollary (paper).  If n is odd (N ≡ 2 mod 4) the only copies of size N/2 are the two
+     parity classes.  Proof: 2 is invertible mod n, so i ↦ 2i is a permutation and its inverse
+     i ↦ i/2 is a power of it; composing i ↦ (i-1)/2 (the edge 2j+1 → j) with doubling gives
+     i ↦ i - 1, so the closure digraph is strongly connected and only U = ∅, Z/n are closed. □
+     Counts (N = 2n; halfcopies.py, = copies.c for N ≤ 80):
+       N   4 8 12 16 20 24 28 32 36  40  44  48  52   56  60   64  68    72  76    80
+       #   3 5  8 12  8 35 20 95 24 249  8 744  8 1761 112 7091 20 10847  8 57095
+     and 2 for every N ≡ 2 (mod 4).  For N = 2^L: 3, 5, 12, 95, 7091 (L = 2..6), growing fast:
+     the closure digraph on Z/2^(L-1) has only singleton components.  No OEIS match.
+
+5.3  Just below N/2 (observed, not proven).  For odd N the copies of size (N+1)/2 - j number
+       1, 4, 12, 24, 64, 132, 264, 584, 1800, 2736, 6408, 19200, 32400, 70032, ...
+     for every prime-like N large enough (stable once N ≳ 6j; checked N = 59..83; numbers with
+     small odd divisors differ).  For N ≡ 2 (mod 4) the sizes N/2 + 1 - j give
+       1, 2, 9, 8, 72, 32, 396, 160, 2916, 512, 15264, 2176, ...
+     The four copies of size (N-1)/2 (odd N ≥ 9) are the evens with 2 → 1 and/or N-1 → N;
+     their completion ratios g(Xᶜ)/a((N+1)/2) are 1 (evens, neutral), 1/2, 1/2 EXACTLY (one swap;
+     N ≤ 33) and ≈ 0.20-0.36 (both swaps), so C_N((N-1)/2)/a((N+1)/2) → ≈ 2.25.
+
+
+6. COUNTS OF COPIES OF FIXED SIZE k (as functions of N)
+-------------------------------------------------------
+ * k = 2: ⌊(N²+2)/6⌋ (proven, 5.1).
+ * k = 3: exact for all N ≤ 200 (qpfit.py; period 12):
+     #copies_3(N) = N³/108 + c1(N mod 6)·N + c0(N mod 12),
+     c1 = (0, 1/18, -1/9, 1/6, -1/9, 1/18),
+     c0 = (0, -7/108, 4/27, 1/4, -4/27, -47/108, 0, 47/108, 4/27, -1/4, -4/27, 7/108);
+     e.g. #copies_3(6m) = 2m³.  (A quasi-polynomial is expected: the copy conditions are linear
+     inequalities in (x, y, z, N) for each order type, as for T(N, k).)
+ * k = 4, 5, 6: growth N^k (fitted exponents 3.99, 4.98, 5.96), leading coefficients
+   ≈ 8.1e-4, 1.8e-5, 1.2e-6 (volume of the continuum copy region); no quasi-polynomial of
+   period < 200 fits the data (N ≤ 150 / 120 / 100) -- too few points per residue for
+   periods like those of T(N,4) (168), so this is not evidence against quasi-polynomiality.
+ * Copies are not "Beatty-like" in number: the totals grow fast (3.8e6 at N = 64) and are
+   dominated by sizes ~N/4..N/2.  The Beatty-type structure appears only at the top: above
+   N/2 there are only the neutral sets E_dᶜ (sizes (d+1)N/(2d)), at N/2 the 2-adic closed
+   sets, just below N/2 universal near-class counts.
+
+
+7. IS THERE AN EXACT RECURSION THROUGH a AND J?
+----------------------------------------------
+ * By Corollary 4.4 the part k > N/2 of (B) is a polynomial in a and J.  The part k ≤ N/2 is
+   not: C_N(k) = Σ_{copies} g(Xᶜ) and the individual completion counts are not products of
+   a-values (e.g. N = 20, copies of size 8: g(Xᶜ) = 85199 (prime), 93182 = 2·46591,
+   154029 = 3·51343, ...; only the neutral E_5 gives a(12) = 383476).  For size-2 copies,
+   g(Xᶜ)/a(N-2) ranges continuously over 0 ({1, N} for even N is dead) .. 0.38.
+ * relfit.py: fitting C_N(k) (k = 2, 3, 4) exactly on N = 12..24 by a fixed combination of 13
+   terms (a(N-k), a(N-k-1), J(N-k), J(N-k-1), J(N-k-2), a(i)a(N-k-i) for i = 2..4, N·a(N-k),
+   N²·a(N-k), N·a(N-k-1), N·J(N-k), N·J(N-k-1)) misses N = 25..32 by 2-19%.  No relation.
+ * Exactly as in reccount section 5, the copy-indecomposable remainder J(N) is a stable 18% of
+   a(N), and the coefficients are completion counts of co-copies, a genuinely new quantity.
+   Conclusion: no exact recursion for a(N) in terms of smaller a, J and copy counts alone.
+
+
+8. LEAN  (Folds/Copies2.lean, no sorry, no native_decide)
+--------------------------------------------------------
+ copy_dbl            copy ⇒ D(k) whenever x_{k+1} = 1
+ hd_bounds_copy      -(N - |X|) ≤ N·P(t) - |X|·t ≤ N - |X|
+ size_bound_gen      g⌊N/(2g)⌋ ≤ μ from |h| ≤ μ
+ copy_size           2|X| d = (d+1) N for a copy with N < 2|X| < 2N
+ copy_unique         copies of equal size s > N/2 coincide
+ copy_large_neutral  copy with N < 2|X| ⇒ neutral;  copy_large_mem: ∈ NFam N
+ g_copy              g(X) = a(|X|) for a copy
+ CN_large            C_N(k) = #{X ∈ NFam N : |X| = k} · a(N-k) for N < 2k, k < N
+ isCopy_pair, card_copies_two     #copies of size 2 = ⌊N²/2⌋ - ⌊N²/3⌋
+ copy_half_P, copy_half_iff       the half-size characterisation (5.2)

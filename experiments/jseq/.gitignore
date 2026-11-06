@@ -1,0 +1,8 @@
+# compiled binaries
+copies
+jdp
+*.o
+__pycache__/
+# raw per-modulus DP outputs (combined into out/data.txt by analyse.py)
+out/jdp_*.txt
+out/jdp_*.err

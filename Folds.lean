@@ -55,3 +55,4 @@ import Folds.MaxMoves
 import Folds.MaxMoves2
 import Folds.SuperExp4
 import Folds.SuperExp5
+import Folds.Copies2
