@@ -1,0 +1,97 @@
+
+ansatz                                                     boxes  maxK  best excess
+EGF(a0=1) M1 linear Mahler m=1                                28    34  +0 (inh=0 d=0)
+EGF(a0=1) M1 linear Mahler m=2                                19    33  +1 (inh=1 d=0)
+EGF(a0=1) M1 linear Mahler m=3                                14    32  +4 (inh=1 d=0)
+EGF(a0=1) M2 theta-Mahler m=1 k<=1                             8    32  +0 (d=0)
+EGF(a0=1) M2 theta-Mahler m=1 k<=2                             5    30  +0 (d=0)
+EGF(a0=1) M2 theta-Mahler m=1 k<=3                             4    32  +0 (d=0)
+EGF(a0=1) M2 theta-Mahler m=2 k<=1                             5    30  +1 (d=0)
+EGF(a0=1) M2 theta-Mahler m=2 k<=2                             3    27  +2 (d=0)
+EGF(a0=1) M2 theta-Mahler m=2 k<=3                             2    24  +3 (d=0)
+EGF(a0=1) M3 nonlinear Mahler vars=(0, 1) hom2                11    33  +0 (d=0)
+EGF(a0=1) M3 nonlinear Mahler vars=(0, 1) <=2                  5    30  +0 (d=0)
+EGF(a0=1) M3 nonlinear Mahler vars=(0, 1, 2) hom2              5    30  +0 (d=0)
+EGF(a0=1) M3 nonlinear Mahler vars=(0, 1, 2) <=2               3    30  +1 (d=0)
+OGF(a0=1) M1 linear Mahler m=1                                28    34  +0 (inh=0 d=0)
+OGF(a0=1) M1 linear Mahler m=2                                19    33  +1 (inh=1 d=0)
+OGF(a0=1) M1 linear Mahler m=3                                14    32  +4 (inh=1 d=0)
+OGF(a0=1) M2 theta-Mahler m=1 k<=1                             8    32  +0 (d=0)
+OGF(a0=1) M2 theta-Mahler m=1 k<=2                             5    30  +0 (d=0)
+OGF(a0=1) M2 theta-Mahler m=1 k<=3                             4    32  +0 (d=0)
+OGF(a0=1) M2 theta-Mahler m=2 k<=1                             5    30  +1 (d=0)
+OGF(a0=1) M2 theta-Mahler m=2 k<=2                             3    27  +2 (d=0)
+OGF(a0=1) M2 theta-Mahler m=2 k<=3                             2    24  +3 (d=0)
+OGF(a0=1) M3 nonlinear Mahler vars=(0, 1) hom2                11    33  +0 (d=0)
+OGF(a0=1) M3 nonlinear Mahler vars=(0, 1) <=2                  5    30  +0 (d=0)
+OGF(a0=1) M3 nonlinear Mahler vars=(0, 1, 2) hom2              5    30  +0 (d=0)
+OGF(a0=1) M3 nonlinear Mahler vars=(0, 1, 2) <=2               3    30  +1 (d=0)
+EGF(a0=1) M4 linear in ('x', '-x')                            11    33  +0 (d=0)
+EGF(a0=1) M4 linear in ('x', '2x')                            11    33  +0 (d=0)
+EGF(a0=1) M4 linear in ('x', '-x', '2x')                       8    32  +0 (d=0)
+EGF(a0=1) M4 linear in ('x', '2x', '4x')                       8    32  +0 (d=0)
+EGF(a0=1) M4 linear in ('x', '-x', '2x', 'x^2')                6    30  +0 (d=0)
+EGF(a0=1) M4 linear in ('x', '-x', 'x^2')                      8    32  +1 (d=0)
+EGF M4 quadratic in ('x', '-x')                                5    30  +1 (d=0)
+EGF M4 quadratic in ('x', '2x')                                5    30  +0 (d=0)
+EGF M4 quadratic in ('x', '-x', 'x^2')                         3    30  +3 (d=0)
+EGF(a0=0) M1 linear Mahler m=1                                27    33  +0 (inh=0 d=0)
+EGF(a0=0) M1 linear Mahler m=2                                19    33  +1 (inh=0 d=0)
+EGF(a0=0) M1 linear Mahler m=3                                14    32  +4 (inh=0 d=0)
+EGF(a0=0) M2 theta-Mahler m=1 k<=1                             8    32  +0 (d=0)
+EGF(a0=0) M2 theta-Mahler m=1 k<=2                             5    30  +0 (d=0)
+EGF(a0=0) M2 theta-Mahler m=1 k<=3                             4    32  +0 (d=0)
+EGF(a0=0) M2 theta-Mahler m=2 k<=1                             5    30  +2 (d=0)
+EGF(a0=0) M2 theta-Mahler m=2 k<=2                             3    27  +3 (d=0)
+EGF(a0=0) M2 theta-Mahler m=2 k<=3                             2    24  +4 (d=0)
+EGF(a0=0) M3 nonlinear Mahler vars=(0, 1) hom2                10    30  +0 (d=0)
+EGF(a0=0) M3 nonlinear Mahler vars=(0, 1) <=2                  5    30  +0 (d=0)
+EGF(a0=0) M3 nonlinear Mahler vars=(0, 1, 2) hom2              5    30  +1 (d=0)
+EGF(a0=0) M3 nonlinear Mahler vars=(0, 1, 2) <=2               3    30  +1 (d=0)
+OGF(a0=0) M1 linear Mahler m=1                                27    33  +0 (inh=0 d=0)
+OGF(a0=0) M1 linear Mahler m=2                                19    33  +1 (inh=0 d=0)
+OGF(a0=0) M1 linear Mahler m=3                                14    32  +4 (inh=0 d=0)
+OGF(a0=0) M2 theta-Mahler m=1 k<=1                             8    32  +0 (d=0)
+OGF(a0=0) M2 theta-Mahler m=1 k<=2                             5    30  +0 (d=0)
+OGF(a0=0) M2 theta-Mahler m=1 k<=3                             4    32  +0 (d=0)
+OGF(a0=0) M2 theta-Mahler m=2 k<=1                             5    30  +2 (d=0)
+OGF(a0=0) M2 theta-Mahler m=2 k<=2                             3    27  +3 (d=0)
+OGF(a0=0) M2 theta-Mahler m=2 k<=3                             2    24  +4 (d=0)
+OGF(a0=0) M3 nonlinear Mahler vars=(0, 1) hom2                10    30  +0 (d=0)
+OGF(a0=0) M3 nonlinear Mahler vars=(0, 1) <=2                  5    30  +0 (d=0)
+OGF(a0=0) M3 nonlinear Mahler vars=(0, 1, 2) hom2              5    30  +1 (d=0)
+OGF(a0=0) M3 nonlinear Mahler vars=(0, 1, 2) <=2               3    30  +1 (d=0)
+EGF(a0=0) M4 linear in ('x', '-x')                            11    33  +0 (d=0)
+EGF(a0=0) M4 linear in ('x', '2x')                            11    33  +0 (d=0)
+EGF(a0=0) M4 linear in ('x', '-x', '2x')                       8    32  +0 (d=0)
+EGF(a0=0) M4 linear in ('x', '2x', '4x')                       8    32  +0 (d=0)
+EGF(a0=0) M4 linear in ('x', '-x', '2x', 'x^2')                6    30  +0 (d=0)
+EGF(a0=0) M4 linear in ('x', '-x', 'x^2')                      8    32  +1 (d=0)
+
+M5: derived coefficient sequences, full P-rec / C-finite box search (K <= 30, spare >= 5)
+  EGF A(x)A(-x) [even coeffs]*n!                   P-rec boxes= 16 best excess +0 hits=0
+  EGF A(x)A(-x) [even coeffs]*n!                   C-fin boxes=  6 best excess +0 hits=0
+  EGF A(x)/A(-x) *n!                               P-rec boxes= 57 best excess +2 hits=0
+  EGF A(x)/A(-x) *n!                               C-fin boxes= 14 best excess +2 hits=0
+  EGF A'/A *n!                                     P-rec boxes= 57 best excess +1 hits=0
+  EGF A'/A *n!                                     C-fin boxes= 14 best excess +1 hits=0
+  OGF F(x)F(-x) [even]                             P-rec boxes= 16 best excess +0 hits=0
+  OGF F(x)F(-x) [even]                             C-fin boxes=  6 best excess +0 hits=0
+  OGF F(x)/F(-x)                                   P-rec boxes= 57 best excess +0 hits=0
+  OGF F(x)/F(-x)                                   C-fin boxes= 14 best excess +0 hits=0
+  OGF F'/F                                         P-rec boxes= 57 best excess +0 hits=0
+  OGF F'/F                                         C-fin boxes= 14 best excess +0 hits=0
+  EGF log A *n!                                    P-rec boxes= 57 best excess +1 hits=0
+  EGF log A *n!                                    C-fin boxes= 14 best excess +0 hits=0
+  EGF A(x)^2/A(2x) *n!                             P-rec boxes= 57 best excess +0 hits=0
+  EGF A(x)^2/A(2x) *n!                             C-fin boxes= 14 best excess +0 hits=0
+  EGF A(x)^2 - A(x^2)... (x^2-sub) A(x)^2/A(x^2)   P-rec boxes= 57 best excess +0 hits=0
+  EGF A(x)^2 - A(x^2)... (x^2-sub) A(x)^2/A(x^2)   C-fin boxes= 14 best excess +0 hits=0
+  OGF F(x)^2/F(x^2)                                P-rec boxes= 57 best excess +0 hits=0
+  OGF F(x)^2/F(x^2)                                C-fin boxes= 14 best excess +0 hits=0
+
+M6: q-holonomic (q=2): sum c_ikl n^l 2^{kn} s(n-i) = 0
+  a: boxes=50 best excess +0
+  a/n!: boxes=50 best excess +0
+HIT CONTROL exp A(x)^2 - A(2x) in quad basis K 4 E 39 dim 1 ['-1', '1', '0', '0']
+HIT CONTROL stern F(x) - (1+x+x^2)F(x^2) K 4 E 39 dim 1 ['1', '-1', '-1', '-1']
