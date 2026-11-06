@@ -267,5 +267,14 @@ Files
    [3|N]/N term is the best small model.
 
 
-7. LEAN  (Folds/Structure2.lean, no sorry, no native_decide)
- See section 1.2 and the file header.
+7. LEAN  (Folds/Structure2.lean, no sorry, no native_decide; axioms: propext,
+   Classical.choice, Quot.sound only; build with `bash leanbuild.sh Folds.Structure2`)
+ firstCount N m, lastCount N m     F(N,m), L(N,m) as Finset filters of semiSeqs N
+ lastCount_eq_firstCount           L(N,m) = F(N,m)                     (reversal)
+ firstCount_mirror                 F(N,m) = F(N,N+1-m), 1 <= m <= N   (mirror)
+ card_head_odd_eq_even             even N: #odd-first = #even-first
+ two_mul_card_head_odd             even N >= 2: 2 * #odd-first = a(N)
+ second_of_first_one               a valid sequence 1, x, ... has N + 2 <= 2x
+ sum_firstCount                    sum_{m=1}^N F(N,m) = a(N)   (N >= 1)
+ These are the only exact identities found; the interesting statements (the first-panel
+ limit law, the sym parity balance at odd N, R log-concavity) are conjectures.
