@@ -257,7 +257,8 @@ and only the terms k ≤ N/2 involve completion counts.  Checked against the DP 
      e.g. #copies_3(6m) = 2m³.  (A quasi-polynomial is expected: the copy conditions are linear
      inequalities in (x, y, z, N) for each order type, as for T(N, k).)
  * k = 4, 5, 6: growth N^k (fitted exponents 3.99, 4.98, 5.96), leading coefficients
-   ≈ 8.1e-4, 1.8e-5, 1.2e-6 (volume of the continuum copy region); no quasi-polynomial of
+   ≈ 8.14e-4 (≈ 1/1228), 1.78e-5 (≈ 1/56000), 1.26e-6 (≈ 1/795000) (least squares; the
+   volume of the continuum copy region; k = 2, 3: 1/6, 1/108); no quasi-polynomial of
    period < 200 fits the data (N ≤ 150 / 120 / 100) -- too few points per residue for
    periods like those of T(N,4) (168), so this is not evidence against quasi-polynomiality.
  * Copies are not "Beatty-like" in number: the totals grow fast (3.8e6 at N = 64) and are
@@ -278,6 +279,9 @@ and only the terms k ≤ N/2 involve completion counts.  Checked against the DP 
    a-values (e.g. N = 20, copies of size 8: g(Xᶜ) = 85199 (prime), 93182 = 2·46591,
    154029 = 3·51343, ...; only the neutral E_5 gives a(12) = 383476).  For size-2 copies,
    g(Xᶜ)/a(N-2) ranges continuously over 0 ({1, N} for even N is dead) .. 0.38.
+ * Over all 38688 copies X with 2 ≤ |X| ≤ N-1, N ≤ 33: g(Xᶜ) ≤ a(N - |X|) always, with
+   equality exactly for the 109 neutral X (so "g(Xᶜ) = a(N-k) iff X neutral" of reccount §2
+   holds to N = 33); the largest non-neutral ratio is 0.69-0.85 (0.8427 at N = 32).
  * relfit.py: fitting C_N(k) (k = 2, 3, 4) exactly on N = 12..24 by a fixed combination of 13
    terms (a(N-k), a(N-k-1), J(N-k), J(N-k-1), J(N-k-2), a(i)a(N-k-i) for i = 2..4, N·a(N-k),
    N²·a(N-k), N·a(N-k-1), N·J(N-k), N·J(N-k-1)) misses N = 25..32 by 2-19%.  No relation.
