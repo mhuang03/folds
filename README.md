@@ -133,6 +133,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `SymStructure2` (M) | symmetric case: recursive extension test **Theorem E** (`ext_iff_cond`, decidable via `extB`), prefix-count recursion **Theorem L** (`live_rec`; L_k(N) = O(N)), exact shuffle-count identity for θ(N), and **Sharma's bound for all N** (`ends_parity`: a[k] has a[0]'s parity whenever k+6 < N/2; sharp at N = 26) |
 | `PeriodLaw` (M) | arithmetic bookkeeping for the period-law exactness proofs (closed-form weights never vanish) |
 | `SymRun` (M) | symmetric case: the **exact minimal opening parity run** f(N) for all N ≥ 36 (`fRun_block`: δ = ⌊N/2⌋ − f ∈ {4,5,6} by an explicit dyadic block pattern); Sharma's bound is attained exactly at the δ = 6 points (`fRun_eq_sub_six_iff`) |
+| `Live3q` (M) | 3-prefix liveness iff for **every N ≤ 50**, N ≠ 7 (`extends3_iff_le_50`); for all N it reduces to `Residual3 N` (N > 50) through transfers and step families |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -178,7 +179,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 5. **Liveness (Conjecture C) — now a theorem (Lean, `Folds.ThinCover.conjectureC`).** A valid
    2-prefix [m₁, m₂] can be completed to a full semi-symmetric sequence iff it is not
    {1,N} for even N ≥ 4 or {1,7} at N = 7. For 3-prefixes the classification is proven for
-   N ≤ 30 (Lean) and checked to N = 44; all N is open (`experiments/live3p/PROOFS.txt`).
+   N ≤ 50 (Lean) and checked to N = 63; all N is open (`experiments/live3p/PROOFS.txt`).
 
 ## Where things are
 
@@ -232,6 +233,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/live3p/PROOFS.txt` | 3-prefix liveness: the classification to N = 44, Theorem G for 3-sets, the route to all N |
 | `experiments/periods3/PROOFS.txt` | period-law exactness: Theorems D1/D2, exact periods of T(N,8), T(N,9), non-simple vertices |
 | `experiments/symrun/PROOFS.txt` | proof of the dyadic opening-run formula (Conjecture F′) via the φ/ψ halving states |
+| `experiments/live3q/PROOFS.txt` | 3-prefix liveness to N = 50, the residual families ({1,2,c}, {1,2k,N}, corner pairs + a middle point) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
