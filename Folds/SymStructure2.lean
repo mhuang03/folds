@@ -2,6 +2,7 @@ import Folds.SymStructure
 import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.Tactic.IntervalCases
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
 /-!
 # Symmetric (3-AP-free) fold sequences II: extendable prefixes, live counts, the merge
@@ -667,6 +668,93 @@ theorem live_linear (k : ℕ) (hk : 1 ≤ k) : ∃ C, ∀ N, 1 ≤ N → (liveSe
   · have := Finset.single_le_sum (f := fun n => (liveSet n k).card) (fun _ _ => Nat.zero_le _)
       (Finset.mem_range.2 (show N < 4 * k by omega))
     exact this.trans (Nat.le_mul_of_pos_right _ hN)
+
+/-! ## The exact counting identity `θ(N) = Σ_{p, σ, τ} P(σ, τ)` -/
+
+/-- The allowed shuffles of `σ` (a permutation of the rescaled class of parity `p`) and `τ`
+(of the other class): the permutations `a` of `[1, N]` starting with parity `p` whose
+parity-`p` subsequence is `σ` lifted, whose other subsequence is `τ` lifted, and in which
+`D` precedes `C` on every linked pair.  `P(σ, τ) = (shuffles N p σ τ).card`. -/
+def shuffles (N p : ℕ) (σ τ : List ℕ) : Finset (List ℕ) :=
+  (List.range' 1 N).permutations.toFinset.filter fun a =>
+    a.headD 0 % 2 = p ∧ a.filter (fun v => decide (v % 2 = p)) = σ.map (lift p) ∧
+      a.filter (fun v => decide (v % 2 ≠ p)) = τ.map (lift (1 - p)) ∧
+      ∀ y ∈ a, ∀ u ∈ a, y % 2 = p → u % 2 ≠ p → Linked N y u → Bef a y u
+
+theorem filter_eq_map_lift_iff {p : ℕ} (hp : p ≤ 1) {σ a : List ℕ} (hσ : ∀ r ∈ σ, 1 ≤ r) :
+    a.filter (fun v => decide (v % 2 = p)) = σ.map (lift p) ↔ cls p a = σ := by
+  constructor
+  · intro h
+    rw [cls, h, List.map_map]
+    conv_rhs => rw [← List.map_id σ]
+    exact List.map_congr_left fun r hr => half_lift hp (hσ r hr)
+  · intro h; rw [← map_lift_cls, h]
+
+theorem shuffle_key {N p : ℕ} (hp : p ≤ 1) {σ τ a : List ℕ} (hσ : APF σ) (hσ1 : ∀ r ∈ σ, 1 ≤ r)
+    (hτ : APF τ) (hτ1 : ∀ r ∈ τ, 1 ≤ r) (hP : IsPermOf N a) (hN : 1 ≤ N)
+    (hh : a.headD 0 % 2 = p) :
+    (APF a ∧ cls p a = σ ∧ cls (1 - p) a = τ) ↔
+      (a.filter (fun v => decide (v % 2 = p)) = σ.map (lift p) ∧
+        a.filter (fun v => decide (v % 2 ≠ p)) = τ.map (lift (1 - p)) ∧
+        ∀ y ∈ a, ∀ u ∈ a, y % 2 = p → u % 2 ≠ p → Linked N y u → Bef a y u) := by
+  obtain ⟨w, tl, ha⟩ : ∃ w tl, a = w :: tl := by
+    cases a with
+    | nil => have := hP.length; simp at this; omega
+    | cons w tl => exact ⟨w, tl, rfl⟩
+  have hw : w % 2 = p := by rw [ha] at hh; simpa using hh
+  have hne : a.filter (fun v => decide (v % 2 ≠ p)) = a.filter (fun v => decide (v % 2 = 1 - p)) :=
+    List.filter_congr fun v _ => by rw [decide_eq_decide]; omega
+  have f1 := filter_eq_map_lift_iff (a := a) hp hσ1
+  have f2 := filter_eq_map_lift_iff (a := a) (p := 1 - p) (by omega) hτ1
+  have M := merge_iff ha hP.1 hP.2
+  rw [hw] at M
+  constructor
+  · rintro ⟨hap, h1, h2⟩
+    have := M.1 hap
+    exact ⟨f1.2 h1, by rw [hne]; exact f2.2 h2, fun y hy u hu => this.2.2 y u hy hu⟩
+  · rintro ⟨h1, h2, h3⟩
+    refine ⟨M.2 ⟨by rw [h1]; exact apf_map_lift hp hσ1 hσ,
+      by rw [h2]; exact apf_map_lift (by omega) hτ1 hτ, fun y u hy hu => h3 y hy u hu⟩,
+      f1.1 h1, f2.1 (by rw [← hne]; exact h2)⟩
+
+/-- **The exact counting identity** (from the merge theorem):
+`θ(N) = Σ_{p ∈ {0,1}} Σ_{σ ∈ Θ(⌊(N+p)/2⌋)} Σ_{τ ∈ Θ(⌊(N+1-p)/2⌋)} P(σ, τ)`. -/
+theorem card_symSeqs_eq_sum {N : ℕ} (hN : 1 ≤ N) :
+    (symSeqs N).card = ∑ p ∈ Finset.range 2, ∑ σ ∈ symSeqs ((N + p) / 2),
+      ∑ τ ∈ symSeqs ((N + 1 - p) / 2), (shuffles N p σ τ).card := by
+  rw [Finset.card_eq_sum_card_fiberwise (f := fun a => a.headD 0 % 2) (t := Finset.range 2)
+    (fun a _ => Finset.mem_range.2 (Nat.mod_lt _ (by omega)))]
+  refine Finset.sum_congr rfl fun p hp => ?_
+  have hp1 : p ≤ 1 := by simp at hp; omega
+  rw [Finset.card_eq_sum_card_fiberwise (f := cls p) (t := symSeqs ((N + p) / 2))
+    (s := (symSeqs N).filter (fun a => a.headD 0 % 2 = p)) (by
+    intro a ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, mem_symSeqs_iff] at ha
+    exact mem_symSeqs_iff.2 ⟨cls_isPermOf hp1 ha.1.1, cls_apf ha.1.2⟩)]
+  refine Finset.sum_congr rfl fun σ hσ => ?_
+  rw [Finset.card_eq_sum_card_fiberwise (f := cls (1 - p)) (t := symSeqs ((N + 1 - p) / 2))
+    (s := ((symSeqs N).filter (fun a => a.headD 0 % 2 = p)).filter (fun a => cls p a = σ)) (by
+    intro a ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, Finset.mem_filter, mem_symSeqs_iff] at ha
+    have := cls_isPermOf (p := 1 - p) (by omega) ha.1.1.1
+    rw [show (N + (1 - p)) / 2 = (N + 1 - p) / 2 by omega] at this
+    exact mem_symSeqs_iff.2 ⟨this, cls_apf ha.1.1.2⟩)]
+  refine Finset.sum_congr rfl fun τ hτ => ?_
+  congr 1
+  ext a
+  obtain ⟨hσP, hσA⟩ := mem_symSeqs_iff.1 hσ
+  obtain ⟨hτP, hτA⟩ := mem_symSeqs_iff.1 hτ
+  have hσ1 : ∀ r ∈ σ, 1 ≤ r := fun r hr => ((hσP.2 r).1 hr).1
+  have hτ1 : ∀ r ∈ τ, 1 ≤ r := fun r hr => ((hτP.2 r).1 hr).1
+  simp only [shuffles, Finset.mem_filter, mem_symSeqs_iff, List.mem_toFinset,
+    List.mem_permutations]
+  rw [← IsFoldSeq, ← isPermOf_iff_isFoldSeq]
+  constructor
+  · rintro ⟨⟨⟨⟨hP, hap⟩, hh⟩, h1⟩, h2⟩
+    exact ⟨hP, hh, (shuffle_key hp1 hσA hσ1 hτA hτ1 hP hN hh).1 ⟨hap, h1, h2⟩⟩
+  · rintro ⟨hP, hh, h⟩
+    obtain ⟨hap, h1, h2⟩ := (shuffle_key hp1 hσA hσ1 hτA hτ1 hP hN hh).2 h
+    exact ⟨⟨⟨⟨hP, hap⟩, hh⟩, h1⟩, h2⟩
 
 /-! ## Theorem F: prefixes inside a top segment have length at most 6 -/
 
