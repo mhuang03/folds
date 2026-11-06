@@ -1,0 +1,144 @@
+NEUTRAL SETS, IDENTITY (A), AND J(k) UNIVERSALITY (IDENTITY (B))     (experiments/neutral/)
+==========================================================================================
+
+Lean: Folds/Neutral.lean (no sorry, no native_decide).  Background: experiments/reccount/NOTES.txt.
+
+Notation.  Panels 1..N.  For X ⊆ [N] and a panel m, with r = reach(N, m) = min(m-1, N-m),
+X is BALANCED AROUND m if |X ∩ [m-r, m-1]| = |X ∩ [m+1, m+r]|.
+ * X is NEUTRAL if it is balanced around every m ∈ [N].
+ * X is a (window) COPY if it is balanced around every m ∈ X.
+Since [N] is balanced around every panel, X is balanced around m iff [N] \ X is, so
+   X neutral  <=>  X and [N] \ X are both copies.                       [Lean: neutral_iff_copy_compl]
+s = |X|.  x_k = [k mod N ∈ X] (residue 0 read as panel N) is the N-periodic indicator, and
+   P(t) = x_1 + ... + x_t          (t >= 0; P(t + N) = P(t) + s).
+
+
+1. THE DOUBLING FORM
+--------------------
+Lemma 1.1.  X is neutral iff  P(2k+1) = P(k) + P(k+1)  for all k >= 0.     [neutral_iff_dbl]
+Proof.  Fix m ∈ [N], k = m - 1.
+ * Left half (2m-1 <= N, r = m-1): left arm count P(m-1), right arm count P(2m-1) - P(m).
+ * Right half (2m-1 >= N, r = N-m): left arm count P(m-1) - P(2m-1-N), right arm count
+   s - P(m), and P(2m-1) = P(2m-1-N) + s.
+In both cases balance at m reads P(2m-1) = P(m-1) + P(m).  Both sides of
+D(k): P(2k+1) = P(k) + P(k+1) grow by 2s when k -> k + N, so D(k) for k < N gives D(k) for
+all k.                                                                                    □
+
+Lemma 1.2 (y-form).  With y_k = x_k + x_{k+1}:   X neutral  <=>  y_{2k} = y_k for all k
+(equivalently on Z/N, since y is N-periodic).                               [neutral_iff_y]
+Proof.  F(k) = P(2k+1) - P(k) - P(k+1) has F(0) = 0 and F(k+1) - F(k) = y_{2k+2} - y_{k+1}.
+So F ≡ 0 iff y_{2k} = y_k for every k >= 1 (and k = 0 is trivial).                       □
+
+So y is constant on the weakly connected components of k -> 2k on Z/N.  The classification
+below does not use the orbit structure at all: it works with P directly.
+
+
+2. THE DISCREPANCY BOUND
+------------------------
+Let h(t) = N·P(t) - s·t ∈ Z.  Then h(0) = 0, h(t + N) = h(t), h(t+1) - h(t) = N x_{t+1} - s,
+and (Lemma 1.1)  X neutral  <=>  h(2k+1) = h(k) + h(k+1) for all k.
+
+Lemma 2.1.  If X is neutral then |h(t)| <= min(s, N-s) for all t.               [h_bounds]
+Proof.  h is periodic, so it has a maximum value M >= h(0) = 0, attained at some t0 >= 1
+(shift by N).  From h(2t0+1) = h(t0) + h(t0+1) <= M we get h(t0+1) <= 0, so
+M = h(t0+1) - N x_{t0+1} + s <= s.  From h(2t0-1) = h(t0-1) + h(t0) <= M we get
+h(t0-1) <= 0, so M = h(t0-1) + N x_{t0} - s <= N - s.  The minimum is symmetric (L <= 0;
+neighbours of a minimum are >= 0, L >= -s and L >= -(N-s)).                                □
+
+(In words: |P(t) - (s/N) t| <= min(s,N-s)/N <= 1/2.  A neutral set is "balanced" in the
+Sturmian sense.)
+
+Corollary 2.2 (uniqueness by size).  If X, X' ⊆ [N] are neutral, |X| = |X'| = s and 2s ≠ N,
+then X = X'.                                                               [neutral_unique]
+Proof.  h - h' = N(P - P'), and |h - h'| <= 2 min(s, N-s) < N.  So P = P', x = x'.          □
+
+Lemma 2.3 (sizes).  Let X be neutral with 0 < s < N.  Write g = gcd(s, N), s = g a, N = g d.
+Then  a >= ⌊d/2⌋  and  d - a >= ⌊d/2⌋.                                     [size_bound]
+Proof.  By Bezout, s A ≡ g (mod N) for some A.  Put q = ⌊d/2⌋ and t ≡ -A q (mod N), t >= 0.
+Then h(t) ≡ -s t ≡ g q (mod N).  Since 2gq <= gd = N, every integer ≡ gq (mod N) is >= gq or
+<= gq - N <= -gq, so |h(t)| >= gq, and Lemma 2.1 gives gq <= min(s, N-s).                  □
+
+Corollary 2.4.  A proper neutral set has 3|X| >= N.                        [three_mul_card]
+(d >= 2 since 0 < s < N, and 3⌊d/2⌋ >= d for d >= 2.)
+
+Corollary 2.5.  If X is proper neutral and 2s ≠ N, then d is odd, d >= 3, d | N, and
+a ∈ {(d-1)/2, (d+1)/2}, i.e. 2sd = (d-1)N or 2sd = (d+1)N.                 [size_odd]
+Proof.  d even forces a = d/2, i.e. 2s = N.  d = 1 forces s ∈ {0, N}.                       □
+
+
+3. THE HALF CASE  2s = N
+------------------------
+Lemma 3.1.  If X is neutral and 2s = N, X is the set of odd panels or of even panels.
+                                                                          [neutral_half]
+Proof.  r(t) = 2P(t) - t satisfies 2h = N r, so |r| <= 1 by Lemma 2.1, and r(t) ≡ t (mod 2).
+Hence r(t) = 0 for t even and r(t) = ±1 for t odd.  The doubling relation becomes
+r(2k+1) = r(k) + r(k+1); one of k, k+1 is even, so r(2k+1) = r(2⌊k/2⌋+1).  By strong
+induction r(2k+1) = r(1) = 2x_1 - 1 for all k.  Then P(t) = t/2 (t even) and
+P(t) = (t + r(1))/2 (t odd), so x_k = x_1 for k odd and x_k = 1 - x_1 for k even.          □
+
+
+4. CLASSIFICATION
+-----------------
+For odd d | N, d >= 3, j = (d-1)/2:  E_d = {x ∈ [N] : x mod d ∈ {2, 4, ..., d-1}}, |E_d| = jN/d,
+|E_dᶜ| = (j+1)N/d.  E_d and E_dᶜ are copies (Copies.split_res), so both are neutral.  The parity
+classes are copies (Live2.winEmb_res), so they are neutral too.
+
+Theorem 4.1.  For N >= 1 the proper (nonempty, ≠ [N]) neutral subsets of [N] are exactly
+   odds, evens, and E_d, E_dᶜ for every odd d | N with 3 <= d < N.          [neutral_classification]
+(For N odd the parity classes are E_N, E_Nᶜ.)
+Proof.  Let X be proper neutral.  If 2s = N, Lemma 3.1.  Otherwise Corollary 2.5 gives d.  If
+d = N then 2s = N ± 1 and the parity class of that size is neutral; otherwise E_d or E_dᶜ has
+size s.  In both cases Corollary 2.2 identifies X with it.  Conversely all the listed sets are
+neutral and proper.                                                                     □
+
+Proposition 4.2 (antichain).  Proper neutral sets never contain one another.   [neutral_antichain]
+Proof.  Balance is additive, so if X ⊆ Y are neutral then Y \ X is neutral; and [N] is neutral.
+If X ⊊ Y are proper neutral, X, Y \ X, [N] \ Y are nonempty proper neutral sets partitioning [N],
+each of size >= N/3 (Cor. 2.4), so all have size N/3.  Then 2|X| ≠ N and |X| = |Y \ X|, so
+X = Y \ X by Cor. 2.2: impossible for disjoint nonempty sets.                            □
+
+(The classification is not needed for 4.2; only the size bound and uniqueness.)
+
+
+5. IDENTITY (A)                                                           [identity_A]
+---------------
+For N >= 2:
+   a(N) = 2 a(⌊N/2⌋) a(⌈N/2⌉) + 2 Σ_{d | N odd, 3 <= d < N} a(jN/d) a((j+1)N/d) + I(N),
+   I(N) = #{w valid : no prefix set S_k (0 < k < N) is neutral}.
+Proof.  The proper neutral sets form an antichain 𝓕 (4.2), so a sequence has at most one
+neutral proper prefix set and a(N) = Σ_{X∈𝓕} g(X) g([N]\X) + I(N)
+(RecCount.semiCount_eq_sum_antichain).  By 4.1, 𝓕 consists of the two parity classes and the
+pairs E_d, E_dᶜ (all distinct: their sizes 2s ∈ {N-1, N, N+1} ∪ {N - N/d, N + N/d} are
+distinct).  Each is the image of a window embedding with complement the image of another, so
+g(X) = a(|X|), g(Xᶜ) = a(N - |X|) (RecCount.g_winEmb).                                     □
+
+
+6. J(k) UNIVERSALITY AND IDENTITY (B)
+-------------------------------------
+J_N(X) = #{valid orderings l of X (from scratch, in the N-strip) with no prefix of size
+2..|X|-1 whose set is a copy in [N]};  J(k) = J_k([k]).
+
+Lemma 6.1 (enumeration).  If X ⊆ [N] is a copy with |X| = k, its increasing enumeration
+φ : [k] -> [N] is a window embedding.                                 [copy_iff_winEmb]
+Proof.  φ with counting function c(t) = |X ∩ [1, t]| (extended by c(t) = k + t - N past N)
+is a CountEmb, and CountEmb.winEmb_iff says: φ is a WinEmb iff X is balanced around each of
+its elements.  Conversely the image of a window embedding is a copy (WinEmb.balanced_self). □
+
+Lemma 6.2 (transfer).  Let φ : [k] -> [N] be a window embedding and Y ⊆ [k].  For j ∈ [k],
+φ(Y) is balanced around φ(j) in [N] iff Y is balanced around j in [k].  In particular
+   Y is a copy in [k]  <=>  φ(Y) is a copy in [N].                        [isCopy_image_iff]
+Proof.  For y ∈ [k], φ(y) is in the left (right) arm of φ(j) iff y is in the left (right)
+arm of j (definition of WinEmb), and φ is injective, so the arm counts agree.              □
+
+Theorem 6.3 (universality).  If X is a copy of size k in [N] then J_N(X) = J(k).
+                                                                          [J_universal]
+Proof.  σ ↦ σ.map φ is a bijection from valid k-sequences to valid orderings of X
+(RecCount.g_winEmb; validity transfers by WinEmb.semiSymmetric_iff), and prefix sets map to
+prefix sets: S_t(σ.map φ) = φ(S_t(σ)).  By 6.2 copy prefixes correspond.                   □
+
+Theorem 6.4 (identity (B)).                                               [identity_B]
+   a(N) = J(N) + Σ_{k=2}^{N-1} J(k) C_N(k),      C_N(k) = Σ_{X copy in [N], |X| = k} g([N] \ X).
+Proof.  Classify w by the least t ∈ [2, N-1] with S_t(w) a copy (none: counted by J(N)).  For
+fixed t = k and S_k(w) = X, w = u ++ v with u a valid ordering of X with no copy prefix of
+size 2..k-1, and v^R a valid ordering of [N] \ X (reversal, RecCount.card_prefix_eq).  So the
+class has J_N(X) g(Xᶜ) = J(k) g(Xᶜ) members.                                              □
