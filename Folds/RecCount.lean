@@ -420,4 +420,125 @@ theorem semiCount_eq_parity_add {N : Nat} (hN : 2 ≤ N) :
   rw [e1, e2]
   ring
 
+/-! ## Parity classes and one doubling split together -/
+
+/-- The doubling set `E = {x : x mod (2j+1) ∈ {2, 4, …, 2j}}` of `[1, (2j+1)n]`. -/
+def resE (j n : Nat) : Finset Nat := (Finset.Icc 1 (j * n)).image (evenRes j)
+
+theorem evenRes_ne {j y : Nat} (hj : 1 ≤ j) (hy : 1 ≤ y) :
+    evenRes j y ≠ 1 ∧ evenRes j y ≠ 2 * j + 2 := by
+  obtain ⟨u, v, hv, rfl⟩ : ∃ u v, v < j ∧ y = j * u + v + 1 :=
+    ⟨(y - 1) / j, (y - 1) % j, Nat.mod_lt _ (by omega), by
+      have := Nat.div_add_mod (y - 1) j; omega⟩
+  rw [evenRes_eq hv]
+  have hju : (u = 0 ∧ j * u = 0) ∨ (1 ≤ u ∧ j ≤ j * u) := by
+    rcases Nat.eq_zero_or_pos u with h | h
+    · exact Or.inl ⟨h, by rw [h, Nat.mul_zero]⟩
+    · exact Or.inr ⟨h, Nat.le_mul_of_pos_right j h⟩
+  omega
+
+/-- The four sets odds, evens, `E`, `Eᶜ` of `[1, (2j+1)n]`. -/
+def fam4 (j n : Nat) : Finset (Finset Nat) :=
+  {parCls ((2 * j + 1) * n) 1, parCls ((2 * j + 1) * n) 2, resE j n,
+    Finset.Icc 1 ((2 * j + 1) * n) \ resE j n}
+
+/-- **Parity classes and the doubling split `{2, 4, …, 2j} mod 2j+1` together.**  For
+`N = (2j+1)n` with `j ≥ 1`, `n ≥ 2`, the four sets (odds, evens, `E`, `Eᶜ`) form an antichain
+of splits, so
+`a(N) = 2 a(⌊N/2⌋) a(⌈N/2⌉) + 2 a(jn) a((j+1)n) + #{no prefix set among the four}`. -/
+theorem semiCount_eq_parity_doubling_add {j n : Nat} (hj : 1 ≤ j) (hn : 2 ≤ n) :
+    semiCount ((2 * j + 1) * n) =
+      2 * (semiCount ((2 * j + 1) * n / 2) * semiCount (((2 * j + 1) * n + 1) / 2)) +
+      2 * (semiCount (j * n) * semiCount ((j + 1) * n)) +
+      ((semiSeqs ((2 * j + 1) * n)).filter (fun a =>
+        ∀ X ∈ fam4 j n, (a.take X.card).toFinset ≠ X)).card := by
+  set N := (2 * j + 1) * n with hN
+  have hN2 : 2 * (2 * j + 1) ≤ N := by rw [hN, Nat.mul_comm 2]; exact Nat.mul_le_mul_left _ hn
+  have hs := split_res hj n
+  have hE : (Finset.Icc 1 (j * n)).image (evenRes j) = resE j n := rfl
+  have cE : Finset.Icc 1 N \ resE j n = (Finset.Icc 1 ((j + 1) * n)).image (oddRes j) := by
+    rw [← hE]; exact hs.compl_image
+  have Esub : resE j n ⊆ Finset.Icc 1 N := by
+    have := hs.emb₁.image_mem_powersetCard
+    rw [Finset.mem_powersetCard] at this
+    exact this.1
+  -- membership facts
+  have jn : j + 1 ≤ j * n := by nlinarith
+  have r0 := evenRes_eq (j := j) (u := 0) (v := 0) (by omega)
+  have r1 := evenRes_eq (j := j) (u := 1) (v := 0) (by omega)
+  simp only [Nat.mul_zero, Nat.mul_one, Nat.add_zero, Nat.zero_add] at r0 r1
+  have mE2 : 2 ∈ resE j n := Finset.mem_image.2 ⟨1, Finset.mem_Icc.2
+    ⟨le_refl 1, by omega⟩, r0⟩
+  have mE3 : 2 * j + 3 ∈ resE j n := Finset.mem_image.2 ⟨j + 1, Finset.mem_Icc.2
+    ⟨by omega, jn⟩, by rw [r1]⟩
+  have nE1 : 1 ∉ resE j n := by
+    intro h; obtain ⟨y, hy, e⟩ := Finset.mem_image.1 h
+    exact (evenRes_ne hj (Finset.mem_Icc.1 hy).1).1 e
+  have nE2' : 2 * j + 2 ∉ resE j n := by
+    intro h; obtain ⟨y, hy, e⟩ := Finset.mem_image.1 h
+    exact (evenRes_ne hj (Finset.mem_Icc.1 hy).1).2 e
+  have mC1 : 1 ∈ Finset.Icc 1 N \ resE j n :=
+    Finset.mem_sdiff.2 ⟨Finset.mem_Icc.2 ⟨le_refl 1, by omega⟩, nE1⟩
+  have mC2' : 2 * j + 2 ∈ Finset.Icc 1 N \ resE j n :=
+    Finset.mem_sdiff.2 ⟨Finset.mem_Icc.2 ⟨by omega, by omega⟩, nE2'⟩
+  have nC2 : 2 ∉ Finset.Icc 1 N \ resE j n := fun h => (Finset.mem_sdiff.1 h).2 mE2
+  have nC3 : 2 * j + 3 ∉ Finset.Icc 1 N \ resE j n := fun h => (Finset.mem_sdiff.1 h).2 mE3
+  have pO : ∀ x, x ∈ parCls N 1 ↔ 1 ≤ x ∧ x ≤ N ∧ x % 2 = 1 % 2 :=
+    fun x => mem_parCls (le_refl 1) (by omega)
+  have pE : ∀ x, x ∈ parCls N 2 ↔ 1 ≤ x ∧ x ≤ N ∧ x % 2 = 2 % 2 :=
+    fun x => mem_parCls (by omega) (le_refl 2)
+  have mO1 : 1 ∈ parCls N 1 := (pO 1).2 ⟨le_refl 1, by omega, rfl⟩
+  have mO3 : 2 * j + 3 ∈ parCls N 1 := (pO _).2 ⟨by omega, by omega, by omega⟩
+  have nO2 : 2 ∉ parCls N 1 := fun h => by have := (pO 2).1 h; omega
+  have nO2' : 2 * j + 2 ∉ parCls N 1 := fun h => by have := (pO _).1 h; omega
+  have mV2 : 2 ∈ parCls N 2 := (pE 2).2 ⟨by omega, by omega, rfl⟩
+  have mV2' : 2 * j + 2 ∈ parCls N 2 := (pE _).2 ⟨by omega, by omega, by omega⟩
+  have nV1 : 1 ∉ parCls N 2 := fun h => by have := (pE 1).1 h; omega
+  have nV3 : 2 * j + 3 ∉ parCls N 2 := fun h => by have := (pE _).1 h; omega
+  have Osub : parCls N 1 ⊆ Finset.Icc 1 N := fun x hx => by
+    rw [pO] at hx; exact Finset.mem_Icc.2 ⟨hx.1, hx.2.1⟩
+  have Vsub : parCls N 2 ⊆ Finset.Icc 1 N := fun x hx => by
+    rw [pE] at hx; exact Finset.mem_Icc.2 ⟨hx.1, hx.2.1⟩
+  -- the family
+  have hsub : ∀ X ∈ fam4 j n, X ⊆ Finset.Icc 1 N := by
+    intro X hX
+    simp only [fam4, Finset.mem_insert, Finset.mem_singleton] at hX
+    rcases hX with rfl | rfl | rfl | rfl
+    exacts [Osub, Vsub, Esub, Finset.sdiff_subset]
+  have hanti : ∀ X ∈ fam4 j n, ∀ Y ∈ fam4 j n, X ⊆ Y → X = Y := by
+    intro X hX Y hY hXY
+    simp only [fam4, Finset.mem_insert, Finset.mem_singleton] at hX hY
+    rcases hX with rfl | rfl | rfl | rfl <;> rcases hY with rfl | rfl | rfl | rfl <;>
+      first
+      | rfl
+      | exact absurd (hXY mO1) nV1 | exact absurd (hXY mO1) nE1
+      | exact absurd (hXY mO3) nC3 | exact absurd (hXY mV2) nO2
+      | exact absurd (hXY mV2') nE2' | exact absurd (hXY mV2) nC2
+      | exact absurd (hXY mE2) nO2 | exact absurd (hXY mE3) nV3
+      | exact absurd (hXY mE2) nC2 | exact absurd (hXY mC2') nO2'
+      | exact absurd (hXY mC1) nV1 | exact absurd (hXY mC1) nE1
+  have n12 : parCls N 1 ≠ parCls N 2 := fun e => nV1 (e ▸ mO1)
+  have n13 : parCls N 1 ≠ resE j n := fun e => nE1 (e ▸ mO1)
+  have n14 : parCls N 1 ≠ Finset.Icc 1 N \ resE j n := fun e => nC3 (e ▸ mO3)
+  have n23 : parCls N 2 ≠ resE j n := fun e => nE2' (e ▸ mV2')
+  have n24 : parCls N 2 ≠ Finset.Icc 1 N \ resE j n := fun e => nC2 (e ▸ mV2)
+  have n34 : resE j n ≠ Finset.Icc 1 N \ resE j n := fun e => nC2 (e ▸ mE2)
+  have hsum : (∑ X ∈ fam4 j n, g N X * g N (Finset.Icc 1 N \ X)) =
+      2 * (semiCount (N / 2) * semiCount ((N + 1) / 2)) +
+      2 * (semiCount (j * n) * semiCount ((j + 1) * n)) := by
+    unfold fam4
+    rw [Finset.sum_insert (by simp only [Finset.mem_insert, Finset.mem_singleton]; tauto),
+      Finset.sum_insert (by simp only [Finset.mem_insert, Finset.mem_singleton]; tauto),
+      Finset.sum_pair n34]
+    have c2 : Finset.Icc 1 N \ parCls N 2 = parCls N 1 := by
+      rw [← compl_parCls, Finset.sdiff_sdiff_eq_self Osub]
+    rw [compl_parCls, c2, Finset.sdiff_sdiff_eq_self Esub, cE, ← hE, g_winEmb hs.emb₁,
+      g_winEmb hs.emb₂, g_parCls (le_refl 1) (by omega) (by omega),
+      g_parCls (by omega) (le_refl 2) (by omega)]
+    have e1 : ccount 2 1 N = (N + 1) / 2 := by unfold ccount; omega
+    have e2 : ccount 2 2 N = N / 2 := by unfold ccount; omega
+    rw [e1, e2]
+    ring
+  rw [semiCount_eq_sum_antichain (fam4 j n) hsub hanti, hsum]
+
 end Folds
