@@ -1,0 +1,14 @@
+regions
+map
+res
+*.o
+bin/
+wit
+scan
+pf
+cover
+cmap
+res2
+res3
+cert
+shapes
