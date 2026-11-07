@@ -1,3 +1,152 @@
-Conjecture E*_k and the two-sided family S_a (work in progress)
+Conjecture E*_k and the two-sided family S_a
+============================================
 
-run.sh: extension of the E*_k checks (k = 4 to N = 64, k = 5, 6 to N = 48).
+Notation as in experiments/ek/PROOFS.txt.  Panels [N]; reach(m) = min(m-1, N-m); a set D is
+co-reachable (CoReach N D) iff its free panels can be placed one by one on the BACKGROUND D,
+every step valid (equal counts of placed panels in the two arms); dead = not co-reachable.
+"Lean" = Folds/EkStar.lean (imports Folds.Ek and Folds.ThinCover, so it is listed in
+FoldsCerts.lean; no sorry, no native_decide; builds in about 8 s on top of the imports).
+
+STATUS (short)
+  * THEOREM (Lean `not_coReach_twoSided`, `not_coReach_sSet`): for every a >= 2 and N >= 6a,
+    S_a = {a, N+1-a} u [2a+2, N-2a-1] is dead -- more generally every D containing a, N+1-a
+    and [2a+2, N-2a-1] and nothing of [a+1, 2a+1] u [N-2a, N-a] (anything outside
+    [a, N+1-a] allowed).  {2,6,7,11} (N = 12) and {2,6,7,8,12} (N = 13) are instances
+    (`not_coReach_2_6_7_11`, `not_coReach_2_6_7_8_12`).  Section 1.
+  * E*_2 holds for all N (Lean `ekStar_two`, `coReach_pair_inner`): this is Conjecture C
+    (ThinCover.conjectureC) in co-reachability form, `coReach_pair`.  Hence unconditionally
+    #dead pairs <= 2(N-1) for every N (`card_dead_pairs_le`; Ek only had N <= 64).
+  * E*_k for k >= 3: NOT proven for all N.  Proven around it (Lean):
+      - the exception is genuine: S_a at N = 6a is a dead 2a-subset of [c+1, N-c]
+        (`sSet_exception`), so E*_k for even k >= 4 cannot drop it;
+      - the radius is optimal: for k >= 3, N >= 3k there is a dead k-subset of
+        [c_k, N+1-c_k] containing c_k (`radius_optimal`, radSet k = {c} u [2c+2, 2c+k]);
+      - E*_k  ==>  #dead k-subsets <= 2 c_k C(N-1, k-1) + 1  (`card_dead_le_of_EkStar`), and the
+        radius-free form `card_dead_le_radius`: if every dead k-subset of [c+1, N-c] lies in
+        E, then #dead <= 2c C(N-1, k-1) + |E|, for any c (so ANY radius r(k) independent of N
+        gives dead = O(N^{k-1}) and live/valid -> 1).
+    The sufficient condition "radius k" (every k-subset of [k, N+1-k] co-reachable) is also
+    NOT proven: already for k = 2 it is Conjecture C, whose proof (ThinCover) is a large
+    certificate-based covering argument; no argument of comparable reach for k >= 3 was found
+    (section 3).
+  * Numerics (section 2): E*_4 checked to N = 64, E*_5, E*_6 to N = 48 (see the table; the
+    sets left open by the fast search were settled by a longer search).
+
+
+1. The two-sided family S_a (proof; Lean `left_side`, `not_coReach_twoSided`)
+-----------------------------------------------------------------------------
+Plays.  `Play N Y e n`: Y 0 = background, Y (i+1) = Y i u {e i} with e i new and valid on Y i
+(arm counts as filters, `lc`, `rc`), Y n = [N].  `play_of_coReach` (from Ek.bg_of_coReach);
+`Play.mirror`: the image under x -> N+1-x is a play on the mirrored background (reach is
+mirror-invariant and the arms swap).  Helpers `mono`, `exists_step`, `ne_of_lt`.
+
+ONE-SIDED LEMMA (`left_side`).  Let a >= 2, N >= 4a+1, and let the background contain the
+anchor a and the TRUNCATED block [2a+2, 4a-1] (2a-2 panels), and nothing of
+G = [a+1, 2a+1].  Let tau be the step at which the top panel T = 2a+1 of G is placed.  Then
+   (L1) at tau, at most 2a-1 panels of (2a+1, 4a+1] are placed, and
+   (L2) 2a is placed before tau.
+Proof.  p = placed panels in [1, a-1] (p <= a-1), s = placed panels of G.
+ (i) Before tau, Z_i = Y_i u {4a, 4a+1} satisfies the invariant of the anchored block B_a with
+     j = a+1 (Ek, section 3): placed panels of G lie in [a+2, a+1+p] and s <= p (`left_inv`).
+     Indeed every step at m in G \ {T} has m <= 2a, its window [1, 2m-1] lies inside
+     [1, 4a-1], so its validity on Y_i is validity on Z_i, and Ek.anchor_step applies to Z_i
+     (which contains the full block [2a+2, 4a+1]).  Other steps only raise p or change nothing.
+ (ii) At tau, T is valid: left arm [1, 2a] holds at most p + 1 + s <= 2p + 1 <= 2a - 1 placed
+     panels; this equals the right arm (2a+1, 4a+1] count, which gives (L1).  The right arm
+     contains the truncated block, so 2a - 2 <= 2p + 1, i.e. p = a - 1: the reserve is full.
+ (iii) a+1 is not placed at tau (the invariant puts placed G panels at >= a+2).  If 2a were not
+     placed at tau, look at which of a+1, 2a is placed first after tau:
+       a+1 first (2a still free): left arm [1, a] holds p + 1 = a, right arm (a+1, 2a+1]
+         without 2a holds at most a - 1.  Not valid.
+       2a first (a+1 still free): left arm [1, 2a-1] without a+1 holds at most 2a - 2; right
+         arm (2a, 4a-1] holds T and [2a+2, 4a-1], i.e. 2a - 1.  Not valid.
+     So 2a was placed before tau: (L2).                                                QED
+TWO-SIDED THEOREM.  S_a (a >= 2, N >= 6a) contains the truncated block on both sides
+([2a+2, 4a-1] and its mirror [N+2-4a, N-2a-1] lie in [2a+2, N-2a-1]).  Apply the lemma to the
+play and to its mirror: tau_L (T_L = 2a+1 placed) and tau_R (T_R = N-2a placed).  If
+tau_L < tau_R: at tau_R the outer arm of T_R, i.e. [N-4a, N-2a-1], is entirely placed
+(2a by (L2) for the left, 2a+1 = T_L, the rest is block): 2a panels, contradicting (L1) for the
+mirror.  Symmetrically if tau_R < tau_L.  QED
+Remarks.  * This is the "inductive refinement of the two-sided invariant" asked for: the two
+sides are B_a games with j = a + 1 that interact only through their top panels, each of whose
+outer arms reaches the two innermost panels of the other side.  The whole proof is: before its
+top panel a side obeys the B_a invariant; the top panel can be placed only when the reserve is
+full and at most one of the other side's two innermost panels is placed; and by then the
+side's own innermost-but-one panel 2a must already be placed.  So the second top panel always
+sees both innermost panels of the first side.
+* For N >= 6a + 2 the statement is also a case of B_a (the block reaches 4a+1); the new content
+is N = 6a (block 2a - 2 on each side) and N = 6a + 1 (block 2a - 1).
+* a = 1 is excluded ((L2) fails: 2a = a + 1); S_1 = {1, 6} (N = 6) and {1, 4, 7} (N = 7) are
+the known dead pair and sporadic triple.
+* The counting picture of sym.py ((s_L - p_L) + (s_R - p_R) <= 2) is a consequence: a side
+whose top panel is placed second can never place it, so it ends with s - p <= 1 there.
+
+
+2. Numerics (ek.c from experiments/ek, unchanged; 1 core; run.sh)
+-----------------------------------------------------------------
+  k = 4, [2, N-1],   N = 49..64: no dead sets (k4c.txt).  One set was left unresolved by the
+                     batch limits: {2, 30, 31, 59} at N = 60 (mirror-symmetric); see below.
+  k = 5, [3, N-2],   N = 41..48: see k5lo3c.txt.
+  k = 6, [3, N-2],   N = 37..48: see k6lo3c.txt.
+(Summary lines with the final counts are appended at the end of this file.)
+So E*_k is now checked for k = 2 (all N, theorem), 3 (N <= 100), 4 (N <= 64), 5, 6 (N <= 48),
+7 (N <= 28), 8 (N <= 24).
+
+
+3. E*_k for k >= 3: what is and is not proven
+---------------------------------------------
+(a) k = 3 (c_3 = 1): E*_3 says every 3-subset of [2, N-1] is co-reachable.  It contains E*_2
+    (pairs, for the pairs that have a free valid panel w in [2, N-1], e.g. w = 2 when 3 is
+    free): if {u, v} subset of [2, N-1] and such a w is valid on the
+    background {u, v} (e.g. a panel whose window misses u, v, or a balanced one), then
+    CoReach {u, v, w} implies CoReach {u, v} (Ek.coReach_of_insert).  So a proof of E*_3 for
+    all N would in particular re-prove Conjecture C, which needed the whole ThinCover
+    certificate machinery.  We did not find a reduction in the other direction: the pair
+    theorem gives SOME ordering of the free panels of {u, v}, but co-reachability of
+    {u, v, w} needs one that STARTS with w (equivalently, D u {w} is co-reachable iff some
+    background ordering of D begins with w), and the pair proofs give no control of the first
+    step.
+(b) "Greedy that spends reserve panels".  The S_a proof above and the B_a proof show the
+    obstruction side precisely: near an anchor a, the panels below a are a reserve of a - 1
+    balancing tokens, and an anchored block needs a of them; two truncated blocks facing each
+    other share their two innermost panels, so only one side can be completed.  A positive
+    proof would run the centre greedy (Theorem G, Adjacent.greedy) and, whenever the
+    outermost unplaced panel on a side is unbalanced, spend a reserve panel; one would need
+    the classification "the only configurations in which the reserve runs out are B_a
+    (one-sided) and S_a (two-sided)", which is exactly what E*_k asserts.  For the greedy the
+    difficulty is that the sign invariant of Theorem G (I_D <= 0 left of the centre) is
+    violated at many places for a generic set (only about 1/3 of the 4-subsets satisfy
+    Theorem G directly: G = 67359 of 212338 at N = 60), and between violations the greedy's
+    order is not controlled by the reserve alone; the C program resolves these by DFS.  We
+    could not turn the DFS witnesses into a uniform rule.
+(c) Radius k.  "Every k-subset of [k, N+1-k] is co-reachable" is, for k = 2, Conjecture C
+    itself, so it cannot be easier than (a); it is not proven for k >= 3.  The corollary that
+    it would give is formalized for every radius: `card_dead_le_radius`.
+(d) What IS unconditional for all N and k: dead k-sets containing an end panel or in the B_a /
+    S_a families (obstruction side), and the positive families of LiveK (compact, middle
+    third, dyadic, anchored), which are positive proportions but not 1 - o(1).
+
+
+4. Lean (Folds/EkStar.lean)
+---------------------------
+  lc, rc, Play, play_of_coReach, Play.mono, Play.mem_succ, Play.exists_step,
+  Play.exists_step_of_free, Play.ne_of_lt, card_filter_image_mirror, mem_image_mirror,
+  Play.mirror                                     plays on a background and their mirror
+  filter_union_far, left_inv, left_side           the one-sided lemma (truncated B_a)
+  not_coReach_twoSided : D ⊆ Icc 1 N → 2 ≤ a → 6a ≤ N → a ∈ D → N+1-a ∈ D →
+      (∀ x ∈ D, ¬ (a < x < 2a+2)) → (∀ x ∈ D, ¬ (N-2a-1 < x < N+1-a)) →
+      (∀ x, 2a+2 ≤ x ≤ N-2a-1 → x ∈ D) → ¬ CoReach N D
+  sSet, mem_sSet, not_coReach_sSet, card_sSet (= N - 4a), not_coReach_2_6_7_11,
+  not_coReach_2_6_7_8_12
+  coReach_pair (all N, from ThinCover), coReach_pair_inner, card_dead_pairs_le (≤ 2(N-1))
+  cK, EkStarConj, card_dead_le_radius, card_dead_le_of_EkStar (≤ 2 c_k C(N-1,k-1) + 1),
+  ekStar_two, sSet_exception, radSet, radius_optimal
+
+
+5. Programs
+-----------
+  ek.c (copy of experiments/ek/ek.c), run.sh (the batch above), symstates.py a r (reachable
+  states on the background S_a, projected to the placed positions of G_L, G_R and the
+  reserves; this is how the one-sided lemma was found: a side completes only if its top
+  panel is placed while exactly one (N = 6a) / none (N = 6a+1) of the other side's innermost
+  panels is placed).
