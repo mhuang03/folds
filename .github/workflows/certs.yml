@@ -1,0 +1,42 @@
+name: Certificates (slow)
+
+# Builds the certificate-heavy library `FoldsCerts` (about an hour).
+# Runs on demand, weekly, and when a certificate-heavy file changes.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 0"
+  push:
+    branches: [main]
+    paths:
+      - "FoldsCerts.lean"
+      - "Folds/ThinCover*.lean"
+      - "Folds/LabellingSAT4*.lean"
+      - "Folds/Live3*.lean"
+      - "Folds/Live8.lean"
+      - "Folds/ArithCover.lean"
+      - "Folds/Residual.lean"
+      - "Folds/CoverAll.lean"
+      - "Folds/Live7.lean"
+      - "Folds/SymRun.lean"
+
+jobs:
+  certs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v7
+      # Installs Lean, fetches the Mathlib cache and builds the fast core.
+      - uses: leanprover/lean-action@v1
+        with:
+          build-args: "Folds"
+      # The kernel-certificate files each need ~2.5-4 GB; build them one at a
+      # time so parallel builds do not exhaust the runner's memory.
+      - name: Build certificate files sequentially
+        run: |
+          for f in Folds/ThinCoverKernel[0-9]*.lean Folds/LabellingSAT4Certs*.lean; do
+            m="Folds.$(basename "$f" .lean)"
+            echo "::group::$m"; lake build "$m"; echo "::endgroup::"
+          done
+      - name: Build the rest of FoldsCerts
+        run: lake build FoldsCerts

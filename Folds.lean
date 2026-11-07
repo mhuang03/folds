@@ -1,3 +1,5 @@
+-- Fast core of the library (built by CI on every push).
+-- Certificate-heavy modules are in `FoldsCerts.lean` (built by the `certs` workflow).
 import Folds.Defs
 import Folds.Basic
 import Folds.Decide
@@ -35,18 +37,8 @@ import Folds.LabellingSATCore
 import Folds.LabellingSAT
 import Folds.LabellingSAT3Certs
 import Folds.LabellingSAT3
-import Folds.LabellingSAT4CertsA
-import Folds.LabellingSAT4CertsB
-import Folds.LabellingSAT4CertsC
-import Folds.LabellingSAT4CertsD
-import Folds.LabellingSAT4CertsE
-import Folds.LabellingSAT4CertsF
-import Folds.LabellingSAT4CertsG
-import Folds.LabellingSAT4CertsH
-import Folds.LabellingSAT4
 import Folds.Live5
 import Folds.Live6
-import Folds.Live7
 import Folds.RecCount
 import Folds.Neutral
 import Folds.Upper
@@ -56,22 +48,10 @@ import Folds.MaxMoves2
 import Folds.SuperExp4
 import Folds.SuperExp5
 import Folds.Copies2
-import Folds.Live8
-import Folds.ArithCover
-import Folds.Residual
-import Folds.CoverAll
 import Folds.Structure2
-import Folds.ThinCover
 import Folds.SymParity
 import Folds.SymStructure
-import Folds.Live3p
 import Folds.SymStructure2
 import Folds.PeriodLaw
-import Folds.SymRun
-import Folds.Live3q
 import Folds.SymRatio
-import Folds.Live3r
-import Folds.Live3s
-import Folds.Live3Final
-import Folds.Live3t
 import Folds.LiveK

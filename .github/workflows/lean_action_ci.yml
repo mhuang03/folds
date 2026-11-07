@@ -1,5 +1,7 @@
 name: Lean Action CI
 
+# Fast check on every push: builds the core library `Folds` (a few minutes).
+# The certificate-heavy library `FoldsCerts` is checked by certs.yml.
 on:
   push:
   pull_request:
@@ -8,7 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v7
       - uses: leanprover/lean-action@v1
+        with:
+          build-args: "Folds"

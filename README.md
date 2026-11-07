@@ -71,7 +71,14 @@ a(1..38) = 1, 2, 4, 10, 28, 96, 256, 1120, 4256, 17878, 70960, 383476, 1620328,
 
 ## Lean formalization (`Folds/`)
 
-Build with `lake exe cache get && lake build`. There is no `sorry` and no
+Build with `lake exe cache get && lake build` (the fast core library `Folds`, a few
+minutes; this is what CI checks on every push). The certificate-heavy modules (the
+ThinCover kernel checks, the LRAT certificates, per-N witness tables: Live3p–Live3t, Live7,
+Live8, ArithCover, Residual, CoverAll, ThinCover*, LabellingSAT4*, SymRun) form the separate
+library `FoldsCerts`. Build it with `lake build FoldsCerts` (about an hour; build the
+`ThinCoverKernel*` and `LabellingSAT4Certs*` modules one at a time on machines under
+16 GB). It is checked by the `certs` workflow on demand, weekly, and when those files
+change. There is no `sorry` and no
 `native_decide`. Files marked (M) use Mathlib.
 
 | file | main results |

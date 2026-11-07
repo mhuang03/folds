@@ -2,8 +2,14 @@ name = "Folds"
 version = "0.1.0"
 defaultTargets = ["Folds"]
 
+# Fast core: everything except the certificate-heavy modules (a few minutes).
 [[lean_lib]]
 name = "Folds"
+
+# Certificate-heavy modules: kernel-checked certificate tables (ThinCover kernel
+# files, LRAT certificates, per-N witness tables). About an hour on 4 cores.
+[[lean_lib]]
+name = "FoldsCerts"
 
 [[require]]
 name = "mathlib"
