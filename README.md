@@ -150,6 +150,7 @@ change. There is no `sorry` and no
 | `EkStar` (M) | the two-sided dead family S_a (`not_coReach_sSet`, all a ≥ 2, N ≥ 6a); E*_2 for all N; the radius c_k is optimal; **at most 2(N−1) dead pairs for every N** (`card_dead_pairs_le`); conditional O(N^{k−1}) dead k-sets |
 | `SymRatio2` (M) | 3-AP-free ratio mechanism: unlifting lemma, 9-state automaton eigen-identities (eigenvalue 1/4), fair-bit closed form (exactly geometric, ratio 1/4), and the single-pair 1/3 lemma (zero when 3 ∣ L) explaining A(x) = 0 for 3 ∣ x |
 | `PeriodLaw2` (M) | B(k) is the lcm of the top orders and the mixed orders with s ≥ 4, a ≥ 2 (`B_eq_L`); main-family identities and time-order counts for the period-law exactness proof |
+| `SuperExp6` (M) | composition by residue classes for **any** N = nq+ρ (`semiCount_gcomp`), e.g. a(n+1)a(n)² ≤ a(3n+1); conditional all-N exponent 1/12 under Hypothesis H (paper) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -263,6 +264,7 @@ change. There is no `sorry` and no
 | `experiments/ekstar/PROOFS.txt` | S_a deadness proof, E*_k checks (k = 3 to N = 100, k = 4 to 64, k = 5, 6 to 48) |
 | `experiments/symratio2/PROOFS.txt` | why the ratio defect contracts by exactly 4 and vanishes for 3 ∣ x: the automaton, the fair-bit model and its amplitude; R/R′ still open |
 | `experiments/periods4/PROOFS.txt` | classification of the cycle+chain vertices; exact period = B(k) for k ≤ 27; the remaining rest2 inequality |
+| `experiments/superexp6/PROOFS.txt` | general residue composition, Hypothesis H (checked for odd q ≤ 47), slip-sum growth 1.255ⁿ (caps slips at ≈ 1/6), controlled-greedy experiments |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
