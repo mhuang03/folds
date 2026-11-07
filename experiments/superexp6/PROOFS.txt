@@ -21,7 +21,7 @@ Goal: a lower-bound method with exponent c > 1/2, or at least 1/8 for all N, not
  * Conditional all-N exponent 1/12 (paper): if every pair (q, rho) has such a class order
    ("hypothesis H"), then a(N) >= (N/300)^{N/12} for ALL N >= 1 (vs (N/4096)^{N/16} now).
    H holds for rho = 0, for q a power of 2, is inherited by 2q and by multiples g q (with g rho),
-   and was verified by computer for every odd q <= 45 and every rho (hence for every q whose odd
+   and was verified by computer for every odd q <= 47 and every rho (hence for every q whose odd
    part is <= 45).  A proof of H for all odd q (in particular primes) is the missing step.
  * Why c > 1/2 is out of reach of every known certificate (data, section 2): the exact growth of
    the best possible slip sum B(n) is 1.255^n a(n)^2, i.e. exponent log2(1.255)/2 = 0.164 = 1/6 for
@@ -153,8 +153,8 @@ preserves V_q, so (q, rho) is good iff P(q, rho): some pi in V_q has rot_rho(pi)
  * gcd reduction (paper): P(d, b') implies P(g d, g b') (composition mod g, Growth.lean: rot_{gb'}
    maps each class mod g to itself, acting as rot_{b'} on the indices).
  * So H reduces to P(d, b) for odd d and gcd(b, d) = 1.  twobase.c (DFS with a failed-state
-   cache): P(d, b) holds for every odd d <= 45 and every b (twobase_out_*.txt).  Hence H holds
-   for every q whose odd part is <= 45.
+   cache): P(d, b) holds for every odd d <= 47 and every b (twobase_out_*.txt).  Hence H holds
+   for every q whose odd part is <= 47.
  * Failed construction attempts for odd d: arithmetic-progression orders (only d = 3, 5),
    "pair" orders {s, mst s} placed consecutively (only d <= 5), mst-palindromic orders
    pi = X f mst(rev X) (then mst(pi) = rev(pi) is valid automatically; they exist only for rho in
@@ -173,7 +173,7 @@ semiCount_odd iterated, a(2^j + 1) >= prod_{i<j} a(2^i), gives ln a(M+1) >= (M/6
 the worst case N = 1055, M = 16) this gives
         a(N) >= (N/300)^{N/12}      for every N >= 1            (conditional on H)
 (for N <= 300 the right side is <= 1).  Asymptotically ln a(N) >= (N/12) ln N - O(N).
-Unconditionally the same bound holds for every N for which the chosen q has odd part <= 45.
+Unconditionally the same bound holds for every N for which the chosen q has odd part <= 47.
 Combining H with the slip machinery (model6.c: superexp5 recursion + compositions with
 d <= 32) the worst recursion value at N ~ 10^6 rises from 0.098 to 0.108 (not a proof).
 Routing WITHOUT H (only d | N compositions, or d with odd part <= 13) does not help: route*.c,
