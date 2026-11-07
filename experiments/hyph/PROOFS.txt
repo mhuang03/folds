@@ -1,0 +1,97 @@
+HYPOTHESIS H FOR PRIME q: X-BALANCE, THE ODD NEAR-REDUCTION, PARITY TREES   (experiments/hyph/)
+=========================================================================================
+
+Notation as in ../superexp7/PROOFS.txt and ../live4/PROOFS.txt.  GoodL q nu pi: pi valid in the
+q-strip and sig o pi valid, sig(t) = ((nu - t) mod q) + 1.  H(q, nu) <=> exists pi, GoodL q nu pi.
+md(x, n) = representative of x mod n in [1, n].  [Lean] = Folds/HypH.lean (no sorry, no
+native_decide).
+
+SUMMARY (honest)
+----------------
+ * H is NOT proven for all (q, rho); the all-N exponent stays 1/16 unconditionally (1/12
+   conditional on H, superexp7).  Nothing new was formalised beyond Lemma X.
+ * New exact reformulation, Lemma X [Lean: xbal, for steps s > nu]: GoodL q nu pi iff pi is
+   strip-valid and at every step s, with A = earlier classes and X = [1, nu],
+        #(A n X) = #(A n (2s - X))        (2s - X = {2s-1, ..., 2s-nu} mod q).
+   (nu = 1 is Lemma P of live3.)  Checked for all steps (including s <= nu) on random valid
+   orders, n <= 15 (checkx.py).
+ * New reduction, Theorem R (odd q = 2m+1, even nu = 2w), proved on paper (below) and
+   checked numerically (checknr.py, csolve.c -- every composed order is re-verified):
+        alpha in C(m+1, w, w+1),  beta in C(m, w, w)
+          ==>  pi = (2a-1 for a in alpha) ++ (2b for b in reverse(beta))  in GoodL(2m+1, 2w),
+   where C(n, w, c) = GoodL(n, w mod n) orders with "i before md(2i - c, n)" for 1 <= i,
+   2i <= c.  This is a parity-block (odds first) order; q -> about q/2, nu -> nu/2, at the price
+   of about w/2 precedences between classes near the two ends.  Odd nu: use the mirror
+   H(q, nu) <=> H(q, q - nu).
+   Data (csolve.c): both C problems are solvable for EVERY odd q <= 63 and every even nu < q
+   except nu = q - 1 for q = 17, 33, 35, 37, 41 (covered by Theorem H / mirror: nu = 1) and
+   (q, nu) = (31, 28).  So Theorem R alone gives H(q, nu) numerically for every odd q <= 63
+   and nu except (31, 3), (31, 28) (those hold by twobase.c of superexp6).
+ * Parity trees (vdc.c): orders obtained by splitting EVERY residue class mod 2^k of the
+   q-strip into its two subclasses mod 2^(k+1), choosing at each node which comes first.
+   One bit per node, yet such GoodL orders exist for every (q, nu), q <= 30, and for all
+   q <= 63 with nu <= 7 or nu >= q - 7 (vdc_26_63.txt; q = 63, nu = 8 ran out of budget); they fail (exhaustively) e.g. for
+   q = 31, nu in [9, 22] (not 11, 12, 15, 16, 19, 20), q = 47, nu = 9, 38, q = 61, 62 several mid
+   nu.  Since the all-N bound only needs SMALL residues (below), this is the most promising
+   family; the choice rule is not found: with the root fixed, the forced choices sit on the
+   nodes that contain classes near the two ends (vdcrule.c), as Theorem R predicts.
+ * Remark on what is needed for 1/12: allN_of_hypH may use any M = 2^j with M ~ sqrt(N)/C (the
+   loss is O(N) in ln a(N)), so q ~ C^2 M and rho < M ~ q / C^2.  H(q, rho) for rho <= q/K (any
+   fixed K, by mirror also rho >= q - q/K) would already give exponent 1/12; even
+   rho <= q / log q suffices for exponent 1/12 (loss O(N log log N)).
+ * Negative results: no two-block split of [q] into double self-balanced sets for prime q
+   (dsb.c: only the parity split at nu = 0); chains of double self-balanced blocks of size
+   >= 2 rarely exist (chain.c: q = 13, nu in {3,4,5} only, with 5 blocks); residue-class
+   blocks mod m never work for nu != 0 (clsblk.c); no affine map t -> m t + c sends a
+   positive fraction of GoodL(q, nu) into some GoodL(q, nu') (affine.py, q = 7, 11); AP middle
+   sets exist but no uniform family (apmid.c).
+
+
+1. LEMMA X                                                               [Lean: xbal]
+------------------------------------------------------------------------------------
+In the CycBal language (live3 1.1), with h_r(c) = [1 <= c <= r] - [c >= q - r] and
+h_{mu+1} - h_mu = [c = mu+1] - [c = q-1-mu]: for s > nu the two radii are r1 = s - 1 and
+r2 = nu + q - s, whose dual is r1 - nu.  Hence
+   h_{r1} - h_{r1-nu} = [s - nu <= c <= s - 1] - [q - s + 1 <= c <= q - s + nu],
+c = (s - t) mod q.  The first indicator is [t in X] (t <= nu < s), the second [t in 2s - X].
+Given the first condition (sum h_{r1} = 0), the second (sum h_{r1-nu} = 0) holds iff the two
+counts agree.  For s <= nu the same computation with the complement Y = [nu+1, q] gives
+#(A n Y) = #(A n (2s - Y)), equivalent since s not in A.  QED
+
+
+2. THEOREM R (odd near-reduction)
+---------------------------------
+q = 2m + 1, nu = 2w, X = [1, 2w].  pi = odds first (odd t = 2i - 1, i in [1, m+1]) in the order
+alpha, then evens (t = 2j) in the order beta'.  Strip validity: parity-block theorem (odd strip
+m+1, even strip m).  The X-condition (Lemma X), per step s:
+ (a) every s in Y = [2w+1, q] has exactly w odd and w even elements in 2s - X (pairs k = 2l-1,
+     2l, exactly one of 2s - k, 2s - k - q is odd), and in i-coordinates the odd ones are
+     md(2i - l, m+1), l = 1..w (the wrap mod q of an odd panel is the wrap mod m+1 of its
+     index); the even ones are md(2j - l, m), l = 1..w.  No wrap below 1 occurs for s in Y.
+     So for s in Y the odd phase is exactly the X-condition of GoodL(m+1, w) (X' = [1, w], the
+     odd panels of X), and in the even phase (all odds placed, w on each side) exactly that of
+     GoodL(m, w).
+ (b) s in X: the window wraps below 1, which flips the parity.  Odd s = 2i - 1 with 2i <= w+1:
+     the odd part of 2s - X is the GoodL(m+1, w) window plus the class md(2i - w - 1, m+1); so
+     the condition holds iff that class is not yet placed (i before md(2i - w - 1, m+1)).
+     Even s = 2j with 2j <= w: one odd too many and the even part misses md(2j - w, m); so the
+     condition holds iff md(2j - w, m) is already placed.  Other s in X: no change.
+Hence alpha in C(m+1, w, w+1) and beta' = reverse of an element of C(m, w, w) (GoodL is closed
+under reversal) give pi in GoodL(q, 2w).  (The conditions are sufficient, not necessary:
+checknr.py counts fewer pairs than odds-first GoodL orders for w >= 2.)
+To recurse one needs the constrained problems C(n, w, c) to reduce again; the constraints
+"i before md(2i - c, n)" are doubling precedences of the Lemma W type and propagate through
+parity splits (partner parity = parity of n - c), but a closed family with a proof was not
+found.  The parity-tree data say that for small nu such a recursion exists numerically.
+
+
+3. FILES (<= 2 cores, < 1 GB)
+-----------------------------
+lib.py        strip validity, GoodL, X-condition, enumeration of GoodL orders.
+checkx.py     Lemma X against GoodL on random valid orders.
+checknr.py    Theorem R: counts and forward implication, q <= 13.
+csolve.c      Theorem R applicability for odd q <= 63 (csolve_33_63.txt; q <= 31 in the summary).
+vdc.c         parity-tree GoodL orders, q <= 63 (vdc_26_63.txt).   vdcrule.c  forced choices.
+mid.c, apmid.c, apcount.py   middle sets / AP middle sets.
+dsb.c, sblist.c, chain.c, clsblk.c   double self-balanced sets, block chains, class blocks.
+enum.c        all GoodL orders with the fewest difference changes.   affine.py  affine maps.
