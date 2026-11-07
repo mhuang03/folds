@@ -21,6 +21,7 @@ on:
       - "Folds/SymRun.lean"
       - "Folds/Ek.lean"
       - "Folds/EkStar.lean"
+      - "Folds/EkStar3.lean"
 
 jobs:
   certs:

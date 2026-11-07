@@ -75,7 +75,7 @@ Build with `lake exe cache get && lake build` (the fast core library `Folds`, a 
 minutes; this is what CI checks on every push). The certificate-heavy modules (the
 ThinCover kernel checks, the LRAT certificates, per-N witness tables: Live3p–Live3t, Live7,
 Live8, ArithCover, Residual, CoverAll, ThinCover*, LabellingSAT4*, SymRun) form the separate
-library `FoldsCerts`. Build it with `lake build FoldsCerts` (about an hour; build the
+library `FoldsCerts` (also EkStar3). Build it with `lake build FoldsCerts` (about an hour; build the
 `ThinCoverKernel*` and `LabellingSAT4Certs*` modules one at a time on machines under
 16 GB). It is checked by the `certs` workflow on demand, weekly, and when those files
 change. There is no `sorry` and no
@@ -149,6 +149,7 @@ change. There is no `sorry` and no
 | `LiveK` | liveness for **any prefix length k**: every subset of the middle third is co-reachable (`coReach_middle`); compact, dyadic, sparse and anchored families (`CovK`); every valid prefix whose set is in them is live; halving prefixes are valid and live |
 | `Ek` (M) | **E_k is false for k ≥ 5**: anchored dead families B_a (`not_coReach_anchor`; dead (2a+1)-sets inside [a, N−a]); end-panel lemmas; counting corollary `card_dead_le` (conditional) and `card_dead_pairs_le_64` |
 | `EkStar` (M) | the two-sided dead family S_a (`not_coReach_sSet`, all a ≥ 2, N ≥ 6a); E*_2 for all N; the radius c_k is optimal; **at most 2(N−1) dead pairs for every N** (`card_dead_pairs_le`); conditional O(N^{k−1}) dead k-sets |
+| `EkStar3` (M) | **E*_3 for N ≤ 40** (`ekStar_three_le_40`: every 3-subset of [2, N−1] is co-reachable; 8037 kernel-checked hints); for all N it reduces to `ResidualE` (`ekStar_three_of_residual`), which has Θ(N²) triples in three 2-parameter families |
 | `SymRatio2` (M) | 3-AP-free ratio mechanism: unlifting lemma, 9-state automaton eigen-identities (eigenvalue 1/4), fair-bit closed form (exactly geometric, ratio 1/4), and the single-pair 1/3 lemma (zero when 3 ∣ L) explaining A(x) = 0 for 3 ∣ x |
 | `PeriodLaw2` (M) | B(k) is the lcm of the top orders and the mixed orders with s ≥ 4, a ≥ 2 (`B_eq_L`); main-family identities and time-order counts for the period-law exactness proof |
 | `SuperExp6` (M) | composition by residue classes for **any** N = nq+ρ (`semiCount_gcomp`), e.g. a(n+1)a(n)² ≤ a(3n+1); conditional all-N exponent 1/12 under Hypothesis H (paper) |
@@ -270,6 +271,7 @@ change. There is no `sorry` and no
 | `experiments/livek/PROOFS.txt` | general-k liveness families, Conjecture E_k (k-sets avoiding 1 and N are co-reachable; one exception), dead k-prefixes ~ Θ(N^{k−2}) |
 | `experiments/ek/PROOFS.txt` | E_k counterexamples, the revised conjecture E*_k (radius c_k = max(1,⌊(k−1)/2⌋), exception S_{k/2} at N = 3k), checks for k ≤ 8 |
 | `experiments/ekstar/PROOFS.txt` | S_a deadness proof, E*_k checks (k = 3 to N = 100, k = 4 to 64, k = 5, 6 to 48) |
+| `experiments/ekstar3/PROOFS.txt` | E*_3: the residual families, why copies cannot close E*_3 on itself, greedy experiments |
 | `experiments/symratio2/PROOFS.txt` | why the ratio defect contracts by exactly 4 and vanishes for 3 ∣ x: the automaton, the fair-bit model and its amplitude; R/R′ still open |
 | `experiments/periods4/PROOFS.txt` | classification of the cycle+chain vertices; exact period = B(k) for k ≤ 27; the remaining rest2 inequality |
 | `experiments/superexp6/PROOFS.txt` | general residue composition, Hypothesis H (checked for odd q ≤ 47), slip-sum growth 1.255ⁿ (caps slips at ≈ 1/6), controlled-greedy experiments |
