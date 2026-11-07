@@ -94,6 +94,7 @@ change. There is no `sorry` and no
 | `Counting` (M) | a(2n) ≥ 2a(n)², a(2n+1) ≥ 2a(n)a(n+1), a(N) ≥ 2^{N−1}; exact count of sequences that start with a full parity class |
 | `Recursion` (M) | **recursion** `g_eq_sum`, `semiCount_eq_g`; split identity `semiCount_eq_sum_split` |
 | `Congruence` (M) | `semiCount_mod_four`: a ≡ c (mod 4); a(N) even; 4 ∣ a(N) when N ≡ 3 (mod 4) |
+| `Congruence2` (M) | mod-8 Burnside for (ℤ/2)³ (`card_mod_eight`); **middle-swap congruence** (`midSwappable_mod_eight`, `semiCount_mod_eight_mid`): for N = 2n, #{valid sequences with a swappable middle pair} ≡ #{self-dual such} (mod 8), both ≡ 0 (mod 4) |
 | `Prefix` (M) | ⌊N²/2⌋ valid 2-prefixes; ⌊N²/3⌋ reachable 2-sets |
 | `WindowRule` (M) | window rule (iff); valid suffixes = valid prefixes; **T(N,3) closed form**: 36·T(N,3) = 8N³ − 3N² − (30 if N even, else 12)N + (0,7,8,−9,16,−1)[N mod 6] |
 | `Wallis` (M) | a single panel's constraint holds for exactly N!·4^r·r!²/(2r+1)! permutations |
@@ -213,6 +214,7 @@ change. There is no `sorry` and no
 | `rust/` | the fast exact counter (see its README) |
 | `experiments/structure/FINDINGS.md` | relaxations, Wallis model, parity blocks, refined statistics |
 | `experiments/arith/FINDINGS.txt` | Burnside / mod 4, c(N) to 41, statistics polynomials |
+| `experiments/mod8/NOTES.txt` | a(N) mod 8/16: the meet-in-the-middle parity formula, swap involutions, why no predictive mod-8 formula exists |
 | `experiments/cluster/FINDINGS.txt` | pair correlations, mod-3 mechanism, Wallis asymptotics |
 | `experiments/prefix/FINDINGS.txt` | T(N,k) quasi-polynomials, Ehrhart mechanism, window rule |
 | `experiments/prefix5/FINDINGS.txt` | exact T(N,5), T(N,6) via Normaliz; period law for the coefficients |
