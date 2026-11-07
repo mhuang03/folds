@@ -1,0 +1,7 @@
+ITERATING THEOREM R WITH PRECEDENCE CONSTRAINTS   (experiments/superexp9/)
+(work in progress; see SUMMARY once written)
+
+rec.cpp   recursive solver for C(n, nu, P) = GoodL(n, nu) orders satisfying the precedences P,
+          using Theorem R (goodL_oddR, constraints = NotAgree pairs of psiW / chiW), block
+          composition j = 2 (good_comp), palindromic chains (good_palin), and the exact
+          symmetries reverse, sig o pi, mirror.  Every success is re-verified against GoodL.
