@@ -19,6 +19,7 @@ on:
       - "Folds/CoverAll.lean"
       - "Folds/Live7.lean"
       - "Folds/SymRun.lean"
+      - "Folds/Ek.lean"
 
 jobs:
   certs:

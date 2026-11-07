@@ -55,4 +55,3 @@ import Folds.SymStructure2
 import Folds.PeriodLaw
 import Folds.SymRatio
 import Folds.LiveK
-import Folds.Ek
