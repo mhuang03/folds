@@ -1,0 +1,15 @@
+d=3: Y Y
+d=5: Y Y Y Y
+d=7: Y Y Y Y Y Y
+d=9: Y Y Y Y Y Y Y Y
+d=11: Y Y Y Y Y Y Y Y Y Y
+d=13: Y Y Y Y Y Y Y Y Y Y Y Y
+d=15: Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=17: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=19: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=21: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=23: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=25: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=27: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=29: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
+d=31: Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y
