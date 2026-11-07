@@ -153,6 +153,7 @@ change. There is no `sorry` and no
 | `SuperExp6` (M) | composition by residue classes for **any** N = nq+ρ (`semiCount_gcomp`), e.g. a(n+1)a(n)² ≤ a(3n+1); conditional all-N exponent 1/12 under Hypothesis H (paper) |
 | `SuperExp7` (M) | Hypothesis H ⇔ "some class is Good" (`hypH_iff`); H proven for ρ ∈ {0, ±1}, all ρ when q is 23-smooth; a(⌊N/q⌋+1)^{N mod q}·a(⌊N/q⌋)^{q−N mod q} ≤ a(N) for smooth q; all-N exponent 1/12 reduced to a single pair H(⌊N/M⌋, N mod M) (`allN_of_hypH`) |
 | `HypH` (M) | Lemma X: the second chain condition as a balance condition #(A∩[1,ν]) = #(A∩(2s−[1,ν])) |
+| `PeriodLaw3` (M) | arithmetic lemmas for the rest2 < 2 proof (weight identity, exponent identities, convexity inequalities, top-family residues) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -180,9 +181,10 @@ change. There is no `sorry` and no
      for odd k. Two-cycle faces give components of order 93 and 105 at k = 9.
    - **The bivariate generating function Σ T(N,k)tᴺuᵏ is not D-finite (proven)**, so
      there is no finite transfer structure in k. See `experiments/periods2/PROOFS.txt`.
-   - **Exact full periods: period(T(N,k)) = B(k) for every 4 ≤ k ≤ 27** (computer-assisted,
-     `experiments/periods4/`; previously k ≤ 9). For all k this reduces to one cosecant-product
-     inequality rest2(s,a) < 2 for k ≥ 28 (`PeriodLaw2.B_eq_L`).
+   - **Exact period law: period(T(N,k)) = B(k) for every k ≥ 4** (paper proof: k ≤ 27 in
+     `experiments/periods4/`; rest2 < 2 for k ≥ 22 in `experiments/periods5/`, by ball
+     arithmetic for 22 ≤ k ≤ 45 and analytically for k ≥ 46). The arithmetic lemmas are in
+     Lean (`PeriodLaw2`, `PeriodLaw3`); the sine-product bounds are not.
      Theorem D1 (c_1, every m) and Theorem D2 (c_2, m ≤ 19) are proven on paper; see
      `experiments/periods3/PROOFS.txt`. Components from shorter cycles for k > m are open.
    - Leading coefficients c_k are exact for k ≤ 9, e.g. 9!·c_9 ≈ 101.7. The continuum
@@ -269,6 +271,7 @@ change. There is no `sorry` and no
 | `experiments/superexp6/PROOFS.txt` | general residue composition, Hypothesis H (checked for odd q ≤ 47), slip-sum growth 1.255ⁿ (caps slips at ≈ 1/6), controlled-greedy experiments |
 | `experiments/superexp7/PROOFS.txt` | the H bridge, coverage of the all-N 1/12 argument by proven pairs (insufficient; counting obstruction) |
 | `experiments/hyph/PROOFS.txt` | Hypothesis H for prime q: the q → q/2 reduction (Theorem R), parity-tree orders (exist for small or large ν), failed constructions; H for ρ ≤ q/K would suffice for exponent 1/12 |
+| `experiments/periods5/PROOFS.txt` | the explicit majorant U(s,a) of rest2 and the proof that rest2 < 2 for k ≥ 22 (completing period(T(N,k)) = B(k)) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
