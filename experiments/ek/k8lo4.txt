@@ -1,0 +1,16 @@
+N=10 k=8 lo=4: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=11 k=8 lo=4: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=12 k=8 lo=4: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=13 k=8 lo=4: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=14 k=8 lo=4: sets(up to mirror)=1 G=1 dead=0 unresolved=0
+N=15 k=8 lo=4: sets(up to mirror)=5 G=5 dead=0 unresolved=0
+N=16 k=8 lo=4: sets(up to mirror)=25 G=25 dead=0 unresolved=0
+N=17 k=8 lo=4: sets(up to mirror)=85 G=85 dead=0 unresolved=0
+N=18 k=8 lo=4: sets(up to mirror)=255 G=255 dead=0 unresolved=0
+N=19 k=8 lo=4: sets(up to mirror)=651 G=633 dead=0 unresolved=0
+N=20 k=8 lo=4: sets(up to mirror)=1519 G=1438 dead=0 unresolved=0
+N=21 k=8 lo=4: sets(up to mirror)=3235 G=2925 dead=0 unresolved=0
+N=22 k=8 lo=4: sets(up to mirror)=6470 G=5594 dead=0 unresolved=0
+N=23 k=8 lo=4: sets(up to mirror)=12190 G=9936 dead=0 unresolved=0
+  DEAD N=24: 4 10 11 12 13 14 15 21   (mirror 4 10 11 12 13 14 15 21)
+N=24 k=8 lo=4: sets(up to mirror)=21942 G=16971 dead=1 unresolved=0

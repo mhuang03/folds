@@ -17,7 +17,7 @@ STATUS (short)
     (`not_finite_exceptions_five`).  More generally, for every a >= 1, the anchored blocks
     {a} u [2j, 2j+2a-1] (j >= a+1) are dead (Lean, `not_coReach_anchor`), so dead (2a+1)-sets
     can have ALL elements at distance >= a from the ends (`exists_dead_far`).
-  * E_k holds numerically for k <= 4 (k = 2, 3: N <= 100; k = 4: N <= 40) with the single
+  * E_k holds numerically for k <= 4 (k = 2, 3: N <= 100; k = 4: N <= 48) with the single
     exception {2, 6, 7, 11} at N = 12, as conjectured in livek.
   * k = 5, N <= 40: the dead 5-subsets of [2, N-1] are EXACTLY the B4 sets, their mirror images,
     and the symmetric sporadic set {2, 6, 7, 8, 12} at N = 13 (all proven dead: B4 in Lean,
@@ -27,7 +27,7 @@ STATUS (short)
     ({2, 6, 7, 11} = S_2 at N = 12 is the exception of E_4).  Dead for a <= 6 (exhaustive).
   * REVISED CONJECTURE E*_k (section 6): with c_k = max(1, floor((k-1)/2)), every k-subset of
     [c_k + 1, N - c_k] is co-reachable, except S_{k/2} at N = 3k for even k >= 4.  Verified:
-    k = 2, 3 (N <= 100), 4 (N <= 40), 5 (N <= 40), 6 (N <= 32), 7 (N <= 28), 8 (N <= 24).
+    k = 2, 3 (N <= 100), 4 (N <= 48), 5 (N <= 40), 6 (N <= 36), 7 (N <= 28), 8 (N <= 24).
     The radius c_k is optimal up to the exceptions: the anchored blocks B_a give dead
     (2a+1)-sets with least element a = c_{2a+1}.
   * Counting corollary (Lean, `card_dead_le`): if every dead k-subset of [N] meets
@@ -55,8 +55,10 @@ ek N k lo: every k-subset of [lo, N+1-lo], up to mirror image, is decided by
 
 Dead k-subsets of [lo, N+1-lo], counted up to mirror image ("N:count"):
   k=2, lo=2, N = 4..100:  none                       (k2.txt; Conjecture C is a theorem)
-  k=3, lo=2, N = 5..100:  none                       (k3.txt)
-  k=4, lo=2, N = 4..40:   12:1  = {2,6,7,11}         (k4.txt)
+  k=3, lo=2, N = 5..100:  none                       (k3.txt; the 2 sets the batch left open,
+                          {2,88,89} at N = 93 and {2,94,95} at N = 99, are live by a
+                          longer DFS: ek2 N set ...)
+  k=4, lo=2, N = 4..48:   12:1  = {2,6,7,11}         (k4.txt, k4b.txt)
   k=5, lo=2, N = 5..40:   10:1 11:1 12:2 13:3 14:3 15:3 16:4 ... 36:14 (= floor((N-8)/2), plus 1
                           at N = 13); all B4 / mirror except {2,6,7,8,12} at N = 13; the 6 sets
                           left unresolved by the search (N = 37..40, j = 8, 9) are B4, dead by
@@ -67,7 +69,7 @@ Dead k-subsets of [lo, N+1-lo], counted up to mirror image ("N:count"):
                           (about N^2/7, i.e. Theta(N^2) = Theta(N^{k-4})); 1053 of the 1137 are
                           in B_a or mirror, the other 84 all contain 2 or N-1 (two more
                           families, section 4), except S_3 = {3,8,9,10,11,16} at N = 18.
-  k=6, lo=3, N = 6..32:   18:1 = S_3                 (k6lo3.txt)
+  k=6, lo=3, N = 6..36:   18:1 = S_3                 (k6lo3.txt, k6lo3b.txt)
   k=7, lo=3, N = 7..24:   15:1 16:1 17:2 18:2 19:4 20:3 21:4 22:4 23:6 24:5: the B_3 family
                           {3} u [2j, 2j+5] and mirror, S_3' = {3,8,...,12,17} at N = 19, and
                           {3,4,5,6,9,10,21} at N = 23                               (k7lo3.txt)
@@ -156,7 +158,11 @@ All dead by exhaustive search (sym.py: all reachable states on the background, e
 a = 5; ek2 N set ...); the non-symmetric variants tested ({4, 10..15, 22} at N = 25 etc.) are live.
 sym.py shows the mechanism: the two sides are copies of B_a with j = a + 1 whose blocks
 [2a+2, 4a+1] are truncated by two panels, the two missing panels being the innermost panels of
-the other side's G; at most 2a of the 2a + 2 panels of G_L u G_R are ever placed.  Each S_a is a
+the other side's G; at most 2a of the 2a + 2 panels of G_L u G_R are ever placed.  With p_L, p_R the
+placed panels of [1, a-1], [N+2-a, N] and s_L, s_R those of G_L = [a+1, 2a+1],
+G_R = [N-2a, N-a], every reachable state (a = 3, N = 18) has (s_L - p_L) + (s_R - p_R) <= 2,
+while completing both sides needs s_L - p_L >= 2 and s_R - p_R >= 2.  A Lean proof would need
+an inductive refinement of this two-sided invariant (not attempted).  Each S_a is a
 single set, so for fixed k it is a finite exception: k = 2a at N = 3k, and k = 2a + 1 at
 N = 3k - 2 (min = a = c_k, inside the radius, so not an exception of E*).
 
@@ -167,9 +173,9 @@ CONJECTURE E*_k.  Let c_k = max(1, floor((k-1)/2)).  For every N, every k-subset
 [c_k + 1, N - c_k] is co-reachable, except for k even >= 4 the set S_{k/2} at N = 3k.
 Evidence: sections 1, 5 and (k7lo4.txt, k8lo4.txt):
   k = 2: [2, N-1], N <= 100: none.     k = 3: [2, N-1], N <= 100: none.
-  k = 4: [2, N-1], N <= 40: S_2 only.  k = 5: [3, N-2], N <= 40: none.
-  k = 6: [3, N-2], N <= 32: S_3 only.  k = 7: [4, N-3], N <= 28: RESULT_K7
-  k = 8: [4, N-3], N <= 24: RESULT_K8
+  k = 4: [2, N-1], N <= 48: S_2 only.  k = 5: [3, N-2], N <= 40: none.
+  k = 6: [3, N-2], N <= 36: S_3 only.  k = 7: [4, N-3], N <= 28: none (k7lo4.txt)
+  k = 8: [4, N-3], N <= 24: S_4 = {4,10,...,15,21} at N = 24 only, as predicted (k8lo4.txt)
 Necessity of the radius: anchorSet a (a+1) (k = 2a + 1) has least element a = c_k, and adding
 elements above 2j - 1 keeps it dead, so for every k >= 3 there are dead k-sets with least
 element c_k (for N >= 3k or so); thus [c_k + 1, N - c_k] cannot be enlarged to [c_k, N + 1 - c_k].

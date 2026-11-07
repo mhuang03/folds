@@ -1,0 +1,4 @@
+N=33 k=6 lo=3: sets(up to mirror)=237692 G=79114 dead=0 unresolved=0
+N=34 k=6 lo=3: sets(up to mirror)=297115 G=95637 dead=0 unresolved=0
+N=35 k=6 lo=3: sets(up to mirror)=368368 G=115018 dead=0 unresolved=0
+N=36 k=6 lo=3: sets(up to mirror)=453376 G=137774 dead=0 unresolved=0
