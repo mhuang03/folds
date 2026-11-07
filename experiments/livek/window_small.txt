@@ -94,3 +94,15 @@ N=23 k=3 centrality=3 (ceil(N/3)=8): sets=289 notG=203 unresolved=0
 N=23 k=3 centrality=2 (ceil(N/3)=8): sets=361 notG=267 unresolved=0
 N=23 k=4 centrality=3 (ceil(N/3)=8): sets=1496 notG=1000 unresolved=0
 N=23 k=4 centrality=2 (ceil(N/3)=8): sets=2109 notG=1613 unresolved=0
+N=16 k=2 centrality=3 (ceil(N/3)=6): sets=21 notG=7 unresolved=0
+N=16 k=2 centrality=2 (ceil(N/3)=6): sets=25 notG=9 unresolved=0
+N=16 k=3 centrality=3 (ceil(N/3)=6): sets=100 notG=52 unresolved=0
+N=16 k=3 centrality=2 (ceil(N/3)=6): sets=144 notG=96 unresolved=0
+N=16 k=4 centrality=3 (ceil(N/3)=6): sets=285 notG=104 unresolved=0
+N=16 k=4 centrality=2 (ceil(N/3)=6): sets=506 notG=316 unresolved=0
+N=20 k=2 centrality=3 (ceil(N/3)=7): sets=29 notG=11 unresolved=0
+N=20 k=2 centrality=2 (ceil(N/3)=7): sets=33 notG=13 unresolved=0
+N=20 k=3 centrality=3 (ceil(N/3)=7): sets=196 notG=128 unresolved=0
+N=20 k=3 centrality=2 (ceil(N/3)=7): sets=256 notG=184 unresolved=0
+N=20 k=4 centrality=3 (ceil(N/3)=7): sets=819 notG=491 unresolved=0
+N=20 k=4 centrality=2 (ceil(N/3)=7): sets=1240 notG=884 unresolved=0

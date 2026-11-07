@@ -27,8 +27,9 @@ STATUS
     * Theorem G's limit for windows is exactly the middle third: every set of centrality
       >= ceil(N/3) satisfies G (proven), and for each N in 28..40 (step 4) some set of
       centrality ceil(N/3) - 1 or ceil(N/3) - 2 fails G.
-    * The truth is much stronger: for 13 <= N <= 40 (k <= 4) every k-set avoiding both end
-      panels 1 and N is co-reachable (DFS witnesses).  CONJECTURE E_k below.
+    * The truth is much stronger: for every 5 <= N <= 40 and k <= 4, every k-set avoiding
+      both end panels 1 and N is co-reachable (DFS witnesses), with the single exception
+      {2, 6, 7, 11} at N = 12.  CONJECTURE E_k below.
     * Dead valid k-prefixes are Theta(N^{k-2}) (k = 2, 3, 4, 5), so the live fraction tends to
       1; NOT proven: the G-type families cover a positive but small fraction of the valid
       prefixes (N = 40: CovK 40% / 12% / 8%, Theorem G 40% / 20% / 13% for k = 2 / 3 / 4;
@@ -79,19 +80,21 @@ and none at t >= ceil(N/3) (Theorem 1).  So for windows the middle third is the 
 Theorem G, up to one or two panels.
 
 The truth is much better (window.c; DFS witness from the background D when G and "G after one
-valid step" fail): for N = 13..40 and k = 2, 3, 4, EVERY k-set of centrality >= 2 (i.e.
-avoiding the end panels 1 and N) is co-reachable; the only failures with centrality >= 2 for
-N <= 40, k <= 4 are at N <= 12 (e.g. N = 12: {2, 6, 7, 11}).  (window.txt, window_small.txt.)
+valid step" fail; window.txt for N = 24, 28, ..., 40, window_rest.txt for the other N in
+25..39, window_small.txt for N = 5..23): for every 5 <= N <= 40 and k = 2, 3, 4, EVERY k-set
+of centrality >= 2 (i.e. avoiding the end panels 1 and N) is co-reachable, with one exception:
+N = 12, D = {2, 6, 7, 11} (dead: the DFS is exhaustive at N = 12).
 CONJECTURE E_k.  For fixed k and N >= N_0(k), every k-set D with 1, N not in D is
-co-reachable.  (N_0(2) = N_0(3) = 1 resp. small, N_0(4) = 13 numerically.)  The dead sets of
-size k <= 4 all contain 1 or N: the blocks {1, 2j, 2j + 1} plus anything (k = 4), the corner
-sets inside {1, 2, N-1, N}, and their mirrors.
+co-reachable.  Numerically (N <= 40): N_0(2) = N_0(3) = 1, N_0(4) = 13 (the only exception
+being N = 12).  Apart from {2, 6, 7, 11} at N = 12, all dead sets of size k <= 4 contain 1 or
+N, e.g. the blocks {1, 2j, 2j + 1} plus anything (k = 4), the corner sets inside {1, 2, N-1, N}
+plus anything, and the mirror images (`livek N 4 1` lists them).
 
 Remark (valid prefixes are rarely compact).  A valid prefix inside a compact window has every
 later inner step seeing all earlier panels, so it must be balanced in the plain left/right
 count; for k = 4 no valid prefix at all has a compact set (N <= 40, column A of livek.txt),
-for k = 3 only 2-5% of the prefixes (N = 24..40).  So Theorem 1 is a statement about co-reachability of arbitrary sets; for
-prefixes the families of section 3 matter more.
+for k = 3 only 2-5% of the prefixes (N = 24..40).  So Theorem 1 is a statement about
+co-reachability of arbitrary sets; for prefixes the families of section 3 matter more.
 
 
 3. Spread sets: dyadic, doubling-sparse, anchored (question 2)
@@ -245,7 +248,7 @@ satisfies Theorem G, on ALL k-subsets of [N] (not only valid ones) -- livek 'all
                     G after one valid step, DFS witness; checks X => G on all k-subsets.
   window.c N k      k-sets by centrality: failures of G, and sets without a witness.
   peel.c N k        Theorem G vs Theorem G' (peeling) by centrality.
-  livek.txt, window.txt, window_small.txt: outputs (N <= 40, k <= 4).
+  livek.txt, window.txt, window_rest.txt, window_small.txt: outputs (N <= 40, k <= 4).
 
 
 8. Lean (Folds/LiveK.lean)
