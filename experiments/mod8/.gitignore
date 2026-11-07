@@ -1,0 +1,10 @@
+parity
+parity2
+parity4
+halfpar
+oddsets
+enum
+sdmid
+midswap
+*.o
+*.bin

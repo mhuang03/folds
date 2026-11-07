@@ -11,6 +11,7 @@ import Folds.Radius
 import Folds.Counting
 import Folds.Recursion
 import Folds.Congruence
+import Folds.Congruence2
 import Folds.Prefix
 import Folds.Wallis
 import Folds.SelfDual
