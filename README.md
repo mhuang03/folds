@@ -149,6 +149,7 @@ change. There is no `sorry` and no
 | `Ek` (M) | **E_k is false for k ≥ 5**: anchored dead families B_a (`not_coReach_anchor`; dead (2a+1)-sets inside [a, N−a]); end-panel lemmas; counting corollary `card_dead_le` (conditional) and `card_dead_pairs_le_64` |
 | `EkStar` (M) | the two-sided dead family S_a (`not_coReach_sSet`, all a ≥ 2, N ≥ 6a); E*_2 for all N; the radius c_k is optimal; **at most 2(N−1) dead pairs for every N** (`card_dead_pairs_le`); conditional O(N^{k−1}) dead k-sets |
 | `SymRatio2` (M) | 3-AP-free ratio mechanism: unlifting lemma, 9-state automaton eigen-identities (eigenvalue 1/4), fair-bit closed form (exactly geometric, ratio 1/4), and the single-pair 1/3 lemma (zero when 3 ∣ L) explaining A(x) = 0 for 3 ∣ x |
+| `PeriodLaw2` (M) | B(k) is the lcm of the top orders and the mixed orders with s ≥ 4, a ≥ 2 (`B_eq_L`); main-family identities and time-order counts for the period-law exactness proof |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -176,7 +177,9 @@ change. There is no `sorry` and no
      for odd k. Two-cycle faces give components of order 93 and 105 at k = 9.
    - **The bivariate generating function Σ T(N,k)tᴺuᵏ is not D-finite (proven)**, so
      there is no finite transfer structure in k. See `experiments/periods2/PROOFS.txt`.
-   - **Exact full periods** of T(N,8) = B(8) = 158739840 and T(N,9) = B(9) = 5397154560.
+   - **Exact full periods: period(T(N,k)) = B(k) for every 4 ≤ k ≤ 27** (computer-assisted,
+     `experiments/periods4/`; previously k ≤ 9). For all k this reduces to one cosecant-product
+     inequality rest2(s,a) < 2 for k ≥ 28 (`PeriodLaw2.B_eq_L`).
      Theorem D1 (c_1, every m) and Theorem D2 (c_2, m ≤ 19) are proven on paper; see
      `experiments/periods3/PROOFS.txt`. Components from shorter cycles for k > m are open.
    - Leading coefficients c_k are exact for k ≤ 9, e.g. 9!·c_9 ≈ 101.7. The continuum
@@ -259,6 +262,7 @@ change. There is no `sorry` and no
 | `experiments/ek/PROOFS.txt` | E_k counterexamples, the revised conjecture E*_k (radius c_k = max(1,⌊(k−1)/2⌋), exception S_{k/2} at N = 3k), checks for k ≤ 8 |
 | `experiments/ekstar/PROOFS.txt` | S_a deadness proof, E*_k checks (k = 3 to N = 100, k = 4 to 64, k = 5, 6 to 48) |
 | `experiments/symratio2/PROOFS.txt` | why the ratio defect contracts by exactly 4 and vanishes for 3 ∣ x: the automaton, the fair-bit model and its amplitude; R/R′ still open |
+| `experiments/periods4/PROOFS.txt` | classification of the cycle+chain vertices; exact period = B(k) for k ≤ 27; the remaining rest2 inequality |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
