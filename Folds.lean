@@ -61,3 +61,4 @@ import Folds.SymRatio2
 import Folds.LiveK
 import Folds.SuperExp7
 import Folds.HypH
+import Folds.SuperExp8

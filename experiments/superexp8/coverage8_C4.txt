@@ -1,0 +1,3 @@
+X=1.0e+06 C=4.0: covered superexp7 161/200, +SmallRes 180/200, all rho<=8 192/200
+X=1.0e+08 C=4.0: covered superexp7 110/200, +SmallRes 136/200, all rho<=8 186/200
+X=1.0e+10 C=4.0: covered superexp7 54/200, +SmallRes 87/200, all rho<=8 148/200
