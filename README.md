@@ -274,6 +274,7 @@ change. There is no `sorry` and no
 | `experiments/hyph/PROOFS.txt` | Hypothesis H for prime q: the q → q/2 reduction (Theorem R), parity-tree orders (exist for small or large ν), failed constructions; H for ρ ≤ q/K would suffice for exponent 1/12 |
 | `experiments/periods5/PROOFS.txt` | the explicit majorant U(s,a) of rest2 and the proof that rest2 < 2 for k ≥ 22 (completing period(T(N,k)) = B(k)) |
 | `experiments/superexp8/PROOFS.txt` | why constant-ρ H cannot give all-N bounds; parity trees work for ν ≤ 8 but first fail at ν = 9 for q ≡ −1 mod 16 |
+| `experiments/superexp9/PROOFS.txt` | why iterating Theorem R cannot give H(q, ρ ≤ q/K): parity-tree obstruction at ρ = 9 for q ≡ 15 mod 16, global doubling constraints at odd/odd steps |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
