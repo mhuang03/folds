@@ -3,3 +3,8 @@ __pycache__/
 experiments/semi
 .claude/
 experiments/arith/polydp
+docs/writeup/*.aux
+docs/writeup/*.log
+docs/writeup/*.out
+docs/writeup/*.fls
+docs/writeup/*.fdb_latexmk

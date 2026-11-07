@@ -1,0 +1,413 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{microtype}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\newcommand{\lean}[1]{\textsf{\small[Lean: \texttt{#1}]}}
+\newcommand{\N}{\mathbb{N}}
+\DeclareMathOperator{\rev}{rev}
+\DeclareMathOperator{\mir}{mir}
+
+\title{Semi-symmetric fold sequences: what is known}
+\author{Summary of the \texttt{mhuang03/folds} project}
+\date{November 2026}
+
+\emergencystretch=3em
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A strip of paper is divided into $N$ panels, and the panels are bisected one at a
+time. A bisection order is \emph{semi-symmetric} if, at every step, the bisected panel
+sees equally many earlier creases on its two sides within its folding window. We
+study the number $a(N)$ of such orders. We find no closed form or recurrence in
+previous terms, and we prove that the ordinary generating function is not algebraic.
+We do obtain: several equivalent reformulations (including a doubling-map form); an
+exact subset recursion; a congruence $a(N)\equiv c(N)\pmod 4$; a classification of
+the ``neutral'' splittings with an exact decomposition identity; a generator for valid
+orders of any length (truncated bit reversal); a complete description of which
+two-step openings can be completed; and super-exponential growth bounds
+$(N/4096)^{N/16}\le a(N)\le N!\,e^{-0.0878N(1+o(1))}$. Results marked
+\textsf{[Lean]} are machine-checked in Lean~4 with Mathlib, with no \texttt{sorry}
+and no \texttt{native\_decide}.
+\end{abstract}
+
+\section{The problem}
+
+Number the panels $1,\dots,N$. A \emph{fold sequence} is a permutation
+$a=(a_1,\dots,a_N)$ of $[N]=\{1,\dots,N\}$. At step $k$ the panel $m=a_k$ is bisected
+by folding its nearer edge onto a reference crease; the panels caught between are
+$m\pm d$ for $1\le d\le r$, where
+\[
+  r = r(m) = \min(m-1,\,N-m).
+\]
+Let $S=\{a_1,\dots,a_{k-1}\}$ be the set of panels bisected before step $k$. Define the
+\emph{left arm} $L(m)=\{m-r,\dots,m-1\}$ and the \emph{right arm}
+$R(m)=\{m+1,\dots,m+r\}$.
+
+\begin{definition}
+The step $(S,m)$ is \emph{symmetric} if $m-d\in S \iff m+d\in S$ for every
+$1\le d\le r$, and \emph{semi-symmetric} if $|S\cap L(m)| = |S\cap R(m)|$. A fold
+sequence is (semi-)symmetric if every step is. Let $a(N)$ be the number of
+semi-symmetric sequences of $[N]$, and let $\theta(N)$ be the number of symmetric ones.
+\end{definition}
+
+The window depends on the panel $m=a_k$, not on the time $k$. Symmetric implies
+semi-symmetric. The values of $a(N)$ begin:
+
+\begin{quote}\small
+1, 2, 4, 10, 28, 96, 256, 1120, 4256, 17878, 70960, 383476, 1620328, 9167908,
+47821296, 276182312, 1481994716, 10084180418, 55082188120, 398874108930, \dots
+\quad($N=1,\dots,20$).
+\end{quote}
+
+The terms are known exactly up to $N=38$, for example
+\[a(38)=15884954204816776206921874682.\]
+They were computed with a meet-in-the-middle
+subset dynamic program (Theorem~\ref{thm:rec}), $N=38$ took $4.6$ hours. The sequence
+is not in the OEIS.
+
+\section{Equivalent formulations}
+
+\begin{proposition}[symmetric $=$ 3-AP-free]\label{prop:ap}
+A sequence is symmetric if and only if there are no $x<y<z$ with $x+z=2y$ such that
+$y$ is bisected between $x$ and $z$ (in time). Hence $\theta(N)$ is OEIS A003407.
+\lean{symmetric\_iff\_apFree}
+\end{proposition}
+
+\begin{proof}
+A symmetric step fails at $m$ exactly when, for some $d\le r(m)$, one of $m\pm d$ comes
+before $m$ and the other comes after it. Every 3-term progression $(m-d,m,m+d)$ inside
+$[N]$ has $d\le r(m)$.
+\end{proof}
+
+Write $P(j)=|S\cap[1,j]|$ and $s=|S|$. Extend $P$ periodically by
+$\tilde P(j)=P(j\bmod N)+\lfloor j/N\rfloor s$.
+
+\begin{proposition}[doubling form]\label{prop:dbl}
+The step $(S,m)$ is semi-symmetric if and only if $\tilde P(2m-1) = 2P(m-1)$.
+\lean{semiStep\_iff\_cyclicStep}
+\end{proposition}
+
+\begin{proof}
+Suppose $2m-1\le N$, so $r=m-1$. The left arm count is $P(m-1)$. Since $m\notin S$,
+the right arm count is $P(2m-1)-P(m)=P(2m-1)-P(m-1)$. Equating the two gives
+$P(2m-1)=2P(m-1)$.
+
+Otherwise $r=N-m$. The left arm count is $P(m-1)-P(2m-1-N)$ and the right arm count is
+$s-P(m-1)$. Equating them gives $s+P(2m-1-N)=2P(m-1)$, and the left-hand side is
+$\tilde P(2m-1)$.
+\end{proof}
+
+In terms of the discrepancy $E(x)=P(x)-sx/N$ on $\mathbb R/N\mathbb Z$, the
+condition reads $E(2c)=2E(c)$ at the panel centre $c=m-\tfrac12$. So the problem is
+governed by the doubling map $x\mapsto 2x \bmod N$. This explains several recurring
+features below: powers of $2$, parity classes, and the special role of $N/3$ and
+$2N/3$, which form a $2$-cycle of the doubling map.
+
+\begin{proposition}[window rule]
+Let $B$ and $A$ be the numbers of elements of $S$ on the near side and the far side of
+$m$. The \emph{near side} is the one towards the closer end of the strip; when
+$m=(N+1)/2$, call either side near. Then $(S,m)$ is semi-symmetric if and only if
+$B\le A$ and exactly $B$ elements of $S$ on the far side lie within distance $r$ of $m$.
+\lean{WindowRule}
+\end{proposition}
+
+\begin{proof}
+The near arm reaches the end of the strip, so it contains all $B$ near-side elements.
+The far arm contains the far-side elements within distance $r$, and there are at most
+$A$ of them.
+\end{proof}
+
+\begin{proposition}[reversal and mirror]\label{prop:sym}
+If $a$ is semi-symmetric, then so are its reversal $\rev(a)=(a_N,\dots,a_1)$ and its
+mirror $\mir(a)=(N+1-a_1,\dots,N+1-a_N)$. \lean{Basic}
+\end{proposition}
+
+\begin{proof}
+The mirror case is clear. For the reversal, consider panel $m$ placed at step $k$.
+In $\rev(a)$, the panels placed before $m$ are exactly the panels placed after $m$ in
+$a$. Inside the window these are $(L\cup R)\setminus S$, where $S$ is the earlier set
+in $a$. Since $|L|=|R|=r$, we have $|L\setminus S|=|R\setminus S|$ if and only if
+$|L\cap S|=|R\cap S|$.
+\end{proof}
+
+\section{Exact counting}
+
+For $X\subseteq[N]$, let $g(X)$ be the number of orderings of $X$ that are
+semi-symmetric as prefixes of a fold sequence of $[N]$. So $g(\emptyset)=1$ and
+$a(N)=g([N])$.
+
+\begin{theorem}[subset recursion]\label{thm:rec}
+For $X\ne\emptyset$,
+\[
+  g(X)=\sum_{\substack{m\in X\\ (X\setminus\{m\},\,m)\ \text{valid}}} g(X\setminus\{m\}).
+\]
+Moreover, for every $0\le k\le N$,
+\[
+  a(N)=\sum_{|X|=k} g(X)\,g([N]\setminus X).
+\]
+\lean{g\_eq\_sum, semiCount\_eq\_sum\_split}
+\end{theorem}
+
+The second identity uses Proposition~\ref{prop:sym}: the reversed suffix of a valid
+sequence is a valid ordering of the complement. This identity is the basis of the
+fast counter. It runs over orbits of the mirror, with $k=N/2$, and uses CRT residues.
+
+\begin{theorem}[a single constraint]
+For a fixed panel $m$ with $r=r(m)$, the number of permutations of $[N]$ whose step at
+$m$ is semi-symmetric (all other steps unconstrained) is
+\[
+  N!\cdot\frac{4^r\, r!^2}{(2r+1)!}.
+\]
+\lean{Wallis}
+\end{theorem}
+
+\begin{proof}
+Only the relative order of the $2r+1$ panels in $\{m\}\cup L\cup R$ matters. The step
+is valid exactly when, for some $j$, $j$ panels of each arm precede $m$. The fraction
+of valid relative orders is
+\[
+  \frac{1}{(2r+1)!}\sum_{j=0}^r \binom rj^2 (2j)!\,(2r-2j)!
+  = \frac{r!^2}{(2r+1)!}\sum_{j=0}^r\binom{2j}{j}\binom{2r-2j}{r-j}
+  = \frac{4^r\,r!^2}{(2r+1)!},
+\]
+by the classical identity $\sum_j\binom{2j}{j}\binom{2r-2j}{r-j}=4^r$.
+\end{proof}
+
+Treating the $N$ constraints as independent gives the \emph{Wallis model}
+$a_W(N)=N!\prod_m \frac{4^{r(m)}r(m)!^2}{(2r(m)+1)!}$. The ratio $a/a_W$ stays
+within $13\%$ for $N\le 11$, but it grows like $e^{0.09N}$ in the data. So the
+constraints are mildly positively correlated.
+
+\paragraph{Prefix counts.}
+Let $T(N,k)$ be the number of valid $k$-step prefixes. For each fixed $k$, $T(N,k)$ is
+a quasi-polynomial in $N$ of degree $k$: it counts lattice points in a union of
+rational polytopes, one per order type. Two cases are proven in Lean:
+\[
+  T(N,2)=\Bigl\lfloor \tfrac{N^2}{2}\Bigr\rfloor,\qquad
+  36\,T(N,3)= 8N^3-3N^2-\begin{cases}30N & N\text{ even}\\12N& N\text{ odd}\end{cases}
+  +\,(0,7,8,-9,16,-1)_{N\bmod 6}.
+\]
+\lean{WindowRule}
+
+Exact formulas are also known for $k\le6$. The periods follow a \emph{period law},
+proven on paper: the period of $T(N,k)$ is $B(k)$ for every $k\ge 4$, where
+\[
+  B(k)=\operatorname{lcm}\bigl(2^{k-1},\ 2^{a}(2^{s}-1) : a+s=k-1\bigr),
+\]
+giving $1,1,2,12,168,1680,104160,624960$. The factors $2^a$ come from halving chains
+and the factors $2^s-1$ from periodic cycles of the doubling map, as
+Proposition~\ref{prop:dbl} predicts. The bivariate generating function
+$\sum T(N,k)\,t^Nu^k$ is not D-finite.
+
+\paragraph{A congruence.}
+Let $c(N)$ be the number of valid sequences fixed by $\rev\circ\mir$.
+
+\begin{theorem}\label{thm:mod4}
+For $N\ge2$, $a(N)\equiv c(N)\pmod 4$. Also, $c(N)=0$ when $N\equiv 3\pmod 4$, so
+$4\mid a(N)$ for those $N$. \lean{semiCount\_mod\_four}
+\end{theorem}
+
+\begin{proof}
+By Proposition~\ref{prop:sym}, the Klein group $\{1,\rev,\mir,\rev\circ\mir\}$ acts
+on valid sequences. For $N\ge2$, neither $\rev$ nor $\mir$ fixes a permutation. Burnside's
+lemma then says that $(a+0+0+c)/4$ is an integer, so $a\equiv -c\pmod 4$. The
+reversal acts on the fixed set of $\rev\circ\mir$ without fixed points, so $c$ is even,
+and therefore $-c\equiv c\pmod 4$.
+
+For odd $N$, the middle panel is always placed at an odd step. A sequence fixed by
+$\rev\circ\mir$ must place it at step $(N+1)/2$, which is even when
+$N\equiv3\pmod4$.
+\end{proof}
+
+No further modular structure was found. In particular, $a(N)\bmod 8$ is not determined
+by $c(N)\bmod 8$, and there is no linear recurrence for $a(N)$ modulo any prime $p\le 97$.
+
+\section{Structure}
+
+\begin{theorem}[parity blocks]
+Let $\sigma$ be an ordering of the even panels and $\tau$ an ordering of the odd panels.
+The sequence ``$\sigma$, then $\tau$'' is valid if and only if $\sigma$ and $\tau$ are
+valid after the relabellings $2y\mapsto y$ and $2y-1\mapsto y$, respectively. The same
+holds with the odd panels first. Consequently
+$a(2n)\ge 2a(n)^2$, $a(2n+1)\ge 2a(n)a(n+1)$ and $a(N)\ge 2^{N-1}$.
+\lean{semiSymmetric\_blocks\_iff, Counting}
+\end{theorem}
+
+More generally, every residue class modulo $q$ is a \emph{window copy}: it behaves
+exactly like a smaller strip. This gives a \emph{composition} inequality
+$a(qn)\ge a(q)\,a(n)^q$, with a version for every $N=nq+\rho$. \lean{Growth,
+SuperExp6}
+
+\paragraph{Neutral sets.}
+Call $X\subseteq[N]$ \emph{neutral} if $|X\cap L(m)|=|X\cap R(m)|$ for every
+$m\in[N]$. If a prefix set is neutral, the sequence splits into two independent
+problems. By Proposition~\ref{prop:dbl}, $X$ is neutral if and only if
+$P(2k+1)=P(k)+P(k+1)$ for all $k$. From this one shows
+$|N\cdot P(t)-|X|\,t|\le\min(|X|,N-|X|)$: neutral sets are balanced in the Sturmian
+sense.
+
+\begin{theorem}[classification of neutral sets]
+For $N\ge 2$, the nonempty proper neutral subsets of $[N]$ are exactly:
+\begin{itemize}
+  \item the odd panels and the even panels;
+  \item $E_d=\{x\in[N]: x\bmod d\in\{2,4,\dots,d-1\}\}$ and its complement, for each
+    odd divisor $3\le d<N$ of $N$.
+\end{itemize}
+They form an antichain. Consequently, with $j=(d-1)/2$,
+\[
+  a(N)=2\,a(\lfloor\tfrac N2\rfloor)\,a(\lceil\tfrac N2\rceil)
+   +2\!\!\sum_{\substack{d\mid N,\ d \text{ odd}\\ 3\le d<N}}\!\! a(\tfrac{jN}d)\,a(\tfrac{(j+1)N}d)
+   + I(N),
+\]
+where $I(N)$ counts the valid sequences that have no neutral proper prefix set.
+\lean{neutral\_classification, identity\_A}
+\end{theorem}
+
+Numerically $I(N)/a(N)\to1$ ($0.999$ at $N=24$), so this identity is exact but does
+not by itself give a recursion.
+
+\paragraph{A generator for every $N$.}
+Choosing, at every node of the binary residue tree (classes modulo $2^d$), which half
+goes first gives a family of exactly $2^{N-1}$ sequences, all of them symmetric.
+\lean{gen\_valid, card\_parFam}
+
+\begin{theorem}[truncation]
+Deleting the panels larger than $N$ from a member of the family for $M\ge N$ gives the
+corresponding member for $N$. In particular, for any $2^k\ge N$, the bit-reversal order
+of $\{1,\dots,2^k\}$ with the panels $>N$ removed is symmetric and semi-symmetric.
+Its $i$-th term can be computed in $O(\log N)$ time.
+\lean{truncation, gen\_filter, genAt\_eq}
+\end{theorem}
+
+For example, for $N=6$ and $k=3$, the bit-reversal order $1,5,3,7,2,6,4,8$ truncates to
+the valid sequence $1,5,3,2,6,4$.
+
+\paragraph{Which openings survive.}
+Some valid prefixes cannot be completed. For example, at $N=4$ the opening $1,4$
+leaves no valid move.
+
+\begin{theorem}[two-step liveness]
+Let $[m_1,m_2]$ be a valid two-step prefix. It extends to a full semi-symmetric
+sequence unless $\{m_1,m_2\}=\{1,N\}$ and either $N\ge4$ is even or $N=7$.
+\lean{ThinCover.conjectureC}
+\end{theorem}
+
+The proof combines explicit constructions with a covering argument: window copies,
+Beatty sets $\{\lfloor kN/p\rfloor\}$, residue chains, and a greedy-then-reverse
+criterion. The remaining pairs, for all $N\ge1000$, are covered by LP-certified
+polynomial inequalities, and those with $N<1000$ by kernel computations. For
+three-step prefixes, the analogous classification is proven for $N\le 50$ and checked to
+$N=63$.
+
+\section{Growth}
+
+\begin{theorem}[slip recursion]
+For every $m\ge1$, $a(4m)\ge 2^m a(m)^4$. Consequently $a(N)\ge N^{N/8}$ for $N=4^j$.
+\lean{semiCount\_four\_mul, pow\_le\_semiCount\_pow\_four}
+\end{theorem}
+
+\begin{proof}[Idea]
+Start from the parity-block sequences of $[2n]$ built from odds-first orders of
+$[n]$. A \emph{slip} at $k$ swaps the panels $2k$ and $2k+1$ between the two parity
+classes. In the doubling form, each slip changes the induced conditions on the two
+blocks in exactly one place, and odds-first block orders satisfy the changed condition
+automatically when $k$ is odd. So each of the $\approx n/2$ odd positions can be slipped
+independently, giving a factor $2^{n/2}$.
+
+For the consequence, set $b_j=\ln a(4^j)$. Then $b_{j+1}\ge 4^j\ln2+4b_j$, so
+$b_j\ge j4^{j-1}\ln 2=\tfrac18 N\ln N$.
+\end{proof}
+
+\begin{theorem}[bounds for all $N$]
+For every $N\ge1$,
+\[
+  \Bigl(\frac{N}{4096}\Bigr)^{N/16}\ \le\ a(N)\ \le\ N!\,e^{-0.0878\,N(1+o(1))},
+\]
+and the upper bound improves to $e^{-0.1255N(1+o(1))}$ for even $N$.
+\lean{self\_pow\_le\_semiCount\_pow\_16, MaxMoves2}
+\end{theorem}
+
+The upper bound counts valid moves. When $|S|\equiv2\pmod4$, at most $\lfloor2N/3\rfloor$
+panels are valid next moves; a $2$-adic refinement covers the other sizes of $S$.
+\lean{card\_moves\_two\_mod\_four, card\_moves\_two\_adic} The lower bound for all $N$
+uses an odd-$N$ variant of the slips.
+
+To raise the exponent to $1/12$ it would suffice to prove a combinatorial
+``Hypothesis~H'' about residue chains for residues $\rho\le q/16$
+\lean{allN\_of\_smallH}. The obvious palindromic constructions provably cannot reach
+residues $\rho\equiv 3\pmod 4$ when $q$ is odd \lean{no\_palin\_three}.
+
+\begin{conjecture}[asymptotics]
+$a(N)=N!/(\kappa_N\ln N)^N$ with $\kappa_N$ bounded, so
+$\ln a(N)=N\ln N-N\ln\ln N+O(N)$.
+\end{conjecture}
+
+The evidence is sequential Monte Carlo estimates of $\ln a(N)$ up to $N=4096$, and a
+continuum limit of the prefix polytopes: the acceptance ratio decays like
+$0.75/(\ln k+0.25)$.
+
+\section{Why there is (probably) no formula}
+
+\begin{proposition}
+$\sum_N a(N)x^N$ is not algebraic, not rational, and not C-finite.
+\end{proposition}
+
+\begin{proof}
+The coefficients of an algebraic power series grow at most exponentially, but
+$a(N)\ge(N/4096)^{N/16}$ grows faster than any exponential.
+\end{proof}
+
+If the conjecture holds, then $a(N)$ is not P-recursive either. Perron--Kreuser theory
+forces a holonomic sequence with $\ln a_n\sim n\ln n$ to satisfy
+$\limsup(a_n/n!)^{1/n}>0$, but under the conjecture $(a(N)/N!)^{1/N}\sim1/(\kappa\ln N)\to0$.
+
+The following searches were all negative, each with at least five spare equations:
+\begin{itemize}
+  \item linear recurrences with polynomial coefficients, up to 30 unknowns (lattice
+    reduction up to 64);
+  \item algebraic and differentially algebraic generating functions (ordinary and
+    exponential);
+  \item Mahler and $q$-difference equations;
+  \item Somos- and Riccati-type relations;
+  \item $2$-regular and automatic structure;
+  \item Hankel determinants;
+  \item OEIS transforms;
+  \item about $10^6$ expression trees in earlier terms.
+\end{itemize}
+Even the simpler symmetric count $\theta(N)$ (A003407) has no known formula. We computed
+it exactly up to $N=2000$.
+
+\paragraph{An arithmetic effect.}
+Let $y(N)=\ln(a(N)/a_W(N))$. The local bump $y(N)-\tfrac12(y(N-2)+y(N+2))$ is positive
+for every $N\equiv0\pmod 3$ in $6\le N\le30$, and negative for every other $N$ in
+$7\le N\le 31$. A plausible mechanism is the $2$-cycle $\{N/3,2N/3\}$ of the doubling
+map, which consists of panel boundaries exactly when $3\mid N$.
+
+\section{Open problems}
+\begin{enumerate}
+  \item Prove $\ln a(N)\sim N\ln N$, or even $\liminf \ln a(N)/(N\ln N)>1/16$.
+  \item Prove $a(N)\le N!\,e^{-\omega(N)}$. This reduces to a ``Path Lemma'' that has
+    been checked numerically.
+  \item Classify the live $k$-step prefixes for $k\ge3$ and all $N$.
+  \item Explain the mod-$3$ effect.
+\end{enumerate}
+
+\paragraph{Sources.} The Lean files are in \texttt{Folds/}; the fast core library builds in a few minutes.
+The paper proofs and data are in \texttt{experiments/*/PROOFS.txt}, and the exact counter
+is in \texttt{rust/}.
+
+\end{document}
