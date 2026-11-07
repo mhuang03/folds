@@ -1,0 +1,153 @@
+HYPOTHESIS H = GOOD CLASSES; WHAT IS PROVEN; WHY IT DOES NOT GIVE ALL N    (experiments/superexp7/)
+=========================================================================================
+
+Notation as in ../superexp6/PROOFS.txt and ../live4/PROOFS.txt.  a(n) = |V_n|; N = nq + rho,
+0 <= rho < q; mst_{q,rho} = the class of the mirror (SuperExp6); sig_{q,nu}(t) = ((nu - t) mod q)
++ 1 (Live2/3/4).  [Lean] = Folds/SuperExp7.lean, namespace Folds.SuperExp7; no sorry, no
+native_decide; axioms propext, Classical.choice, Quot.sound (checked with #print axioms).
+
+SUMMARY
+-------
+ * BRIDGE (exact) [mst_eq_sig, goodL_iff, hypH_iff]:  mst_{q,rho} = sig_{q,rho} on [1, q], so
+       H(q, rho)  <=>  exists pi, GoodL q rho pi  <=>  exists t, Good q rho t.
+   Every Gd derivation of Live4 is a proof of H (hypH_of_gd); semiCount_of_good /
+   semiCount_pow_of_hypH turn it into a(n+1)^rho a(n)^(q-rho) <= a(nq + rho).
+ * PROVEN CASES OF H [Lean]:
+     rho in {0, 1, q-1}, every q >= 2           hypH_zero, hypH_one, hypH_neg_one
+     every rho, q = 2^a                          allH_pow_two
+     every rho, q <= 12                          allH_le_12 (Live2 table)
+     every rho, q = 13, 17, 19, 23               allH_13 ... allH_23 (Live4 certificates + mirror)
+     block composition                           hypH_comp: H(j,e), H(m,c), H(m,c+1) => H(mj, jc+e)
+     every rho, every 23-SMOOTH q                allH_smooth (all prime factors <= 23);
+                                                 in particular every q <= 28 (allH_le_28)
+     rho < j or rho >= q - j, j | q, j smooth    hypH_low, hypH_high
+   (The Live4 palindromic families nu = 4r+1 (CGs) add a few more pairs; not needed below.)
+ * NOT ENOUGH FOR ALL N.  The all-N argument needs, for every N, a q in an interval of
+   length about N/M^2 (M = 2^j ~ sqrt N) with H(q, N - qM); the proven pairs are far too sparse
+   (section 3: a counting obstruction, plus data).  The best UNCONDITIONAL all-N exponent is
+   still 1/16 (SuperExp5).  What is proven [allN_of_hypH, allN_smooth]: the 1/12-type bound
+        M^K <= 8^K a(N)^6,   K = floor(N/M) M >= N M/(M+1),   M = 2^j, M(M+1) <= N,
+   at every N for which H(floor(N/M), N mod M) holds -- e.g. whenever floor(N/M) is 23-smooth
+   -- and conditionally on H for that single pair in general.
+
+
+=========================================================================================
+1. THE BRIDGE                                                               [Lean]
+=========================================================================================
+mst_{q,rho}(t) = rho + 1 - t (t <= rho), q + rho + 1 - t (t > rho).  For 1 <= t <= q and rho < q:
+  t <= rho:  (rho + q - t) mod q = rho - t,           so sig(t) = rho - t + 1;
+  t >  rho:  rho + q - t < q,  (rho + q - t) mod q = rho + q - t, sig(t) = q + rho + 1 - t.
+So mst = sig on [1, q] (mst_eq_sig), pi.map mst = pi.map sig for pi in V_q (map_mst_eq), and
+SuperExp6's condition "pi and pi.map mst valid" is literally Live4's GoodL q rho pi
+(goodL_iff).  pi is nonempty (q >= 1), so H(q, rho) <=> some class t (= the head of pi) is Good
+(hypH_iff).  This is the expected identification: both are "complete residue chains" (Live2
+ChainOK, live3 1.1(e)); SuperExp6 found it from the composition side (right-half panels of
+class s see the classes through the mirror), Live2 from the liveness side (radius
+reach(N, x) mod q in {s - 1, (nu - s) mod q}).
+
+
+=========================================================================================
+2. PROVEN CASES                                                             [Lean]
+=========================================================================================
+2.1 rho = 0 (good_zero), rho = 1 for every q >= 2 (good_one_exists: Theorem H of live3 for odd
+    q, block composition with j = 2 for even q), rho = q - 1 (good_rot).
+2.2 Mirror rho -> q - rho (good_mirror; hypH_mirror).
+2.3 Block composition (good_comp; hypH_comp): q = m j, rho = j c + e (c < m, e < j):
+        H(j, e) and H(m, c) and (e > 0 => H(m, c+1 mod m))  =>  H(m j, rho).
+    (The inner order for a class a needs H(m, c + 1) only if a <= e, which forces e > 0.)
+    Hence AllH(m), AllH(j) => AllH(m j) (allH_mul; AllH(q) := H(q, rho) for every rho < q).
+2.4 AllH(q) for q <= 12 (Live2 table, class 2 is never exceptional), q = 2^a (good_pow_two),
+    and the primes 13, 17, 19, 23: for each rho one Live4 certificate cert_p_i with nu = rho
+    or nu = p - rho (then the mirror); certmap.py chooses them and prints the Lean case lists.
+    (Live4 has certificates for every non-exceptional (q, nu, t), q <= 27.)
+2.5 allH_smooth: strong induction on q, q = minFac(q) * m.  So AllH(q) for every q whose
+    prime factors are <= 23; the first q without a proof of AllH is 29.
+2.6 Small/large residues (hypH_low/high): if j | q and AllH(j) then H(q, rho) for rho < j and
+    for rho >= q - j (c = 0 uses H(m, 0), H(m, 1); c = m - 1 uses H(m, m-1), H(m, 0)).
+2.7 Compositions in power form (prod_sz, semiCount_pow_of_hypH): prod_{s<=q} a(sz(s)) =
+    a(n+1)^rho a(n)^(q-rho).  semiCount_smooth: for 23-smooth q and EVERY N,
+        a(floor(N/q) + 1)^(N mod q) a(floor(N/q))^(q - N mod q) <= a(N).
+    semiCount_one_mod / semiCount_neg_one_mod: a(n+1) a(n)^(q-1) <= a(nq+1),
+    a(n+1)^(q-1) a(n) <= a(nq + q - 1), every q >= 2.
+2.8 The all-N step for one N (allN_of_hypH).  M = 2^j, M(M+1) <= N, q = floor(N/M), rho = N mod M
+    (< M < q, so N = qM + rho with class sizes M and M+1; canonical_q).  With
+        M^M <= 2^M a(M)^6           (SuperExp2, pow_le_semiCount_pow_six)
+        M^M <= 8^M a(M+1)^6         (new: pow_le_semiCount_succ_pow_six, induction with
+                                     a(2^(j+1)+1) >= a(2^j) a(2^j+1), semiCount_odd)
+    H(q, rho) gives M^(qM) <= 8^(qM) a(N)^6 and qM (M+1) >= N M.  For the maximal M
+    (M > (sqrt N - 1)/2) this is ln a(N) >= (N/12) ln N - O(N), as in superexp6 3.2.
+    allN_smooth: unconditional whenever floor(N/2^j) is 23-smooth.
+    Note: the canonical q needs H only at a SMALL residue rho < M ~ sqrt(q); by 2.6 it holds
+    whenever q has a smooth divisor > rho, but this is not true for every N either.
+
+
+=========================================================================================
+3. WHY THE PROVEN CASES DO NOT GIVE AN ALL-N BOUND
+=========================================================================================
+3.1 The constraint.  For class sizes M, M+1 (M = 2^j: the only sizes with a 1/6-quality bound)
+    q is confined to (N/(M+1), N/M], an interval of RELATIVE width 1/M ~ N^(-1/2); taking
+    M = N^theta (exponent theta/6; theta > 3/8 is needed to beat 1/16) the interval has
+    length N^(1 - 2 theta) but relative width N^(-theta).  rho = N - qM moves by M when q moves
+    by 1, so it is "arbitrary" for each q.
+3.2 Counting obstruction (heuristic but robust).  Let T be the set of class sizes with a
+    1/6-quality bound and G(q) the set of residues with proven H.  N is covered iff
+    N in U_{q, M in T} (qM + G(q)), so on [N, 2N] one needs
+        sum_{q ~ N/X} |G(q)| * |T n [X, 2X]|  >~  N = X * (N/X).
+    (a) AllH moduli (23-smooth q, any rho): |G(q)| = q but only polylog(N) such q; |T n [X,2X]|
+        is at most X^eps for quality (1 - eps)/6 (sizes 2^K + r, r < 2^(eps K), or smooth
+        multiples of powers of 2).  Total polylog * X^eps * N/X << N.
+    (b) Every q, rho in {0, 1, q-1}: |G(q)| = 3; total 3 (N/X) X^eps << N.
+    (c) q = m j with j | q smooth (2.6): |G(q)| ~ 2 s(q), s(q) = smooth part of q, whose
+        mean over q is polylog: again << N.
+    So one needs the good residues to be a positive proportion for most q (i.e. H for most
+    (q, rho)), or a 1/6-quality bound for a positive proportion of all sizes (the all-N
+    problem itself).  Non-uniform trees (different moduli at different nodes) do not escape
+    this: a node of size S has classes of sizes floor(S/q), floor(S/q)+1, so the leaves are
+    exactly powers of 2 (or 2^l + 1) only along exceptional divisibility chains.
+3.3 Data (only proven pairs; coverage_lib.py = rho in {0,1,q-1}, 23-smooth q, block
+    composition with any factorisation):
+    coverage.py (exhaustive, M >= sqrt(N)/C): every N <= 20000 is covered for C = 16; for C = 4
+    the first gaps are at N = 18200, ... (99.7% of [64, 20000]).
+    coverage2.py (300 random N in [X, 2X], C = 4):
+        X      1e5    1e6    1e7    1e8    1e9    1e10   1e12
+        cov    98%    73%    72%    47%    25%    29%    10%
+    coverage3.py (200 random N, any M = 2^j in [N^0.4, sqrt N], i.e. exponent >= 1/15):
+        X      1e6    1e8    1e10   1e12   1e14
+        cov    74%    89%    77%    62%    71%
+    treedp.c (all x < 2^22, trees of compositions with arbitrary per-node moduli, leaves
+    2^l or 2^l + 1 with l >= L; VQ(x) = best L; treedp_out.txt): min_x VQ(x)/log2 x over
+    [2^k, 2^(k+1)) = 0.43, 0.38, 0.33, 0.40, 0.37, 0.33, 0.39, 0.36, 0.34, 0.38, 0.35, 0.33, 0.32,
+    0.30, 0.34, 0.32 (k = 6..21); beating 1/16 needs > 3/8 = 0.375 for every x.  The fraction
+    of x with VQ >= 0.40 log2 x is 77-96% in this range, but it is not 1 and the minimum drifts
+    down (smooth numbers thin out: the coverage at small N is a small-number effect).
+    So no unconditional all-N exponent above 1/16 follows from the proven cases, and none was
+    proven here.
+3.4 What would close the gap.  H for all (q, rho) gives 1/12 (superexp6 3.2, now reduced in
+    Lean to the single pair H(floor(N/M), N mod M), allN_of_hypH).  A weaker sufficient
+    statement: H(q, rho) for all rho < sqrt(q) (small residues) and all q in a set with bounded
+    gaps.  Adding certificates for the primes 29..47 (twobase.c of superexp6 found good orders
+    for every odd d <= 47) would only enlarge the smooth set (47-smooth), which does not change
+    3.2(a).  The missing step is a uniform construction for prime q; the routes tried before
+    (superexp6 3.1: AP orders, pair orders, mst-palindromic orders, parity blocks; Live4: the
+    transversal / CG problem at nu = 4r + 1) remain the state of the art; nothing new was
+    found here.
+
+
+=========================================================================================
+4. FILES (1 core, < 1 GB)
+=========================================================================================
+certmap.py      chooses the Live4 certificate (or its mirror) for each (p, rho), p = 13..23, and
+                prints the Lean proofs allH_13 ... allH_23.   python3 certmap.py ../../Folds/Live4.lean
+coverage_lib.py proven instances of H (rho in {0, 1, q-1}; 23-smooth q; block composition).
+coverage.py     exhaustive coverage of the all-N composition for N <= NMAX.  coverage.py NMAX C
+coverage2.py    sampled coverage, M >= sqrt(N)/C.       coverage2.py C samples X...
+coverage3.py    sampled coverage, M in [N^theta, sqrt N].   coverage3.py theta samples X...
+treedp.c        best composition trees with per-node moduli (3.3); treedp_out.txt (K = 22).
+Lean            Folds/SuperExp7.lean: mst_eq_sig, map_mst_eq, HypH, goodL_iff, hypH_iff,
+                hypH_of_good, hypH_of_gd, semiCount_of_hypH, semiCount_of_good, hypH_zero,
+                hypH_one, hypH_neg_one, hypH_mirror, hypH_of_fullOK, hypH_comp, AllH, allH_one,
+                allH_mul, allH_pow_two, allH_le_12, allH_13, allH_17, allH_19, allH_23,
+                allH_prime, allH_smooth, allH_le_28, hypH_low, hypH_high, prod_range_sz, prod_sz,
+                semiCount_pow_of_hypH, semiCount_smooth, semiCount_one_mod,
+                semiCount_neg_one_mod, pow_le_semiCount_succ_pow_six,
+                pow_le_semiCount_pow_six_of_hypH, canonical_q, allN_of_hypH, allN_smooth.

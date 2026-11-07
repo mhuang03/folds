@@ -1,0 +1,16 @@
+x in [2^6, 2^7): min VQ/log2 x = 0.429 at x = 127; fraction with VQ >= 0.40 log2 x: 1.000, >= 0.45: 0.734
+x in [2^7, 2^8): min VQ/log2 x = 0.380 at x = 239; fraction with VQ >= 0.40 log2 x: 0.922, >= 0.45: 0.781
+x in [2^8, 2^9): min VQ/log2 x = 0.333 at x = 511; fraction with VQ >= 0.40 log2 x: 0.984, >= 0.45: 0.918
+x in [2^9, 2^10): min VQ/log2 x = 0.400 at x = 1021; fraction with VQ >= 0.40 log2 x: 1.000, >= 0.45: 0.660
+x in [2^10, 2^11): min VQ/log2 x = 0.365 at x = 2011; fraction with VQ >= 0.40 log2 x: 0.847, >= 0.45: 0.847
+x in [2^11, 2^12): min VQ/log2 x = 0.334 at x = 3997; fraction with VQ >= 0.40 log2 x: 0.977, >= 0.45: 0.581
+x in [2^12, 2^13): min VQ/log2 x = 0.385 at x = 8191; fraction with VQ >= 0.40 log2 x: 0.899, >= 0.45: 0.775
+x in [2^13, 2^14): min VQ/log2 x = 0.360 at x = 15231; fraction with VQ >= 0.40 log2 x: 0.923, >= 0.45: 0.589
+x in [2^14, 2^15): min VQ/log2 x = 0.344 at x = 23927; fraction with VQ >= 0.40 log2 x: 0.993, >= 0.45: 0.661
+x in [2^15, 2^16): min VQ/log2 x = 0.376 at x = 64511; fraction with VQ >= 0.40 log2 x: 0.815, >= 0.45: 0.585
+x in [2^16, 2^17): min VQ/log2 x = 0.354 at x = 127999; fraction with VQ >= 0.40 log2 x: 0.941, >= 0.45: 0.530
+x in [2^17, 2^18): min VQ/log2 x = 0.334 at x = 252863; fraction with VQ >= 0.40 log2 x: 0.841, >= 0.45: 0.596
+x in [2^18, 2^19): min VQ/log2 x = 0.320 at x = 447431; fraction with VQ >= 0.40 log2 x: 0.869, >= 0.45: 0.426
+x in [2^19, 2^20): min VQ/log2 x = 0.303 at x = 894863; fraction with VQ >= 0.40 log2 x: 0.962, >= 0.45: 0.597
+x in [2^20, 2^21): min VQ/log2 x = 0.335 at x = 1966059; fraction with VQ >= 0.40 log2 x: 0.765, >= 0.45: 0.340
+x in [2^21, 2^22): min VQ/log2 x = 0.322 at x = 3440575; fraction with VQ >= 0.40 log2 x: 0.907, >= 0.45: 0.484
