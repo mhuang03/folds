@@ -102,8 +102,9 @@ Numbers (midswap.c: subset DP, midswap_out.txt; sdmid.c: half DP, sdmid_out.txt)
    24 : 405183518255160           0         | 48596872              0
    26 : 23104956296668912         0         | 396722320             0
  PREDICTED #midSwappable(N) mod 8 (from the proven congruence; c - d by sdmid.c):
-   28: 4  30: 4  32: 4  34: 0  36: 4  38: 4   (40: see sdmid_out.txt if present)
- (c, c-d, d for N <= 38 in sdmid_out.txt.)
+   28: 4  30: 4  32: 4  34: 0  36: 4  38: 4  40: 0
+ (c, c-d, d for N <= 40 in sdmid_out.txt; N = 40: c-d = 2479845095337816,
+  d = 953894542843952, c agrees with selfdual_out.txt.)
 This determines a mod 8 only up to r = #{dependent middle pair} mod 8, which is as hard
 as a itself.
 
