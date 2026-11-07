@@ -1,0 +1,13 @@
+  0/30812
+  5000/30812
+  10000/30812
+  15000/30812
+  20000/30812
+  25000/30812
+  30000/30812
+K=8 q=96 (s=2, a=5): Normaliz 44 vertices, structures 44: EQUAL
+K=8 q=112 (s=3, a=4): Normaliz 340 vertices, structures 340: EQUAL
+K=8 q=120 (s=4, a=3): Normaliz 340 vertices, structures 340: EQUAL
+K=8 q=124 (s=5, a=2): Normaliz 316 vertices, structures 316: EQUAL
+K=8 q=126 (s=6, a=1): Normaliz 58 vertices, structures 58: EQUAL
+ALL EQUAL

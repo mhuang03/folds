@@ -1,0 +1,11 @@
+s=4 a=2 m=7: main(f=1)/Phi_main = +0.106591 -0.016575i
+s=4 a=3 m=8: main(f=1)/Phi_main = +0.345772 +0.018579i
+s=4 a=4 m=9: main(f=1)/Phi_main = +0.559492 +0.015253i
+s=4 a=5 m=10: main(f=1)/Phi_main = +0.801725 +0.006497i
+s=5 a=2 m=8: main(f=1)/Phi_main = +0.293946 -0.008054i
+s=5 a=3 m=9: main(f=1)/Phi_main = +0.538037 +0.008768i
+s=5 a=4 m=10: main(f=1)/Phi_main = +0.770624 +0.007156i
+s=5 a=5 m=11: main(f=1)/Phi_main = +1.016943 +0.003044i
+s=6 a=2 m=9: main(f=1)/Phi_main = +0.517758 -0.003967i
+s=6 a=3 m=10: main(f=1)/Phi_main = +0.764693 +0.004261i
+s=6 a=4 m=11: main(f=1)/Phi_main = +1.006157 +0.003468i
