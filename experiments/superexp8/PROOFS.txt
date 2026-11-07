@@ -1,0 +1,173 @@
+SMALL RESIDUES OF HYPOTHESIS H; WHY SMALL RESIDUES DO NOT GIVE AN ALL-N BOUND   (experiments/superexp8/)
+=========================================================================================
+
+Notation as in ../superexp7/PROOFS.txt and ../hyph/PROOFS.txt.  a(n) = |V_n|, H(q, rho) <=>
+exists pi, GoodL q rho pi; sig(t) = ((nu - t) mod q) + 1.  [Lean] = Folds/SuperExp8.lean,
+namespace Folds.SuperExp8; no sorry, no native_decide; axioms propext, Classical.choice,
+Quot.sound (checked with #print axioms).
+
+SUMMARY (honest)
+----------------
+ * The unconditional all-N exponent is NOT improved: it stays 1/16 (SuperExp5).  Small
+   residues (rho <= c for a constant c, or rho >= q - c) cannot give an all-N bound beyond the
+   existing one, whatever c is: section 1 (a counting argument, a concrete obstruction at
+   N = 2^L - 1, and data).  What is needed is H(q, rho) for rho <= q/K (any fixed K); this is
+   now the exact statement in Lean:
+ * [Lean: allN_of_smallH]  if H(q, rho) holds whenever 16 rho < q, then for EVERY N
+        N^N <= 2^(15 N) a(N)^12,      i.e.  a(N) >= (N / 32768)^(N/12).
+   (M = 2^j with 64 M^2 <= N < 256 M^2, q = floor(N/M) >= 64 M, rho = N mod M < M <= q/64.)
+ * Parity trees (step 2 of the plan) cannot supply rho <= q/K: their threshold is the constant
+   9 for every q = -1 mod 16 (section 3, verified for all q <= 260, with a conjectured exact
+   formula).  They do give GoodL orders for all rho <= 8 (and >= q - 8), every q <= 260.
+ * New unconditional cases of H, EVERY modulus [Lean]:
+        H(q, 2)  (q >= 3),   H(q, 4)  (q >= 5),   H(q, 3)  (q even, q >= 4)
+   and the mirrors H(q, q-2), H(q, q-4), H(q, q-3) (q even)  (hypH_two, hypH_four,
+   hypH_three_even, hypH_neg_*, hypH_smallRes), hence for every q and n
+        a(n+1)^rho a(n)^(q-rho) <= a(nq + rho),   rho in SmallRes(q)   (semiCount_smallRes).
+   Before: rho in {0, 1, q-1} for general q.  The tool is Theorem R of ../hyph, now in Lean
+   (goodL_oddR), plus the observation that for w in {1, 2} each side of Theorem R has at most
+   ONE exceptional pair, which reversal always satisfies (prec_or_reverse).
+
+
+=========================================================================================
+1. STEP 1: CAN SMALL RESIDUES COVER EVERY N?   NO.
+=========================================================================================
+1.1 What the composition needs.  a(N) >= prod a(class sizes) with the q residue classes of the
+    N-strip (sizes n, n+1; N = nq + rho, rho < q), given H(q, rho).  Only class sizes with a
+    1/6-quality bound a(M)^6 >= (M/C)^M help, and the known ones are M = 2^j, 2^j + 1 (and,
+    with constant C ~ x c, the numbers x 2^j + c with x, c bounded: polylog(X) of them in
+    [X, 2X]); a composition with q classes costs a factor q in the base, so it cannot be used
+    to enlarge this set except with bounded q.  The exponent is (1/6) ln M / ln N, so beating
+    1/16 needs M >= N^(3/8 + eps); and rho < q needs M <~ sqrt N.
+1.2 Small residues are a lottery with 1/M odds.  Fix such an M.  q ranges over
+    (N/(M+1), N/M], and rho = N - qM takes the values (N mod M) + iM.  rho <= c happens only for
+    i = 0 and needs N mod M <= c; rho >= q - c needs (M+1) | N + delta for some delta <= c.  So
+    each admissible M is one pair of tickets with probability about (2c+1)/M, and there are
+    polylog(N) admissible M (1.1).  The expected number of good choices is
+    polylog(N) / N^(3/8) -> 0.  (superexp7 3.2 is the same count; it is independent of c.)
+    Composition with smooth factors (hypH_comp: H(m j, j c + e) from H(j, e), H(m, c),
+    H(m, c+1)) turns "rho small" into "rho < c' 2^(v_2(q))" (j = 2^a), resp. "rho mod (q/2^a)
+    small": for q = N >> j this asks for a zero run of about j bits in N.  Also hopeless.
+1.3 A concrete obstruction for parity trees: N = 2^L - 1.  Then every q = N >> j = 2^(L-j) - 1
+    is = -1 mod 16, where parity trees stop at rho = 8 (section 3), while rho = N mod 2^j =
+    2^j - 1 and q - rho = 2^(L-j) - 2^j are both large.  (Such N need other orders, e.g. the
+    C-orders of ../hyph csolve.c, which are not uniform.)
+1.4 Data (coverage8.py: fraction of 200 random N in [X, 2X] covered with M = 2^j >= sqrt(N)/4,
+    any q in (N/(M+1), N/M], H proven by the superexp7 rules / + SmallRes / + HYPOTHETICAL
+    "every rho <= 8 or >= q - 8, every q", all closed under block composition):
+        X        1e6    1e8    1e10
+        sexp7    81%    55%    27%
+        +Small   90%    68%    44%
+        rho<=8   96%    93%    74%
+    The coverage falls with X in all three columns (the smooth numbers thin out), as 1.2
+    predicts; even the hypothetical full small-residue range does not cover every N.
+1.5 Allowing smaller M (exponent theta/6 with M = N^theta) does not help: the q-interval then
+    has length N^(1 - 2 theta) and contains a q with 2^a | q, 2^a ~ N^(1-2theta), but the
+    residues are rho ~ i M, and hypH_comp with c in a bounded set needs 2^a >~ rho >= M, i.e.
+    1 - 2 theta > theta, theta < 1/3: exponent < 1/18 < 1/16.
+So the reformulation that DOES work is in terms of rho <= q/K (allN_of_smallH), and the
+missing input is H for residues up to a fixed fraction of q, not a fixed number.
+
+
+=========================================================================================
+2. THEOREM R IN LEAN AND THE NEW SMALL CASES                                [Lean]
+=========================================================================================
+2.1 Theorem R (goodL_oddR).  q = 2m + 1, nu = 2w, w < m.  With oddE i = 2i - 1, evE j = 2j,
+        sig_q(2i - 1) = psiW w (sig_{m+1,w}(i)),   psiW w y = 2y (y <= w), 2y - 1 (y > w)
+        sig_q(2j)     = chiW w (sig_{m,w}(j)),     chiW w z = 2z - 1 (z <= w), 2z (z > w)
+    (sig_oddE, sig_evE).  oddE, evE are exact window embeddings of the (m+1)- and m-strips
+    (agree_oddE, agree_evE: Live4.Agree for every pair).  pi = alpha.map oddE ++
+    reverse(beta.map evE): pi is complete, valid by semiSymmetric_append_rev (complement
+    lemma: a final block is valid iff its reverse is valid from scratch); sig o pi =
+    (sig alpha).map psiW ++ reverse((sig beta).map chiW) is valid by semiSymmetric_near
+    (Live4) as soon as sig alpha (resp. sig beta) never places j before i for an exceptional
+    pair (i, j) of psiW (resp. chiW), i.e. a pair where Agree fails (NotAgree).
+2.2 Exceptional pairs (agree.py; exc_psi_one, exc_chi_one, exc_psi_two, exc_chi_two by omega
+    for all m):
+        w = 1, m >= 2:  psiW: (1, 2) only;      chiW: none
+        w = 2, m >= 3:  psiW: (2, 4) only;      chiW: (2, 3) only
+        w = 3:          psiW: (2,4), (3,6);     chiW: (3, 5)          (two pairs: not used)
+    In general psiW has the doubling pairs (y, 2y), w/2 < y <= w, plus wrapped ones; for odd nu
+    (odds first, agree2.py) the doubling pairs (y, 2y - 1), (z, 2z) appear for ALL small y, z
+    (Lemma-W type constraints), which is why odd nu for odd q is not covered here.
+2.3 One pair is free (prec_or_reverse): if e relates only (a, b), a nodup list or its reverse
+    has no e-violation; GoodL is closed under reversal and sig commutes with it
+    (goodL_prec_of_pair).  So (hypH_oddR_pairs): H(2m+1, 2w) follows from the mere existence
+    of GoodL(m+1, w) and GoodL(m, w) orders when each side has <= 1 exceptional pair.
+2.4 The cases.  Even q = 2m: block composition with j = 2 (hypH_comp): H(2m, 2c + e) from
+    H(m, c) and (e = 1) H(m, c + 1).
+        H(q, 2):  q = 2m: H(m, 1);  q = 3: q - 1;  q = 2m+1, m >= 2: R(w = 1) with GoodL(., 1)
+                  (Live4 good_one_exists).
+        H(q, 4):  q = 2m (m >= 3): H(m, 2);  q = 5: q - 1;  q = 2m+1, m >= 3: R(w = 2) with
+                  GoodL(m+1, 2), GoodL(m, 2) from H(., 2).
+        H(2m, 3): m = 2: q - 1;  m >= 3: H(2, 1), H(m, 1), H(m, 2).
+        mirrors:  hypH_mirror.
+    SmallRes q rho := rho in {0, 1, 2, 4, q-1, q-2, q-4} or (q even and rho in {3, q-3});
+    hypH_smallRes, semiCount_smallRes, semiCount_two_mod, semiCount_four_mod.
+    (With block composition these give more for q with many factors 2, e.g. H(4k, 5) from
+    H(2k, 2), H(2k, 3); not stated separately.)
+
+
+=========================================================================================
+3. PARITY TREES (data; the binary form)
+=========================================================================================
+3.1 Binary form (ptree.py, checked against GoodL directly).  0-indexed classes u = s - 1; a
+    parity tree is a choice g(k, a) in {0, 1} at every node (residue class a mod 2^k with >= 2
+    members of [0, q)); t precedes u iff the subclass containing t at level k = v2(t - u) is
+    the one chosen first.  Every parity tree is strip-valid (Generate / parity blocks), so by
+    Lemma X it is GoodL(q, nu) iff at every step s
+        #{earlier classes in X} = #{earlier classes in 2s - X (mod q)},   X = [1, nu].
+    KEY CANCELLATION: if 2s - j lies in [1, q] then 2s - j = j (mod 2^(k+1)), k = v2(s - j),
+    so 2s - j and j are on the same side of s; the two counts differ only through the WRAPPED
+    j (2s - j > q or < 1):
+        sum over wrapped j of  [x_j precedes s] - [ghost 2s - j precedes s] = 0,
+    x_j = 2s - j - w q, w = +-1, i.e.  eps(v2(s - j - wq), s) = eps(v2(s - j), s) on average,
+    eps(k, u) = g(k, u mod 2^k) XOR bit_k(u).  For q = 2^L the wrap does not change v2 and
+    everything cancels (H for every rho).  ptree.py builds this as a SAT instance (cardinality
+    constraints, pysat); it reproduces vdc.c exactly for q <= 63.
+3.2 Thresholds (thresh.py, thresh_*.out): smallest nu <= q/2 without a parity-tree GoodL
+    order (the mirror side is identical), all q <= 260:
+        q = -1 mod 16: 9      q = 1 mod 16: 10
+        q = -3, -2 mod 32: 17      q = 2, 3 mod 32: 19, 20
+        q = -7..-4 mod 64: 33      q = 4..7 mod 64: 37..40
+        q = -15..-8 mod 128: 65    (all other q <= 260: every nu)
+    Conjecture (fits every q <= 260): thresh(q) = min over k >= 4 of T_k(q), where
+    T_k = 2^(k-1) + 1 if q mod 2^k is in (2^k - 2^(k-3), 2^k - 2^(k-4)], T_k = 2^(k-1) + d + 1 if
+    q mod 2^k = d in [2^(k-4), 2^(k-3)), T_k = infinity otherwise.  In particular parity trees
+    work for every nu <= 8 and every nu >= q - 8 (all q <= 260), but NOT for nu <= q/K: one
+    sixteenth of all q stop at 9.
+3.3 The rule (mindev.py, mindev_scan.py, mindev_3_160.out).  The fewest deviations from the
+    van der Corput tree (g = 0 everywhere) is bounded for fixed nu (max over q <= 160:
+    6, 10, 14, 16, 19, 22, 23, 25 for nu = 1..8), but the deviating nodes reach the deepest
+    levels (about log2 q - 1): they lie on O(nu) root-to-leaf paths, those of the classes near
+    the two ends (vdcrule.c of ../hyph; forced.py), and they depend on q mod 2^k for growing k.
+    A closed-form rule was not extracted.  The recursion that produces them is Theorem R
+    (odd q) and block composition (even q): the precedences of R are exactly single node
+    choices of the tree, so a parity tree for (q, nu) is a pair of parity trees for
+    (m+1, w), (m, w) with O(w) prescribed node choices.  For w <= 2 at most one choice per side
+    is prescribed and reversal provides it (section 2); for larger w, and for odd nu with odd
+    q (doubling precedences), several choices are prescribed simultaneously and an inductive
+    family of constrained problems would be needed.  This was not done.
+
+
+=========================================================================================
+4. FILES (<= 2 cores, < 1 GB)
+=========================================================================================
+ptree.py         parity trees, binary form of the X-condition, SAT solver (pysat).  Self-test:
+                 python3 ptree.py
+thresh.py        thresholds (3.2): thresh_2_33.out, thresh_34_140.out, thresh_141_260.out
+forced.py        forced node choices with the root fixed.     python3 forced.py q nu
+mindev.py        fewest deviations from the van der Corput tree (MaxSAT, RC2).
+mindev_scan.py   mindev_3_160.out (q <= 160, nu <= 8: "nu:deviations/deepest level").
+agree.py         exceptional pairs of psiW, chiW (Theorem R, even nu).
+agree2.py        exceptional pairs for odd nu, odds first (doubling constraints).
+coverage8.py     coverage data of 1.4 (coverage8_C4.txt).
+threshconj.py    checks the conjectured threshold formula of 3.2 against thresh_*.out (0 mismatches).
+Lean             Folds/SuperExp8.lean: oddE, evE, psiW, chiW, sig_oddE, sig_evE, agree_oddE,
+                 agree_evE, NotAgree, semiSymmetric_map_exact, semiSymmetric_map_prec,
+                 goodL_oddR, prec_or_reverse, goodL_prec_of_pair, prec_of_none, InStrip,
+                 prec_of_inStrip, exc_psi_one, exc_chi_one, exc_psi_two, exc_chi_two,
+                 hypH_oddR_pairs, goodL_of_hypH, goodL_one_exists, hypH_two, hypH_four,
+                 hypH_three_even, hypH_neg_two, hypH_neg_four, hypH_neg_three_even, SmallRes,
+                 hypH_smallRes, semiCount_smallRes, semiCount_two_mod, semiCount_four_mod,
+                 pow_sqrt_bound, allN_of_smallH.
