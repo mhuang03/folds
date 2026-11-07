@@ -1,4 +1,5 @@
 import Folds.Ek
+import Folds.ThinCover
 
 /-!
 # Conjecture E*_k: the two-sided family `S_a`
@@ -556,6 +557,117 @@ theorem not_coReach_2_6_7_11 : ¬ CoReach 12 {2, 6, 7, 11} := by
 theorem not_coReach_2_6_7_8_12 : ¬ CoReach 13 {2, 6, 7, 8, 12} := by
   have : sSet 2 13 = {2, 6, 7, 8, 12} := by decide
   rw [← this]; exact not_coReach_sSet le_rfl (by norm_num)
+
+end EkStar
+end Folds
+
+/-! ## Pairs: Conjecture E*_2 for all `N` -/
+
+namespace Folds
+namespace EkStar
+
+open Live2 Ek
+
+/-- **Conjecture C as co-reachability, for all `N`** (`ThinCover`): every pair other than the
+dead pairs `{1, N}` (`N` even `≥ 4` or `N = 7`) is co-reachable. -/
+theorem coReach_pair {N u v : Nat} (hu : 1 ≤ u) (huv : u < v) (hv : v ≤ N)
+    (hd : deadB N u v = false) : CoReach N {u, v} :=
+  Live8.coReach_of_mixed_large (fun N hN => Live8.mixedCover_of_arith (by omega)
+    (ArithCover.arithCover_of_residual (Residual.residual_of_residual2 (ThinCover.residual2 hN))))
+    N u v hu huv hv hd
+
+/-- **E*_2**: every pair inside `[2, N - 1]` is co-reachable, for every `N`. -/
+theorem coReach_pair_inner {N : Nat} {D : Finset Nat} (hD : D ⊆ Finset.Icc 2 (N - 1))
+    (h2 : D.card = 2) : CoReach N D := by
+  obtain ⟨x, y, hxy, rfl⟩ := Finset.card_eq_two.1 h2
+  have hx := Finset.mem_Icc.1 (hD (Finset.mem_insert_self x {y}))
+  have hy := Finset.mem_Icc.1 (hD (Finset.mem_insert_of_mem (Finset.mem_singleton_self y)))
+  rcases Nat.lt_or_gt_of_ne hxy with hlt | hlt
+  · exact coReach_pair (by omega) hlt (by omega) (by simp [deadB]; omega)
+  · rw [Finset.pair_comm]
+    exact coReach_pair (by omega) hlt (by omega) (by simp [deadB]; omega)
+
+/-- **Dead pairs, for every `N`**: at most `2 (N - 1)` of the pairs of `[N]` are dead. -/
+theorem card_dead_pairs_le (N : Nat) :
+    ((Finset.powersetCard 2 (Finset.Icc 1 N)).filter (fun D => ¬ CoReach N D)).card ≤
+      2 * (N - 1) := by
+  have := card_dead_le_of_Ek N 2 ∅ (fun D hD hc hd => absurd (coReach_pair_inner hD hc) hd)
+  simpa using this
+
+/-! ## Conjecture E*_k and the counting corollary -/
+
+/-- The radius `c_k = max(1, ⌊(k-1)/2⌋)` of Conjecture E*_k. -/
+def cK (k : Nat) : Nat := max 1 ((k - 1) / 2)
+
+/-- **Conjecture E*_k** (for one `k`, all `N`): every dead `k`-subset of `[c_k + 1, N - c_k]`
+is `S_{k/2}` at `N = 3k` (`k` even, `k ≥ 4`). -/
+def EkStarConj (k : Nat) : Prop :=
+  ∀ N (D : Finset Nat), D ⊆ Finset.Icc (cK k + 1) (N - cK k) → D.card = k → ¬ CoReach N D →
+    k % 2 = 0 ∧ 4 ≤ k ∧ N = 3 * k ∧ D = sSet (k / 2) N
+
+/-- **The counting corollary for any radius.**  If every dead `k`-subset of `[c + 1, N - c]`
+lies in `E`, then at most `2c · C(N-1, k-1) + |E|` of the `k`-subsets of `[N]` are dead. -/
+theorem card_dead_le_radius (N k c : Nat) (E : Finset (Finset Nat))
+    (h : ∀ D ⊆ Finset.Icc (c + 1) (N - c), D.card = k → ¬ CoReach N D → D ∈ E) :
+    ((Finset.powersetCard k (Finset.Icc 1 N)).filter (fun D => ¬ CoReach N D)).card ≤
+      2 * c * (N - 1).choose (k - 1) + E.card :=
+  card_dead_le N k c E (fun D hD hd => by
+    rw [Finset.mem_powersetCard] at hD
+    by_cases hend : ∃ x ∈ D, x ≤ c ∨ N + 1 ≤ x + c
+    · exact Or.inl hend
+    · push Not at hend
+      refine Or.inr (h D (fun x hx => ?_) hD.2 hd)
+      have := hend x hx
+      have := Finset.mem_Icc.1 (hD.1 hx)
+      rw [Finset.mem_Icc]; omega)
+
+/-- **E*_k implies the counting bound**: at most `2 c_k C(N-1, k-1) + 1` dead `k`-subsets of
+`[N]`, i.e. `O(N^{k-1})` for fixed `k`. -/
+theorem card_dead_le_of_EkStar {k : Nat} (hE : EkStarConj k) (N : Nat) :
+    ((Finset.powersetCard k (Finset.Icc 1 N)).filter (fun D => ¬ CoReach N D)).card ≤
+      2 * cK k * (N - 1).choose (k - 1) + 1 := by
+  have := card_dead_le_radius N k (cK k) {sSet (k / 2) N} (fun D hD hc hd => by
+    obtain ⟨-, -, -, rfl⟩ := hE N D hD hc hd
+    exact Finset.mem_singleton_self _)
+  simpa using this
+
+/-- **E*_2 holds** (Conjecture C, `ThinCover`). -/
+theorem ekStar_two : EkStarConj 2 := fun N D hD hc hd =>
+  absurd (coReach_pair_inner (by simpa [cK] using hD) hc) hd
+
+/-- **The exception of E*_k is needed**: for even `k = 2a ≥ 4`, `S_a` at `N = 3k` is a dead
+`k`-subset of `[c_k + 1, N - c_k]`. -/
+theorem sSet_exception {a : Nat} (ha2 : 2 ≤ a) :
+    sSet a (6 * a) ⊆ Finset.Icc (cK (2 * a) + 1) (6 * a - cK (2 * a)) ∧
+      (sSet a (6 * a)).card = 2 * a ∧ ¬ CoReach (6 * a) (sSet a (6 * a)) := by
+  have hc : cK (2 * a) = a - 1 := by unfold cK; omega
+  refine ⟨fun x hx => ?_, by rw [card_sSet ha2 le_rfl]; omega, not_coReach_sSet ha2 le_rfl⟩
+  rw [mem_sSet] at hx; rw [Finset.mem_Icc, hc]; omega
+
+/-- The set `{c} ∪ [2c + 2, 2c + k]`, `c = ⌊(k-1)/2⌋`: the anchored block `B_c` (plus one
+more block panel when `k` is even). -/
+def radSet (k : Nat) : Finset Nat :=
+  insert ((k - 1) / 2) (Finset.Ico (2 * ((k - 1) / 2) + 2) (2 * ((k - 1) / 2) + k + 1))
+
+/-- **The radius `c_k` of E*_k is optimal** (`k ≥ 3`, `N ≥ 3k`): there is a dead `k`-subset of
+`[c_k, N + 1 - c_k]` containing `c_k`, so `[c_k + 1, N - c_k]` cannot be widened by one panel
+at either end. -/
+theorem radius_optimal {k N : Nat} (hk : 3 ≤ k) (hN : 3 * k ≤ N) :
+    radSet k ⊆ Finset.Icc (cK k) (N + 1 - cK k) ∧ cK k ∈ radSet k ∧
+      (radSet k).card = k ∧ ¬ CoReach N (radSet k) := by
+  have hc : cK k = (k - 1) / 2 := by unfold cK; omega
+  have hmem : ∀ x, x ∈ radSet k ↔ x = (k - 1) / 2 ∨
+      (2 * ((k - 1) / 2) + 2 ≤ x ∧ x < 2 * ((k - 1) / 2) + k + 1) := by
+    intro x; rw [radSet, Finset.mem_insert, Finset.mem_Ico]
+  refine ⟨fun x hx => ?_, ?_, ?_, ?_⟩
+  · rw [hmem] at hx; rw [Finset.mem_Icc, hc]; omega
+  · rw [hc, hmem]; exact Or.inl rfl
+  · rw [radSet, Finset.card_insert_of_notMem (by rw [Finset.mem_Ico]; omega), Nat.card_Ico]
+    omega
+  · refine not_coReach_anchor (a := (k - 1) / 2) (j := (k - 1) / 2 + 1)
+      (fun x hx => by rw [hmem] at hx; rw [Finset.mem_Icc]; omega) (by omega) le_rfl (by omega)
+      ((hmem _).2 (Or.inl rfl)) (fun t ht => (hmem _).2 (Or.inr ⟨by omega, by omega⟩))
+      (fun x hx => by rw [hmem] at hx; omega)
 
 end EkStar
 end Folds
