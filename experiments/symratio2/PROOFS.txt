@@ -1,0 +1,258 @@
+WHY THE DOUBLING DEFECT OF r(n) CONTRACTS BY 4, AND WHY IT VANISHES WHEN 3 | x
+                                                                    (experiments/symratio2/)
+==========================================================================================
+Builds on ../symratio/PROOFS.txt (Theorems W, S, J, Q) and ../thetaext/NOTES.txt (exact
+theta(n), n <= 2000).  r(n) = theta(n)/(2 theta(floor n/2) theta(ceil n/2)), theta = A003407.
+Lean: Folds/SymRatio2.lean (no sorry, no native_decide; axioms propext, Classical.choice,
+Quot.sound).
+
+Notation.  For windows S (a reversed tail: y'_1 = last entry of sigma, ...) and T (a head:
+u_1 = first entry of tau), Pi_{N,q}(S,T) is the count of Theorem W: the number of Young
+diagrams lambda in the 6x6 box with no cell (i,k) such that the lifted entries y_k = 2y'_k - q
+and u_i = 2u_i - (1-q) are linked at size N.  It is a function of the LINKAGE PATTERN
+(k,i) -> Linked(N, y_k, u_i) only.  Theorem S: r(N) = (1/2) sum_q <t_d, Pi_{N,q} t_c>.
+
+SUMMARY
+  U   (unlifting lemma; Lean linkS_unlift, linkGH_unlift, linked_lift_iff, patt_lift)
+      Linkage of lifted values at size 2L (or 2L+1) is linkage of the unlifted values at size
+      L with the two progression windows SHIFTED; the shifts evolve by a finite automaton
+      g -> floor((g + 2b - c)/2), h -> floor((h + 2c - b)/2) driven by the parity bits b, c
+      of the two windows.  So every r(N) is an expectation of Pi^{(g,h)} on deep windows.
+  A   (the automaton and its spectrum; Lean delta_T, pi_T, p0_T, fair_closed_form, fair_diff)
+      9 states {-1,0,1}^2, spectrum {1, 1/2, 1/2, 1/4, 1/4, 1/4, 0, 0, -1/4}.  The 1/2-modes
+      are the additive functions a(g)+b(h); the top state {(-1,1),(1,-1)} of Theorem J does
+      not excite them, and after one step it is  pi + 4^{-k} v/6  EXACTLY (Jacobsthal numbers).
+      THE FAIR-BIT MODEL (iid fair parity bits on top of any law mu at size M) is therefore
+      exactly  r_fair(M 2^{k+1}) = Phi_mu + 4^{-k} Delta(F_mu)/6  for all k >= 1.
+  T   (the role of 3)  Delta = w1 + w2, w1, w2 = mixed second differences of F(g,h) on the
+      two off-diagonal squares.  They measure the INTERACTION between the progression types
+      2y-u and 2u-y.  For one pair (y,u) the interaction is 1 exactly at the "1/3-pairs"
+      (2y-u, 2u-y) in {(L,1), (0,L+1)}, i.e. 3y = 2L+1 or 3y = L+1, and 0 when 3 | L
+      [Lean w1_cell, w1_cell_eq_zero_of_three_dvd, w1_cell_one_third, w1_cell_two_thirds].
+      For whole windows of 3-AP-free permutations: w1 = w2 = 0 on EVERY window pair of
+      Theta(M) when 3 | M (checked by computer for all M = 0 mod 3 listed in section 4), and
+      this identity propagates exactly under doubling [Lean w1_lift, w2_lift, w_lifts_eq_zero].
+      For 3 not dividing M the nonzero pairs form a fixed finite product family whose junction
+      pair (y'_1, u_1) is the 1/3-pair; each window has probability ~1/M, so the amplitude is
+      ~ M^{-2}: this is the 4 = 2^2.
+  N   numerics: the linearised doubling map (forward-mode tangents of Theorem J) contracts by
+      4.0 along 3-free chains and super-geometrically along 3 | x chains; the doubling defect is
+      all "linear" (block-product) part, the head-tail correlation part is quadratic; the
+      marginal-only (Markov-bit) model and the fair-bit model reproduce the dichotomy; the
+      fair-bit amplitude computed from the exact law at M0 converges to the true A(x)
+      (x = 5: 2.46845 vs 2.468..; x = 7: 2.13597 vs 2.1359..).
+  Status: Conjectures R and R' remain OPEN for the true sequence (the bit-bias corrections
+  to the fair-bit model are not controlled).  The mechanism of R' (rate 1/4, A(x) = 0 iff
+  3 | x, A(x) > 0 otherwise) is now an exact theorem for the fair-bit model.
+
+------------------------------------------------------------------------------------------
+1. LEMMA U (unlifting)                                     [Lean SymRatio2.linkS_unlift]
+------------------------------------------------------------------------------------------
+Define, for integers, linkS(L; glo,ghi,hlo,hhi; y,u) :<=> 1+glo <= 2y-u <= L+ghi  or
+1+hlo <= 2u-y <= L+hhi, and linkGH(L;g,h) = linkS(L;g,g,h,h).  Linked(N,y,u) = linkGH(N;0,0)
+(linked_iff_linkGH).
+LEMMA U.  For all integers L, e, Y, U, b, c and shifts,
+   linkS(2L+e; glo,ghi,hlo,hhi; 2Y-b, 2U-c)  <=>
+   linkS(L; [(glo+2b-c)/2], [(ghi+e+2b-c)/2], [(hlo+2c-b)/2], [(hhi+e+2c-b)/2]; Y, U)
+([x] = floor).  Proof: 2y-u = 2(2Y-U) - (2b-c) and 2u-y = 2(2U-Y) - (2c-b); divide the
+inequalities by 2 (ceil((m+1)/2) = floor(m/2)+1).  (omega)                          QED
+Even sizes (e = 0) keep rigid shifts: linkGH(2L;g,h;2Y-b,2U-c) <=> linkGH(L; s(g;b,c),
+s(h;c,b); Y, U), s(g;b,c) = floor((g+2b-c)/2)  [linkGH_unlift].  Top level of Theorem J
+(D-entries lifted by q, C-entries by 1-q) [linked_lift_iff]:
+   Linked(2L, lift_0 Y, lift_1 U) <=> linkGH(L;-1, 1;Y,U),
+   Linked(2L, lift_1 Y, lift_0 U) <=> linkGH(L; 1,-1;Y,U).
+Whole windows (all six entries of a window share its top bit) [patt_lift]: the linkage
+pattern of (lift_b S, lift_c T) at (2L; g,h) equals that of (S,T) at (L; s(g;b,c), s(h;c,b)).
+Hence for every function Phi of the pattern (in particular Pi, Theorem W's explicit form),
+     F_{lift_b S, lift_c T} = F_{S,T} o step_{b,c},   F_{S,T}(g,h) := Phi(pattern at (L;g,h)).
+Starting from (0,0) at size N the reachable shifts stay in {-1,0,1}^2 (even sizes).
+Consequence (exact).  For N = M 2^{k+1} with all sizes M 2^i even (i >= 1) and windows that are
+lifts all the way down to size M (true for M >= 10 by Theorem J: heads are lifted heads):
+   r(N) = E[ Pi^{(g_k,h_k)}_M (S_0, T_0) ],
+the expectation over independent (sigma-tail path, S_0) and (tau-head path, T_0), with
+(g_k,h_k) the automaton state after the top step and the k bit pairs of the two paths.
+
+------------------------------------------------------------------------------------------
+2. THE AUTOMATON AND THE FAIR-BIT MODEL       [Lean delta_T, pi_T, p0_T, fair_closed_form]
+------------------------------------------------------------------------------------------
+On functions F of the shifts: (TF)(g,h) = (1/4) sum_{b,c in {0,1}} F(s(g;b,c), s(h;c,b)).
+As a 9x9 stochastic matrix on {-1,0,1}^2 (automaton.py, data/automaton.txt):
+   spectrum {1, 1/2, 1/2, 1/4, 1/4, 1/4, 0, 0, -1/4}  (diagonalisable).
+ * Additive functions a(g) + b(h) form an invariant subspace; there T is the marginal chain
+   g -> floor((g+n)/2), n uniform in {-1,0,1,2}, with spectrum {1, 1/2, 0}.  So the 1/2-modes
+   are additive, and 1/4 = (1/2)(1/2) is the INTERACTION of the two shift coordinates.
+ * Stationary law pi = (1/12)(0,1,2,1,4,1,2,1,0) on (-1,-1),(-1,0),...,(1,1).
+ * Left eigenvector for 1/4 that is excited: v = (0,1,-1,1,-2,1,-1,1,0), i.e. the functional
+      Delta(F) = F(-1,0) + F(0,-1) + F(0,1) + F(1,0) - F(-1,1) - F(1,-1) - 2F(0,0),
+   Delta(TF) = Delta(F)/4 [delta_T];  v has zero marginals.
+ * Top state p0 = (delta_{(-1,1)} + delta_{(1,-1)})/2 (q uniform).  p0 T = pi + v/24 [p0_T],
+   hence by induction
+      p0 T^k = pi + 4^{-k} v / 6   for every k >= 1           [fair_closed_form]
+   (the entries are Jacobsthal numbers J_n = (2^n - (-1)^n)/3: 3/32, 11/128, 43/512, ...).
+   The 1/2-modes and the -1/4-mode are not excited (the q <-> 1-q symmetry of the top step),
+   the 0-modes die after one step.
+THEOREM F (fair-bit model).  Let mu be any law on 6-tuples at size M, and give each window
+of size M 2^i, i >= 1, independent uniform parity bits on top of a mu-distributed base
+(t_{2m}(lift_a H) = t_m(H)/2).  Then with F_mu(g,h) = E_{mu x mu} Pi^{(g,h)}_M(S,T):
+      r_fair(M 2^{k+1}) = p0 T^k F_mu = pi(F_mu) + 4^{-k} Delta(F_mu)/6       (k >= 1),
+      r_fair(M 2^{k+2}) - r_fair(M 2^{k+1}) = - 4^{-k} Delta(F_mu)/8        [fair_diff].
+Proof: Lemma U turns r_fair(M 2^{k+1}) into p0 T^k F_mu (each fair lift is one T); then A.
+Checked numerically (delta.py, data/delta_base.txt: closed form = direct fair recursion to
+<= 8e-13 for every base 9..18; fair.py, fair_scan.py: random mu too, ratios exactly 4.000).
+So in the fair-bit model the doubling defect is EXACTLY geometric with ratio 1/4 from the
+second step on, and its amplitude is the single number Delta(F_mu).
+
+------------------------------------------------------------------------------------------
+3. THE ROLE OF 3
+------------------------------------------------------------------------------------------
+3.1 Delta splits as w1 + w2 [delta_eq]:
+      w1(F) = F(-1,0) - F(-1,1) - F(0,0) + F(0,1)   (square g in {-1,0}, h in {0,1}),
+      w2(F) = F(0,-1) - F(0,0) - F(1,-1) + F(1,0)   (square g in {0,1}, h in {-1,0}).
+   Both vanish on additive F: they measure how the shift of the 2y-u window and the shift
+   of the 2u-y window interact.
+3.2 One pair [w1_cell, w2_cell].  For the indicator l(g,h) = [linkGH(L;g,h;y,u)], L >= 1,
+      w1(l) = [2y-u = L and 2u-y = 1] + [2y-u = 0 and 2u-y = L+1],
+   i.e. (3y,3u) = (2L+1, L+2) or (L+1, 2L+2): the pairs next to (2L/3, L/3), the middle and
+   first terms of the progression (L/3, 2L/3, L).  Proof: 1 - l = (1-A(g))(1-B(h)), so
+   w1(l) = -(A(0)-A(-1))(B(1)-B(0)) = ([K=L]-[K=0])([K'=L+1]-[K'=1]) with K = 2y-u,
+   K' = 2u-y; and 3y = 2K+K', 3u = K+2K'.  So when 3 | L no single pair couples the two
+   shifts [w1_cell_eq_zero_of_three_dvd]; when L = 1 or 2 mod 3 the pair
+   ((2L+1)/3, (L+2)/3) resp. ((L+1)/3, (2L+2)/3) does [w1_cell_one_third, _two_thirds].
+3.3 Whole windows.  Pi = sum_lambda a_lambda(g) b_lambda(h) (for each Young diagram,
+   1 - (A or B) = (1-A)(1-B) cellwise), so w1(Pi) = sum_lambda (a(-1)-a(0))(b(0)-b(1)), a
+   sum over diagrams of products of "A-boundary" and "B-boundary" events.  For ARBITRARY
+   6-tuples this does not vanish at 3 | L (delta_rand.py: nonzero, and always <= 0), so the
+   window structure matters.
+   OBSERVATION W3 (computer, verify_w.py, data/verify_w.txt).  For every pair (S,T) of
+   windows of Theta(M) (S a reversed tail, T a head):  w1(F_{S,T}) = w2(F_{S,T}) = 0  when
+   3 | M.  Checked for M = 9, 12, 15, 18 (exact window sets), every odd multiple of 3 in
+   [21, 99], and M = 24, 30, 36, 42, 48, 54, 72, 96 (window sets of Theorem J); together
+   5.56e7 pairs, 0 exceptions.  For 3 not dividing M it fails, always with the same
+   structure: the pairs with w1 != 0 form a product set R x C (|R| = |C| = 39, 40, 16, 21,
+   22, 23 at M = 10, 11, 13, 14, 16, 17, and the lifted copies: 39 at 19, 20, 40, ...),
+   all rows have y'_1 = (2M+1)/3 or (M+1)/3 and all columns u_1 = (M+2)/3 resp. (2M+2)/3:
+   the JUNCTION cell (1,1) (last entry of sigma, first of tau; in every nonempty lambda) is
+   the 1/3-pair of 3.2.  Values w1 in {-19,-9,-5,-3,-2,-1}: Delta <= 0 always.
+   (span.py: for 3 | M the vectors F_{S,T} span exactly the 7-dim annihilator of w1, w2;
+   for 3 not dividing M they span all of Q^9.)
+3.4 PROPAGATION THEOREM [Lean w1_lift, w2_lift, w_lift_eq_zero, w_lifts_eq_zero].  For any
+   function Phi of the linkage pattern and any windows y, u (Fin 6 -> Z), size L, bits b, c:
+      w1(F at 2L of the lifted pair) = w2(F at L)  if (b,c) = (1,0),  0 otherwise;
+      w2(F at 2L of the lifted pair) = w1(F at L)  if (b,c) = (0,1),  0 otherwise.
+   (step_{1,0} maps the w1-square onto the w2-square, the other steps collapse it.)  Hence
+   w1 = w2 = 0 at size L implies w1 = w2 = 0 for every j-fold lift at size L 2^j.
+COROLLARY.  For M0 in the verified list with M0 >= 10 and every j >= 0, w1 = w2 = 0 on all
+window pairs of Theta(M0 2^j) (Theorem J: windows at size 2m >= 20 are lifts of windows at
+size m; Pi is a function of the pattern).  So for every chain x 2^j with 3 | x <= 99 (x odd)
+the fair-bit model started at ANY level M0 = x 2^{j0} with the TRUE law t_{M0} has
+Delta = 0: no 4^{-k} term at all, r_fair constant from the second step.  For 3 not dividing x
+it has Delta < 0 (checked on every chain tested), i.e. A > 0: the positive sign of D_j seen
+in all 21 chains of ../thetaext.
+Why 4 = 2^2, in window language: Delta(F_{t_M}) is a sum over the fixed lifted family R x C;
+lifting halves the probability of each window (one fair bit), so Delta(F_{t_{2M}}) ~
+Delta(F_{t_M})/4 (exact in the fair model; true values -1.2491e-2, -3.0954e-3, -7.7197e-4,
+-1.9288e-4, -4.8212e-5 at M = 20, 40, 80, 160, 320: ratios 4.035, 4.010, 4.002, 4.0007).
+
+------------------------------------------------------------------------------------------
+4. NUMERICS ON THE TRUE RECURSION (double precision; wl.py = Theorem J with dense J_m)
+------------------------------------------------------------------------------------------
+wl.py reproduces r(n) of ../thetaext/ratios.txt to ~1e-15 (n = 19, 24, 40, 48, 96, 100, 192).
+4.1 Linearisation (tangent.py).  Forward-mode derivative of the doubling map
+    J_m -> J_{2m} = [[0,B],[B^T,0]]/(2 r(2m)), B = J_m Pi_{2m,0} J_m, along x 2^j, for random
+    multiplicative symmetric perturbations dJ = J o R of the starting law (mass 0), split into
+    complement-even and complement-odd directions.  Odd directions do not move r at first
+    order (r is complement-even): dr = 0 to 1e-17.  Even directions: dr_k -> const (the
+    neutral direction: Phi depends on the base) and the successive differences contract by
+      x = 5 (from 20):  2.48, 15.6, 4.105  (direction 1);  45.0, 5.45, 3.997  (direction 2)
+      x = 7 (from 14):  -4.5, 7.9, 4.045
+      x = 3 (from 24):  281, -9916  /  -217, -15412            (super-geometric)
+      x = 9 (from 18):  -52, 880                               (super-geometric)
+    So the leading nontrivial eigenvalue of the linearised doubling map is 1/4 for 3-free x,
+    and along 3 | x chains the linearisation has NO geometric mode: the tangent responses
+    decay like the defects themselves (log10 |dD|: -2.9, -5.4, -9.3 for x = 3, cf. log10|D|:
+    -2.85, -5.49, -9.13).  Not a symmetry of the window laws: the 3 | x chains see the same
+    perturbation classes; the 1/4-mode amplitude is identically zero (section 3).
+4.2 Where the defect lives (split.py, data/split.txt).  Replace J_{N/2} by its block product
+    2(t_0 t_1^T + t_1 t_0^T) (head and tail independent given the parity block):
+       r(2N) - r(N) = Lin + Cor,  Lin = defect of the block-product model, Cor = rest.
+       x = 5:  Lin = 1.577e-3, 3.975e-4, 9.728e-5, 2.416e-5;  Cor = 8.7e-7, 8.1e-8, 1.7e-9, 2.5e-11
+       x = 7:  Lin = 5.667e-4, 1.729e-4, 4.272e-5;            Cor = 1.1e-6, 6.9e-9, 1.3e-10
+       x = 3:  Lin = -3.970e-6, -7.388e-10, ~1e-16;           Cor = 7.1e-7, 2.7e-12
+    The 4^{-j} part is entirely Lin; the correlation part Cor is quadratic (Theorem Q) and
+    super-geometric along every chain, although kappa itself decays only like 4^{-j}.
+4.3 Marginal-only model (reduced.py, data/reduced.txt).  With J_m -> block product at every
+    level the recursion closes on t alone: t_{2m}(lift_a H) = t_m(H) w_{a, par H} (a
+    two-bit Markov reweighting).  It reproduces the dichotomy: x = 5 ratios 2.96, 3.89, 4.08,
+    4.03, 4.007; x = 3: D = 5.7e-4, -1.2e-6, -1.3e-10, then < 1e-13.
+4.4 The top-bit bias eps(m) = P(a_1 = a_2) - 1/2 of the head (bitcorr.py) has the same
+    dichotomy (5-chain: 2.2e-3, 6.2e-4, 1.5e-4; 3-chain: 1.0e-4, -7.4e-7, -1.4e-10) and is
+    0 exactly when m = 2 * odd (complement symmetry at the odd half).
+4.5 Fair-bit model on the true data (fair.py, fair_scan.py, data/fair_scan.txt).  From the
+    exact t_M of every base M = 9..18, and from random laws mu on W_M: D_{k+1}/D_k = 1/4
+    EXACTLY from k = 2 when 3 does not divide M, and D_k = 0 (to 1e-14) from k = 2 when 3 | M.
+4.6 Amplitude.  A(x) := lim N^2 (r(2N) - r(N)) along x 2^j.  Theorem F at level M0 predicts
+    N^2 D = -M0^2 Delta(F_{t_{M0}})/2:
+       x = 5:  M0 = 20, 40, 80, 160, 320:  2.4982, 2.4763, 2.4703, 2.46886, 2.46845
+               exact N^2 D (../thetaext):  N = 160: 2.4905, 320: 2.4737, 640: 2.4696
+       x = 7:  M0 = 28, 56, 112, 224:  2.1491, 2.1386, 2.13656, 2.13597
+               exact: N = 448: 2.13786, 896: 2.13629
+    The two converge to the same limit (A(5) ~ 2.468, A(7) ~ 2.1359), so the fair-bit
+    amplitude IS the R' amplitude, with corrections of relative size ~4^{-j} on both sides.
+
+------------------------------------------------------------------------------------------
+5. STATUS
+------------------------------------------------------------------------------------------
+PROVED (Lean, Folds/SymRatio2.lean):
+  linked_iff_linkGH, linkS_unlift, linkGH_unlift, linked_lift_iff, patt_lift   Lemma U
+  delta_T, pi_T, p0_T, fair_closed_form, fair_diff                             automaton, Thm F
+  delta_eq, ofPatt_lift, w1_lift, w2_lift, w_lift_eq_zero, w_lifts_eq_zero,
+  delta_lift_eq_zero                                                          propagation 3.4
+  w1_cell, w2_cell, w1_cell_eq_zero_of_three_dvd, w1_cell_one_third,
+  w1_cell_two_thirds                                                          one pair, 3.2
+PROVED (paper, from Lean pieces + Theorem J): Theorem F (fair-bit model exactly
+  Phi + A 4^{-k}); the spectrum of the automaton (finite matrix, automaton.py); the
+  Corollary of 3.4 given Observation W3 at the base sizes.
+COMPUTER-VERIFIED (not Lean): Observation W3 at the listed sizes (exact integer arithmetic on
+  the window sets; the window sets themselves come from the enumeration, M <= 18, and from
+  Theorem J's lifts with positive double-precision weight, M >= 19).
+GOAL 1.  Yes: the leading nontrivial eigenvalue of the (fair / block-product) linearised
+  doubling map is exactly 1/4, the interaction mode of the two progression types; its 1/2
+  companions (additive modes) are not excited.  Numerically the true linearisation contracts
+  by 4.0.  The 3 | x exception is not a symmetry of the laws but an arithmetic identity: the
+  1/4-mode amplitude Delta vanishes window-pair by window-pair at sizes divisible by 3,
+  because the two progression windows can only interact at the junction 1/3-pair, which
+  exists iff 3 does not divide M.
+GOAL 2.  (a) Conjecture R is NOT proved for any chain, also not for x = 3: the true r(3 2^j)
+  is not eventually constant (D_j ~ 1e-37 at 768 -> 1536, nonzero), and the bias of the true
+  bit law relative to the fair model (eps, 4.4) is not controlled rigorously.  What is proved
+  is the exact statement for the fair-bit model (Theorem F) plus W3: started from the exact
+  window law at any level of a 3 | x chain, the model has no 4^{-k} term and is constant
+  after two doublings; for 3-free x it is exactly geometric with ratio 1/4.
+  (b) Given a spectral-gap statement ("the true bit law deviates from the fair one by
+  O(4^{-j}) uniformly, with summable corrections"), Theorem F gives r(x 2^j) = Phi + A 4^{-j}
+  + o(4^{-j}) with A = lim -M0^2 Delta(F_{t_{M0}})/2 >= 0 and A = 0 when 3 | x (W3).  This is
+  a reduction, not a proof: the gap statement is itself open.
+CONJECTURE R' now has a mechanism: the rate 1/4 is the eigenvalue of the shift automaton
+  (two independent fair bits, one per window), the amplitude A(x) is the fair-bit Delta on the
+  junction 1/3-pairs, A(x) > 0 for 3 not dividing x (Delta <= 0 on every pair seen), and
+  A(x) = 0 for 3 | x.  The super-geometric decay for 3 | x then comes only from the
+  nonlinear (bias x correlation) terms, consistent with log10|D| ~ Fibonacci-like.
+OPEN: a proof of W3 for all M = 0 mod 3 (odd sizes need the four-shift automaton of Lemma U
+  with e = 1 and the window sets of both halves); a proof that Delta <= 0; control of the
+  bias terms (would give R and R').
+
+Files
+  pilib.c        C helpers: base enumeration, Pi (dense / mat-vec), Pi^{(g,h)} for all 9 shifts
+  wl.py          window laws J_m in double precision (Theorem J, dense), r(n)
+  tangent.py     forward-mode linearisation of the doubling map along a chain
+  split.py       defect = block-product part + correlation part
+  reduced.py     marginal-only (Markov-bit) model;   fair.py, fair_scan.py   fair-bit model
+  bits.py, bitcorr.py    parity-bit law of the head
+  automaton.py   the 9-state automaton, spectrum, Jacobsthal iterates
+  delta.py       closed form of the fair model vs direct recursion; Delta per window pair
+  delta_rand.py, delta_ex.py   Delta on random 6-tuples (nonzero also at 3 | L)
+  delta_real.py, verify_w.py, special.py, span.py   W3 on the true window sets
+  axioms_check.lean   #print axioms for the main Lean theorems
+  data/          outputs (text)
+  build: gcc -O3 -march=native -shared -fPIC -o pilib.so pilib.c     (ignored)
+  resources: <= 2 cores (OPENBLAS_NUM_THREADS=2), < 2.5 GB.

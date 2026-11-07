@@ -1,0 +1,7 @@
+*.bin
+*.so
+*.o
+*.npy
+*.npz
+cache/
+__pycache__/
