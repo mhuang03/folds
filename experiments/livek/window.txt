@@ -1,0 +1,200 @@
+N=24 k=2 centrality=8 (ceil(N/3)=8): sets=17 notG=0 unresolved=0
+N=24 k=2 centrality=7 (ceil(N/3)=8): sets=21 notG=3 unresolved=0
+N=24 k=2 centrality=6 (ceil(N/3)=8): sets=25 notG=5 unresolved=0
+N=24 k=2 centrality=5 (ceil(N/3)=8): sets=29 notG=9 unresolved=0
+N=24 k=2 centrality=4 (ceil(N/3)=8): sets=33 notG=11 unresolved=0
+N=24 k=2 centrality=3 (ceil(N/3)=8): sets=37 notG=15 unresolved=0
+N=24 k=2 centrality=2 (ceil(N/3)=8): sets=41 notG=17 unresolved=0
+  unresolved: 1 24
+N=24 k=2 centrality=1 (ceil(N/3)=8): sets=45 notG=21 unresolved=1
+N=24 k=3 centrality=8 (ceil(N/3)=8): sets=64 notG=0 unresolved=0
+N=24 k=3 centrality=7 (ceil(N/3)=8): sets=100 notG=6 unresolved=0
+N=24 k=3 centrality=6 (ceil(N/3)=8): sets=144 notG=38 unresolved=0
+N=24 k=3 centrality=5 (ceil(N/3)=8): sets=196 notG=94 unresolved=0
+N=24 k=3 centrality=4 (ceil(N/3)=8): sets=256 notG=162 unresolved=0
+N=24 k=3 centrality=3 (ceil(N/3)=8): sets=324 notG=230 unresolved=0
+N=24 k=3 centrality=2 (ceil(N/3)=8): sets=400 notG=298 unresolved=0
+  unresolved: 1 4 5
+  unresolved: 1 6 7
+  unresolved: 1 8 9
+N=24 k=3 centrality=1 (ceil(N/3)=8): sets=484 notG=364 unresolved=20
+N=24 k=4 centrality=8 (ceil(N/3)=8): sets=140 notG=0 unresolved=0
+N=24 k=4 centrality=7 (ceil(N/3)=8): sets=285 notG=3 unresolved=0
+N=24 k=4 centrality=6 (ceil(N/3)=8): sets=506 notG=54 unresolved=0
+N=24 k=4 centrality=5 (ceil(N/3)=8): sets=819 notG=261 unresolved=0
+N=24 k=4 centrality=4 (ceil(N/3)=8): sets=1240 notG=662 unresolved=0
+N=24 k=4 centrality=3 (ceil(N/3)=8): sets=1785 notG=1251 unresolved=0
+N=24 k=4 centrality=2 (ceil(N/3)=8): sets=2470 notG=1870 unresolved=0
+  unresolved: 1 2 3 22
+  unresolved: 1 2 3 23
+  unresolved: 1 2 3 24
+N=24 k=4 centrality=1 (ceil(N/3)=8): sets=3311 notG=2649 unresolved=199
+N=28 k=2 centrality=10 (ceil(N/3)=10): sets=17 notG=0 unresolved=0
+N=28 k=2 centrality=9 (ceil(N/3)=10): sets=21 notG=1 unresolved=0
+N=28 k=2 centrality=8 (ceil(N/3)=10): sets=25 notG=3 unresolved=0
+N=28 k=2 centrality=7 (ceil(N/3)=10): sets=29 notG=7 unresolved=0
+N=28 k=2 centrality=6 (ceil(N/3)=10): sets=33 notG=9 unresolved=0
+N=28 k=2 centrality=5 (ceil(N/3)=10): sets=37 notG=13 unresolved=0
+N=28 k=2 centrality=4 (ceil(N/3)=10): sets=41 notG=15 unresolved=0
+N=28 k=2 centrality=3 (ceil(N/3)=10): sets=45 notG=19 unresolved=0
+N=28 k=2 centrality=2 (ceil(N/3)=10): sets=49 notG=21 unresolved=0
+  unresolved: 1 28
+N=28 k=2 centrality=1 (ceil(N/3)=10): sets=53 notG=25 unresolved=1
+N=28 k=3 centrality=10 (ceil(N/3)=10): sets=64 notG=0 unresolved=0
+N=28 k=3 centrality=9 (ceil(N/3)=10): sets=100 notG=0 unresolved=0
+N=28 k=3 centrality=8 (ceil(N/3)=10): sets=144 notG=14 unresolved=0
+N=28 k=3 centrality=7 (ceil(N/3)=10): sets=196 notG=54 unresolved=0
+N=28 k=3 centrality=6 (ceil(N/3)=10): sets=256 notG=120 unresolved=0
+N=28 k=3 centrality=5 (ceil(N/3)=10): sets=324 notG=198 unresolved=0
+N=28 k=3 centrality=4 (ceil(N/3)=10): sets=400 notG=280 unresolved=0
+N=28 k=3 centrality=3 (ceil(N/3)=10): sets=484 notG=360 unresolved=0
+N=28 k=3 centrality=2 (ceil(N/3)=10): sets=576 notG=440 unresolved=0
+  unresolved: 1 4 5
+  unresolved: 1 6 7
+  unresolved: 1 8 9
+N=28 k=3 centrality=1 (ceil(N/3)=10): sets=676 notG=518 unresolved=24
+N=28 k=4 centrality=10 (ceil(N/3)=10): sets=140 notG=0 unresolved=0
+N=28 k=4 centrality=9 (ceil(N/3)=10): sets=285 notG=0 unresolved=0
+N=28 k=4 centrality=8 (ceil(N/3)=10): sets=506 notG=9 unresolved=0
+N=28 k=4 centrality=7 (ceil(N/3)=10): sets=819 notG=105 unresolved=0
+N=28 k=4 centrality=6 (ceil(N/3)=10): sets=1240 notG=365 unresolved=0
+N=28 k=4 centrality=5 (ceil(N/3)=10): sets=1785 notG=905 unresolved=0
+N=28 k=4 centrality=4 (ceil(N/3)=10): sets=2470 notG=1614 unresolved=0
+N=28 k=4 centrality=3 (ceil(N/3)=10): sets=3311 notG=2483 unresolved=0
+N=28 k=4 centrality=2 (ceil(N/3)=10): sets=4324 notG=3386 unresolved=0
+  unresolved: 1 2 3 26
+  unresolved: 1 2 3 27
+  unresolved: 1 2 3 28
+N=28 k=4 centrality=1 (ceil(N/3)=10): sets=5525 notG=4489 unresolved=285
+N=32 k=2 centrality=11 (ceil(N/3)=11): sets=21 notG=0 unresolved=0
+N=32 k=2 centrality=10 (ceil(N/3)=11): sets=25 notG=1 unresolved=0
+N=32 k=2 centrality=9 (ceil(N/3)=11): sets=29 notG=5 unresolved=0
+N=32 k=2 centrality=8 (ceil(N/3)=11): sets=33 notG=7 unresolved=0
+N=32 k=2 centrality=7 (ceil(N/3)=11): sets=37 notG=11 unresolved=0
+N=32 k=2 centrality=6 (ceil(N/3)=11): sets=41 notG=13 unresolved=0
+N=32 k=2 centrality=5 (ceil(N/3)=11): sets=45 notG=17 unresolved=0
+N=32 k=2 centrality=4 (ceil(N/3)=11): sets=49 notG=19 unresolved=0
+N=32 k=2 centrality=3 (ceil(N/3)=11): sets=53 notG=23 unresolved=0
+N=32 k=2 centrality=2 (ceil(N/3)=11): sets=57 notG=25 unresolved=0
+  unresolved: 1 32
+N=32 k=2 centrality=1 (ceil(N/3)=11): sets=61 notG=29 unresolved=1
+N=32 k=3 centrality=11 (ceil(N/3)=11): sets=100 notG=0 unresolved=0
+N=32 k=3 centrality=10 (ceil(N/3)=11): sets=144 notG=2 unresolved=0
+N=32 k=3 centrality=9 (ceil(N/3)=11): sets=196 notG=24 unresolved=0
+N=32 k=3 centrality=8 (ceil(N/3)=11): sets=256 notG=74 unresolved=0
+N=32 k=3 centrality=7 (ceil(N/3)=11): sets=324 notG=148 unresolved=0
+N=32 k=3 centrality=6 (ceil(N/3)=11): sets=400 notG=236 unresolved=0
+N=32 k=3 centrality=5 (ceil(N/3)=11): sets=484 notG=330 unresolved=0
+N=32 k=3 centrality=4 (ceil(N/3)=11): sets=576 notG=424 unresolved=0
+N=32 k=3 centrality=3 (ceil(N/3)=11): sets=676 notG=516 unresolved=0
+N=32 k=3 centrality=2 (ceil(N/3)=11): sets=784 notG=608 unresolved=0
+  unresolved: 1 4 5
+  unresolved: 1 6 7
+  unresolved: 1 8 9
+N=32 k=3 centrality=1 (ceil(N/3)=11): sets=900 notG=698 unresolved=28
+N=32 k=4 centrality=11 (ceil(N/3)=11): sets=285 notG=0 unresolved=0
+N=32 k=4 centrality=10 (ceil(N/3)=11): sets=506 notG=0 unresolved=0
+N=32 k=4 centrality=9 (ceil(N/3)=11): sets=819 notG=28 unresolved=0
+N=32 k=4 centrality=8 (ceil(N/3)=11): sets=1240 notG=163 unresolved=0
+N=32 k=4 centrality=7 (ceil(N/3)=11): sets=1785 notG=528 unresolved=0
+N=32 k=4 centrality=6 (ceil(N/3)=11): sets=2470 notG=1139 unresolved=0
+N=32 k=4 centrality=5 (ceil(N/3)=11): sets=3311 notG=2077 unresolved=0
+N=32 k=4 centrality=4 (ceil(N/3)=11): sets=4324 notG=3090 unresolved=0
+N=32 k=4 centrality=3 (ceil(N/3)=11): sets=5525 notG=4305 unresolved=0
+N=32 k=4 centrality=2 (ceil(N/3)=11): sets=6930 notG=5544 unresolved=0
+  unresolved: 1 2 3 30
+  unresolved: 1 2 3 31
+  unresolved: 1 2 3 32
+N=32 k=4 centrality=1 (ceil(N/3)=11): sets=8555 notG=7027 unresolved=387
+N=36 k=2 centrality=12 (ceil(N/3)=12): sets=25 notG=0 unresolved=0
+N=36 k=2 centrality=11 (ceil(N/3)=12): sets=29 notG=3 unresolved=0
+N=36 k=2 centrality=10 (ceil(N/3)=12): sets=33 notG=5 unresolved=0
+N=36 k=2 centrality=9 (ceil(N/3)=12): sets=37 notG=9 unresolved=0
+N=36 k=2 centrality=8 (ceil(N/3)=12): sets=41 notG=11 unresolved=0
+N=36 k=2 centrality=7 (ceil(N/3)=12): sets=45 notG=15 unresolved=0
+N=36 k=2 centrality=6 (ceil(N/3)=12): sets=49 notG=17 unresolved=0
+N=36 k=2 centrality=5 (ceil(N/3)=12): sets=53 notG=21 unresolved=0
+N=36 k=2 centrality=4 (ceil(N/3)=12): sets=57 notG=23 unresolved=0
+N=36 k=2 centrality=3 (ceil(N/3)=12): sets=61 notG=27 unresolved=0
+N=36 k=2 centrality=2 (ceil(N/3)=12): sets=65 notG=29 unresolved=0
+  unresolved: 1 36
+N=36 k=2 centrality=1 (ceil(N/3)=12): sets=69 notG=33 unresolved=1
+N=36 k=3 centrality=12 (ceil(N/3)=12): sets=144 notG=0 unresolved=0
+N=36 k=3 centrality=11 (ceil(N/3)=12): sets=196 notG=6 unresolved=0
+N=36 k=3 centrality=10 (ceil(N/3)=12): sets=256 notG=38 unresolved=0
+N=36 k=3 centrality=9 (ceil(N/3)=12): sets=324 notG=96 unresolved=0
+N=36 k=3 centrality=8 (ceil(N/3)=12): sets=400 notG=180 unresolved=0
+N=36 k=3 centrality=7 (ceil(N/3)=12): sets=484 notG=276 unresolved=0
+N=36 k=3 centrality=6 (ceil(N/3)=12): sets=576 notG=382 unresolved=0
+N=36 k=3 centrality=5 (ceil(N/3)=12): sets=676 notG=488 unresolved=0
+N=36 k=3 centrality=4 (ceil(N/3)=12): sets=784 notG=594 unresolved=0
+N=36 k=3 centrality=3 (ceil(N/3)=12): sets=900 notG=698 unresolved=0
+N=36 k=3 centrality=2 (ceil(N/3)=12): sets=1024 notG=802 unresolved=0
+  unresolved: 1 4 5
+  unresolved: 1 6 7
+  unresolved: 1 8 9
+N=36 k=3 centrality=1 (ceil(N/3)=12): sets=1156 notG=904 unresolved=32
+N=36 k=4 centrality=12 (ceil(N/3)=12): sets=506 notG=0 unresolved=0
+N=36 k=4 centrality=11 (ceil(N/3)=12): sets=819 notG=3 unresolved=0
+N=36 k=4 centrality=10 (ceil(N/3)=12): sets=1240 notG=54 unresolved=0
+N=36 k=4 centrality=9 (ceil(N/3)=12): sets=1785 notG=262 unresolved=0
+N=36 k=4 centrality=8 (ceil(N/3)=12): sets=2470 notG=690 unresolved=0
+N=36 k=4 centrality=7 (ceil(N/3)=12): sets=3311 notG=1478 unresolved=0
+N=36 k=4 centrality=6 (ceil(N/3)=12): sets=4324 notG=2518 unresolved=0
+N=36 k=4 centrality=5 (ceil(N/3)=12): sets=5525 notG=3847 unresolved=0
+N=36 k=4 centrality=4 (ceil(N/3)=12): sets=6930 notG=5210 unresolved=0
+N=36 k=4 centrality=3 (ceil(N/3)=12): sets=8555 notG=6829 unresolved=0
+N=36 k=4 centrality=2 (ceil(N/3)=12): sets=10416 notG=8456 unresolved=0
+  unresolved: 1 2 3 34
+  unresolved: 1 2 3 35
+  unresolved: 1 2 3 36
+N=36 k=4 centrality=1 (ceil(N/3)=12): sets=12529 notG=10375 unresolved=505
+N=40 k=2 centrality=14 (ceil(N/3)=14): sets=25 notG=0 unresolved=0
+N=40 k=2 centrality=13 (ceil(N/3)=14): sets=29 notG=1 unresolved=0
+N=40 k=2 centrality=12 (ceil(N/3)=14): sets=33 notG=3 unresolved=0
+N=40 k=2 centrality=11 (ceil(N/3)=14): sets=37 notG=7 unresolved=0
+N=40 k=2 centrality=10 (ceil(N/3)=14): sets=41 notG=9 unresolved=0
+N=40 k=2 centrality=9 (ceil(N/3)=14): sets=45 notG=13 unresolved=0
+N=40 k=2 centrality=8 (ceil(N/3)=14): sets=49 notG=15 unresolved=0
+N=40 k=2 centrality=7 (ceil(N/3)=14): sets=53 notG=19 unresolved=0
+N=40 k=2 centrality=6 (ceil(N/3)=14): sets=57 notG=21 unresolved=0
+N=40 k=2 centrality=5 (ceil(N/3)=14): sets=61 notG=25 unresolved=0
+N=40 k=2 centrality=4 (ceil(N/3)=14): sets=65 notG=27 unresolved=0
+N=40 k=2 centrality=3 (ceil(N/3)=14): sets=69 notG=31 unresolved=0
+N=40 k=2 centrality=2 (ceil(N/3)=14): sets=73 notG=33 unresolved=0
+  unresolved: 1 40
+N=40 k=2 centrality=1 (ceil(N/3)=14): sets=77 notG=37 unresolved=1
+N=40 k=3 centrality=14 (ceil(N/3)=14): sets=144 notG=0 unresolved=0
+N=40 k=3 centrality=13 (ceil(N/3)=14): sets=196 notG=0 unresolved=0
+N=40 k=3 centrality=12 (ceil(N/3)=14): sets=256 notG=14 unresolved=0
+N=40 k=3 centrality=11 (ceil(N/3)=14): sets=324 notG=54 unresolved=0
+N=40 k=3 centrality=10 (ceil(N/3)=14): sets=400 notG=122 unresolved=0
+N=40 k=3 centrality=9 (ceil(N/3)=14): sets=484 notG=214 unresolved=0
+N=40 k=3 centrality=8 (ceil(N/3)=14): sets=576 notG=320 unresolved=0
+N=40 k=3 centrality=7 (ceil(N/3)=14): sets=676 notG=436 unresolved=0
+N=40 k=3 centrality=6 (ceil(N/3)=14): sets=784 notG=556 unresolved=0
+N=40 k=3 centrality=5 (ceil(N/3)=14): sets=900 notG=674 unresolved=0
+N=40 k=3 centrality=4 (ceil(N/3)=14): sets=1024 notG=792 unresolved=0
+N=40 k=3 centrality=3 (ceil(N/3)=14): sets=1156 notG=908 unresolved=0
+N=40 k=3 centrality=2 (ceil(N/3)=14): sets=1296 notG=1024 unresolved=0
+  unresolved: 1 4 5
+  unresolved: 1 6 7
+  unresolved: 1 8 9
+N=40 k=3 centrality=1 (ceil(N/3)=14): sets=1444 notG=1138 unresolved=36
+N=40 k=4 centrality=14 (ceil(N/3)=14): sets=506 notG=0 unresolved=0
+N=40 k=4 centrality=13 (ceil(N/3)=14): sets=819 notG=0 unresolved=0
+N=40 k=4 centrality=12 (ceil(N/3)=14): sets=1240 notG=9 unresolved=0
+N=40 k=4 centrality=11 (ceil(N/3)=14): sets=1785 notG=105 unresolved=0
+N=40 k=4 centrality=10 (ceil(N/3)=14): sets=2470 notG=366 unresolved=0
+N=40 k=4 centrality=9 (ceil(N/3)=14): sets=3311 notG=933 unresolved=0
+N=40 k=4 centrality=8 (ceil(N/3)=14): sets=4324 notG=1796 unresolved=0
+N=40 k=4 centrality=7 (ceil(N/3)=14): sets=5525 notG=3109 unresolved=0
+N=40 k=4 centrality=6 (ceil(N/3)=14): sets=6930 notG=4556 unresolved=0
+N=40 k=4 centrality=5 (ceil(N/3)=14): sets=8555 notG=6313 unresolved=0
+N=40 k=4 centrality=4 (ceil(N/3)=14): sets=10416 notG=8088 unresolved=0
+N=40 k=4 centrality=3 (ceil(N/3)=14): sets=12529 notG=10167 unresolved=0
+N=40 k=4 centrality=2 (ceil(N/3)=14): sets=14910 notG=12234 unresolved=0
+  unresolved: 1 2 3 38
+  unresolved: 1 2 3 39
+  unresolved: 1 2 3 40
+N=40 k=4 centrality=1 (ceil(N/3)=14): sets=17575 notG=14645 unresolved=639

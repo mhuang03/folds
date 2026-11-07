@@ -1,0 +1,273 @@
+Live k-prefixes: explicit co-reachable families for every N and every k
+======================================================================
+
+Notation as in experiments/live2, adjacent, live3p.  Panels [N] = {1..N}; reach(m) =
+min(m-1, N-m); arms L(m) = [m - reach, m - 1], R(m) = [m + 1, m + reach]; a step (S, m) is
+valid iff |S n L(m)| = |S n R(m)|.  A set D is CO-REACHABLE if [N] \ D has a semi-symmetric
+ordering from scratch (Lean `Live2.CoReach`); a valid prefix is live iff its set is
+co-reachable (`Live2.extends_iff_coReach`).  I_D(m) = |D n L(m)| - |D n R(m)|; a FREE panel is
+one outside D.  The CENTRALITY of D is min(min D, N + 1 - max D).
+"Lean" refers to Folds/LiveK.lean (imports only Folds.Adjacent; no sorry, no native_decide,
+no decide; builds in about 4 s).
+
+STATUS
+  PROVEN for every N and every size k (Lean, section 1-4):
+    (G-sep)    Theorem G in separation form (negative free panels left of positive ones).
+    (Compact)  D in [a, b], 1 <= a, b <= N, b <= 2a + 1, 2b <= N + a + 2  =>  co-reachable.
+    (Middle)   D in [a, N + 1 - a] with 3a >= N (e.g. a = ceil(N/3))      =>  co-reachable.
+    (Dyadic)   2x <= y for all x < y in D, and 2 max D <= N + (second largest) + 2.
+    (Sparse)   D in the left half, d_{2i+1} >= 2 d_{i+1} - 2 (count form).
+    (Anchored) for every non-least y in D:  #D n [y, 2y-3] <= #D n [1, y-1]  and, if
+               2y >= N + 4,  #D n [y, N] <= #D n [2y-N-2, y-1].  Contains Dyadic and Sparse.
+    and the mirror images of all of these (family `CovK`).
+    (Prefix)   every valid prefix of any length whose set is in CovK is live (`CovK.extends`).
+    (Halving)  every halving prefix x_1, ..., x_k (2 x_1 <= N + 1, 2 x_{j+1} <= x_j) is valid
+               and live (`extends_halving`): a positive proportion of all valid k-prefixes.
+  NUMERICAL (C, 1 core, N <= 40, k <= 4; sections 5-6):
+    * Theorem G's limit for windows is exactly the middle third: every set of centrality
+      >= ceil(N/3) satisfies G (proven), and for each N in 28..40 (step 4) some set of
+      centrality ceil(N/3) - 1 or ceil(N/3) - 2 fails G.
+    * The truth is much stronger: for 13 <= N <= 40 (k <= 4) every k-set avoiding both end
+      panels 1 and N is co-reachable (DFS witnesses).  CONJECTURE E_k below.
+    * Dead valid k-prefixes are Theta(N^{k-2}) (k = 2, 3, 4, 5), so the live fraction tends to
+      1; NOT proven: the G-type families cover a positive but small fraction of the valid
+      prefixes (N = 40: CovK 40% / 12% / 8%, Theorem G 40% / 20% / 13% for k = 2 / 3 / 4;
+      section 6), and the remaining sets (points near both ends) have positive density.
+
+
+1. Theorem G in separation form
+-------------------------------
+THEOREM (Lean `inward_of_sep`, `coReach_of_sep`).  If every free panel m with I_D(m) < 0 lies
+left of every free panel m' with I_D(m') > 0, then D is co-reachable.
+Proof.  Let n be the largest free panel with I_D < 0 (if any) and put the centre at n + 1/2
+(c2 = 2n + 1; c2 = 0 if there is none).  Free m <= n is not positive (else n < m), free m > n
+is not negative (maximality of n); this is the criterion `Adjacent.Inward`, and
+`Adjacent.coReach_of_inward` (Theorem G) applies.  QED
+Lean helpers: `armL_eq`, `armR_eq` express the arm counts of a Finset as cardinalities of
+filters; `reach_cases`.
+
+
+2. Compact sets and the middle third (question 1)
+-------------------------------------------------
+THEOREM 1 (Lean `coReach_compact`).  Let D be a subset of [a, b] with 1 <= a, b <= N,
+        b <= 2a + 1   and   2b <= N + a + 2.
+Then D is co-reachable (any size of D).
+Proof.  By section 1 it suffices to show: free m negative, free m' positive => m < m'.
+  * A free panel m' <= a has no element of D left of it, so I_D(m') <= 0; hence a positive
+    m' satisfies m' > a.  Symmetrically a negative m satisfies m < b.
+  * Inner panels see everything: for a < y < b, reach(y) >= y - a (as y - 1 >= y - a and
+    N - y >= y - a by 2y <= 2b - 2 <= N + a) and reach(y) >= b - y (as y - 1 >= b - y by
+    2y >= 2a + 2 >= b + 1, and N - y >= b - y).  So L(y) contains D n [a, y) and R(y)
+    contains D n (y, b]: I_D(y) = #D n [a, y) - #D n (y, b], a NONDECREASING function of y.
+  * If m' <= m, both lie in (a, b) and I_D(m') <= I_D(m) < 0, contradicting I_D(m') > 0.  QED
+In words: the panels outside [a, b] see D in one arm only (and are pulled towards D), and the
+panels inside see all of D, so the imbalance changes sign at most once, from - to +.
+
+COROLLARY (the middle third; Lean `coReach_middle`).  If 1 <= a and N <= 3a, every subset of
+[a, N + 1 - a] is co-reachable.  With a = ceil(N/3): every set of panels inside
+[ceil(N/3), N + 1 - ceil(N/3)] is co-reachable, for every N and every size.
+(b = N + 1 - a: b <= 2a + 1 and 2b <= N + a + 2 are both equivalent to N <= 3a.)
+
+Tightness for Theorem G (window.c, window.txt): the number of k-sets of centrality exactly t
+failing Theorem G, for t just below ceil(N/3):
+            t = ceil(N/3) - 1      ceil(N/3) - 2
+   N = 28:  k=2: 1, k=3: 0, k=4: 0     k=2: 3,  k=3: 14,  k=4: 9
+   N = 32:  k=2: 1, k=3: 2, k=4: 0     k=2: 5,  k=3: 24,  k=4: 28
+   N = 36:  k=2: 3, k=3: 6, k=4: 3     k=2: 5,  k=3: 38,  k=4: 54
+   N = 40:  k=2: 1, k=3: 0, k=4: 0     k=2: 3,  k=3: 14,  k=4: 9    (t = 13, 12)
+and none at t >= ceil(N/3) (Theorem 1).  So for windows the middle third is the exact reach of
+Theorem G, up to one or two panels.
+
+The truth is much better (window.c; DFS witness from the background D when G and "G after one
+valid step" fail): for N = 13..40 and k = 2, 3, 4, EVERY k-set of centrality >= 2 (i.e.
+avoiding the end panels 1 and N) is co-reachable; the only failures with centrality >= 2 for
+N <= 40, k <= 4 are at N <= 12 (e.g. N = 12: {2, 6, 7, 11}).  (window.txt, window_small.txt.)
+CONJECTURE E_k.  For fixed k and N >= N_0(k), every k-set D with 1, N not in D is
+co-reachable.  (N_0(2) = N_0(3) = 1 resp. small, N_0(4) = 13 numerically.)  The dead sets of
+size k <= 4 all contain 1 or N: the blocks {1, 2j, 2j + 1} plus anything (k = 4), the corner
+sets inside {1, 2, N-1, N}, and their mirrors.
+
+Remark (valid prefixes are rarely compact).  A valid prefix inside a compact window has every
+later inner step seeing all earlier panels, so it must be balanced in the plain left/right
+count; for k = 4 no valid prefix at all has a compact set (N <= 40, column A of livek.txt),
+for k = 3 only 2-5% of the prefixes (N = 24..40).  So Theorem 1 is a statement about co-reachability of arbitrary sets; for
+prefixes the families of section 3 matter more.
+
+
+3. Spread sets: dyadic, doubling-sparse, anchored (question 2)
+-------------------------------------------------------------
+"Pairwise far apart" is NOT a sufficient condition: {1, N} (N even) is dead, and so are
+{1, 2j, 2j+1, N}-type sets.  Spreading must be measured from one end, multiplicatively, and the
+natural scale is the doubling map (the arms of m in the left half are [1, m) and (m, 2m)).
+
+THEOREM 2 (dyadic sets; Lean `coReach_dyadic`).  Suppose 2x <= y for all x < y in D, and every
+non-least y in D has a smaller x in D with 2y <= N + x + 2 (for a dyadic set only the top
+element can need this: 2 max D <= N + (second largest) + 2).  Then D is co-reachable.
+In particular every dyadic set in the left half (2 max D <= N + 1) is co-reachable
+(`coReach_dyadic_half`), and so are the mirror images (`coReach_dyadic_mirror`).
+Proof.  Centre c = d = min D (c2 = 2d; d is in D, so no free panel sits at the centre).  Free
+m < d: L(m) misses D, I_D(m) <= 0.  Free m > d: (a) at most one element of D lies in R(m):
+two elements x < y in R(m) give 2x <= y <= m + reach(m) <= 2m - 1 < 2x.  (b) If one element y
+lies in R(m), some element lies in L(m): if m - reach(m) <= d, d itself does; otherwise
+reach(m) = N - m (right half) and the x with 2y <= N + x + 2 does: 2m - N <= 2y - 2 - N <= x,
+and x <= y/2 <= N/2 < m.  So I_D(m) >= 0.  QED
+
+THEOREM 3 (doubling-sparse sets; Lean `coReach_sparse`, `coReach_sparse_mirror`).  Let D lie in
+the left half (2y <= N + 1 for y in D) and suppose that for every non-least y in D
+        #(D n [y, 2y - 3]) <= #(D n [1, y - 1]).
+Sorted d_1 < d_2 < ..., this is exactly d_{2i+1} >= 2 d_{i+1} - 2 for all i >= 1 (livek.c
+checks the equivalence on all k-sets, condition S = Z).  Then D is co-reachable.
+Every dyadic set of the left half qualifies (#D n [y, 2y-3] = 1); for k = 2 every pair in the
+left half; for k = 3, {a, b, c} with c >= 2b - 2.
+
+THEOREM 4 (anchored sets; Lean `coReach_anchored`).  Suppose that for every non-least y in D
+   (i)  #(D n [y, 2y - 3]) <= #(D n [1, y - 1]),  and
+   (ii) if 2y >= N + 4:  #(D n [y, N]) <= #(D n [2y - N - 2, y - 1]).
+Then D is co-reachable.  Theorems 2 and 3 are special cases ((ii) is vacuous in the left half;
+for a dyadic set (i) reads 1 <= #below and (ii) is the top condition).
+Proof.  Centre d = min D.  Free m < d: I_D(m) <= 0 as before.  Free m > d with no element of D
+right of m: R(m) misses D.  Otherwise let y be the least element of D right of m (so y is not
+the least element of D, and D n [m, y) is empty since m is free).
+  * left half (m - 1 <= N - m, reach = m - 1): L(m) n D = D n [1, m) = D n [1, y), and
+    R(m) n D = D n (m, 2m - 1] is inside D n [y, 2y - 3] (as m <= y - 1); use (i).
+  * right half (reach = N - m < m - 1, so 2m >= N + 2 and 2y >= N + 4): R(m) n D = D n [y, N],
+    and L(m) n D = D n [2m - N, m) contains D n [2y - N - 2, y - 1] (as 2m - N <= 2y - 2 - N,
+    and z < y forces z < m); use (ii).
+So I_D(m) >= 0 for every free m > d; Theorem G with centre d.  QED
+The conditions are k counting conditions on the elements of D only.  On all k-subsets of [N]
+(N <= 40, k <= 4) every set satisfying Theorems 1-4 (or a mirror image) satisfies the
+criterion of Theorem G (livek.c, "allsets X!G = 0"), as it must.
+
+What Theorem 4 captures: the sets for which Theorem G works with the centre at an END of D
+(condition H of livek.c: I_D >= 0 at every free panel right of min D, or the mirror).  For
+k = 2 the explicit family is exactly G; for k = 4 the anchored part H is about 77% of G, and
+Theorem 4 alone gets 92% of H (N = 24: G 2099, H 1608, Theorem 4: 1472 of the 6578 valid
+4-sets).
+
+
+4. Prefix liveness for every N and k (question 3)
+-------------------------------------------------
+`CovK N D` (Lean, inductive): constructors compact, dyadic, sparse, anchored, mirror.
+THEOREM 5 (Lean `CovK.coReach`, `CovK.extends`).  For every N, every k and every valid
+k-prefix p (p nodup, panels in [1, N], every step semi-symmetric): if the set of p is in CovK,
+then p extends to a full semi-symmetric fold sequence.
+Specialisations: `extends_compact`, `extends_middle` (every valid prefix inside
+[ceil(N/3), N + 1 - ceil(N/3)] is live), `extends_dyadic`, `extends_dyadic_half`,
+`extends_dyadic_mirror`, `extends_sparse`, `extends_anchored`.
+Proof: extends_iff_coReach and the theorems above.
+
+THEOREM 6 (halving prefixes; Lean `semiSymmetric_halving`, `extends_halving`).  Let
+x_1, ..., x_k satisfy x_j >= 1, 2 x_1 <= N + 1 and 2 x_{j+1} <= x_j.  Then (x_1, ..., x_k) is a
+valid prefix, and it is live.
+Proof.  At step j + 1 the new panel m = x_{j+1} has window inside [1, 2m - 1] (reach <= m - 1),
+and every earlier panel is >= x_j >= 2m: both arm counts are 0.  The set is dyadic in the left
+half (Theorem 2).  QED
+Counting (on paper): the number of halving k-prefixes is (1 + o(1)) N^k / (k! 2^{k(k+1)/2})
+(volume of 0 < x_k < x_{k-1}/2 < ... , x_1 < N/2), while T(N, k) ~ c_k N^k.  So for every
+fixed k a fraction >= 2^{-k(k+1)/2} / (k! c_k) - o(1) > 0 of the valid k-prefixes is live,
+for all large N; numerically the dyadic-half prefixes alone are a constant fraction 0.25 (k = 2),
+0.0235 (k = 3), 0.00085 (k = 4) of T(N, k) (column Y of livek.c, N = 24..64).
+
+Coverage on valid prefixes: section 6.
+
+
+5. Dead prefixes (question 4, numerical)
+----------------------------------------
+Exact (experiments/prefix/levels.txt, full DP, N <= 22) and DFS (livek.c, N <= 40; the DFS
+count of unresolved prefixes equals the exact dead count for every N <= 22 where both exist):
+   dead 2-prefixes: 2 (N even), 0 (N odd)                         -- Theta(1)
+   dead 3-prefixes: N/2, (N-6)/2, (N+19)/2, (N+25)/2               -- Theta(N)  (live3p)
+   dead 4-prefixes: N = 12: 148, 16: 248, 20: 380, 22: 410, 24: 548, 28: 750, ... -- ~ N^2
+   dead 5-prefixes: N = 14: 868, 18: 1994, 22: 3826                -- ~ N^3
+while T(N,k) ~ c_k N^k (c_2 = 1/2, c_3 = 2/9, c_4 = 4283/48384, experiments/prefix).  So
+numerically dead k-prefixes are Theta(N^{k-2}) and the fraction of live valid k-prefixes is
+1 - Theta(N^{-2}) -> 1.  Conjecture E_k would give the weaker bound O(N^{k-1}) at once
+(valid k-prefixes containing panel 1 or N number O(N^{k-1})).
+
+What is proven towards it: "live k-prefixes >= c'_k N^k with c'_k > 0" for every k (Theorem
+6, and more generally the families of sections 2-3, whose conditions are scale invariant up to
+O(1)).  But "dead = o(N^k)" is out of reach of Theorem G: the fraction of valid prefixes whose
+set satisfies Theorem G (for ANY centre) is far from 1 and still slowly decreasing at the
+largest N computed (k = 2: 0.398 at N = 40, 0.374 at N = 64; k = 3: 0.201 at N = 40, 0.169 at
+N = 64; k = 4: 0.134 at N = 40).  The sets G misses have points near both ends (as the wide
+pairs of Conjecture C).  Theorem G' (sign schemes with priorities, adjacent/PROOFS.txt 2,
+decided by peeling: peel.c) proves exactly the same sets as G on all k-subsets of [30],
+k <= 4, so it does not help either.  A proof of the probability statement needs the copy /
+transfer machinery of live2-live8 for general k, or Conjecture E_k.
+
+
+6. Tables
+---------
+livek.txt (N = 12..40 step 4, k = 2, 3, 4).  'sets' = distinct sets of valid k-prefixes;
+compact = Theorem 1, anchored = Theorem 4 (with mirror), CovK = Theorems 1-4 + mirrors,
+G = Theorem G for some centre, dead = no completion (DFS; equals the exact dead count of
+prefix/levels.txt for N <= 22).  Right block: the same for prefixes (with multiplicity).
+
+   k   N   valid-pref   sets | compact anchored  CovK      G  dead |   CovK       G   dead | CovK/T   G/T
+   2  12           72     48 |      15       31    31     31     1 |     38      38      2 |  0.528  0.528
+   2  16          128     85 |      20       52    52     52     1 |     62      62      2 |  0.484  0.484
+   2  20          200    133 |      25       79    79     79     1 |     92      92      2 |  0.460  0.460
+   2  24          288    192 |      31      111   111    111     1 |    126     126      2 |  0.438  0.438
+   2  28          392    261 |      36      148   148    148     1 |    166     166      2 |  0.423  0.423
+   2  32          512    341 |      41      191   191    191     1 |    212     212      2 |  0.414  0.414
+   2  36          648    432 |      47      239   239    239     1 |    262     262      2 |  0.404  0.404
+   2  40          800    533 |      52      292   292    292     1 |    318     318      2 |  0.398  0.398
+   3  12          362    168 |      28       72    86     94     4 |    150     162      6 |  0.414  0.448
+   3  16          876    408 |      50      124   154    190     6 |    238     296      8 |  0.272  0.338
+   3  20         1728    810 |      78      206   260    342     8 |    374     506     10 |  0.216  0.293
+   3  24         3004   1416 |     120      320   410    556    10 |    582     802     12 |  0.194  0.267
+   3  28         4790   2260 |     162      448   574    824    12 |    778    1144     14 |  0.162  0.239
+   3  32         7170   3390 |     210      622   792   1180    14 |   1038    1604     16 |  0.145  0.224
+   3  36        10230   4848 |     276      840  1070   1626    16 |   1398    2186     18 |  0.137  0.214
+   3  40        14056   6664 |     338     1076  1362   2146    18 |   1734    2828     20 |  0.123  0.201
+   4  12         1584    355 |       0      137   137    162    32 |    474     564    148 |  0.299  0.356
+   4  16         5226   1210 |       0      376   376    472    57 |   1130    1414    248 |  0.216  0.271
+   4  20        13078   3085 |       0      792   792   1071    95 |   2156    2908    380 |  0.165  0.222
+   4  24        27542   6578 |       0     1472  1472   2099   143 |   3712    5292    548 |  0.135  0.192
+   4  28        51546  12385 |       0     2496  2496   3691   201 |   5914    8736    750 |  0.115  0.169
+   4  32        88602  21412 |       0     3962  3962   6068   271 |   8962   13732    982 |  0.101  0.155
+   4  36       142746  34661 |       0     5984  5984   9410   351 |  13042   20484   1250 |  0.091  0.143
+   4  40       218522  53182 |       0     8662  8662  13917   441 |  18274   29316   1552 |  0.084  0.134
+
+Criteria only (livek N k 0 x), larger N:
+   k=2: N = 48: CovK = G = 446 of 1152 prefixes (0.387); N = 56: 596 of 1568 (0.380);
+        N = 64: 766 of 2048 (0.374).
+   k=3: N = 48: CovK 2694, G 4590 of 24344 (0.111, 0.189); N = 56: 3806, 6858 of 38718
+        (0.098, 0.177); N = 64: 5278, 9804 of 57860 (0.091, 0.169).
+For every N <= 40 and k <= 4 above: every set satisfying one of Theorems 1-4 or its mirror
+satisfies Theorem G, on ALL k-subsets of [N] (not only valid ones) -- livek 'allsets'.
+
+
+7. Programs (C, gcc -O2, 1 core, < 100 MB)
+------------------------------------------
+  livek.c N k [v]   valid k-prefixes: sets, criteria A (compact), M (middle third), Y, Z, S,
+                    W (dyadic), E (anchored, Theorem 4), U, V, H (G with end centre), G,
+                    G after one valid step, DFS witness; checks X => G on all k-subsets.
+  window.c N k      k-sets by centrality: failures of G, and sets without a witness.
+  peel.c N k        Theorem G vs Theorem G' (peeling) by centrality.
+  livek.txt, window.txt, window_small.txt: outputs (N <= 40, k <= 4).
+
+
+8. Lean (Folds/LiveK.lean)
+--------------------------
+  armL_eq, armR_eq, reach_cases                          arm counts as filter cardinalities
+  inward_of_sep, coReach_of_sep                          Theorem G, separation form
+  coReach_compact : B ⊆ Icc a b → 1 ≤ a → b ≤ N → b ≤ 2a+1 → 2b ≤ N+a+2 → CoReach N B
+  coReach_middle  : B ⊆ Icc a (N+1-a) → 1 ≤ a → N ≤ 3a → CoReach N B
+  coReach_dyadic  : B ⊆ Icc 1 N → (∀ x y ∈ B, x < y → 2x ≤ y) →
+                    (∀ y ∈ B, (∃ x ∈ B, x < y) → ∃ x ∈ B, x < y ∧ 2y ≤ N+x+2) → CoReach N B
+  coReach_dyadic_half, coReach_dyadic_mirror
+  coReach_sparse  : B ⊆ Icc 1 N → (∀ y ∈ B, 2y ≤ N+1) →
+                    (∀ y ∈ B, (∃ x ∈ B, x < y) →
+                       #(B.filter (y ≤ · ∧ · + 2 < 2y)) ≤ #(B.filter (· < y))) → CoReach N B
+  coReach_sparse_mirror
+  coReach_anchored : B ⊆ Icc 1 N →
+                    (∀ y ∈ B, (∃ x ∈ B, x < y) → #(B.filter (y ≤ · ∧ · + 3 ≤ 2y)) ≤ #(B.filter (· < y))) →
+                    (∀ y ∈ B, (∃ x ∈ B, x < y) → N + 4 ≤ 2y →
+                       #(B.filter (y ≤ ·)) ≤ #(B.filter (fun z => 2y ≤ N+2+z ∧ z < y))) → CoReach N B
+  CovK (compact / dyadic / sparse / anchored / mirror), CovK.coReach,
+  CovK.extends : p.Nodup → (∀ x ∈ p, 1 ≤ x ∧ x ≤ N) → SemiSymmetric N p → CovK N p.toFinset →
+                 Extends N p
+  extends_of_coReach, extends_compact, extends_middle, extends_dyadic, extends_dyadic_half,
+  extends_dyadic_mirror, extends_sparse, extends_anchored
+  examples: every subset of [14, 27] is co-reachable for N = 40; {1, 3, 6, 13, 27} for N = 40.
