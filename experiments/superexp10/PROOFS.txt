@@ -1,0 +1,116 @@
+PALINDROMIC CHAINS WITH GENERAL TRANSVERSALS: A PARITY OBSTRUCTION   (experiments/superexp10/)
+=========================================================================================
+
+Notation as in ../hyph, ../superexp8, ../superexp9.  q odd, k = (q-1)/2, sig = sig q nu,
+t0 = the fixed point of sig.  A palindromic chain is pi = x ++ [t0] ++ reverse(sig o x)
+(Live4.goodL_palin): x and sig o x valid from scratch, t0 balanced after x, and set(x) a
+transversal T of the k sig-pairs.  [Lean] = Folds/SuperExp10.lean, namespace
+Folds.SuperExp10; no sorry, no native_decide; axioms propext, Classical.choice, Quot.sound.
+
+SUMMARY
+-------
+ * The all-N exponent 1/12 is NOT proven, and this candidate cannot prove it: the
+   unconditional all-N exponent stays 1/16 (SuperExp5), and 1/12 stays conditional on
+   H(q, rho), rho <= q/16 (SuperExp8.allN_of_smallH).
+ * PARITY OBSTRUCTION [Lean: palin_reach_even, palin_mod_four, palin_goodL_mod_four,
+   no_palin_three].  A palindromic chain for (q, nu) exists only if reach(q, t0) is even.  For
+   odd q that means
+          nu = 1 (mod 4)   or   q - nu = 1 (mod 4).
+   This holds for EVERY transversal and EVERY ordering, and also for every good pi with
+   sig o pi = reverse(pi), since each such pi is a palindromic chain.  So for odd q and
+   nu = 3 (mod 4) no palindromic chain exists at all.
+ * The condition is also sufficient numerically: exhaustive search, every odd q <= 25 and
+   every nu (obstr_3_25.out, no mismatch).  For larger q the dilation-2 transversals (below)
+   solve most predicted residues for q <= 101, nu <= q/4.  The rest ran out of the search
+   budget; none was found unsolvable (section 3).
+ * Why this rules out the candidate: the all-N argument needs residues = 3 (mod 4) at odd
+   moduli.  For N = 2^L - 1, every admissible q = N >> j is odd and = 3 (mod 4), and
+   rho = 2^j - 1 = 3 (mod 4).  Then q - rho = 0 (mod 4), and neither form of the condition
+   holds.  More generally, if N = 3 (mod 4) then every rho = N mod 2^j (j >= 2) is = 3 (mod 4).
+   For odd q, the residue therefore has to come from a non-palindromic order: the mirror plus
+   Theorem R with its global constraints (superexp9 (B)), or parity trees, which stop at 9.
+   Palindromic chains can still be used for subproblems with nu = 1 (mod 4), but at a
+   nu = 3 (mod 4) node of odd size they never apply.
+ * Middle blocks do not help much (numerics).  pi = x ++ M ++ reverse(sig o x), where M is
+   an ordering of a small sig-invariant set, was tried for (q, 3), q <= 21:
+     - M = {t0, a, sig a}: no a works for (q, 3), q <= 21.  It works for some other blocked
+       residues, e.g. (9, 2), (15, 4), (17, 2), (21, 6), (13, 11), (15, 11), (19, 15).
+     - M = {t0, a, sig a, c, sig c}: no (a, c) works for (q, 3), q <= 19.  Some pairs work
+       for (15, 7) and (19, 7).
+   (The obstruction itself only concerns the step of t0: with M of size >= 3 the parity
+   count can be repaired, but other steps then fail for nu = 3.)
+ * Transversal structure (trans.py).  Every "dilation-2" transversal of the sig-pairs is
+   one of four types: on each of the two sig-invariant segments [1, nu] and [nu+1, q], one
+   parity on each side of the centre.  For all four, one of the two maps phi (T sorted) and
+   psi (sig T sorted) is a 2i+1-type copy of the k-strip, with the global doubling NotAgree
+   set {(i, 2i) : r < i <= k/2}, about k/2 pairs.  The other map has O(1) local pairs.
+   The induced residue is nu' = (nu-1)/2 (nu odd) or the mirror analogue.  The reason: T
+   and sig T together contain all odds but at most one, so one of them carries the odd
+   panels shifted by one against the exact copy oddE.  So the recursion of step 2 always
+   meets a Lemma-W-type doubling set on one side, as in good_palin / CG (Live4).  Even
+   nu (q - nu = 1 mod 4) gives exactly the mirrors of the odd case: nothing beyond
+   good_palin + good_mirror.
+
+
+1. THE OBSTRUCTION                                             [Lean: palin_reach_even]
+------------------------------------------------------------------------------------
+Let R = reach(q, t0) = min(t0 - 1, q - t0), W- = [t0 - R, t0), W+ = (t0, t0 + R].
+(a) sig is the reflection t -> 2 t0 - t on [t0 - R, t0 + R]  (sig_window).  From sig t0 = t0:
+    either 2 t0 = nu + 1 (t0 <= nu) and then the whole window lies in [1, nu], or
+    2 t0 = nu + 1 + q and the window lies in [nu + 1, q].  In both cases sig is the affine
+    reflection there.  So sig maps W+ onto W-  (sig_left_iff).
+(b) pi is a permutation of [1, q], so #(pi n W-) = R.  Split pi = x, t0, reverse(sig x):
+        R = #(x n W-) + #(sig x n W-) = #(x n W-) + #(x n W+).
+(c) The middle step (t0 after x) is valid iff #(x n W-) = #(x n W+).  Hence R = 2 #(x n W-).
+For odd q (palin_mod_four): nu odd => 2 t0 = nu + 1 (nu + q + 1 is odd), R = (nu - 1)/2.
+nu even => 2 t0 = nu + q + 1, R = (q - nu - 1)/2.  R even <=> nu = 1 mod 4 resp.
+q - nu = 1 mod 4.
+palin_goodL_mod_four: if GoodL q nu pi and sig o pi = reverse pi, then with k = q div 2 and
+x = take k pi, the middle entry pi[k] is fixed by sig and drop (k+1) pi = reverse(sig o x).
+So the theorem applies.  no_palin_three: odd q, nu = 3 mod 4 => no good pi with
+sig o pi = reverse pi.
+
+
+2. THE FOUR DILATION-2 TRANSVERSALS                                      (trans.py)
+------------------------------------------------------------------------------------
+nu odd (t0 = (nu+1)/2): on [1, nu] the pairs are {t0 - d, t0 + d} (same parity), so T takes
+parity a below t0 and 1 - a above it.  On [nu+1, q] the pairs have opposite parities, so T
+takes a single parity b.  Family (a, b) = (0, 1) is Live4's X_r (nu = 4r + 1); for nu = 4r + 3
+the same phiR r gives t0 even, nu' = 2r + 1, but that residue is obstructed (section 1).
+nu even: the analogous four with the roles of the two segments exchanged (mirror images).
+python3 trans.py q nu prints T, nu', and the NotAgree pairs of phi and psi.  Example
+(79, 9), family (0, 1): phi has 18 pairs (3,6), (4,8), ..., (19,38), (20,1); psi has one
+pair (2, 3).
+
+
+3. DATA (<= 2 cores, < 1 GB)
+------------------------------------------------------------------------------------
+pal.c        DFS for palindromic chains (dead-state hash):  ./pal q nu mode budget [a] [c]
+             mode 0 = free transversal, mode 1 = transversal read from stdin; a, c > 0 add
+             the middle block {t0, a, sig a [, c, sig c]}.
+trans.py     transversal families, induced nu', NotAgree pairs.
+famrun.py    the four families for one (q, nu).        famscan.py   scan (famscan_9_101_K4.out:
+             odd q in [9, 101], 1 <= nu, 4 nu < q, budget 2e5 per family; marks + / ? / -).
+             Every (q, nu) with a '+' satisfies the mod-4 condition (none is obstructed).  Of
+             the 323 predicted residues, 286 were solved at budget 2e5, and 37 ran out of budget
+             (31 of them nu = 1, covered by Theorem H anyway).  rerun.py / rerun.out: those
+             with nu > 1 again at budget 2e7.  7 of the 11 were solved; (85, 9), (89, 9),
+             (93, 9) and (101, 25) ran out of budget again.  These are search limits:
+             none of them was shown unsolvable.
+obstr.py     exhaustive free search vs the mod-4 prediction (obstr_3_25.out: all odd q <= 25,
+             all nu: O = chain found, N = none; no mismatch).
+midscan.py   middle blocks of size 3 (section SUMMARY).
+
+
+4. WHAT REMAINS
+------------------------------------------------------------------------------------
+ * The binding residues are nu = 3 (mod 4) at odd moduli (already H(q, 3), q odd, is open in
+   Lean; parity trees give it numerically for q <= 260).  Palindromic chains can never supply
+   them (section 1).  A construction for them has to be "non-symmetric" at the top level.
+   Options left: the mirror + Theorem R with the global constraints treated exactly (counts,
+   not NotAgree precedences), or chains x ++ M ++ reverse(sig x) with a middle block M of
+   unbounded size.  For the second, |M| = 3 and |M| = 5 already fail for (q, 3), q <= 19
+   (section SUMMARY).
+ * For nu = 1 (mod 4) palindromic chains exist numerically, but every transversal of the
+   dilation-2 kind carries a global doubling set to the next level (section 2).  That is the
+   CG problem of Live4, which is solved only for k even (cg_double, cg_four).
