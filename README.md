@@ -154,6 +154,7 @@ change. There is no `sorry` and no
 | `SuperExp7` (M) | Hypothesis H ⇔ "some class is Good" (`hypH_iff`); H proven for ρ ∈ {0, ±1}, all ρ when q is 23-smooth; a(⌊N/q⌋+1)^{N mod q}·a(⌊N/q⌋)^{q−N mod q} ≤ a(N) for smooth q; all-N exponent 1/12 reduced to a single pair H(⌊N/M⌋, N mod M) (`allN_of_hypH`) |
 | `HypH` (M) | Lemma X: the second chain condition as a balance condition #(A∩[1,ν]) = #(A∩(2s−[1,ν])) |
 | `PeriodLaw3` (M) | arithmetic lemmas for the rest2 < 2 proof (weight identity, exponent identities, convexity inequalities, top-family residues) |
+| `SuperExp8` (M) | Theorem R (`goodL_oddR`); H(q,2), H(q,4) for all q (and H(q,3) for even q) with mirrors; a(n+1)^ρ·a(n)^{q−ρ} ≤ a(nq+ρ) for these ρ (`semiCount_smallRes`); exponent 1/12 for all N reduces to H for ρ ≤ q/16 (`allN_of_smallH`) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -272,6 +273,7 @@ change. There is no `sorry` and no
 | `experiments/superexp7/PROOFS.txt` | the H bridge, coverage of the all-N 1/12 argument by proven pairs (insufficient; counting obstruction) |
 | `experiments/hyph/PROOFS.txt` | Hypothesis H for prime q: the q → q/2 reduction (Theorem R), parity-tree orders (exist for small or large ν), failed constructions; H for ρ ≤ q/K would suffice for exponent 1/12 |
 | `experiments/periods5/PROOFS.txt` | the explicit majorant U(s,a) of rest2 and the proof that rest2 < 2 for k ≥ 22 (completing period(T(N,k)) = B(k)) |
+| `experiments/superexp8/PROOFS.txt` | why constant-ρ H cannot give all-N bounds; parity trees work for ν ≤ 8 but first fail at ν = 9 for q ≡ −1 mod 16 |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
