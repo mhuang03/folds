@@ -48,6 +48,7 @@ import Folds.MaxMoves2
 import Folds.SuperExp4
 import Folds.SuperExp5
 import Folds.Copies2
+import Folds.SuperExp6
 import Folds.Structure2
 import Folds.SymParity
 import Folds.SymStructure

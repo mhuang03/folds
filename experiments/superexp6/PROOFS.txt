@@ -1,0 +1,204 @@
+BEYOND SLIPS: CONTROLLED GREEDY, CAPS, AND THE GENERALISED COMPOSITION   (experiments/superexp6/)
+=========================================================================================
+
+Notation as in ../superexp/PROOFS.txt ... ../superexp5/PROOFS.txt.  V_n = valid sequences of the
+n-strip, a(n) = |V_n|, x mod* n = representative in [1, n], g(X) = number of valid orders of the
+set X from scratch (N-strip), J(m) = imbalance field (m free is valid iff J(m) = 0).
+[Lean] = Folds/SuperExp6.lean, namespace Folds.GComp; no sorry, no native_decide; axioms
+propext, Classical.choice, Quot.sound.
+
+SUMMARY (honest)
+----------------
+Goal: a lower-bound method with exponent c > 1/2, or at least 1/8 for all N, not built on slips.
+ * NOT ACHIEVED unconditionally.  The best rigorous exponents are unchanged:
+       1/6 along N = 2^L (Lean, SuperExp2),   1/16 for all N (Lean, SuperExp5).
+ * New rigorous theorem (Lean): the GENERALISED COMPOSITION.  For ANY N = n q + rho (rho < q,
+   q need not divide N), the residue classes mod q are window-embedded copies of their own
+   strips, and they can be placed as blocks in a class order pi whenever pi and its image under
+   an explicit involution mst_rho are both valid q-sequences:
+        prod_{s=1}^{q} a(|class s|) <= a(n q + rho)                     [semiCount_gcomp]
+   Instances (Lean): a(n+1) a(n)^2 <= a(3n+1), a(n+1)^2 a(n) <= a(3n+2).
+ * Conditional all-N exponent 1/12 (paper): if every pair (q, rho) has such a class order
+   ("hypothesis H"), then a(N) >= (N/300)^{N/12} for ALL N >= 1 (vs (N/4096)^{N/16} now).
+   H holds for rho = 0, for q a power of 2, is inherited by 2q and by multiples g q (with g rho),
+   and was verified by computer for every odd q <= 45 and every rho (hence for every q whose odd
+   part is <= 45).  A proof of H for all odd q (in particular primes) is the missing step.
+ * Why c > 1/2 is out of reach of every known certificate (data, section 2): the exact growth of
+   the best possible slip sum B(n) is 1.255^n a(n)^2, i.e. exponent log2(1.255)/2 = 0.164 = 1/6 for
+   ANY recursion built on a(2n) >= B(n) -- the proven 1/6 chain is already optimal for D-slips;
+   the 1/2 "ceiling" of superexp2 is far from binding.  Summing the general slip lemma over ALL
+   half-sets X with strip-valid blocks gives about 1.34^n a(n)^2, i.e. at most ~0.21.  Exponent
+   > 1/4 (let alone > 1/2) needs certificates for sequences whose two halves are NOT valid strip
+   sequences -- the "regress" of superexp3, now quantified.
+ * Controlled greedy (idea 1): a discrepancy-minimising greedy survives (70-95% of runs up to
+   N = 16384) but has almost no freedom (sum ln|choices| = 0.04-0.09 N ln N); every relaxation
+   that adds freedom dies.  No invariant was found (section 1).
+
+
+=========================================================================================
+1. IDEA 1: CONTROLLED GREEDY STRATEGIES (data)
+=========================================================================================
+Entropy reduction (asymptotics/NOTES 4.1): a dead-end-free strategy with allowed sets C(S) gives
+a(N) >= prod min |C|, and a(N) >= exp(E sum ln|C|) for a strategy that never dies.
+greedy.c maintains J by the dipole rule (O(N) per step; the change of Phi = sum_free J^2 for
+every candidate in O(1) by prefix sums).  Strategies: 0 = uniform valid move; 1 = valid moves with
+dPhi <= min dPhi + tol (uniform among them); 2 = valid moves with dPhi <= 0; 4/5 = maximise the
+number of valid moves after the step (with tolerance).  20 runs each (greedy_out.txt):
+      N        strat 1 tol 0     strat 1 tol 1     strat 1 tol 3     strat 2         strat 0
+             done  E/(NlnN)    done  E/(NlnN)    done  E/(NlnN)    done E/(NlnN)  done E/(NlnN)
+     256     19/20  0.085       4/20  0.123       1/20  0.177      5/20  0.193     0/20 0.216
+    1024     17/20  0.062       7/20  0.097       3/20  0.140      3/20  0.208     0/20 0.214
+    4096     17/20  0.050       1/20  0.072       0/20  0.115      1/20  0.233     0/20 0.142
+   16384     14/20  0.041       3/20  0.060       0/20  0.093      0/20  0.261     0/20 0.105
+(E = sum_k ln|allowed set_k| along the run, up to death.)  Max-mobility (strategies 4, 5) dies in
+6/6 runs at N = 512.  Findings: (i) the pure Phi-greedy keeps sigma_J ~ 0.8 (much below the
+uniform measure's ~2-3) and usually survives, but its ties carry only ~0.5 nats per step, and the
+freedom decreases with N; (ii) any tolerance that gives N^eps choices kills the process (death
+late in the run, k/N = 0.72-0.999 at N = 4096).  This matches the Feynman-Kac picture: low discrepancy is
+produced by selection, and a "potential" that is preserved step by step has to be almost
+deterministic.  No candidate invariant survived the data, so nothing was attempted on paper.
+
+
+=========================================================================================
+2. WHY HALF-BLOCK CERTIFICATES CANNOT REACH 1/2 (data)
+=========================================================================================
+Any recursion of the form a(2n) >= C(n) a(n)^2 with C(n) ~ lambda^n gives exponent
+c = log2(lambda)/2 (f(N)/N = f(N/2)/(N/2) + ln(lambda)/2).
+ (a) D-slips (superexp Thm 1): the TRUE slip sum B(n) (superexp2/bsum.c, rerun to n = 15):
+        n          4     6     8     10     12     14
+        B/a(n)^2  2.12  3.22  5.26  8.63  13.12  20.63    (odd n: 2.27, 3.47, 5.17, 7.77, 11.75, 17.64)
+     ratio per step of n: 1.232, 1.278, 1.281, 1.233, 1.254 -> lambda_B ~ 1.255, c ~ 0.164.
+     So no recursion on a(2n) >= B(n) can exceed ~1/6 (if the rate stays flat, as it does on
+     n <= 15).  The proven chain (1/6 along 2^L) is essentially optimal for D-slips; the bound
+     B(n) <= 2^{n-1} a(n)^2 behind the "1/2 ceiling" is very far from the truth.
+ (b) ALL half-sets X with strip-valid blocks (general slip lemma, superexp3 2.2 gsum.c):
+     sum_X T(X) S(X) / a(n)^2 = 6.32, 11.81, 17.21, 35.72, 66.59 for n = 4, 6, ..., 12:
+     ~1.34 per n, c ~ 0.21.
+ (c) The truth: a(2n)/a(n)^2 = 11.2, 41.6, 220.2, 1248, 6662 (n = 4..12), ~2.3 per n now and
+     -> 4 per n asymptotically (if a(N) = N!/(kappa ln N)^N), i.e. c -> 1.
+So the mass that separates c ~ 0.2 from c = 1 sits on sequences whose two halves are not valid
+strip sequences (their defects compensate each other).  Every certificate known (slips, general
+slips, parity blocks, compositions, splits) works with strip-valid blocks; c > 1/4 needs a
+new kind of certificate.
+
+2.1 Self-balanced sets and fully valid sets (selfbal.c, fullvalid.c).  Call Y self-balanced if
+every y in Y has equally many elements of Y in its two arms.  Sub-block lemma (paper; it is the
+zero-defect case of superexp3 Theorem A): if Z is self-balanced and W is balanced around every
+point of Z, then g(W u Z) >= g(W) a(|Z|) (any strip-valid order of Z after any valid order of W).
+In particular a(N) >= g(Y^c) a(|Y|) for self-balanced Y ("fully valid" X = Y^c: every panel
+outside X is a valid move after X).  Every residue class of [N] (any modulus, any N) is
+self-balanced (section 3).  Data:
+   * chains [N] = Z_1 u Z_2 u ... with these properties: for N <= 20 the best chain is always a
+     2-block split (parity or doubling set); chains give nothing new.
+   * fully valid X exist for every size k in [N/2, N-1] (N <= 22) with
+     g(X)/a(k) >= 0.36 for the best X of each size (N = 16: 0.82, 0.68, 0.61, 0.42, 0.47, 0.46,
+     0.49 for k = 9..15).  If g(X) >= a(k) e^{-O(N)} could be PROVED for such X, one would get
+     a(N) >= a(k) a(N-k) e^{-O(N)} for all k, hence exponent 1/6 for all N (binary expansion of N).
+     The case |Y| = 1 shows this is a monotonicity statement (a(N) >= g([N]\{y})), as hard as
+     a(N+1) >= a(N)/poly(N), which is open.
+2.2 Lifts (lift.c).  Inserting a new panel p at time t into a valid N-sequence: all valid
+N-sequences lift for N <= 9 except 2 at N = 8; at N = 10, 292 of 17878 do not.  Inserting panel 1
+works iff the left-half panels m with "m before 2m" form a time prefix; no uniform lift exists.
+NOTE: a(N+1) >= a(N)/N^C for all N would give exponent 1/6 - eps for ALL N (with the Lean
+composition a(d 2^j) >= a(2^j)^d, d <= D, and N - d 2^j <= N/D).  Not proved.
+
+
+=========================================================================================
+3. THE GENERALISED COMPOSITION                                              [Lean]
+=========================================================================================
+Setting.  N = n q + rho, 0 <= rho < q, class s = {s, s+q, s+2q, ...} n [1, N] (1 <= s <= q),
+       sz(s) = n + [s <= rho]  (its size),   cls q s j = (j-1) q + s,
+       ccount(t, z) = floor((z + q - t)/q) = #(class t n [1, z])   (z <= N),
+       mst(s) = rho + 1 - s (s <= rho),  q + rho + 1 - s (s > rho)  [the class of N + 1 - x].
+
+Lemma 1 (mirror) [cls_mirror', ccount_mirror'].  cls q (mst s) (sz(s) + 1 - j) + cls q s j = N + 1,
+sz(mst s) = sz(s), mst(mst s) = s, and ccount(t, z) + ccount(mst t, N - z) = sz(t) (z <= N).
+Proof: arithmetic (w = z + q - t = a q + b; the second count is (q - 1 - b) + (n + [t<=rho] - a) q
+over q).
+
+Lemma 2 (class identity) [class_identity_left, class_identity_right].  Let x = cls q s j.
+ (L) If x - 1 <= N - x (left half):  #(class t in left arm of x) + [t in right arm of s in the
+     q-strip] = #(class t in right arm of x) + [t in left arm of s in the q-strip].
+ (R) If N - x <= x - 1 (right half): the same with the arms exchanged and (s, t) replaced by
+     (mst s, mst t).
+Proof.  (L): the arm counts are ccount(t, x-1) and ccount(t, 2x-1) - ccount(t, x), and
+ccount_vals (Growth.lean) gives ccount(t, x-1) = j - 1 + [t<s], ccount(t, x) = j - 1 + [t<=s],
+ccount(t, 2x-1) = 2(j-1) + [t <= 2s-1] + [t + q <= 2s-1]: this is the q-strip dipole of t at s.
+The left-half identity does not see N at all.  (R): with x' = N + 1 - x = cls q (mst s) j' in the
+left half, Lemma 1 turns the right-half counts of class t around x into the left-half counts of
+class mst t around x' (arms exchanged); apply (L) there.  QED
+Corollary (class balance) [cunion_balanced].  If (R, s) and (mst R, mst s) are valid steps of
+the q-strip, the union of the complete classes R is balanced around every panel of class s.
+Lemma 3 [winEmb_cls'].  Every class is a window-embedded copy of the sz(s)-strip (also when
+q does not divide N; checked independently for all N <= 60 and all q, winemb.py).
+Theorem (generalised composition) [semiSymmetric_blocks', semiCount_gcomp].  If pi and
+pi.map mst are valid q-sequences, then for any sigma_s in V_{sz(s)} the sequence "classes in the
+order pi, class s in the order sigma_s" is valid, and (injectivity)
+        prod_s a(sz(s)) <= a(n q + rho).
+For rho = 0 this is semiCount_comp (mst = mirror of the q-strip).  [Lean instances:
+semiCount_three_one: pi = (2,1,3); semiCount_three_two: pi = (1,3,2).]
+Necessity (data, gcomp.py): for N <= 31, q <= 6 the class orders that work are exactly those
+with pi and mst(pi) valid; their number depends only on (q, N mod q) (rotpi.c: d = 5:
+28, 6, 8, 8, 6; d = 7: 256, 42, 48, 32, 32, 48, 42; ...).
+
+3.1 Which (q, rho) are good.  mirror o mst = rotation s -> s - rho (mod* q), and the mirror
+preserves V_q, so (q, rho) is good iff P(q, rho): some pi in V_q has rot_rho(pi) in V_q
+(a sequence valid for two base points of the cyclic form).  P(q, b) <=> P(q, q - b).
+ * P(q, 0): trivial.  P(2^k, b) for all b: the iterated odds-first parity-block (vdC) orders
+   are rotation invariant (rotall.c: 8 of 10 for q = 4, 128 of 1120 for q = 8; NONE for odd q >= 3).
+ * Even reduction (paper): q = 2q'.  rot_b maps PB_odd(alpha, beta) to PB_odd(rot_{b/2} alpha,
+   rot_{b/2} beta) (b even) or to PB_even(rot_{(b-1)/2} alpha, rot_{(b+1)/2} beta) (b odd); the
+   parity-block theorem holds in both orders, so P(q', floor(b/2)) and P(q', ceil(b/2)) imply
+   P(2q', b).
+ * gcd reduction (paper): P(d, b') implies P(g d, g b') (composition mod g, Growth.lean: rot_{gb'}
+   maps each class mod g to itself, acting as rot_{b'} on the indices).
+ * So H reduces to P(d, b) for odd d and gcd(b, d) = 1.  twobase.c (DFS with a failed-state
+   cache): P(d, b) holds for every odd d <= 45 and every b (twobase_out_*.txt).  Hence H holds
+   for every q whose odd part is <= 45.
+ * Failed construction attempts for odd d: arithmetic-progression orders (only d = 3, 5),
+   "pair" orders {s, mst s} placed consecutively (only d <= 5), mst-palindromic orders
+   pi = X f mst(rev X) (then mst(pi) = rev(pi) is valid automatically; they exist only for rho in
+   two residue classes mod 4, palin.c), parity blocks (they exist, pbrec.py, but the conditions
+   on the halves are modified systems -- asymmetric windows -- not again of the form P(., .)).
+   A proof of P for all odd d (in particular primes) is open.
+
+3.2 Conditional all-N bound.  Assume H.  For N >= 2 let M = 2^j be maximal with M(M+1) <= N.
+The interval (N/(M+1), N/M] has length >= 1, so it contains an integer q; then N = qM + rho with
+0 <= rho < q, the classes mod q have sizes M and M + 1, and semiCount_gcomp gives
+        a(N) >= a(M)^{q - rho} a(M+1)^rho.
+Lean (SuperExp2, pow_le_semiCount_pow_six): M^M <= 2^M a(M)^6, so ln a(M) >= (M/6) ln(M/2); and
+semiCount_odd iterated, a(2^j + 1) >= prod_{i<j} a(2^i), gives ln a(M+1) >= (M/6)((j-3) ln 2) =
+(M/6) ln(M/8).  So ln a(N) >= (qM/6) ln(M/8) >= (N/6) (M/(M+1)) ln(M/8), and since
+2M(2M+1) > N, M > (sqrt(N) - 1)/2.  Numerically (all N <= 2*10^5 and a geometric grid to 10^12,
+the worst case N = 1055, M = 16) this gives
+        a(N) >= (N/300)^{N/12}      for every N >= 1            (conditional on H)
+(for N <= 300 the right side is <= 1).  Asymptotically ln a(N) >= (N/12) ln N - O(N).
+Unconditionally the same bound holds for every N for which the chosen q has odd part <= 45.
+Combining H with the slip machinery (model6.c: superexp5 recursion + compositions with
+d <= 32) the worst recursion value at N ~ 10^6 rises from 0.098 to 0.108 (not a proof).
+Routing WITHOUT H (only d | N compositions, or d with odd part <= 13) does not help: route*.c,
+worst values decay like the parity-only model (0.05 at N ~ 10^6).
+
+
+=========================================================================================
+4. FILES (1-2 cores, < 1 GB)
+=========================================================================================
+greedy.c       controlled greedy strategies (section 1).  ./greedy.bin N strat tol runs [seed]
+greedy_out.txt the table of section 1.
+lift.c         lifts of valid N-sequences to N+1 (2.2).
+selfbal.c      self-balanced sets, chains, chain sums (2.1).   fullvalid.c  fully valid sets, g(X).
+dset.py        all doubling sets (splits) for N <= 30.
+gcomp.py, gcomp2.py   generalised composition: class orders that satisfy the balance conditions
+               directly in the N-strip (N <= 31, q <= 6).
+winemb.py      classes are window embeddings (N <= 60, all q).
+rotpi.c, rotpi2.py, rotall.c, apgood.py, pairpi.c, palin.c, pbrec.py   the class-order problem
+               P(q, rho) and the failed constructions (3.1).
+twobase.c      P(d, b) by DFS; twobase_out_3_31.txt, twobase_out_33_47.txt (all Y).
+               twobase_p.c prints the solutions.
+route.c, route_div.c, route_d0.c   routing models for all-N bounds via compositions (3.2).
+model6.c       superexp5 recursion model + generalised composition (3.2).
+Lean           Folds/SuperExp6.lean: sz, mst, cpanels, ccount_top', countP_cpanels, cls_mirror',
+               ccount_mirror', arms_ccount, class_identity_left, class_identity_right, cunion,
+               cunion_identity_left/right, cunion_balanced, winEmb_cls', blocks_perm',
+               cunion_cover, isFoldSeq_blocks', semiSymmetric_blocks', semiCount_gcomp,
+               semiCount_three_one, semiCount_three_two.
