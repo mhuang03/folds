@@ -155,6 +155,7 @@ change. There is no `sorry` and no
 | `HypH` (M) | Lemma X: the second chain condition as a balance condition #(A∩[1,ν]) = #(A∩(2s−[1,ν])) |
 | `PeriodLaw3` (M) | arithmetic lemmas for the rest2 < 2 proof (weight identity, exponent identities, convexity inequalities, top-family residues) |
 | `SuperExp8` (M) | Theorem R (`goodL_oddR`); H(q,2), H(q,4) for all q (and H(q,3) for even q) with mirrors; a(n+1)^ρ·a(n)^{q−ρ} ≤ a(nq+ρ) for these ρ (`semiCount_smallRes`); exponent 1/12 for all N reduces to H for ρ ≤ q/16 (`allN_of_smallH`) |
+| `SuperExp10` (M) | **palindromic-chain obstruction** (`palin_mod_four`, `no_palin_three`): for odd q a palindromic chain needs ν ≡ 1 or q−ν ≡ 1 (mod 4), so these chains alone cannot give the all-N exponent 1/12 |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -275,6 +276,7 @@ change. There is no `sorry` and no
 | `experiments/periods5/PROOFS.txt` | the explicit majorant U(s,a) of rest2 and the proof that rest2 < 2 for k ≥ 22 (completing period(T(N,k)) = B(k)) |
 | `experiments/superexp8/PROOFS.txt` | why constant-ρ H cannot give all-N bounds; parity trees work for ν ≤ 8 but first fail at ν = 9 for q ≡ −1 mod 16 |
 | `experiments/superexp9/PROOFS.txt` | why iterating Theorem R cannot give H(q, ρ ≤ q/K): parity-tree obstruction at ρ = 9 for q ≡ 15 mod 16, global doubling constraints at odd/odd steps |
+| `experiments/superexp10/PROOFS.txt` | the mod-4 obstruction for palindromic chains; chain scans for odd q ≤ 101 |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
