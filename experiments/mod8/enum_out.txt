@@ -1,0 +1,82 @@
+N=4 a=10 a%8=2
+  pair 0/2: Y=8 FixRM=4 FixTauRM=4  Y%8=0 rhs%8=0 ok
+  pair 1/1: Y=4 FixRM=4 FixTauRM=0  Y%8=4 rhs%8=4 ok
+  rigid: Z=6 (Z/a=0.6000, sd 2) T1=4  (Z+T1)%8=2 ok
+N=5 a=28 a%8=4
+  pair 0/3: Y=24 FixRM=4 FixTauRM=4  Y%8=0 rhs%8=0 ok
+  rigid: Z=4 (Z/a=0.1429, sd 0) T1=8  (Z+T1)%8=4 ok
+N=6 a=96 a%8=0
+  pair 0/4: Y=80 FixRM=4 FixTauRM=4  Y%8=0 rhs%8=0 ok
+  pair 1/3: Y=64 FixRM=4 FixTauRM=4  Y%8=0 rhs%8=0 ok
+  pair 2/2: Y=56 FixRM=8 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  rigid: Z=8 (Z/a=0.0833, sd 0) T1=16  (Z+T1)%8=0 ok
+N=7 a=256 a%8=0
+  pair 0/5: Y=224 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 1/4: Y=160 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  rigid: Z=96 (Z/a=0.3750, sd 0) T1=0  (Z+T1)%8=0 ok
+N=8 a=1120 a%8=0
+  pair 0/6: Y=976 FixRM=48 FixTauRM=48  Y%8=0 rhs%8=0 ok
+  pair 1/5: Y=664 FixRM=24 FixTauRM=24  Y%8=0 rhs%8=0 ok
+  pair 2/4: Y=848 FixRM=36 FixTauRM=36  Y%8=0 rhs%8=0 ok
+  pair 3/3: Y=544 FixRM=64 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  rigid: Z=216 (Z/a=0.1929, sd 4) T1=64  (Z+T1)%8=0 ok
+N=9 a=4256 a%8=0
+  pair 0/7: Y=3632 FixRM=8 FixTauRM=8  Y%8=0 rhs%8=0 ok
+  pair 1/6: Y=2384 FixRM=8 FixTauRM=8  Y%8=0 rhs%8=0 ok
+  pair 2/5: Y=3000 FixRM=12 FixTauRM=12  Y%8=0 rhs%8=0 ok
+  rigid: Z=168 (Z/a=0.0395, sd 4) T1=8  (Z+T1)%8=0 ok
+N=10 a=17878 a%8=6
+  pair 0/8: Y=15848 FixRM=184 FixTauRM=184  Y%8=0 rhs%8=0 ok
+  pair 1/7: Y=9912 FixRM=80 FixTauRM=80  Y%8=0 rhs%8=0 ok
+  pair 2/6: Y=12760 FixRM=112 FixTauRM=112  Y%8=0 rhs%8=0 ok
+  pair 3/5: Y=12712 FixRM=128 FixTauRM=128  Y%8=0 rhs%8=0 ok
+  pair 4/4: Y=8340 FixRM=204 FixTauRM=0  Y%8=4 rhs%8=4 ok
+  rigid: Z=322 (Z/a=0.0180, sd 14) T1=100  (Z+T1)%8=6 ok
+N=11 a=70960 a%8=0
+  pair 0/9: Y=62848 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 1/8: Y=40200 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 2/7: Y=51856 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 3/6: Y=48440 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  rigid: Z=8816 (Z/a=0.1242, sd 0) T1=0  (Z+T1)%8=0 ok
+N=12 a=383476 a%8=4
+  pair 0/10: Y=328432 FixRM=624 FixTauRM=624  Y%8=0 rhs%8=0 ok
+  pair 1/9: Y=217184 FixRM=316 FixTauRM=316  Y%8=0 rhs%8=0 ok
+  pair 2/8: Y=279648 FixRM=444 FixTauRM=444  Y%8=0 rhs%8=0 ok
+  pair 3/7: Y=255936 FixRM=348 FixTauRM=348  Y%8=0 rhs%8=0 ok
+  pair 4/6: Y=270976 FixRM=448 FixTauRM=448  Y%8=0 rhs%8=0 ok
+  pair 5/5: Y=165080 FixRM=864 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  rigid: Z=27532 (Z/a=0.0718, sd 56) T1=648  (Z+T1)%8=4 ok
+N=13 a=1620328 a%8=0
+  pair 0/11: Y=1428640 FixRM=456 FixTauRM=456  Y%8=0 rhs%8=0 ok
+  pair 1/10: Y=901648 FixRM=288 FixTauRM=288  Y%8=0 rhs%8=0 ok
+  pair 2/9: Y=1158816 FixRM=416 FixTauRM=416  Y%8=0 rhs%8=0 ok
+  pair 3/8: Y=1144040 FixRM=376 FixTauRM=376  Y%8=0 rhs%8=0 ok
+  pair 4/7: Y=1095352 FixRM=424 FixTauRM=424  Y%8=0 rhs%8=0 ok
+  rigid: Z=19872 (Z/a=0.0123, sd 44) T1=576  (Z+T1)%8=0 ok
+N=14 a=9167908 a%8=4
+  pair 0/12: Y=7980408 FixRM=3612 FixTauRM=3612  Y%8=0 rhs%8=0 ok
+  pair 1/11: Y=5179064 FixRM=1896 FixTauRM=1896  Y%8=0 rhs%8=0 ok
+  pair 2/10: Y=6642576 FixRM=2588 FixTauRM=2588  Y%8=0 rhs%8=0 ok
+  pair 3/9: Y=6423960 FixRM=2476 FixTauRM=2476  Y%8=0 rhs%8=0 ok
+  pair 4/8: Y=6191792 FixRM=2056 FixTauRM=2056  Y%8=0 rhs%8=0 ok
+  pair 5/7: Y=6166184 FixRM=2276 FixTauRM=2276  Y%8=0 rhs%8=0 ok
+  pair 6/6: Y=3886052 FixRM=4172 FixTauRM=0  Y%8=4 rhs%8=4 ok
+  rigid: Z=61848 (Z/a=0.0067, sd 108) T1=1756  (Z+T1)%8=4 ok
+N=15 a=47821296 a%8=0
+  pair 0/13: Y=41175128 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 1/12: Y=26925864 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 2/11: Y=34439528 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 3/10: Y=32054416 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 4/9: Y=32284440 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  pair 5/8: Y=31833512 FixRM=0 FixTauRM=0  Y%8=0 rhs%8=0 ok
+  rigid: Z=2033184 (Z/a=0.0425, sd 0) T1=0  (Z+T1)%8=0 ok
+N=16 a=276182312 a%8=0
+  pair 0/14: Y=240465200 FixRM=24512 FixTauRM=24512  Y%8=0 rhs%8=0 ok
+  pair 1/13: Y=154320520 FixRM=12892 FixTauRM=12892  Y%8=0 rhs%8=0 ok
+  pair 2/12: Y=198385648 FixRM=17568 FixTauRM=17568  Y%8=0 rhs%8=0 ok
+  pair 3/11: Y=192213720 FixRM=16456 FixTauRM=16456  Y%8=0 rhs%8=0 ok
+  pair 4/10: Y=189611544 FixRM=16912 FixTauRM=16912  Y%8=0 rhs%8=0 ok
+  pair 5/9: Y=181687872 FixRM=14660 FixTauRM=14660  Y%8=0 rhs%8=0 ok
+  pair 6/8: Y=187226160 FixRM=17676 FixTauRM=17676  Y%8=0 rhs%8=0 ok
+  pair 7/7: Y=111780764 FixRM=27612 FixTauRM=0  Y%8=4 rhs%8=4 ok
+  rigid: Z=6418828 (Z/a=0.0232, sd 1952) T1=16236  (Z+T1)%8=0 ok
