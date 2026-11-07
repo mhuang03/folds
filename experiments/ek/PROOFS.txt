@@ -1,0 +1,260 @@
+Conjecture E_k: dead sets that avoid the end panels
+===================================================
+
+Notation as in experiments/livek.  Panels [N] = {1..N}; reach(m) = min(m-1, N-m); arms
+L(m) = [m - reach, m - 1], R(m) = [m + 1, m + reach].  A set D is CO-REACHABLE (Lean
+`Live2.CoReach`) if [N] \ D has a semi-symmetric ordering from scratch; equivalently
+(`Ek.bg_of_coReach`, `Adjacent.coReach_of_inward`'s proof) the free panels can be placed one at a
+time on the BACKGROUND D, every step valid (|placed n L(m)| = |placed n R(m)|).  DEAD = not
+co-reachable.  A valid prefix is live iff its set is co-reachable, so dead sets and dead prefixes
+are the same question.  "Lean" means Folds/Ek.lean (imports Folds.LiveK and Folds.Live7; no sorry,
+no native_decide, builds in about 6 s).
+
+STATUS (short)
+  * Conjecture E_k as stated (finitely many exceptions in [2, N-1]) is FALSE for every k >= 5:
+    the B4 family {2, 2j, 2j+1, 2j+2, 2j+3} (j >= 3, 2j+3 <= N-1) is dead for every N (Lean),
+    so there are at least floor((N-8)/2) dead 5-subsets of [2, N-1] up to mirror image
+    (`not_finite_exceptions_five`).  More generally, for every a >= 1, the anchored blocks
+    {a} u [2j, 2j+2a-1] (j >= a+1) are dead (Lean, `not_coReach_anchor`), so dead (2a+1)-sets
+    can have ALL elements at distance >= a from the ends (`exists_dead_far`).
+  * E_k holds numerically for k <= 4 (k = 2, 3: N <= 100; k = 4: N <= 48) with the single
+    exception {2, 6, 7, 11} at N = 12, as conjectured in livek.
+  * k = 5, N <= 40: the dead 5-subsets of [2, N-1] are EXACTLY the B4 sets, their mirror images,
+    and the symmetric sporadic set {2, 6, 7, 8, 12} at N = 13 (all proven dead: B4 in Lean,
+    the sporadic one by exhaustive search).
+  * The exceptions that are not explained by a family near an end are all mirror-symmetric and
+    form one more family S_a (section 5): {a, N+1-a} u [2a+2, N-2a-1] at N = 6a and N = 6a+1
+    ({2, 6, 7, 11} = S_2 at N = 12 is the exception of E_4).  Dead for a <= 6 (exhaustive).
+  * REVISED CONJECTURE E*_k (section 6): with c_k = max(1, floor((k-1)/2)), every k-subset of
+    [c_k + 1, N - c_k] is co-reachable, except S_{k/2} at N = 3k for even k >= 4.  Verified:
+    k = 2, 3 (N <= 100), 4 (N <= 48), 5 (N <= 40), 6 (N <= 36), 7 (N <= 28), 8 (N <= 24).
+    The radius c_k is optimal up to the exceptions: the anchored blocks B_a give dead
+    (2a+1)-sets with least element a = c_{2a+1}.
+  * Counting corollary (Lean, `card_dead_le`): if every dead k-subset of [N] meets
+    [1, c] u [N+1-c, N] or lies in E, the number of dead k-subsets is at most
+    2c C(N-1, k-1) + |E|.  So E*_k gives  #dead k-sets <= 2 c_k C(N-1, k-1) + 1 = O(N^{k-1}), and
+    hence live / valid -> 1 for every fixed k.  `card_dead_le_of_Ek` is the c = 1 form asked for
+    (2 C(N-1, k-1) + |E|), conditional on E_k (true numerically for k <= 4, false for k >= 5);
+    `card_dead_pairs_le_64`: unconditionally at most 2(N-1) dead pairs for N <= 64 (Conjecture C,
+    Live7).
+  * Proof of E_k itself: not obtained.  The structural part that IS proven explains why the ends
+    matter (sections 2-4), and section 7 discusses the three suggested strategies.
+
+
+1. Numerical results (ek.c; 1 core; outputs k*.txt)
+---------------------------------------------------
+ek N k lo: every k-subset of [lo, N+1-lo], up to mirror image, is decided by
+  (1) Theorem G for some centre;  (2) DFS witnesses on the background D, in the order of the
+  distance to 8 fixed centres, with Theorem G tested at every node (if the placed set satisfies
+  G, the centre greedy completes it);  (3) the LOCAL RELAXATION dead test (below), at both ends,
+  radius w <= 13;  (4) 60 randomized DFS restarts;  (5) exhaustive DFS with memo (certifies dead).
+  Local relaxation (sound): the free panels of [1, w] (w <= (N+1)/2) are the core; their
+  windows lie in [1, 2w-1]; the free panels of [w+1, 2w-1] are wildcards that may be placed at
+  any moment; panels beyond 2w-1 are ignored.  If no relaxed play places the whole core, D is
+  dead (every real completion projects to a relaxed play).  "DEAD-LOCALLw" in the outputs.
+
+Dead k-subsets of [lo, N+1-lo], counted up to mirror image ("N:count"):
+  k=2, lo=2, N = 4..100:  none                       (k2.txt; Conjecture C is a theorem)
+  k=3, lo=2, N = 5..100:  none                       (k3.txt; the 2 sets the batch left open,
+                          {2,88,89} at N = 93 and {2,94,95} at N = 99, are live by a
+                          longer DFS: ek2 N set ...)
+  k=4, lo=2, N = 4..48:   12:1  = {2,6,7,11}         (k4.txt, k4b.txt)
+  k=5, lo=2, N = 5..40:   10:1 11:1 12:2 13:3 14:3 15:3 16:4 ... 36:14 (= floor((N-8)/2), plus 1
+                          at N = 13); all B4 / mirror except {2,6,7,8,12} at N = 13; the 6 sets
+                          left unresolved by the search (N = 37..40, j = 8, 9) are B4, dead by
+                          Lean.                                                     (k5.txt)
+  k=5, lo=3, N = 6..40:   none                       (k5lo3.txt)
+  k=6, lo=2, N = 6..32:   11:1 12:2 13:4 14:7 15:9 16:11 17:17 18:20 19:26 20:30 21:37 22:42
+                          23:53 24:55 25:69 26:75 27:86 28:94 29:110 30:114 31:134 32:141
+                          (about N^2/7, i.e. Theta(N^2) = Theta(N^{k-4})); 1053 of the 1137 are
+                          in B_a or mirror, the other 84 all contain 2 or N-1 (two more
+                          families, section 4), except S_3 = {3,8,9,10,11,16} at N = 18.
+  k=6, lo=3, N = 6..36:   18:1 = S_3                 (k6lo3.txt, k6lo3b.txt)
+  k=7, lo=3, N = 7..24:   15:1 16:1 17:2 18:2 19:4 20:3 21:4 22:4 23:6 24:5: the B_3 family
+                          {3} u [2j, 2j+5] and mirror, S_3' = {3,8,...,12,17} at N = 19, and
+                          {3,4,5,6,9,10,21} at N = 23                               (k7lo3.txt)
+  k=7, lo=4 and k=8, lo=4: see section 6 (k7lo4.txt, k8lo4.txt).
+classify.py lists the sets not explained by the B_a family; summary.py prints the counts.
+
+So E_k with "finitely many exceptions" holds for k <= 4 and fails for k >= 5 (at k = 5 already
+with a linear number of dead sets in [2, N-1]).  The count consequence that livek wanted
+(dead = O(N^{k-1})) survives: what grows is only the distance from the ends needed.
+
+
+2. The background form and the end panels (Lean)
+------------------------------------------------
+`bg_of_coReach`: CoReach N D gives a list a of the free panels with every step valid on D plus
+the earlier steps (the ordering from scratch read backwards; `semiStep_compl`).
+`coReach_of_insert`: if x is free and valid on the background D, then CoReach N (D u {x}) implies
+CoReach N D (append x to the from-scratch ordering of the complement of D u {x}; its step is
+valid there iff valid on D, by complementation).  End panels have empty windows, so
+`coReach_of_insert_one`, `coReach_of_insert_N`, and contrapositively `not_coReach_insert_one`,
+`not_coReach_insert_N`: a dead set avoiding 1 stays dead when 1 is added.  This is why the dead
+families "containing 1 or N plus anything" exist: every dead set avoiding the ends produces dead
+sets containing them, never the converse.
+
+
+3. The anchored-block family B_a (Lean, all a, j, N)
+----------------------------------------------------
+THEOREM (`not_coReach_anchor`).  Let a >= 1, j >= a + 1, 2j + 2a - 1 <= N, and let D contain a and
+the block [2j, 2j + 2a - 1], and nothing of G = [a+1, 2j-1].  (Anything below a or above 2j-1 is
+allowed.)  Then D is dead.
+  a = 1: the blocks {1, 2j, 2j+1} of `Live.not_extends_block`;  a = 2: B4 (also proved directly,
+  `not_coReach_b4`, with the mirror `not_coReach_b4_mirror`).
+Proof.  Work on the background D.  At any moment let p = number of placed panels in [1, a-1]
+(including those of D; p <= a-1) and s = number of placed panels of G.
+INVARIANT: every placed panel of G lies in [j+1, j+p], and s <= p.  It holds at the start
+(s = 0).  Placing a panel below a raises p; placing a panel above 2j - 1 changes nothing.  Let a
+panel m of G be placed (`anchor_step`):
+  * m <= j (left half, window [1, 2m-1]): its left arm contains a and the p placed small panels,
+    its right arm (m, 2m-1] lies inside G (no block, nothing of D), so holds at most s <= p
+    placed panels: p + 1 > s, not valid.
+  * m = j + t, right half: its right arm [m+1, N] contains the whole block (2a panels); the left
+    arm holds at most p + 1 + s <= 2p + 1 <= 2a - 1 (everything placed below 2j).  Not valid.
+  * m = j + t, left half, t > p: the left arm holds at most p + 1 + s <= 2p + 1, the right arm
+    contains [2j, 2j + 2p + 1] (as 2t >= 2p + 2 and 2a >= 2p + 2).  Not valid.
+  * m = j + t, left half, t <= p (so m is in [j+1, j+p]): with b = placed G below m (<= t - 1, all
+    in [j+1, m-1]) and c = placed G above m: left <= p + 1 + b, right >= 2t + c (the block part
+    [2j, 2j+2t-1] and the placed G above m, all inside (m, 2m-1]).  Validity gives
+    c <= p + 1 + b - 2t, so s + 1 <= b + c + 1 <= 2b + p + 2 - 2t <= p.
+So s <= p <= a - 1 forever, while |G| = 2j - 1 - a >= a: G is never completed.  QED
+The (2a+1)-sets anchorSet a j = {a} u [2j, 2j+2a-1] are dead (`not_coReach_anchorSet`,
+`card_anchorSet`); with j = a + 1 and N >= 6a + 1 all elements lie in [a, N - a]
+(`exists_dead_far`).  For a = 2: `not_coReach_b4set`, and `not_finite_exceptions_five`: no
+finite family E contains, for all N, all dead 5-subsets of [2, N-1].
+Sharpness (ek2 N set ...): the block must have 2a panels: {3} u [10, 14] (N = 20) is live; and
+j >= a + 1 is needed: {2, 4, 5, 6, 7} and {3, 6, ..., 11} (j = a, N = 20) are live.  The relaxation is local: bfamily.py a j checks
+the invariant on all reachable local states (a <= 4).
+Interpretation ("endpoint reserve").  The small panels [1, a-1] (their windows are tiny and
+nested at the end) are the only panels that can rebalance the interior panels against a block,
+and each of them rebalances one step.  A block of 2a panels next to an anchor a needs a panels
+of reserve but only a - 1 exist.  The end panel 1 is the first unit of this reserve; a set
+avoiding 1 and N keeps one unit at each end, which is exactly enough for every block of
+size <= 2 + (what the rest of D supplies) when k <= 4 -- and not for a 4-block anchored at 2.
+
+
+4. The other families for k = 6 (numerical)
+-------------------------------------------
+Besides B_2 "plus anything" (1053 of the 1137 dead 6-sets of [2, N-1], N <= 32), the remaining 84
+all contain 2 or N - 1:
+  F1  {2, x, x+1, y, y+1, N-1} with both anchors 2 and N-1 (two-ended, like the pair {1, N}),
+      e.g. {2,3,4,7,8,N-1} (N odd >= 17), {2,4,5,8,9,N-1} (N even >= 20), {2,5,6,9,10,N-1},
+      {2,3,4,9,10,N-1}, {2,4,5,10,11,N-1}, {2,6,7,10,11,N-1}, {2,7,8,11,12,N-1}, ...
+  F2  {2, 2j, 2j+1, 2j+4, 2j+5, z} (and {2, 2j, 2j+1, 2j+6, 2j+7, z}) with 2j around 0.6 N to
+      0.7 N: a split 4-block in the right half, where the right arms reach N.
+Both grow linearly in N at fixed shape, so for k = 6 the dead sets meeting {2, N-1} number
+Theta(N^2) up to N = 32, and the only dead 6-subset of [3, N-2] is S_3.
+
+
+5. The symmetric sporadic family S_a (numerical)
+------------------------------------------------
+S_a = {a, N+1-a} u [2a+2, N-2a-1] at N = 6a (block of 2a-2) and at N = 6a + 1 (block of 2a-1):
+  a = 1: {1, 6} (N = 6), {1, 4, 7} (N = 7)  -- the known dead pair {1, N} and the N = 7 sporadic;
+  a = 2: {2, 6, 7, 11} (N = 12, the exception of E_4), {2, 6, 7, 8, 12} (N = 13);
+  a = 3: {3, 8, ..., 11, 16} (N = 18), {3, 8, ..., 12, 17} (N = 19);
+  a = 4: {4, 10, ..., 15, 21} (N = 24), {4, 10, ..., 16, 22} (N = 25);
+  a = 5: {5, 12, ..., 19, 26} (N = 30), {5, 12, ..., 20, 27} (N = 31);  a = 6: N = 36.
+All dead by exhaustive search (sym.py: all reachable states on the background, e.g. 1688 for
+a = 5; ek2 N set ...); the non-symmetric variants tested ({4, 10..15, 22} at N = 25 etc.) are live.
+sym.py shows the mechanism: the two sides are copies of B_a with j = a + 1 whose blocks
+[2a+2, 4a+1] are truncated by two panels, the two missing panels being the innermost panels of
+the other side's G; at most 2a of the 2a + 2 panels of G_L u G_R are ever placed.  With p_L, p_R the
+placed panels of [1, a-1], [N+2-a, N] and s_L, s_R those of G_L = [a+1, 2a+1],
+G_R = [N-2a, N-a], every reachable state (a = 3, N = 18) has (s_L - p_L) + (s_R - p_R) <= 2,
+while completing both sides needs s_L - p_L >= 2 and s_R - p_R >= 2.  A Lean proof would need
+an inductive refinement of this two-sided invariant (not attempted).  Each S_a is a
+single set, so for fixed k it is a finite exception: k = 2a at N = 3k, and k = 2a + 1 at
+N = 3k - 2 (min = a = c_k, inside the radius, so not an exception of E*).
+
+
+6. Revised conjecture E*_k and the counting bound
+-------------------------------------------------
+CONJECTURE E*_k.  Let c_k = max(1, floor((k-1)/2)).  For every N, every k-subset of
+[c_k + 1, N - c_k] is co-reachable, except for k even >= 4 the set S_{k/2} at N = 3k.
+Evidence: sections 1, 5 and (k7lo4.txt, k8lo4.txt):
+  k = 2: [2, N-1], N <= 100: none.     k = 3: [2, N-1], N <= 100: none.
+  k = 4: [2, N-1], N <= 48: S_2 only.  k = 5: [3, N-2], N <= 40: none.
+  k = 6: [3, N-2], N <= 36: S_3 only.  k = 7: [4, N-3], N <= 28: none (k7lo4.txt)
+  k = 8: [4, N-3], N <= 24: S_4 = {4,10,...,15,21} at N = 24 only, as predicted (k8lo4.txt)
+Necessity of the radius: anchorSet a (a+1) (k = 2a + 1) has least element a = c_k, and adding
+elements above 2j - 1 keeps it dead, so for every k >= 3 there are dead k-sets with least
+element c_k (for N >= 3k or so); thus [c_k + 1, N - c_k] cannot be enlarged to [c_k, N + 1 - c_k].
+COROLLARY (Lean `card_dead_le` with c = c_k, E = {S_{k/2}}):  E*_k implies
+   #{dead k-subsets of [N]} <= 2 c_k C(N-1, k-1) + 1 <= (k - 1) C(N-1, k-1) + 1 = O(N^{k-1}),
+and since the valid k-prefixes number ~ c'_k N^k (experiments/prefix), live/valid -> 1.
+Numerically the dead count is much smaller: Theta(N^{k-2}) (livek section 5), because most
+dead sets need TWO elements fixed near an end (anchor + block start), not one.
+
+
+7. Proof strategies (question 2)
+--------------------------------
+(a) Why avoiding the ends helps: proven content is sections 2-3.  The end panels are always valid
+    (empty windows), and more generally the panels near an end have small nested windows; they
+    form a reserve of "balancing tokens".  A dead configuration near the left end is an anchor a
+    with a block of 2a panels at [2j, 2j+2a-1]; the reserve below a has a - 1 tokens, one short.
+    Avoiding 1 keeps a reserve of one panel at each end; a one-ended obstruction then needs an
+    anchor >= 2 and a block of >= 4 panels, i.e. k >= 5 -- which is why E_k holds for k <= 4
+    (numerically) with only the two-ended symmetric S_2 as exception, and fails for k = 5.
+(b) "Endpoint reserve" as a positive statement.  The naive form is false in both directions:
+    placing 1 and N FIRST (CoReach(D u {1, N})) fails already for D = {} with N even ({1, N}
+    dead), and placing them LAST fails for D = {} at N = 4 (2, 3 cannot be ordered with 1, 4
+    unplaced).  Placing 1 adds +1 to the left arm of every left-half panel at once, i.e. it
+    shifts the imbalance I_D by +1 on the whole left half; Theorem G needs I_D <= 0 left of the
+    centre, so on the background the end panels should be placed as late as possible -- but the
+    outermost-panel argument of the greedy (an arm is full) needs them present.  A workable
+    version would be a greedy with a budget: run the centre greedy, and whenever the outermost
+    unplaced panel of the left half has an unbalanced arm, spend a reserve panel (1, then 2,
+    ...); the B_a invariant (s <= p) is exactly the bookkeeping such a proof would need, and it
+    shows the budget available near an end is a - 1 below an anchor a.
+(c) Reduction of D u {1} to a smaller strip by a copy transfer: the near-copy and Beatty/centred
+    copies of live3r/live5-7 transfer co-reachability from an n-strip to the N-strip through
+    window embeddings; D u {1} for D far from the ends does not lie in any proven copy family
+    in general (the anchored blocks show that "far from the ends" is not even enough for
+    deadness to be excluded), so a copy route would have to be restricted to sets satisfying a
+    reserve condition like E*_k's radius.  Not pursued further.
+(d) Induction on N by removing the ends: for m in [2, N-1] the window in the N-strip is the window
+    of m - 1 in the (N-2)-strip plus the two outer panels m - reach, m + reach (= 1 and 2m - 1 in
+    the left half).  So the N-condition is the (N-2)-condition plus a correction of
+    [1 placed] - [2m-1 placed] for left-half m: the panel 1 enters uniformly, but 2m - 1 does not;
+    the correction is the ThinCover-style "line with bounded offset", and it is not monotone in
+    the placed set.  We found no clean implication "co-reachable in the (N-2)-strip => co-reachable
+    in [N]" (it fails for D = {} type cases by parity).
+(e) What a proof of E*_k should look like: a classification of LOCAL obstructions near one end
+    (B_a-type: an anchor and a block exceeding the reserve), of two-ended ones (F1, S_a), plus a
+    constructive completion (Theorem G after spending reserve panels) for everything else.  The
+    proven half is the obstruction side for one-ended blocks.
+
+
+8. Lean (Folds/Ek.lean)
+-----------------------
+  foldSeq_bg, bg_of_coReach                  background form of CoReach
+  coReach_of_insert                          removing a valid panel keeps co-reachability
+  semiStep_of_reach_zero, coReach_of_insert_one, coReach_of_insert_N,
+  not_coReach_insert_one, not_coReach_insert_N
+  card_le_countP, countP_le_card, first_index, bg_nodup, countP_eq_card_filter   (helpers)
+  not_coReach_b4 : D ⊆ Icc 1 N → 3 ≤ j → 2j+3 ≤ N → 1 ∉ D → 2 ∈ D → (∀ i < 4, 2j+i ∈ D) →
+                   (∀ x ∈ D, x < 3 ∨ 2j ≤ x) → ¬ CoReach N D
+  not_coReach_b4_mirror, b4set, not_coReach_b4set, card_b4set, b4set_subset
+  not_finite_exceptions_five : ¬ ∃ E, ∀ N D, D ⊆ Icc 2 (N-1) → D.card = 5 → ¬ CoReach N D → D ∈ E
+  anchor_step, not_coReach_anchor : D ⊆ Icc 1 N → 1 ≤ a → a+1 ≤ j → 2j+2a ≤ N+1 → a ∈ D →
+                   (∀ t < 2a, 2j+t ∈ D) → (∀ x ∈ D, x ≤ a ∨ 2j ≤ x) → ¬ CoReach N D
+  anchorSet, not_coReach_anchorSet, card_anchorSet,
+  exists_dead_far : 1 ≤ a → 6a+1 ≤ N → ∃ D, D.card = 2a+1 ∧ ¬ CoReach N D ∧ ∀ x ∈ D, a ≤ x ∧ x+a ≤ N
+  card_filter_mem_le : #{k-subsets of [N] containing t} ≤ C(N-1, k-1)
+  card_dead_le : (∀ D ∈ powersetCard k (Icc 1 N), ¬ CoReach N D →
+                    (∃ x ∈ D, x ≤ c ∨ N+1 ≤ x+c) ∨ D ∈ E) →
+                 #(dead k-subsets) ≤ 2c C(N-1, k-1) + |E|
+  card_dead_le_of_Ek : (∀ D ⊆ Icc 2 (N-1), D.card = k → ¬ CoReach N D → D ∈ E) →
+                 #(dead k-subsets) ≤ 2 C(N-1, k-1) + |E|
+  coReach_pair_le_64, card_dead_pairs_le_64 : N ≤ 64 → #(dead pairs) ≤ 2(N-1)  (unconditional)
+  (CoReach is given a Decidable instance, 0 < g N _, for the filters.)
+
+
+9. Programs (C / Python, 1 core, < 200 MB)
+-------------------------------------------
+  ek.c        ek N k [lo] [exhaustive-limit] [witness-limit] [random-restarts]: all k-subsets of
+              [lo, N+1-lo] up to mirror; ek N set x1 x2 ...: one set.  (binary names ek, ek2)
+  run_all.sh, run_more.sh   regenerate k2..k8*.txt
+  classify.py  sets not explained by B_a (or mirror);  summary.py  dead counts per N
+  bfamily.py a j   the local game of B_a and the invariant (I1, I2) on all reachable states
+  sym.py a [r]     exhaustive search on the background S_a (N = 6a + r)

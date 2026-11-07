@@ -1,0 +1,50 @@
+N=7 k=7 lo=3: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=8 k=7 lo=3: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=9 k=7 lo=3: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=10 k=7 lo=3: sets(up to mirror)=0 G=0 dead=0 unresolved=0
+N=11 k=7 lo=3: sets(up to mirror)=1 G=1 dead=0 unresolved=0
+N=12 k=7 lo=3: sets(up to mirror)=4 G=4 dead=0 unresolved=0
+N=13 k=7 lo=3: sets(up to mirror)=20 G=20 dead=0 unresolved=0
+N=14 k=7 lo=3: sets(up to mirror)=60 G=60 dead=0 unresolved=0
+  DEAD-LOCALR7 N=15: 3 4 5 6 7 8 13   (mirror 3 8 9 10 11 12 13)
+N=15 k=7 lo=3: sets(up to mirror)=170 G=159 dead=1 unresolved=0
+  DEAD-LOCALL7 N=16: 3 8 9 10 11 12 13   (mirror 4 5 6 7 8 9 14)
+N=16 k=7 lo=3: sets(up to mirror)=396 G=353 dead=1 unresolved=0
+  DEAD-LOCALR9 N=17: 3 4 5 6 7 8 15   (mirror 3 10 11 12 13 14 15)
+  DEAD-LOCALL7 N=17: 3 8 9 10 11 12 13   (mirror 5 6 7 8 9 10 15)
+N=17 k=7 lo=3: sets(up to mirror)=868 G=708 dead=2 unresolved=0
+  DEAD-LOCALL7 N=18: 3 8 9 10 11 12 13   (mirror 6 7 8 9 10 11 16)
+  DEAD-LOCALL9 N=18: 3 10 11 12 13 14 15   (mirror 4 5 6 7 8 9 16)
+N=18 k=7 lo=3: sets(up to mirror)=1716 G=1306 dead=2 unresolved=0
+  DEAD N=19: 3 4 5 6 7 8 17   (mirror 3 12 13 14 15 16 17)
+  DEAD-LOCALL7 N=19: 3 8 9 10 11 12 13   (mirror 7 8 9 10 11 12 17)
+  DEAD N=19: 3 8 9 10 11 12 17   (mirror 3 8 9 10 11 12 17)
+  DEAD-LOCALL9 N=19: 3 10 11 12 13 14 15   (mirror 5 6 7 8 9 10 17)
+N=19 k=7 lo=3: sets(up to mirror)=3235 G=2263 dead=4 unresolved=0
+  DEAD-LOCALL7 N=20: 3 8 9 10 11 12 13   (mirror 8 9 10 11 12 13 18)
+  DEAD-LOCALL9 N=20: 3 10 11 12 13 14 15   (mirror 6 7 8 9 10 11 18)
+  DEAD N=20: 3 12 13 14 15 16 17   (mirror 4 5 6 7 8 9 18)
+N=20 k=7 lo=3: sets(up to mirror)=5720 G=3693 dead=3 unresolved=0
+  DEAD N=21: 3 4 5 6 7 8 19   (mirror 3 14 15 16 17 18 19)
+  DEAD-LOCALL7 N=21: 3 8 9 10 11 12 13   (mirror 9 10 11 12 13 14 19)
+  DEAD-LOCALL9 N=21: 3 10 11 12 13 14 15   (mirror 7 8 9 10 11 12 19)
+  DEAD-LOCALL11 N=21: 3 12 13 14 15 16 17   (mirror 5 6 7 8 9 10 19)
+N=21 k=7 lo=3: sets(up to mirror)=9752 G=5794 dead=4 unresolved=0
+  DEAD-LOCALL7 N=22: 3 8 9 10 11 12 13   (mirror 10 11 12 13 14 15 20)
+  DEAD-LOCALL9 N=22: 3 10 11 12 13 14 15   (mirror 8 9 10 11 12 13 20)
+  DEAD-LOCALL11 N=22: 3 12 13 14 15 16 17   (mirror 6 7 8 9 10 11 20)
+  DEAD N=22: 3 14 15 16 17 18 19   (mirror 4 5 6 7 8 9 20)
+N=22 k=7 lo=3: sets(up to mirror)=15912 G=8757 dead=4 unresolved=0
+  DEAD N=23: 3 4 5 6 7 8 21   (mirror 3 16 17 18 19 20 21)
+  DEAD N=23: 3 4 5 6 9 10 21   (mirror 3 14 15 18 19 20 21)
+  DEAD-LOCALL7 N=23: 3 8 9 10 11 12 13   (mirror 11 12 13 14 15 16 21)
+  DEAD-LOCALL9 N=23: 3 10 11 12 13 14 15   (mirror 9 10 11 12 13 14 21)
+  DEAD-LOCALL11 N=23: 3 12 13 14 15 16 17   (mirror 7 8 9 10 11 12 21)
+  DEAD N=23: 3 14 15 16 17 18 19   (mirror 5 6 7 8 9 10 21)
+N=23 k=7 lo=3: sets(up to mirror)=25236 G=12834 dead=6 unresolved=0
+  DEAD-LOCALL7 N=24: 3 8 9 10 11 12 13   (mirror 12 13 14 15 16 17 22)
+  DEAD-LOCALL9 N=24: 3 10 11 12 13 14 15   (mirror 10 11 12 13 14 15 22)
+  DEAD-LOCALL11 N=24: 3 12 13 14 15 16 17   (mirror 8 9 10 11 12 13 22)
+  DEAD N=24: 3 14 15 16 17 18 19   (mirror 6 7 8 9 10 11 22)
+  DEAD N=24: 3 16 17 18 19 20 21   (mirror 4 5 6 7 8 9 22)
+N=24 k=7 lo=3: sets(up to mirror)=38760 G=18319 dead=5 unresolved=0

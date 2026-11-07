@@ -1,0 +1,6 @@
+ek
+ek2
+*.o
+*.out
+/bin/
+*.log

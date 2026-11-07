@@ -1,0 +1,8 @@
+N=41 k=4 lo=2: sets(up to mirror)=41211 G=14441 dead=0 unresolved=0
+N=42 k=4 lo=2: sets(up to mirror)=45790 G=15955 dead=0 unresolved=0
+N=43 k=4 lo=2: sets(up to mirror)=50730 G=17515 dead=0 unresolved=0
+N=44 k=4 lo=2: sets(up to mirror)=56070 G=19269 dead=0 unresolved=0
+N=45 k=4 lo=2: sets(up to mirror)=61810 G=21060 dead=0 unresolved=0
+N=46 k=4 lo=2: sets(up to mirror)=67991 G=23061 dead=0 unresolved=0
+N=47 k=4 lo=2: sets(up to mirror)=74613 G=25110 dead=0 unresolved=0
+N=48 k=4 lo=2: sets(up to mirror)=81719 G=27394 dead=0 unresolved=0
