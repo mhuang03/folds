@@ -16,6 +16,12 @@ import Folds.Live7
   `not_coReach_b4_mirror`: the mirror images.  In particular the 5-sets
   `{2, 2j, 2j+1, 2j+2, 2j+3}` (`2j + 3 ≤ N - 1`) are dead and avoid both end panels.
 * `not_finite_exceptions_five`: **Conjecture E_5 fails with any finite exception list.**
+* `anchor_step`, `not_coReach_anchor` (**the anchored-block family `B_a`**, every `a ≥ 1`): if
+  `a ∈ D`, `[2j, 2j + 2a - 1] ⊆ D`, `D ∩ [a + 1, 2j - 1] = ∅`, `j ≥ a + 1` and
+  `2j + 2a - 1 ≤ N`, then `D` is dead (invariant: the placed panels of `[a + 1, 2j - 1]` lie in
+  `[j + 1, j + p]` and number at most `p`, where `p ≤ a - 1` counts the placed panels below `a`).
+  `not_coReach_anchorSet`, `exists_dead_far`: dead `(2a+1)`-sets inside `[a, N - a]`, so no
+  fixed distance from the ends works for all `k`; the radius must grow like `k / 2`.
 * `card_dead_le`: **the counting corollary.**  If every dead `k`-subset of `[N]` meets
   `[1, c] ∪ [N+1-c, N]` or lies in a list `E` of exceptions, then the number of dead `k`-subsets
   is at most `2c · C(N-1, k-1) + |E|`.  `card_dead_le_of_Ek`: the case `c = 1` (Conjecture E_k
@@ -165,6 +171,16 @@ theorem coReach_of_insert_one {N : Nat} {D : Finset Nat} (hD : D ⊆ Finset.Icc 
 theorem coReach_of_insert_N {N : Nat} {D : Finset Nat} (hD : D ⊆ Finset.Icc 1 N) (hN : 1 ≤ N)
     (hND : N ∉ D) (h : CoReach N (insert N D)) : CoReach N D :=
   coReach_of_insert hD hN le_rfl hND (semiStep_of_reach_zero (by unfold reach; omega)) h
+
+/-- Contrapositive: a dead set avoiding `1` stays dead when `1` is added. -/
+theorem not_coReach_insert_one {N : Nat} {D : Finset Nat} (hD : D ⊆ Finset.Icc 1 N) (hN : 1 ≤ N)
+    (h1 : 1 ∉ D) (h : ¬ CoReach N D) : ¬ CoReach N (insert 1 D) :=
+  fun h' => h (coReach_of_insert_one hD hN h1 h')
+
+/-- Contrapositive: a dead set avoiding `N` stays dead when `N` is added. -/
+theorem not_coReach_insert_N {N : Nat} {D : Finset Nat} (hD : D ⊆ Finset.Icc 1 N) (hN : 1 ≤ N)
+    (hND : N ∉ D) (h : ¬ CoReach N D) : ¬ CoReach N (insert N D) :=
+  fun h' => h (coReach_of_insert_N hD hN hND h')
 
 /-! ## Counting helpers -/
 
