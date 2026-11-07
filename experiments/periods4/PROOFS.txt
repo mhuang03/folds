@@ -33,7 +33,7 @@ SUMMARY
      of modulus 2 M(1,0);  for a = 1 the two terms nearly cancel (factor 2 sin(pi/2D)).
      ROTATION LEMMA: for s >= 4 no structure attached at 1/D or 1 - 1/D with j >= 1 is valid
      (these are the only structures whose modulus can exceed M(1,0) substantially).
-  3. THEOREM F (computer-assisted, float64 with margins >= 1.4): for all s >= 2, a >= 1 with
+  3. THEOREM F (computer-assisted, float64 with margins >= 1.26): for all s >= 2, a >= 1 with
      a + s + 1 = k <= 27, the component of exact order 2^a (2^s - 1) of c_0(T(N,k)) is nonzero.
      (s >= 4, a >= 2: one inequality "rest < 2" per (s, a) by Lemmas 2.3, 2.4; s <= 3 or a = 1:
      exact evaluation of all large structures plus a crude tail bound.)
