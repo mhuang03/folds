@@ -14,7 +14,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 typedef vector<pair<int,int>> PS;
-static int BASE = 12, BASE2 = 24, VERB = 0, PALIN = 1, MIRALL = 1;
+static int BASE = 12, BASE2 = 24, VERB = 0, PALIN = 1, MIRALL = 1, ONLYR = 0, NOSIG = 0;
 static int md(int x, int n) { return ((x - 1) % n + n) % n + 1; }
 static int sg(int n, int nu, int t) { return ((nu - t) % n + n) % n + 1; }
 static int reach(int N, int m) { return min(m - 1, N - m); }
@@ -180,6 +180,7 @@ static bool solve(int n, int nu, PS P, vector<int>& out, int depth) {
       int nv = nus[mi];
       PS Pm = P; if (mi) for (auto& e : Pm) e = {n + 1 - e.first, n + 1 - e.second};
       for (int v = 0; v < 4 && !ok; v++) {
+        if (NOSIG && (v & 1)) continue;
         PS Q = Pm;
         if (v & 1) for (auto& e : Q) e = {sg(n, nv, e.first), sg(n, nv, e.second)};
         if (v & 2) for (auto& e : Q) swap(e.first, e.second);
@@ -208,14 +209,18 @@ int main(int argc, char** argv) {
   if (argc > 6) VERB = atoi(argv[6]);
   if (argc > 7) PALIN = atoi(argv[7]);
   if (argc > 8) MIRALL = atoi(argv[8]);
+  if (argc > 9) budget = atol(argv[9]);
+  if (argc > 10) ONLYR = atoi(argv[10]);
+  if (argc > 11) NOSIG = atoi(argv[11]);
   long tot = 0, good = 0;
   for (int q = lo; q <= hi; q++) {
     string bad;
     for (int r = 1; K * r < q; r++) {
+      if (ONLYR && r != ONLYR) continue;
       vector<int> o; tot++;
       if (solve(q, r, {}, o, 0)) good++; else bad += " " + to_string(r);
     }
-    if (!bad.empty()) printf("q=%d FAIL rho:%s\n", q, bad.c_str());
+    if (!bad.empty()) { printf("q=%d FAIL rho:%s\n", q, bad.c_str()); fflush(stdout); }
   }
   printf("total %ld ok %ld  memo %zu  budget-outs %ld\n", tot, good, memo.size(), nbudget);
 }

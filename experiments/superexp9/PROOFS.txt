@@ -1,7 +1,117 @@
 ITERATING THEOREM R WITH PRECEDENCE CONSTRAINTS   (experiments/superexp9/)
-(work in progress; see SUMMARY once written)
+=========================================================================================
 
-rec.cpp   recursive solver for C(n, nu, P) = GoodL(n, nu) orders satisfying the precedences P,
-          using Theorem R (goodL_oddR, constraints = NotAgree pairs of psiW / chiW), block
-          composition j = 2 (good_comp), palindromic chains (good_palin), and the exact
-          symmetries reverse, sig o pi, mirror.  Every success is re-verified against GoodL.
+Notation as in ../hyph/PROOFS.txt and ../superexp8/PROOFS.txt.  GoodL n nu pi (Live4);
+sig = sig n nu (an involution, GoodL is closed under pi -> sig o pi, reverse, and the mirror
+t -> n+1-t with nu -> n - nu).  C(n, nu, P) = { pi in GoodL(n, nu) : a before b in pi for
+every (a, b) in P }.
+
+SUMMARY (honest)
+----------------
+ * The all-N exponent 1/12 is NOT proven.  The unconditional all-N exponent stays 1/16
+   (SuperExp5); 1/12 stays conditional on H(q, rho) for rho <= q/16 (allN_of_smallH).
+   No Lean file was added: nothing new was proven that would change a bound.
+ * Negative finding: iterating Theorem R (with block composition for even q, the mirror,
+   reverse, sig o pi and the palindromic chains of Live4 as extra moves) does NOT close on any
+   family of constrained problems that contains H(q, rho), rho <= q/K, for any fixed K.
+   Two independent reasons, both checked numerically (section 3):
+     (A) Iterating parity splits EXACTLY (odds/evens, either first, at every node) produces
+         exactly the parity trees of superexp8 section 3, and those do not exist for
+         (q, 9), q = -1 mod 16 (exhaustive SAT there, all q <= 260); the threshold does not
+         grow with q, so no choice of K helps.  Our recursion, which also uses the non-tree
+         moves sig o pi and palindromic chains, still fails at (q, 9) for every
+         q = 15 mod 16 with 79 <= q <= 255 (base cases n <= 16 solved exhaustively).
+     (B) With the Lean-usable (sufficient) constraints of goodL_oddR (NotAgree pairs), the
+         recursion fails already at rho = 3 for 94 odd q in [49, 260], at rho = 5, 6, 7 for
+         about 100 q each, etc. (rec_B12_K16.out).  The cause is the odd-q / odd-nu case: the
+         mirror turns it into Theorem R with w = m - (rho-1)/2, close to m, and then the
+         exceptional pairs are GLOBAL doubling pairs (about m/2 of them, section 1), which the
+         next levels cannot absorb; the resulting constrained problems are often solvable
+         (exhaustive search) but not by a further Theorem R step.
+ * Residues that the constrained recursion does solve for EVERY q <= 260 (base n <= 12):
+   rho in {1, 2, 4, 8} (and mirrors).  1, 2, 4 are in Lean (SuperExp8); 8 would be new but
+   is a bounded residue, which by superexp8 section 1 cannot improve the all-N exponent.
+ * K = 16 in allN_of_smallH is not the obstruction: any fixed K works there (M = 2^j with a
+   smaller j costs only a constant in the base, superexp8 1.x / hyph remark); the
+   obstruction is that the Theorem-R recursion fails at bounded rho (9, or 3 with the Lean
+   constraints) for infinitely many q.
+
+
+1. WHICH CONSTRAINTS THEOREM R CREATES                          (excpairs.py, exact for all m)
+------------------------------------------------------------------------------------------
+goodL_oddR (q = 2m + 1, nu = 2w, w < m) asks sig o alpha (alpha in GoodL(m+1, w)) and sig o beta
+(beta in GoodL(m, w)) to avoid the NotAgree pairs of psiW w, chiW w.  For every w < m:
+     psiW:  (y, md(2y, m+1))    for w/2 < y <= w          ("y before 2y")
+     chiW:  (z, md(2z - 1, m))  for (w+1)/2 < z <= w      ("z before 2z - 1")
+(md = representative in [1, n]).  So there are floor((w+1)/2), floor(w/2) pairs.  On the
+alpha side (apply sig, y -> w + 1 - y on [1, w]) they read i before md(2i - w - 1, m+1),
+2i <= w + 1: the C(m+1, w, w+1) of ../hyph.
+ * w <= n/16 (even rho): the pairs live in (w/2, 2w], i.e. within O(w) of the left end of the
+   sig side.  Under further splits they stay near the two ends.  These local families are
+   harmless numerically (rho = 2, 4, 8 never fail).
+ * odd q, odd nu: the only exact reductions are the mirror (nu' = q - nu even, w = m - (nu-1)/2)
+   and, for nu = 1 mod 4, good_palin (q = 2k+1 -> (k, (nu-1)/2), constraints exc1, exc2).  In
+   both cases the constraints are global: about m/2 doubling pairs y -> 2y (mod n), e.g. for
+   (q, nu) = (65, 3) the child C(33, 31, {i before 2i+1, i = 1..16}).  This is exactly the
+   "Lemma W type" obstruction noted in superexp8 2.2 / 3.3, and it recurs at every level where
+   an odd modulus meets an odd residue (which happens whenever w is odd at odd m + 1, etc.).
+
+Moves used at a node (all exact equivalences, so the search is complete for this move set):
+reverse (P -> P reversed), sig o pi (P -> sig P), mirror (nu -> n - nu, P -> n + 1 - P);
+decompositions:
+   odd n, even nu = 2w, w < m:  pi = oddE(alpha) ++ rev(evE(beta)); cross pairs must be
+       (odd, even); same-parity pairs go to alpha (odd) resp. beta (even, reversed), plus the
+       pairs above.
+   even n = 2m, nu = 2c + e:   pi = block(b1) ++ block(b2) (good_comp, j = 2), odd block in
+       GoodL(m, e ? c+1 : c), even block in GoodL(m, c); cross pairs fix the block order.
+   odd n, nu = 4r + 1, 2r < k:  good_palin, pi = phiR(beta) ++ [2r+1] ++ rev(sig phiR(beta)),
+       beta in GoodL(k, 2r) with the NotAgree pairs of phiR / psiR (exc1, exc2) and P mapped.
+Base: n <= B solved by exhaustive DFS (csolve.c style).  Every composed order is checked
+directly against GoodL and P.
+
+
+2. THE CLASS PI THAT WAS LOOKED FOR, AND WHY IT DOES NOT EXIST IN THIS FORM
+------------------------------------------------------------------------------------------
+A closed class must contain the constraint sets of the odd/odd children, i.e. global
+doubling sets D = {(y, md(2y + d, n)) : y in an interval of length ~ n/2}, intersected with
+GoodL(n, nu) for nu ~ n (mirror of a small residue), together with O(w) local pairs.  For
+such (n, nu, D) the four symmetry variants all fail Theorem R at small sizes although the
+problem itself is solvable, e.g.
+     C(33, 31, {i before 2i + 1 : 1 <= i <= 16})    solvable (exhaustive), not by R;
+     its R-children include C(17, 1, {1>17, 2i-1 > i}) which is UNSOLVABLE (exhaustive).
+And reason (A) shows that even exact parity splits stop at rho = 9 for q = -1 mod 16, so no
+class Pi closed under parity splits alone can contain every (q, rho <= q/K).  A successful
+recursion must use non-parity-tree orders at unboundedly many levels (not only at bounded
+base cases); the moves sig o pi and palindromic chains are such moves, but in the search they
+do not rescue rho = 9 (rho9_B16.out).
+
+
+3. DATA (<= 1 core, < 1 GB)
+------------------------------------------------------------------------------------------
+rec.cpp        the solver.  ./rec qlo qhi K [BASE] [BASE2] [verbose] [palin] [mirror-all]
+               [budget] [only-rho] [no-sig].  Tries every 1 <= rho, K rho < q.
+               Prints the failing (q, rho); with verbose, every failing node (n, nu, P).
+rec_B12_K16.out          q in [13, 260], rho <= q/16, base n <= 12, all moves:
+                         1342 / 1984 solved.  (failset.py: rho = 1, 2, 4, 8 never fail;
+                         rho = 3 fails for 94 q from 49 on, 5: 57 q, 6: 102, 7: 99, 9: 50, ...)
+rec_B12_K16_nosig.out    without the sig o pi move: 117 / 1984 (sig is essential, since the
+                         goodL_oddR constraints live on the sig side).
+rec_B12_K16_nopalin.out  without palindromic chains: 1223 / 1984 (nu = 1 at odd n then has
+                         no reduction).
+b41.out                  + exhaustive search for nu = +-1 at odd n <= 41: 1630 / 1984; rho = 3
+                         still fails for odd q >= 65 (cause: the global doubling children).
+rho9_B16.out             (q, 9), q = 15 mod 16, 63 <= q <= 255, base n <= 16: only q = 63
+                         solved (there the children are already base cases).
+excpairs.py    the exceptional pairs of section 1.     failset.py   summary of a rec output.
+
+
+4. WHAT REMAINS
+------------------------------------------------------------------------------------------
+ * H(q, rho) for rho <= q/K (any K) needs a construction that is not a parity tree at an
+   unbounded number of levels: by (A) the threshold of parity trees is the constant 9 on
+   q = -1 mod 16.  Candidates: palindromic chains with other transversals of the sig-pairs
+   (good_palin uses only X = evens <= 2r, odds > 2r + 1), or an exact (not NotAgree)
+   treatment of the odd/odd step whose constraints are global doubling sets (Lemma W of
+   Live3 handles exactly one such set, Doubling, for nu = 0).
+ * A proof of the uniform residue rho = 8 (all q) along the lines of hypH_four is plausible
+   (the recursion never fails for it), but it does not affect any exponent.
