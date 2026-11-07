@@ -151,6 +151,7 @@ change. There is no `sorry` and no
 | `SymRatio2` (M) | 3-AP-free ratio mechanism: unlifting lemma, 9-state automaton eigen-identities (eigenvalue 1/4), fair-bit closed form (exactly geometric, ratio 1/4), and the single-pair 1/3 lemma (zero when 3 ∣ L) explaining A(x) = 0 for 3 ∣ x |
 | `PeriodLaw2` (M) | B(k) is the lcm of the top orders and the mixed orders with s ≥ 4, a ≥ 2 (`B_eq_L`); main-family identities and time-order counts for the period-law exactness proof |
 | `SuperExp6` (M) | composition by residue classes for **any** N = nq+ρ (`semiCount_gcomp`), e.g. a(n+1)a(n)² ≤ a(3n+1); conditional all-N exponent 1/12 under Hypothesis H (paper) |
+| `SuperExp7` (M) | Hypothesis H ⇔ "some class is Good" (`hypH_iff`); H proven for ρ ∈ {0, ±1}, all ρ when q is 23-smooth; a(⌊N/q⌋+1)^{N mod q}·a(⌊N/q⌋)^{q−N mod q} ≤ a(N) for smooth q; all-N exponent 1/12 reduced to a single pair H(⌊N/M⌋, N mod M) (`allN_of_hypH`) |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -265,6 +266,7 @@ change. There is no `sorry` and no
 | `experiments/symratio2/PROOFS.txt` | why the ratio defect contracts by exactly 4 and vanishes for 3 ∣ x: the automaton, the fair-bit model and its amplitude; R/R′ still open |
 | `experiments/periods4/PROOFS.txt` | classification of the cycle+chain vertices; exact period = B(k) for k ≤ 27; the remaining rest2 inequality |
 | `experiments/superexp6/PROOFS.txt` | general residue composition, Hypothesis H (checked for odd q ≤ 47), slip-sum growth 1.255ⁿ (caps slips at ≈ 1/6), controlled-greedy experiments |
+| `experiments/superexp7/PROOFS.txt` | the H bridge, coverage of the all-N 1/12 argument by proven pairs (insufficient; counting obstruction) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
