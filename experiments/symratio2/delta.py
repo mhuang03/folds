@@ -3,8 +3,8 @@
 With the automaton of automaton.py, for a law mu on windows of size M (any M >= 2) and k >= 0,
     r_fair(M 2^{k+1}) = sum_state p_k(state) F_mu(state),
     F_mu(g,h) = E_{S,T ~ mu iid} Pi^{(g,h)}_M(S, T),   p_0 = (delta_{(-1,1)} + delta_{(1,-1)})/2,
-    p_k = pi + 4^{-k} v / 48  for k >= 1 (Jacobsthal numbers),  v = (0,1,-1,1,-2,1,-1,1,0).
-Hence r_fair(M 2^{k+1}) = Phi + 4^{-k} Delta(F_mu) / 48 for k >= 1, with
+    p_k = pi + 4^{-k} v / 6  for k >= 1 (Jacobsthal numbers),  v = (0,1,-1,1,-2,1,-1,1,0).
+Hence r_fair(M 2^{k+1}) = Phi + 4^{-k} Delta(F_mu) / 6 for k >= 1, with
     Delta(F) = F(-1,0) + F(0,-1) + F(0,1) + F(1,0) - F(-1,1) - F(1,-1) - 2 F(0,0).
 This script checks the closed form against fair.py and tabulates Delta(Pi^{.}(S,T)) per
 window pair for M = 9..18: is it identically 0 when 3 | M?
