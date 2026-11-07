@@ -20,6 +20,7 @@ on:
       - "Folds/Live7.lean"
       - "Folds/SymRun.lean"
       - "Folds/Ek.lean"
+      - "Folds/EkStar.lean"
 
 jobs:
   certs:
