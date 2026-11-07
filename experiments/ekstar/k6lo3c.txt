@@ -1,0 +1,12 @@
+N=37 k=6 lo=3: sets(up to mirror)=554064 G=163583 dead=0 unresolved=0
+N=38 k=6 lo=3: sets(up to mirror)=672792 G=193622 dead=0 unresolved=0
+N=39 k=6 lo=3: sets(up to mirror)=811920 G=228248 dead=0 unresolved=0
+N=40 k=6 lo=3: sets(up to mirror)=974304 G=267329 dead=0 unresolved=0
+N=41 k=6 lo=3: sets(up to mirror)=1162800 G=311946 dead=0 unresolved=0
+N=42 k=6 lo=3: sets(up to mirror)=1380825 G=363160 dead=0 unresolved=0
+N=43 k=6 lo=3: sets(up to mirror)=1631796 G=419975 dead=0 unresolved=0
+N=44 k=6 lo=3: sets(up to mirror)=1919760 G=484758 dead=0 unresolved=0
+N=45 k=6 lo=3: sets(up to mirror)=2248764 G=557870 dead=0 unresolved=0
+N=46 k=6 lo=3: sets(up to mirror)=2623558 G=638952 dead=0 unresolved=0
+N=47 k=6 lo=3: sets(up to mirror)=3048892 G=729856 dead=0 unresolved=0
+N=48 k=6 lo=3: sets(up to mirror)=3530296 G=832424 dead=0 unresolved=0

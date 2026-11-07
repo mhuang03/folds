@@ -78,17 +78,25 @@ sees both innermost panels of the first side.
 is N = 6a (block 2a - 2 on each side) and N = 6a + 1 (block 2a - 1).
 * a = 1 is excluded ((L2) fails: 2a = a + 1); S_1 = {1, 6} (N = 6) and {1, 4, 7} (N = 7) are
 the known dead pair and sporadic triple.
-* The counting picture of sym.py ((s_L - p_L) + (s_R - p_R) <= 2) is a consequence: a side
-whose top panel is placed second can never place it, so it ends with s - p <= 1 there.
+* Different anchors a < b on the two sides give nothing new: the same argument needs
+N >= 2a + 4b and N >= 4a + 2b, and then N >= 6a + 2, so the left block reaches 4a + 1 and the
+set is already a B_a set.  The two-sided obstruction is genuinely new only for the symmetric
+S_a at N = 6a, 6a + 1, matching the numerics (no non-symmetric variant is dead).
 
 
-2. Numerics (ek.c from experiments/ek, unchanged; 1 core; run.sh)
------------------------------------------------------------------
-  k = 4, [2, N-1],   N = 49..64: no dead sets (k4c.txt).  One set was left unresolved by the
-                     batch limits: {2, 30, 31, 59} at N = 60 (mirror-symmetric); see below.
-  k = 5, [3, N-2],   N = 41..48: see k5lo3c.txt.
-  k = 6, [3, N-2],   N = 37..48: see k6lo3c.txt.
-(Summary lines with the final counts are appended at the end of this file.)
+2. Numerics (ek.c from experiments/ek, unchanged; 1 core; run.sh; total about 1.5 h)
+------------------------------------------------------------------------------------
+  k = 4, [2, N-1],   N = 49..64: no dead sets (k4c.txt).  Two sets were left unresolved by the
+                     batch limits, {2, 30, 31, 59} (N = 60) and {2, 32, 33, 63} (N = 64), both of
+                     the S_2 shape {2, N/2, N/2+1, N-1}; both are LIVE by a longer witness search
+                     (ek2.c = ek.c with witness limit 2e6 and 400 random restarts in "set" mode;
+                     k4c_resolve.txt).
+  k = 5, [3, N-2],   N = 41..48: no dead sets, nothing unresolved (k5lo3c.txt; 543004 sets up
+                     to mirror at N = 48, 137081 by Theorem G directly).
+  k = 6, [3, N-2],   N = 37..48: no dead sets, nothing unresolved (k6lo3c.txt; 3530296 sets up
+                     to mirror at N = 48).
+(ek.c's "set" mode reads argv[5], argv[6] as limits even in set mode -- a harmless bug of the
+original that weakens single-set searches; ek2.c sets the limits explicitly.)
 So E*_k is now checked for k = 2 (all N, theorem), 3 (N <= 100), 4 (N <= 64), 5, 6 (N <= 48),
 7 (N <= 28), 8 (N <= 24).
 

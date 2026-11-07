@@ -1,0 +1,18 @@
+N=49 k=4 lo=2: sets(up to mirror)=89309 G=29718 dead=0 unresolved=0
+N=50 k=4 lo=2: sets(up to mirror)=97428 G=32294 dead=0 unresolved=0
+N=51 k=4 lo=2: sets(up to mirror)=106076 G=34933 dead=0 unresolved=0
+N=52 k=4 lo=2: sets(up to mirror)=115300 G=37842 dead=0 unresolved=0
+N=53 k=4 lo=2: sets(up to mirror)=125100 G=40803 dead=0 unresolved=0
+N=54 k=4 lo=2: sets(up to mirror)=135525 G=44052 dead=0 unresolved=0
+N=55 k=4 lo=2: sets(up to mirror)=146575 G=47380 dead=0 unresolved=0
+N=56 k=4 lo=2: sets(up to mirror)=158301 G=51015 dead=0 unresolved=0
+N=57 k=4 lo=2: sets(up to mirror)=170703 G=54715 dead=0 unresolved=0
+N=58 k=4 lo=2: sets(up to mirror)=183834 G=58755 dead=0 unresolved=0
+N=59 k=4 lo=2: sets(up to mirror)=197694 G=62877 dead=0 unresolved=0
+  UNRESOLVED N=60: 2 30 31 59   (mirror 2 30 31 59)
+N=60 k=4 lo=2: sets(up to mirror)=212338 G=67359 dead=0 unresolved=1
+N=61 k=4 lo=2: sets(up to mirror)=227766 G=71910 dead=0 unresolved=0
+N=62 k=4 lo=2: sets(up to mirror)=244035 G=76854 dead=0 unresolved=0
+N=63 k=4 lo=2: sets(up to mirror)=261145 G=81884 dead=0 unresolved=0
+  UNRESOLVED N=64: 2 32 33 63   (mirror 2 32 33 63)
+N=64 k=4 lo=2: sets(up to mirror)=279155 G=87330 dead=0 unresolved=1
