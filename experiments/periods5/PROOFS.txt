@@ -1,0 +1,214 @@
+PERIODS V: rest2(s, a) < 2 FOR ALL k >= 22, AND THE PERIOD LAW period(T(N,k)) = B(k) FOR ALL k >= 4
+=====================================================================================================
+(experiments/periods5/.  Notation of ../periods4/PROOFS.txt; references "P4 x.y" are to that file.)
+
+SUMMARY
+  P4 reduced "period(T(N,k)) = B(k) for every k >= 4" to one inequality per (s, a), s >= 4, a >= 2,
+  k = s + a + 1 >= 28 (P4, Corollary of section 2):
+       rest2(s, a) := sum_{(u,j) not in E} C(s-j+a, a) M(u,j)/M(1,0)  <  2,
+       E = {u = +-1, j = 0} u {u = +-1 mod D, j >= 1}.
+  THEOREM 6.1.  rest2(s, a) < 2 for all s >= 4, a >= 2 with k >= 22.
+  Proof: an explicit majorant rest2 <= U(s, a) (Theorem 5.1, sections 1-5, pure inequalities on
+  products of cosecants), U(s, a) < 2 for 22 <= k <= 45 by ball arithmetic (verify.py, python-flint
+  arb, every (s, a)), and U(s, a) <= F(s + a) with an explicit F decreasing for m >= 40 and
+  F(45) < 0.402 (Lemma 6.2) for k >= 46.
+  COROLLARY (period law, now unconditional).  For every k >= 4 the period of T(N, k) (and of its
+  constant term c_0) is exactly B(k) = lcm(2^(k-1), 2^a (2^s - 1) : a + s = k - 1, s >= 1).
+  (P4 Theorem G for k <= 27; for k >= 28: P4 Theorem C, Theorem D1 of ../periods3, P4 Prop. 2.5 +
+  Theorem 6.1, and Lean PeriodLaw2.B_eq_L; for c_0 alone the a = 1 orders are still needed and are
+  certified only for k <= 27, see section 8.)
+  The majorant is far from sharp only by constants: U = 0.200 at k = 28 against the true max_s rest2
+  = 0.0016; for a >= 3 it is essentially exact (the top family dominates, ratio true/bound = 1).
+  Lean (Folds/PeriodLaw3.lean, no sorry): the weight identity, the exponent identities and the
+  endpoint inequalities of section 4/6, the top-family residues, the fold monotonicity, and
+  sin(2^j x) <= 2^j sin x (kappa_j <= 2^j).
+
+
+1. Notation
+-----------
+s >= 4, a >= 2, D = 2^s - 1, q = 2^a D, m = s + a = k - 1, eps = 1/(1 - 2^-s) <= 16/15 (q = 2^m/eps).
+||x|| = distance to Z.  For a unit u mod q (odd, prime to D), e >= 0:
+     d_e = |2^e u mod q| (symmetric residue, 1 <= d_e <= q/2),  y_e = d_e/q,  P_e = 2^e/d_e.
+gamma(y) = pi y / sin(pi y), increasing on [0, 1/2], 1 <= gamma <= pi/2;
+G = prod_{i>=1} gamma(2^-i) = 1.80580 (ubound.py, arb), G2 = prod_{i>=2} gamma(2^-i) = G/(pi/2) = 1.14961.
+Q_e = q/2^e (e <= a; Q_a = D), n = min(a, s).  For a = (residue r), |r|_Q = symmetric residue.
+M(u, j)/M(1, 0) (P4 Lemma 1.3) is the product of
+   chain rows l = 1..a:          phi_l(u) = sin(pi/2^l)/|sin(pi u/2^l)|           (depends on u mod 2^l)
+   cycle rows e = 0..s-1:        rho_e(u) = sin(pi 2^e/q)/sin(pi y_e)
+   equality row:                 sin(pi 2^s/q)/sin(pi y_(s-j)) = kappa_j rho_(s-j),
+                                 kappa_j = sin(pi 2^s/q)/sin(pi 2^(s-j)/q).
+Write A(u) = prod_l phi_l(u).  With e' = s - j in [1, s] and w_e' = C(e'+a, a) kappa_(s-e'):
+   sum_j C(s-j+a, a) M(u,j)/M(1,0) = A(u) prod_{e<s} rho_e(u) * sum_{e'=1}^{s} w_e' rho_e'(u).   (1.1)
+
+
+2. Elementary facts
+-------------------
+LEMMA 2.1 (orbit).  (i) For e <= a, 2^e | d_e and t_e := d_e/2^e = |u mod Q_e|_(Q_e); t_e is odd for
+e < a.  For e >= a, d_e = 2^a |2^(e-a) u mod D|_D.  (ii) |u mod Q|_Q >= |u mod Q'|_(Q') if Q' | Q.
+(iii) (fold rule) y_(e+1) = 2 y_e if y_e <= 1/4, and y_(e+1) = 1 - 2 y_e if y_e > 1/4 ("fold at e").
+(iv) P_(e+1) = P_e without a fold; at a fold P_(e+1) >= P_e (Lean fold_monotone).
+(v) u = +-1 mod Q_n  <=>  d_s = 2^s  (2^s u = +-2^s mod q <=> u = +-1 mod q/gcd(q, 2^s) = Q_n).
+Proof.  (i) 2^e u mod q = 2^e (u mod Q_e); u odd, Q_e even for e < a.  (ii) reduce a symmetric
+representative.  (iii) ||2y|| for y in (0, 1/2].  (iv) at a fold d_(e+1) = q - 2 d_e <= 2 d_e.  []
+
+LEMMA 2.2 (factors).  (i) rho_e = P_e gamma(y_e)/gamma(2^e/q) <= P_e gamma(y_e) (e <= s; 2^s/q < 1/2).
+(ii) rho_e <= 1 for e <= a.  (iii) kappa_j <= 2^j (sin 2x <= 2 sin x; Lean sin_two_pow_le).
+(iv) phi_l <= 1 (u odd: ||u/2^l|| >= 2^-l); for an odd integer d with bit length b and l > b,
+phi_l(d) <= gamma(d/2^l)/d, so prod_{l=b+1}^{a} phi_l(d) <= G d^-(a-b).
+(v) sum_{e'=1}^{s} w_e' <= sum_{e'=0}^{s} C(e'+a, a) 2^(s-e') < 2^(m+1) (Lean weights_lt, from the identity
+weights_total: sum_{i<=n} C(i+a,a) 2^(n-i) + sum_{j<=a} C(n+a+1, j) = 2^(n+a+1)).
+(vi) (runs) If y_e doubles along e = p..g (no fold in [p, g-1]) and y_g <= 1/2, then P is constant on
+[p, g] and prod_{e=p}^{g} gamma(y_e) <= G; if moreover y_g <= 1/4, the product is <= G2.  []
+
+Classes.  Every unit u != +-1 mod q is in exactly one of
+   alpha : u = +-1 mod Q_n;
+   I     : not alpha, no fold in [0, s-1];
+   0     : not alpha, the set of folds in [0, s-1] is {0};
+   II'   : not alpha, some fold in [1, s-1].
+For u in alpha, u = +-1 mod D, so the terms j >= 1 are in E; for the other u all terms are kept
+(this only enlarges the sum).  Hence
+   rest2(s, a) <= sum_{u in alpha} C(m, a) M(u,0)/M(1,0) + sum_{u not in alpha} (1.1).        (2.1)
+
+
+3. Class alpha (the main orbit with another chain)
+--------------------------------------------------
+LEMMA 3.1.  sum_{u in alpha} C(m,a) M(u,0)/M(1,0) <= Ua(s,a) :=
+   2 C(m,a) [ tan(pi/2^a) tan(pi/q)
+      + sum_{e*=1}^{min(a-2, s-1)} 2^e* tan(pi/2^(a-e*)) tan(pi 2^e*/q) (pi/(2(Q_(e*+1) - 1)))^e* ].
+The first term is the exact contribution of u = +-(q/2 + 1) (the "top family").
+Proof.  Let e* = max{e <= n : u != +-1 mod Q_e}; e* in [0, n-1], u = s' mod Q_(e*+1) (s' = +-1) and
+u = s' + Q_(e*+1) mod Q_(e*).  If n = a, e* = a - 1 would make u = s' + D mod 2D even: so
+e* <= min(a-2, s-1).  Positions e in (e*, s]: 2^e u = s' 2^e mod q, rho_e = 1.  Position e*:
+t = Q_(e*+1) - 1, rho = sin(pi/Q)/cos(pi/Q) = tan(pi 2^e*/q).  Positions e < e*: t_e >= Q_(e*+1) - 1
+(Lemma 2.1 ii), so rho_e <= sin(pi/Q_e)/sin(pi (Q_(e*+1)-1)/Q_e) <= pi/(2(Q_(e*+1) - 1)) (Jordan).
+Chain: u = s' mod 2^(a-e*-1) (phi = 1), u = s'(1 + 2^(L-1)) mod 2^L, L = a - e*, so
+phi_L = tan(pi/2^L) (Lean top_chain for e* = 0); phi_l <= 1 for l > L.  There are 2^(e*+1) such u
+(2^e* lifts, 2 signs).  For e* = 0 all bounds are equalities (Lean top_cycle).  []
+Numerically the e* = 0 term is the whole of class alpha: ratio true/bound = 1.000 for all k <= 25
+(check_7_25.log); 2 C(m,a) tan tan ~ 2 pi^2 C(m,a) 2^-(a+m) is the (3/4)^k behaviour of rest2.
+
+
+4. Classes I, 0, II'
+--------------------
+LEMMA 4.1 (class I).  sum_{u in I} (1.1) <= UI := pi G G2 (9 (2/3)^k + 128 k 2^-k).
+Proof.  No fold in [0, s-1] means d_0 = |u| =: d <= q/2^(s+1) < 2^(a-1) and d_e = 2^e d (e <= s); d odd
+>= 3.  By Lemma 2.2: prod_{e<s} rho_e <= G2 d^-s, rho_e' <= (pi/2)/d, A <= G d^-(a-b) (b = bit length,
+b <= a-1 <= k-6), sum w <= 2^(m+1).  Two signs:  <= pi G G2 2^k sum_{d odd >= 3} d^-(k-b(d)).  d = 3 gives
+3^(2-k); the d of bit length b >= 3 give <= 2^(b-2) 2^-(b-1)(k-b) <= 2^(7-2k) (convex in b, endpoint
+values 7-2k and 34-5k; Lean classI_exp), at most k values of b.  []
+
+LEMMA 4.2 (class 0).  sum_{u in 0} (1.1) <= U0 := 0 for a = 2, and for a >= 3
+   U0 := (2 pi^2 eps G2/cos(pi/2^(s+1))) [ G sqrt2 pi 2^-a (27 3^-m + m 2^(9-2m)) + 3^(3-m) + 2^(9-2m) ].
+Proof.  Folds {0}: d_1 = q - 2 d_0 = 2t, t odd (1 < a), t >= 3 (t = 1 is alpha), d_e = 2^e t (1 <= e <= s),
+t <= q/2^(s+1) < 2^(a-1) (empty for a = 2); u = +-(q/2 - t).  rho_0 = sin(pi/q)/cos(pi t/q)
+<= (pi/q)/cos(pi/2^(s+1)); prod_{e=1}^{s-1} rho_e <= G2 t^-(s-1); rho_e' <= (pi/2)/t.  Chain: u = -+t mod 2^l
+(l < a) and |u mod 2^a| = 2^(a-1) - t, so A <= G t^-(a-1-b) sin(pi/2^a)/cos(pi t/2^a), the last factor
+<= sqrt2 pi/2^a for t <= 2^(a-2) and <= 1 always.  With sum w <= 2^(m+1), (pi/q) 2^(m+1) = 2 pi eps:
+sum over t <= 2^(a-2): sum_t t^-(m-1-b) <= 27 3^-m + m 2^(9-2m) (Lean class0_exp); over t > 2^(a-2):
+sum t^-s <= 3^(3-m) (a = 3) resp. 2^(a-3-(a-2)s) <= 2^(9-2m) (a >= 4; Lean class0_exp2).  []
+
+Class II'.  For u in II' let F = {g_1 < ... < g_r} be the folds in [0, s-1] (r >= 1, g := g_r >= 1),
+runs R_i = [g_i + 1, g_(i+1)] (g_0 = -1), i < r, closed (fold at the end), and the last run
+R_r = [p, s], p = g + 1, n = s - p.  P is constant on each run, = P_i resp. P_r = 2^p/d_p.
+(a) closed run R_i ending at h with next run ending at h' (h' = s for the last run):
+    P_i = 2^(h+1)/(q (1 - y_(h+1))), y_(h+1) <= 2^(h-h'), so P_i <= eps 2^(h+1-m)/(1 - 2^(h-h')) <= eps 2^(h+2-m);
+(b) P_0 = 1/d_0 <= 1/3;
+(c) for fixed F and sign, u -> d_p is injective; its values lie in an arithmetic progression of
+    difference 2^(p+1) (y_p = +-2^p y_0 + integer on the cylinder of F), all <= q 2^(p-s-1), and
+    d_p in 2^p {3, 5, 7, ...} if p < a (t_p odd, t_p = 1 is alpha), d_p >= 2^(a+1) if p = a, d_p >= 2^a if p > a.
+By Lemma 2.2, A <= 1, gamma <= G per run and gamma <= pi/2 at e':
+   (1.1) <= (pi/2) G^(r+1) prod_{i<r} P_i^|R_i| P_r^n sum_{e'} C(e'+a,a) 2^(s-e') P(e').           (4.1)
+
+LEMMA 4.3.  With x_e = eps 2^(e+2-m) and Y(h) = sum over partitions of [0, h] into runs (last run ending
+at h) of prod_runs G x_end^len:  Y(h) <= K x_h^(h+1), K = G/(1 - G/2) = 18.5973.
+Proof.  Y(h) = G x_h^(h+1) + sum_{e<h} Y(e) G x_h^(h-e), induction, and
+sum_{e<h} 2^-(h-e)(e+1) <= 1/2 (h = 1, 2: = 1/2; h >= 3: <= 2^(1-h) + (h-2) 2^(2-2h)).  []
+
+LEMMA 4.4 (last run).  S_n(p) := sup sum_{d} (2^p/d)^n over sets as in (c) is at most:
+  p < a  (T = floor(q/2^(s+1))):  n = 0: floor((T-1)/2);  n = 1: 1/3 + ln(T/3)/2;  n >= 2: 3^-n + 3^(1-n)/(2(n-1));
+  p >= a (c = 2^(a+[p=a]), N = floor((q 2^(p-s-1) - c)/2^(p+1)) + 1):  n = 0: N;
+         n = 1: 2^p/c + (1 + ln(N-1))/2 [N >= 2];  n >= 2: (2^p/c)^n + 2^-n (1 + 1/(n-1)).
+Proof.  The i-th element is >= max(c, 2^(p+1) i); compare sums with integrals.  []
+
+PROPOSITION 4.5 (class II').  sum_{u in II'} (1.1) <= Vp(s,a) := pi G sum_{g=1}^{s-1} Cl_g [c_g A_<=(g) S_n(g+1)
+ + A_>(g) S_(n+1)(g+1)], n = s-g-1, A_<=(g) = sum_{e'=1}^{g} C(e'+a,a) 2^(s-e'), A_> = sum_{e'=g+1}^{s} (same), with
+   c_g = (4/3) eps 2^(g+1-m) (g <= s-2),  c_(s-1) = eps 2^(1-a),
+   Cl_g = G min(1/3, c_g)^(g+1) + G K sigma_g c_g^(g+1),  sigma_g = sum_{g'<g} (theta 2^(g'-g))^(g'+1),
+   theta = 3/2 (g <= s-2), 1 (g = s-1).
+Proof.  In (4.1) group by g.  The last closed run has P <= c_g by (a) (h' = s >= g+2, resp. h' = s = g+1),
+all earlier ones P <= x_(g_(i+1)) <= c_g.  r = 1: G min(1/3, c_g)^(g+1) by (b).  r >= 2, g' = g_(r-1):
+G c_g^(g-g') Y(g') <= G K c_g^(g+1) (x_(g')/c_g)^(g'+1), x_(g')/c_g = theta 2^(g'-g) (Lemma 4.3).  The e' in
+closed runs contribute P(e') <= c_g, those in the last run raise the exponent of P_r to n+1, and the sum
+over u (2 signs, injectivity (c)) is bounded by Lemma 4.4; 2 (pi/2) G = pi G.  []
+
+
+5. The majorant
+---------------
+THEOREM 5.1.  rest2(s,a) <= U(s,a) := Ua + UI + U0 + Vp  for all s >= 4, a >= 2.
+Proof.  (2.1), Lemmas 3.1, 4.1, 4.2, Proposition 4.5.  []
+Brute-force check (check.py, all units, float64, k <= 25, 190 pairs (s,a)): every class sum is below
+its bound and rest2 <= U (check_7_25.log; max true/bound: alpha 1.000, I 0.32, 0 0.22, II' 0.0054).
+
+
+6. U < 2
+--------
+THEOREM 6.1.  U(s,a) < 2 for all s >= 4, a >= 2 with k = s + a + 1 >= 22.  Hence rest2(s,a) < 2 there.
+(i) 21 <= m <= 44 (22 <= k <= 45): verify.py evaluates U(s,a) in arb (128-bit balls; all integer
+    quantities exact) for every s; the maximum over s is attained at a = 2:
+       k = 22: 1.656, 23: 1.149, 24: 0.802, 25: 0.564, 26: 0.398, 27: 0.282, 28: 0.1999, 29: 0.142,
+       30: 0.101, 31: 0.0718, 35: 0.0183, 40: 0.0032, 45: 0.00055   (verify_22_27.log, verify.log).
+(ii) m >= 45: Lemma 6.2.
+LEMMA 6.2.  For m = s + a >= 27, U(s,a) <= F(m) := f_a0 + f_a1 + f_I + f_0 + pi G (f_a + f_b + f_c) with
+   f_a0 = 32 (16/15) (3/4)^m                          [tan x <= 4x/pi on [0, pi/4]; C(m,a) 2^-a <= (3/2)^m]
+   f_a1 = 237 2^-m + 54 2^-(m/2)                       [e* = 1, and e* >= 2 with 2^e*/q <= eps 2^(-m/2-1)]
+   f_I  = UI,   f_0 = U0 with eps <= 16/15, cos(pi/32), 2^-a <= 1/8
+   f_a  = 47.2 m^2 2^(6.02-m)                          [g < a: Cl <= G(1+1.35K) c^(g+1) <= 47.2 c^(g+1),
+                                                         S <= a, c^(g+1) <= 2^(5.017-2m) (Lean casea_exp)]
+   f_b  = 47.2 [ (m-2) 1.31 (2/3)^(m-2) (3 + C(m,2)) + (m-3) 1.31 3^-(m-3) (4 + C(m,3)/2)
+                 + m (m+5) (16/45)^(m/2+1) ]           [a <= g <= s-2, a = 2, 3, >= 4; exponents by Lean
+                                                         exp_closed_last*: c^(g+2) 2^((p-a)n) 2^(m+1) = 2^(g+2-as),
+                                                         c^(g+1) 2^((p-a)(n+1)) 2^(s-g) = 2^(1-a+s-as) (times omega^.)]
+   f_c  = G[(2/3)^(m-2) + 8 K 1.31 2^-(m-2)][8(16/15) + C(m,2)/2]
+          + 10.3 G 1.31 4^-(m-3) [(16/15) 2^(m+1) + C(m,3)(2^(m-6) + 3)]
+          + 10.3 G [1.40 2^(13-2m) + 1.31 2^(8-m)(1 + m/16)]      [g = s-1; Lean casec_exp]
+(eps_s^s <= e^(4/15) < 1.31 for s >= 4.)  Every term is P(m) lam^m with P of degree <= 3 and
+lam <= 3/4, so (1+1/m)^3 lam < 1 for m >= 40: F is decreasing on m >= 40, and F(45) = 0.4016 (arb) < 2.
+Values: F(41) = 1.53, F(50) = 0.073, F(60) = 1.7e-3, F(80) = 1.6e-6.  []
+
+COROLLARY 6.3.  For every k >= 4: period(T(N,k)) = B(k).
+Proof.  P4 Theorem G (k <= 27).  For k >= 28: P4 Corollary (section 2), whose hypothesis is Theorem 6.1.  []
+
+
+7. Remarks
+----------
+* Theorem 6.1 also covers 22 <= k <= 27, independently of the float64 computation of P4 Theorem F path A
+  (it gives rest2 < 2 by a bound proved here, evaluated in ball arithmetic).
+* bound.py (not used in the proofs): a sharper dynamic-programming majorant over all fold patterns
+  (run-to-run coupling, discreteness of every run start) which is < 2 already from k = 14
+  (table.py: k = 14: 1.22, k = 20: 0.055, k = 28: 0.00155 = the true value 0.0016 up to 3%).
+* The weakest point of U is a = 2, s = k - 3 (u = +-3 and its neighbours, the equality row with
+  weight 2^j); for a >= 3 the bound is dominated by the exact top-family term.
+
+
+8. The a = 1 family (for c_0 alone): not proved
+------------------------------------------------
+For a = 1 the main term is 4 sin(pi/(2D)) M(1,0) ~ 2 pi 2^-s M(1,0), exponentially smaller than the
+crude sums: the absolute-value bounds of sections 3-4 (which ignore phases) are far above it, so the
+method used here does not apply; P4 certified it with
+exact evaluation of up to ~1000 pairs and the margins decrease (s = 21..25: 89, 58, 22, 12.5, 3.0).  A
+proof would need cancellation between the exactly evaluated large structures.  The period law for
+T(N,k) does not need it (Theorem D1 carries 2^(k-2) - 1 in c_1); "period(c_0(T(N,k))) = B(k)" stays
+proved for k <= 27 only.
+
+
+9. Files
+--------
+  ubound.py     U = Ua + UI + U0 + Vp in arb (sections 3-5)
+  verify.py     Theorem 6.1: U < 2 on a range of m, and F(m) (Lemma 6.2);  verify.log (k 28..45, F(45..80)),
+                verify_22_27.log (k 22..27; its "NOT VERIFIED" line refers only to F(27) > 2, not used)
+  check.py      brute force: class sums vs bounds, rest2 <= U, k <= 25 (check_7_25.log)
+  split.py      exact rest2 split into classes (exploration)
+  bound.py, table.py   the sharper DP majorant (exploration, section 7)
+  alpha_es.py, win.py  exploration (class alpha by e*, window products of the D-orbit)
+  ../../Folds/PeriodLaw3.lean   weights_total, weights_lt, exponent identities, endpoint inequalities,
+                top_cycle, top_chain, fold_monotone, sin_two_pow_le
