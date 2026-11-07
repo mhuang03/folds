@@ -321,12 +321,16 @@ components_6.json, Fourier coefficient of the exact order-q component of c_1):
      q = 14:   0.059858838626 + 0.090092292718i   (both)
 Values (coefficient of e(-N/q) in c_1(T(N, m+1)), face1.log), all nonzero:
      m = 6:  q = 24: -2.437899 + 0.216842i;  q = 28: -0.239764 + 0.239265i;  q = 30: 1.401638 - 0.292369i
-     m = 7, 8: see face1.log.
+     m = 7:  q = 48: -0.488014 - 32.573887i;  56: -1.194203 - 8.515597i;  60: 2.742866 + 27.341339i;
+             62: -0.092050 + 0.302386i
+     m = 8:  q = 96: 917.593054 - 7.056370i;  112: 158.507546 - 9.537691i;  120: -797.692253 + 38.414511i;
+             124: 2.695644 + 2.619469i;  126: 0.130345 + 0.230451i
 Main structure with one free point (mainf1.py, mainf1.log): its contribution to c_1(T(N, m+1)),
 divided by the vertex-level main term Phi_main of Lemma 2.3 (same (s, a)), is
      (s,a) = (4,2): 0.1066-0.0166i  (4,3): 0.3458+0.0186i  (4,4): 0.5595+0.0153i  (4,5): 0.8017+0.0065i
              (5,2): 0.2939-0.0081i  (5,3): 0.5380+0.0088i  (5,4): 0.7706+0.0072i  (5,5): 1.0169+0.0030i
-             (6,2): 0.5178-0.0040i  (6,3): 0.7647+0.0043i  (6,4): 1.0062+0.0035i
+             (6,2): 0.5178-0.0040i  (6,3): 0.7647+0.0043i  (6,4): 1.0062+0.0035i  (6,5): 1.2544+0.0015i
+             (7,2): 0.7569-0.0020i  (7,3): 1.0053+0.0021i
 i.e.  ~ (m - 7)/4 + (small, decreasing in s): the same leading weight (m - 7)/4 = vol(V_1) m + ...
 as the orbit vertex 1/D in Theorem D1 (../periods3 Lemma 2.1 and Proposition E: the time-free
 free point z in (3/4, 1)).  So for one free point the mixed main term behaves like the top one;
