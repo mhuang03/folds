@@ -53,6 +53,7 @@ import Folds.SymParity
 import Folds.SymStructure
 import Folds.SymStructure2
 import Folds.PeriodLaw
+import Folds.PeriodLaw2
 import Folds.SymRatio
 import Folds.SymRatio2
 import Folds.LiveK

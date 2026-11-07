@@ -1,0 +1,367 @@
+PERIODS IV: THE MIXED COMPONENTS 2^a (2^s - 1) AND THE FULL PERIOD OF T(N,k)
+============================================================================
+(experiments/periods4/.  Notation of ../periods/PROOFS.txt (classes, face lemma, B(m),
+Theorem A), ../periods2/PROOFS.txt (vertex formula, column rule, orbit/chain vertices,
+Theorem C) and ../periods3/PROOFS.txt (Theorems D1, D2, non-simple vertices).
+T x = 2x mod 1;  h(x) = 1/(1 - e(-x)),  g(x) = 1/(1 - e(x)) = 1 - h(x),  e(x) = exp(2 pi i x),
+|h(x)| = |g(x)| = 1/(2|sin pi x|).  Throughout  k = m = a + s + 1  (vertices, c_0), a >= 1,
+s >= 2,  D = 2^s - 1,  q = 2^a D.)
+
+SUMMARY
+  Question: the period of T(N,k) divides B(k) (Theorem A) and is divisible by 2^(k-1)(2^(k-1)-1)
+  (Theorem C).  The remaining prime powers of B(k) live on the MIXED orders q = 2^a (2^s - 1),
+  a + s = k - 1, s < k - 1, which are new at codimension k: in c_0(T(N,k)) they are carried by
+  vertices only.
+
+  1. CLASSIFICATION (section 1, proved).  A vertex carries the order q = 2^a(2^s - 1) iff it is a
+     CYCLE + PENDANT CHAIN vertex: an s-periodic doubling orbit traversed in time order as a
+     halving chain theta = x_{t_0} -> x_{t_1} -> ... -> x_{t_s} = theta (closed by one equality),
+     plus a chain z_1, ..., z_a of successive halvings, later in time than its parent, hanging off
+     a cycle point x_{t_j} through its OFF-orbit preimage.  (If z_1 hangs off theta after both
+     copies of theta, the vertex is the non-simple vertex of ../periods3 8.2.)  The structures are
+     parametrised by pairs (u, j), u a unit mod q (u = (q z_a)^(-1)), j the attachment index; the
+     unique contributing character is explicit, and every valid vertex of the structure (u, j)
+     contributes a term of the same modulus M(u, j) (closed form, Lemma 1.3).  Checked by
+     exhaustion: the set of valid structured vertices equals the set of Normaliz vertices with
+     q | index for every mixed q at k = 5, 6, 7, 8 (setcheck.py), and the derived lemmas below hold
+     for every valid vertex for k <= 12 (classify.py, all 56962 valid vertices).
+  2. THE MAIN FAMILY AND THE ROTATION LEMMA (section 2, proved).  For s >= 3 the main structure
+     theta = 1/D, z_i = 1/(2^i D) (u = 1, j = 0) and its mirror are valid exactly with the time
+     orders  c^s z^p c z^(a-p),  p = 0, 1, ..., min(a, 2); for a >= 2 the three terms add up to
+     the first one (p = 0, the non-simple vertex), so the main family contributes EXACTLY
+        Phi_main = 2 (-1)^(s+1) q^(-1) h(2^s/q) prod_{e<s} h(-2^e/q) prod_{l=1}^{a} h(-2^-l),
+     of modulus 2 M(1,0);  for a = 1 the two terms nearly cancel (factor 2 sin(pi/2D)).
+     ROTATION LEMMA: for s >= 4 no structure attached at 1/D or 1 - 1/D with j >= 1 is valid
+     (these are the only structures whose modulus can exceed M(1,0) substantially).
+  3. THEOREM F (computer-assisted, float64 with margins >= 1.26): for all s >= 2, a >= 1 with
+     a + s + 1 = k <= 27, the component of exact order 2^a (2^s - 1) of c_0(T(N,k)) is nonzero.
+     (s >= 4, a >= 2: one inequality "rest < 2" per (s, a) by Lemmas 2.3, 2.4; s <= 3 or a = 1:
+     exact evaluation of all large structures plus a crude tail bound.)
+  4. THEOREM G.  For 4 <= k <= 27:  period(c_0(T(N,k))) = period(T(N,k)) = B(k).
+     (Previously certified: k <= 9.)  E.g. the period of T(N,27) is
+        B(27) = 2^26 3^3 5^2 7^2 11 13 17 19 23 31 41 43 47 73 89 127 151 241 257 337 601 683
+                1801 2731 8191 131071 178481 524287   (a 73-digit number).
+  5. FOR ALL k: Lean (Folds/PeriodLaw2.lean, B_eq_L) proves that for k >= 9 the orders carried
+     by Theorem C (2^(k-1), 2^(k-1) - 1), Theorem D1 (2^(k-2) - 1, in c_1) and the mixed orders
+     with s >= 4, a >= 2 already have lcm B(k).  So "period of T(N,k) = B(k) for EVERY k >= 4" is
+     reduced to ONE explicit inequality per (s, a), s >= 4, a >= 2:
+        rest2(s, a) := sum_{(u,j) not main, not rotation} C(s-j+a, a) M(u,j)/M(1,0)  <  2,
+     a finite trigonometric sum (no geometry left).  It holds for every k <= 27 (min margin 1.4
+     at k = 9, margins >= 100 from k = 21 on; max over s of rest2 at k = 23..27: 8.3e-3, 5.8e-3,
+     4.1e-3, 3.1e-3, 2.2e-3, decreasing by ~0.72 per step).  A proof of the inequality for all k is NOT given (it
+     needs a uniform estimate of these products of cosecants, analogous to ../periods3 Prop. 3.1
+     but with a 2-adic and a periodic part); so the period law for all k remains open, now as a
+     pure inequality.
+  6. CLOSED FORMS (section 4): |Phi|/M(1,0) -> 2 (s >= 4, a >= 2), = 4 sin(pi/2D) + o (a = 1),
+     -> 4(a + 1) (s = 2) and -> 8a + 6 (s = 3) (for s <= 3 the rotations are valid and dominate).
+  7. ONE FREE POINT (section 5): the face formula extends to the mixed structures with free
+     points (mixedface.py); validated against the exact quasi-polynomial of T(N,6) (orders 12,
+     14 in c_1: 12 digits).  All mixed orders new at m = 6, 7, 8 are nonzero in c_1(T(N, m+1)).
+
+
+1. Which vertices carry the mixed orders
+----------------------------------------
+1.1 Newness.  By the face lemma, a face of codimension m has index dividing lcm_C D_C with
+D_C = 2^(a_C) (tree/mark components, a_C <= e_C - 1) or 2^(a_C)(2^(s_C) - 1) (unicyclic,
+a_C + s_C <= e_C - 1), sum_C e_C = m.  Let q = 2^a (2^s - 1), a >= 1, s >= 2, a + s = k - 1.
+Take p a primitive prime divisor of 2^s - 1 (Zsigmondy; for s = 6 take p^2 = 9): p | 2^t - 1
+iff s | t.  If q | D_F then some unicyclic C has s | s_C, so e_C >= s + 1, and some component
+C' has a_C' >= a, so e_C' >= a + 1 (+ s_C' if unicyclic).  C' != C would need m >= a + s + 2 =
+k + 1.  So C' = C, a_C + s_C >= a + s = k - 1 >= e_C - 1 forces m = e_C = k, a_C = a, s_C = s.
+Consequences: (i) no face of codimension < k has index divisible by q ("q is new at k"), so the
+order-q part of c_0(T(N,k)) is the sum over the DISTINCT vertices v with q | index(v) of the
+vertex formula restricted to the characters with all w_r != 0 (../periods3 8.2); (ii) at such
+a vertex any maximal independent set E of tight rows is ONE unicyclic component on all k points
+with a + s = e - 1, the equality case of Lemma 5 of ../periods.
+
+PROPOSITION 1.1 (classification).  q | index(v) iff v is a cycle + pendant chain vertex:
+there are times t_0 < t_1 < ... < t_s and an s-periodic point theta with denominator D such
+that x_{t_0} = x_{t_s} = theta and T(x_{t_(i+1)}) = x_{t_i} (each cycle point is a preimage of
+the previous one); the other a points z_1, ..., z_a (in time order) satisfy T(z_1) = x_{t_j}
+for some 0 <= j <= s - 1, z_1 != x_{t_(j+1)}, T(z_(i+1)) = z_i, and z_1 is later than t_j.
+Proof.  Equality in Lemma 5 of ../periods (notation there: p, q = numbers of halving edges of
+the cycle with the coefficient 2 at the start/end of the edge in a traversal, t = pendant edges
+with the 2 on the far side, T = all pendant edges, e = T + cycle length):
+  * min(p, q) = 0: a + s = t + p and e >= T + p + 1 (the cycle has a Q edge); equality forces
+    t = T (every pendant edge is a halving whose LATER point is the far one) and a cycle made
+    of p halvings and ONE equality.  Along the halvings time strictly decreases in the traversal
+    direction (the 2 sits on the later point), and the later point of a halving 2y_j - y_i = c
+    satisfies T(y_j) = y_i.  So the cycle is x_{t_0}, ..., x_{t_s} as stated with s = p, closed
+    by the equality x_{t_s} = x_{t_0}; theta has exact period s (a smaller period s' would make
+    the denominator divide 2^(s') - 1, not divisible by p).
+  * min(p, q) = 1: a + s = t + max(p, q) <= t + p + q - 1 <= e - 1 with equality iff t = T and
+    the cycle consists of halvings only.  The cycle point w carrying the 2 in both of its cycle
+    edges is a halving of both neighbours u, u': u = 2w - c, u' = 2w - c'.  If c != c' then
+    {u, u'} = {0, 1}; but a coordinate in {0,1} makes a box row tight, and choosing E through
+    that mark gives a tree + mark component, impossible by 1.1.  So u = u' (the same value):
+    the equality x_u = x_u' is implied, and the point configuration is that of the first case
+    (this is the non-simple vertex: z_1 halving both copies of theta).
+  * The pendant tree: t = T = a edges, each a halving whose far (later) point maps under T to
+    the near one.  A point at depth d whose first step off the cycle is off-orbit has exact
+    denominator 2^d D (the off-orbit preimage of r/D is (r + D)/(2D) or r/(2D), of exact
+    denominator 2D; later halvings double the denominator); an on-orbit first step coincides
+    with a cycle value.  2^a | index needs depth a, so the tree is a path z_1 .. z_a with z_1
+    the off-orbit preimage.
+Conversely every such configuration is a vertex of the arrangement (k independent tight rows)
+with index exactly q (z_a has denominator q, all others divide q).  It is a vertex of a class
+polytope iff some local cell is valid.  []
+
+1.2 One character.  At a simple structured vertex M (the k tight rows) has |det M| = 2^a D = q
+(Lemma 5: 2^t 2^min(p,q) (2^s - 1)), so the character group M^(-T)Z^k/Z^k has order q; the mode
+<w, b> = <n, y> (w = M^(-T) n, M y = b) maps it onto (1/q)Z/Z because index(y) = q.  So exactly
+ONE character w has mode -1/q, and all its w_r are nonzero (a w_r = 0 would make the mode an
+edge character, of order not divisible by q).  The non-simple vertices are treated as in
+../periods3 (nonsimple.py: each consistent sign pattern is an orthant of the basis obtained by
+dropping the implied row); each basis again has |det| = q.  Hence each valid vertex contributes
+ONE term (1/q) prod_r F_r(w_r) to the coefficient of e(-N/q) in c_0, F_r in {h, -h, -g}:
+halving row on its side u <= 0: h(w); u > 0: -h(w); equality u > 0: -h(w); u < 0: -g(w).
+By the column rule (../periods2 2.2) every column has at most one valid side assignment (for the
+non-simple column of z_1 the two candidates are separated by the equality side, fixed in the
+closing column), so each valid vertex has exactly one valid cell.
+
+LEMMA 1.3 (parametrisation and moduli).  The structures (theta, j, chain) correspond
+bijectively to the pairs (u, j), u in (Z/q)^*, 0 <= j < s, via  z_a = u^(-1)/q  and
+theta = T^j(T^a(z_a)) (x_{t_j} = T^a z_a is the attachment value).  For the structure (u, j)
+the character with mode -1/q is  w_r = -u (d z_a/d b_r) mod 1  (take n = -u e_{z_a}; the
+columns of M^(-1) are d y/d b_r), i.e.
+     chain rows  2z_i - z_{i-1} (z_0 := x_{t_j}):  w = -u 2^(i-1)/2^a,
+     cycle rows  2x_{t_(i+1)} - x_{t_i}:           w = -u 2^((i - j) mod s)/q,
+     equality    x_{t_s} - x_{t_0}:                w = +u 2^(s-j)/q,
+(from x_{t_j} = (sum_i c_i 2^((i-j) mod s) - 2^(s-j) b_e)/D).  Hence every valid vertex of
+(u, j) contributes a term of modulus
+     M(u, j) = (1/q) prod_{l=1}^{a} |2 sin(pi u/2^l)|^-1 . prod_{e=0}^{s-1} |2 sin(pi u 2^e/q)|^-1
+               . |2 sin(pi u 2^(s-j)/q)|^-1.
+(Derived for simple vertices; for all valid vertices, simple and non-simple, |term| = M(u,j)
+is checked by classify.py for k <= 12.)  The main structure is u = 1, j = 0 (theta = 1/D,
+z_i = 1/(2^i D)) and its mirror u = -1.  Every factor of M(u,j)/M(1,0) from a chain row, or from
+a cycle row with e <= a, is <= 1 (|u 2^e mod q| >= 2^e); the others can exceed 1.
+
+LEMMA 1.4.  A structure (u, j) has at most C(s - j + a, a) time orders (t_0..t_j precede z_1;
+the a chain points and the s - j cycle points t_(j+1)..t_s interleave freely), so at most that
+many valid vertices.  (sum_{j<s} C(s-j+a, a) = C(s+a+1, a+1) - 1: Lean weights_sum.)
+
+Exhaustive checks.
+  setcheck.py K (Normaliz extreme rays of all class polytopes, ../periods/types_K.txt):
+     K = 5: q = 12, 14;  K = 6: 24, 28, 30;  K = 7: 48, 56, 60, 62;  K = 8: 96, 112, 120, 124, 126:
+     the set of vertices with q | index EQUALS the set of valid structured vertices (mixed.py)
+     in every case (28, 26 / 38, 94, 20 / 36, 232, 84, 72 / 44, 340, 340, 316, 58 vertices;
+     setcheck8.log).
+  Values: mixed.py reproduces every previously known mixed component of c_0 exactly:
+     k = 5: q = 12: 0.2693375673 + 0.1988959455i, q = 14: -0.1586380044 - 0.2770671019i;
+     k = 6: q = 24, 28, 30 (Normaliz values of ../periods3 8.2, and the exact quasi-polynomial
+     ../prefix5/components_6.json);  k = 8: q = 96, 112, 120, 124, 126 (vertsq8.log, Normaliz
+     vertex enumeration).
+  classify.py 12: all valid vertices for k <= 12 (all (s, a)); |term| = M(u,j), V(u,j) <=
+     C(s-j+a, a), Lemma 2.3 and Lemma 2.4 hold for every one of them (classify.log).
+
+
+2. The main family, the rotation lemma, dominance
+-------------------------------------------------
+LEMMA 2.3 (main family).  Let s >= 3, a >= 1, theta = 1/D, x_{t_i} = 2^(s-i)/D (1 <= i <= s-1),
+x_{t_s} = 1/D, z_i = 1/(2^i D).  The valid time orders are exactly
+     t_0, t_1, ..., t_(s-1), then the chain z_1..z_a with t_s inserted after p chain points,
+     p = 0, 1, ..., min(a, 2)
+(p = 0 is the non-simple vertex).  Their terms are X phi_p with a common factor X and
+     phi_0 = (-h_c)(-h_e),  phi_1 = h_c (-g_e),  phi_2 = (-h_c)(-g_e),
+h_c = h(-2^(s-1)/q) (closing halving), h_e = h(2^s/q), g_e = g(2^s/q) (equality).  Hence for a >= 2
+the family sums to X phi_0 (Lean main_family), and with the mirror
+     Phi_main = 2 (-1)^(s+1) q^-1 h(2^s/q) prod_{e=0}^{s-1} h(-2^e/q) prod_{l=1}^{a} h(-2^-l),
+|Phi_main| = 2 M(1,0).  For a = 1 the sum is X h_c (h_e - g_e) = -i cot(pi 2^s/q) X h_c (Lean
+main_family_a1), |Phi_main| = 4 sin(pi/(2D)) M(1,0).
+Proof.  Columns (sign of the later point; R(x) = (x, (1+x)/2), L(x) = (x/2, x)):
+  * t_1 (b = 2^(s-1)/D = (1 + theta)/2, bit 1): chain points z < theta contribute 0 (b > (1+z)/2);
+    fixed sum 0, side "outside".
+  * t_i, 2 <= i <= s-1 (value x <= 2^(s-2)/D < 1/2, bit 0): +1 from theta (x in R(theta)), 0 from
+    the larger cycle points (x < y/2), +1 from every earlier chain point (x in R(z)).  The tight
+    row contributes 0 or -1, so no chain point may precede t_i.  As s >= 3, all chain points come
+    after t_(s-1).
+  * z_1 = theta/2: 0 from t_1..t_(s-1) (z_1 < y/2); tight with theta (and with t_s if later):
+    side u <= 0 (both sides u <= 0 in the non-simple case).  z_i, i >= 2: 0 from everything but
+    the parent; side u <= 0.
+  * closing column t_s (value theta, bit 0 w.r.t. t_(s-1) = 2/D): 0 from t_1..t_(s-2); +1 from
+    each of the p chain points before it (theta in R(z)); halving 0 (u <= 0) or -1 (u > 0);
+    equality +1 (above) or -1 (below).  p + hc + ec = 0 has the solutions (p, hc, ec) = (0,-1,+1),
+    (1, 0, -1), (2, -1, -1) only (Lean closing_column).
+  * the chain points after t_s are unaffected (z_i <= theta/4 for i >= 2; z_1 is tight).
+For p = 0 the non-simple pattern (z_1: both u <= 0; equality above) drops the row (z_1, t_s), so
+the basis is the same graph as for p = 1, 2, and the character (Lemma 1.3) and all other factors
+coincide.  The factors: halving u > 0: -h, u <= 0: h; equality above: -h(w_e), below: -g(w_e);
+w_c = -2^(s-1)/q, w_e = 2^s/q; the sides of all other rows (cycle rows u > 0, chain rows u <= 0)
+are the same for every p, which gives the sign (-1)^(s+1) and X.  Mirror: identical function of N.
+For a = 1: h_e - g_e = 2h(w_e) - 1 = -i cot(pi w_e), and |cot(pi 2^(s-1)/D)| = tan(pi/(2D)).  []
+
+LEMMA 2.4 (rotation lemma).  Let s >= 4, a >= 1.  No structure whose attachment value is 1/D
+(u = 1 mod D) or 1 - 1/D (u = -1 mod D) with j >= 1 has a valid time order.
+Proof (attachment 1/D; the other is the mirror).  x_{t_i} = 2^(j-i)/D for i <= j, so theta = 2^j/D;
+x_{t_(j+1)} = b := 2^(s-1)/D (the on-orbit preimage of 1/D), and z_1 = 1/(2D).  All chain points
+come after t_j.
+Case j <= s - 2.  (1) A chain point placed before t_(j+1) has bit 0, i.e. is 1/(2^l D): if z_i is
+the first one with bit 1, z_(i-1) = 1/(2^(i-1) D) and z_i = (1 + z_(i-1))/2 lies in R(x) for each
+of the j + 1 earlier cycle points x = 2^l/D (z_i < (1+x)/2 iff z_(i-1) < x) and in R(z_l) for the
+earlier chain points; the column sum is >= j + 1 + (tight >= 0) > 0.  (2) Column t_(j+1) (b, bit 1,
+tight with 1/D): b is in R(2^l/D) for l = 1..j (2^s < 2^s - 1 + 2^l), and the chain points
+1/(2^l D) < 1/D contribute 0; sum >= j >= 1 for both sides.  Invalid.
+Case j = s - 1 (theta = b, closing column t_s).  (1) No chain point exceeding b precedes t_s: the
+first such z_i has bit 1 and lies above all earlier points; it is in R(b) = R(x_{t_0}) since
+z_(i-1) < b; its column is >= 1.  (2) Closing column: +1 from each of t_1..t_(s-2) (values 2^l/D,
+l = 1..s-2, b in R), >= 0 from chain points (all < b, so never -1), tight halving >= 0, equality
+>= -1: sum >= s - 3 >= 1.  Invalid.  []
+(For s = 2, 3 the closing-column count s - 3 is <= 0, and indeed the rotations are valid and
+dominant there, section 4.)
+
+PROPOSITION 2.5 (dominance).  For s >= 4, a >= 2 let Phi be the coefficient of e(-N/q) in
+c_0(T(N, a+s+1)).  Then |Phi - Phi_main| <= M(1,0) rest2(s, a), with
+     rest2(s, a) = sum_{u in (Z/q)^*, j < s, (u,j) not in E} C(s-j+a, a) M(u,j)/M(1,0),
+     E = {u = +-1, j = 0} u {u = +-1 mod D, j >= 1}.
+So Phi != 0 whenever rest2(s, a) < 2.
+Proof.  Lemmas 1.3, 1.4, 2.3, 2.4.  []
+
+THEOREM F (computer-assisted).  For all s >= 2, a >= 1 with k = a + s + 1 <= 27 the component of
+exact order 2^a (2^s - 1) of c_0(T(N,k)) is nonzero.
+Proof (certify.py, certify_a1.py; logs certify_4_20.log (a >= 2), certify_21_27.log (a >= 2),
+certify_a1.log).
+  Path A (s >= 4, a >= 2): rest2(s, a) < 2 evaluated over all units u (numpy, float64).  Worst
+     cases: (s,a) = (6,2): 1.404, (5,3): 1.279, (7,2): 1.172, (4,3): 1.166; the maximum over s of
+     rest2 is, for k = 11, 12, ..., 27:  0.562, 0.411, 0.251, 0.182, 0.122, 0.086, 0.063, 0.043,
+     0.031, 0.023, 0.016, 0.011, 0.0083, 0.0058, 0.0041, 0.0031, 0.0022  (ratio ~0.72 per step;
+     all far above rounding).  (4,2) and (5,2) (k = 7, 8) fail the crude test and go through path B.
+  Path B (s <= 3, or a = 1, or path A failed): all pairs (u, j) with C(s-j+a,a) M(u,j)/M(1,0) >
+     tau are rebuilt and all their time orders checked and evaluated exactly (mixed.py); the
+     rest is bounded by sum C(s-j+a,a) M(u,j).  Rotation pairs are excluded from the tail only for
+     s >= 4 (Lemma 2.4); for s <= 3 they are among the exactly evaluated pairs.  tau = 1e-3 suffices
+     except for a = 1, where the main family is reduced by 2 sin(pi/2D) and tau down to 1e-9 is
+     used (a = 1, s = 25 needs ~1000 exact pairs; margins >= 1.26).
+  For k <= 12 classify.py evaluates EVERY valid vertex exactly (no tail at all), with the same
+  conclusion.  []
+
+THEOREM G.  For 4 <= k <= 27 the constant term c_0 of T(N,k), and T(N,k) itself, have period
+exactly B(k).
+Proof.  The period of c_0 is the lcm of the orders of its nonzero exact-order components.  By
+Theorem C (orders 2^(k-1), 2^(k-1) - 1) and Theorem F (orders 2^a(2^s - 1), a >= 1, s >= 2,
+a + s = k - 1) it is divisible by lcm(2^(k-1), 2^a(2^s - 1) : a + s = k - 1, s >= 1) = B(k) (the
+terms with s = 1 are powers of 2 below 2^(k-1)).  By Theorem A it divides B(k), and so does the
+period of T (the lcm of the periods of the c_j, each dividing B(j') | B(k)).  []
+(Independently of the a = 1 part of Theorem F: Lean B_eq_L shows for k >= 9 that C, D1 and the
+path-A orders suffice.)
+
+COROLLARY (conditional).  If rest2(s, a) < 2 for all s >= 4, a >= 2 with a + s + 1 >= 28, then
+the period of T(N,k) is exactly B(k) for EVERY k >= 4 (and T(N,3) has period 6).
+Proof.  Theorem G for k <= 27.  For k >= 28: Theorem C (2^(k-1), 2^(k-1) - 1 in c_0), Theorem D1
+(2^(k-2) - 1 in c_1 of T(N,k), m = k - 1), Proposition 2.5 (all 2^a(2^s - 1) with s >= 4,
+a >= 2 in c_0), and B(k) = lcm of these orders (Lean PeriodLaw2.B_eq_L, all k >= 9).  []
+For the constant term alone the same holds with the a = 1 orders 2(2^(k-2) - 1) (Lean B_eq_L0);
+those need, besides the hypothesis, the a = 1 analogue of the inequality (with main term
+4 sin(pi/2D) M(1,0) instead of 2 M(1,0)), certified for s <= 25.
+
+Why the inequality should hold (not a proof).  ratio(u,j) = M(u,j)/M(1,0) is a product of
+k + 1 ratios of cosecants.  A factor stays ~1 only when u c_r = c_r (mod q) approximately, and
+the units u for which MANY factors stay ~1 are u = +-1 (excluded), u = +-1 mod D with j >= 1
+(rotations, excluded by Lemma 2.4), u = +-1 mod D with j = 0 and u != +-1 mod 2^a (the main orbit
+with a different chain: the e < a cycle rows lose a factor ~ 2^(e-a-s) each, e.g. u = q/2 + 1:
+ratio ~ pi^2 2^-(2a+s), weight C(s+a, a) <= 2^(s+a)), and u = +-3, +-5, ... (ratio ~ |u|^-(k-3)
+times 2^j from the equality row).  The data show exactly these as the largest terms of rest2
+(r2top.py: k = 21, (13,7): u = -+(q/2 - 1)... j = 0 terms 5.7e-3 each, then u = +-3), and every one
+of these families gives a contribution decaying geometrically in k; what is missing is the
+uniform bound on the union of all the other units (as in ../periods3 Prop. 3.1, but now with the
+2-adic part u mod 2^a and the periodic part u mod D interacting through the e < a rows).
+
+
+3. The prime powers and the reduction to B(k) (Lean)
+----------------------------------------------------
+For a prime p, v_p(B(k)) = max_{s <= k-1} v_p(2^s - 1) is attained exactly at the multiples s of
+s_0 = ord_p(2) p^J <= k - 1 (../periods3 8.1).  Theorem C carries p^v when s_0 | k - 1, Theorem D1
+when s_0 | k - 2, Proposition 2.5 whenever some multiple s of s_0 has 4 <= s <= k - 3.  If none
+of these happens then every multiple of s_0 in [1, k-1] is <= 3 or >= k - 2, which for k >= 9
+is impossible (2^6 - 1 = 63 contains 3 and 7, and 6 <= k - 3).  This is the content of
+     PeriodLaw2.B_eq_L  (k >= 9):  B(k) = lcm(2^(k-1), 2^(k-1) - 1, 2^(k-2) - 1,
+                                              2^(k-1-s)(2^s - 1) : 4 <= s <= k - 3),
+     PeriodLaw2.B_eq_L0 (k >= 9):  the same with 2(2^(k-2) - 1) in place of 2^(k-2) - 1,
+proved for all k in Lean (no sorry, no native_decide), together with the bookkeeping identities
+hg_sum (h + g = 1), main_family, main_family_a1, closing_column (Lemma 2.3) and weights_sum
+(Lemma 1.4).
+
+
+4. Closed forms and the small cycles
+------------------------------------
+For s >= 4, a >= 2 the component is Phi_main (Lemma 2.3, explicit) plus a relative error
+rest2 (<= 0.016 for k >= 21):  |Phi|/M(1,0) = 2.000000 (k = 11: 1.999997..2.000000).  With
+M(1,0) = (1/q) prod_{l=1}^{a} (2 sin(pi/2^l))^-1 prod_{e=0}^{s} (2 sin(pi 2^e/q))^-1
+           ~ G_a q^s / ((2 pi)^(s+1) 2^(s(s+1)/2)),  G_a = prod_{l<=a} (2 sin(pi/2^l))^-1,
+the component grows like 2^(s(s-1)/2 + a s) (e.g. k = 11, (4,6): |Phi| = 1.04e7).
+For a = 1, s >= 4: |Phi| = 4 sin(pi/(2D)) M(1,0) (1 + o(1)) (the two main vertices nearly cancel:
+the factor is cot(pi 2^s/q), 2^s/q = 1/2 + 1/(2D)); e.g. s = 24: 3.745e-7 M(1,0); the crude bound on
+all other structures is below 1/1.26 of it for s <= 25 (certify_a1.log).  This is the vertex-level counterpart of the
+near-cancellation 126: 0.233 + 9.024i against 0.227 - 9.095i at k = 8 (../periods3 8.3).
+For s = 2, 3 the rotation lemma fails (closing column count s - 3 <= 0): the rotation
+(u = 1, j = s - 1: theta = 2^(s-1)/D, chain at 1/D) is valid with a + 1 time orders per mirror,
+all of the same phase, and its modulus is sin(pi 2^s/q)/sin(pi 2/q) ~ 2^(s-1) times M(1,0):
+     s = 2:  |Phi|/M(1,0) = 4(a + 1) + o(1)      (a = 5..19: 23.99, 28.00, 32.00, ..., 80.00),
+     s = 3:  |Phi|/M(1,0) = 8a + 6 + o(1)        (a = 5..19: 45.93, 53.98, 61.99, ..., 150.0)
+(s = 2: the rotation has ratio -> 2 and 2(a+1) time orders (both mirrors), all in phase;
+s = 3: ratio -> 4, 2(a+1) time orders, minus the main family 2 M(1,0) of opposite phase:
+8(a+1) - 2).  These orders
+(3.2^(k-3), 7.2^(k-4)) are not needed for the period of T (Lean B_eq_L), but they are part of
+the full Fourier structure of c_0.
+Exact totals for k <= 12 (all vertices): classify.log.
+
+
+5. One free point
+-----------------
+For c_1(T(N, m+1)) the mixed orders q = 2^a(2^s - 1), a + s = m - 1, are carried by the
+codimension-m faces: a cycle + pendant chain structure on m of the points and one free point z
+(the same newness argument: the free point carries no tight row).  The face formula
+(../periods2 section 1) becomes: for every structure, every time order of the m structured
+points, every gap and every z-interval between the breakpoints (v, v/2, (1+v)/2, 2v, 2v-1), the
+valid cell (unique) is determined and its term (1/q) prod F_r(w_r) (character of the structured
+rows, Lemma 1.3) is weighted by the length of the interval (mixedface.py).  The free point can
+change the sides of the structured columns, so the weights are signed lengths per side pattern.
+Validation: (m, k) = (5, 6) against the exact quasi-polynomial of T(N,6) (../prefix5/
+components_6.json, Fourier coefficient of the exact order-q component of c_1):
+     q = 12:  -0.029468264858 + 0.123890400395i   (both)
+     q = 14:   0.059858838626 + 0.090092292718i   (both)
+Values (coefficient of e(-N/q) in c_1(T(N, m+1)), face1.log), all nonzero:
+     m = 6:  q = 24: -2.437899 + 0.216842i;  q = 28: -0.239764 + 0.239265i;  q = 30: 1.401638 - 0.292369i
+     m = 7:  q = 48: -0.488014 - 32.573887i;  56: -1.194203 - 8.515597i;  60: 2.742866 + 27.341339i;
+             62: -0.092050 + 0.302386i
+     m = 8:  q = 96: 917.593054 - 7.056370i;  112: 158.507546 - 9.537691i;  120: -797.692253 + 38.414511i;
+             124: 2.695644 + 2.619469i;  126: 0.130345 + 0.230451i
+Main structure with one free point (mainf1.py, mainf1.log): its contribution to c_1(T(N, m+1)),
+divided by the vertex-level main term Phi_main of Lemma 2.3 (same (s, a)), is
+     (s,a) = (4,2): 0.1066-0.0166i  (4,3): 0.3458+0.0186i  (4,4): 0.5595+0.0153i  (4,5): 0.8017+0.0065i
+             (5,2): 0.2939-0.0081i  (5,3): 0.5380+0.0088i  (5,4): 0.7706+0.0072i  (5,5): 1.0169+0.0030i
+             (6,2): 0.5178-0.0040i  (6,3): 0.7647+0.0043i  (6,4): 1.0062+0.0035i  (6,5): 1.2544+0.0015i
+             (7,2): 0.7569-0.0020i  (7,3): 1.0053+0.0021i
+i.e.  ~ (m - 7)/4 + (small, decreasing in s): the same leading weight (m - 7)/4 = vol(V_1) m + ...
+as the orbit vertex 1/D in Theorem D1 (../periods3 Lemma 2.1 and Proposition E: the time-free
+free point z in (3/4, 1)).  So for one free point the mixed main term behaves like the top one;
+an exact closed form (and the rest bound) is not derived here.
+(At m = 6, q = 30 = 2(2^4 - 1) the free point lifts the a = 1 cancellation of the vertex level:
+1.40 against 0.032 in c_0(T(N,6)).)  Closed forms in (a, s) for f >= 1 and a dominance argument
+with free points (the free point rescues rotations, as in ../periods2 section 6) are not
+attempted here; the per-coefficient law "period(c_(k-m)) = B(m) for k > m" stays open beyond
+the top orders of ../periods3.
+
+
+6. What remains open
+--------------------
+  * The inequality rest2(s, a) < 2 for k >= 28 (equivalently, with this note: the period law
+    period(T(N,k)) = B(k) for k >= 28).  Numerically the left side is <= 0.0022 at k = 27 and
+    decreasing geometrically.
+  * The a = 1 analogue (needed only for the constant term c_0 alone; D1 covers T).
+  * Mixed components with free points beyond one free point, and their nonvanishing for all m
+    (the per-coefficient law), and the two-cycle orders (93, 105, ...) in c_{k-9}, k > 9.
+
+
+7. Files
+--------
+  mixed.py S A           all valid cycle + pendant chain vertices for (S, A), their terms (exact
+                         cell, unique character), total coefficient of e(-N/q) in c_0
+  census.py S A          the same grouped by (u, j); modulus formula M(u, j) (asserted)
+  setcheck.py K          vertex sets vs Normaliz (K = 5..8; setcheck8.log)
+  classify.py KMAX       all valid vertices, checks of Lemmas 1.3, 1.4, 2.3, 2.4 (classify.log)
+  crude.py, r2top.py     rest2 and its largest terms
+  topcheck.py S A TAU    exact top + crude tail for one (S, A) (prints the top structures)
+  certify.py KMAX KMIN [AMIN], certify_a1.py SMIN SMAX     Theorem F (certify_*.log)
+  crudetop.py            largest terms of the crude tail before the rotation lemma
+  mixedface.py S A F     one free point (F = 1) face formula; face1.sh -> face1.log
+  ../../Folds/PeriodLaw2.lean   B_eq_L, B_eq_L0, identities of Lemma 2.3, weights_sum
