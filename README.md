@@ -148,6 +148,7 @@ change. There is no `sorry` and no
 | `LiveK` | liveness for **any prefix length k**: every subset of the middle third is co-reachable (`coReach_middle`); compact, dyadic, sparse and anchored families (`CovK`); every valid prefix whose set is in them is live; halving prefixes are valid and live |
 | `Ek` (M) | **E_k is false for k ≥ 5**: anchored dead families B_a (`not_coReach_anchor`; dead (2a+1)-sets inside [a, N−a]); end-panel lemmas; counting corollary `card_dead_le` (conditional) and `card_dead_pairs_le_64` |
 | `EkStar` (M) | the two-sided dead family S_a (`not_coReach_sSet`, all a ≥ 2, N ≥ 6a); E*_2 for all N; the radius c_k is optimal; **at most 2(N−1) dead pairs for every N** (`card_dead_pairs_le`); conditional O(N^{k−1}) dead k-sets |
+| `SymRatio2` (M) | 3-AP-free ratio mechanism: unlifting lemma, 9-state automaton eigen-identities (eigenvalue 1/4), fair-bit closed form (exactly geometric, ratio 1/4), and the single-pair 1/3 lemma (zero when 3 ∣ L) explaining A(x) = 0 for 3 ∣ x |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -257,6 +258,7 @@ change. There is no `sorry` and no
 | `experiments/livek/PROOFS.txt` | general-k liveness families, Conjecture E_k (k-sets avoiding 1 and N are co-reachable; one exception), dead k-prefixes ~ Θ(N^{k−2}) |
 | `experiments/ek/PROOFS.txt` | E_k counterexamples, the revised conjecture E*_k (radius c_k = max(1,⌊(k−1)/2⌋), exception S_{k/2} at N = 3k), checks for k ≤ 8 |
 | `experiments/ekstar/PROOFS.txt` | S_a deadness proof, E*_k checks (k = 3 to N = 100, k = 4 to 64, k = 5, 6 to 48) |
+| `experiments/symratio2/PROOFS.txt` | why the ratio defect contracts by exactly 4 and vanishes for 3 ∣ x: the automaton, the fair-bit model and its amplitude; R/R′ still open |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
