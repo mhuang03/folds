@@ -138,6 +138,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `Live3r` (M) | near copies (`coReach_nearEmb`); {1,2k,N} for odd N and {1,2,c} for N ≡ 1 (mod 4), c odd, settled for all N; new decidable transfer rules; reduction of 3-prefix liveness to `Residual3R` (only {1,2,c}-type sets remain: 86 triples for N = 51..70) |
 | `Live3s`, `Live3Final` (M) | moved-panel copies settle four more {1,2,c} families for all N; `extends3_iff_of_residual3T`: 3-prefix liveness for all N ≠ 7 follows from `Residual3T` (N > 50) |
 | `Live3t` (M) | closed-form {1,3,N} (N ≡ 1 mod 4), {1,b,N} for all b (N ≡ 2 mod 4), {1,2,N} (N ≡ 4 mod 8); reduction to `Residual3U` |
+| `LiveK` | liveness for **any prefix length k**: every subset of the middle third is co-reachable (`coReach_middle`); compact, dyadic, sparse and anchored families (`CovK`); every valid prefix whose set is in them is live; halving prefixes are valid and live |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
 
 ## Conjectures and open problems
@@ -244,6 +245,7 @@ Build with `lake exe cache get && lake build`. There is no `sorry` and no
 | `experiments/fastalg/NOTES.txt` | no fundamentally faster algorithm for a(N): any time-ordered automaton needs one state per live set (proven); the exact bisimulation quotient only saves a constant factor; the trace lemma and normal form (≈16 GB for N = 39, not built) |
 | `experiments/live3s/PROOFS.txt` | {1,2,c} families, why the halving chain alone cannot finish, and what remains of Residual3T |
 | `experiments/live3t/PROOFS.txt` | 3-prefix residual computed to N = 150 (only {1,2,c}-type sets remain); why the copy-size p is not omega-friendly |
+| `experiments/livek/PROOFS.txt` | general-k liveness families, Conjecture E_k (k-sets avoiding 1 and N are co-reachable; one exception), dead k-prefixes ~ Θ(N^{k−2}) |
 | `docs/LITERATURE.md` | literature and OEIS survey |
 
 ## Generating valid sequences
