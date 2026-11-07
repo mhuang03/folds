@@ -1,0 +1,142 @@
+Conjecture E*_3: every 3-subset of [2, N-1] is co-reachable
+==========================================================
+
+Notation as in experiments/ekstar, live3p, live3q, live3r (valid steps, I_X(m), CoReach,
+Theorem G, F3S, Good3, copies copyF/copyOK, Theorem 2 = a valid step may be added to the
+background).  "Lean" = Folds/EkStar3.lean (imports Folds.EkStar and Folds.Live3q; listed in
+FoldsCerts.lean; no sorry, no native_decide, kernel checks by `decide +kernel` only).
+
+STATUS
+  * NOT PROVEN for all N.  E*_3 for all N is reduced (Lean) to an explicit residual statement
+    `ResidualE N` for N > 40, and that residual is NOT small: it has Theta(N^2) canonical
+    triples for every N (section 1), in three 2-parameter families with no closed-form
+    construction found (sections 1, 3).
+  * PROVEN (Lean), for every N <= 40:  every 3-subset of [2, N-1] is co-reachable
+        e3_le_40          : forall N, N <= 40 -> E3 N
+        ekStar_three_le_40: N <= 40 -> D ⊆ Icc 2 (N-1) -> D.card = 3 -> CoReach N D
+    (previously only numerical, ek.c to N = 100).
+  * PROVEN (Lean), the reduction for all N:
+        ekStar_three_of_residual : (forall N, 40 < N -> ResidualE N) -> EkStar.EkStarConj 3
+        e3_of_residualE          : base + residual above it -> forall N, E3 N
+        ekStarConj_three_of, e3_of_ekStarConj_three : (forall N, E3 N) <-> EkStarConj 3
+  * PROVEN (Lean): interior triples are never Dead3 (`dead3B_inner`), so Good3 N settles every
+    VALID interior triple (`coReach_of_good3_inner`); E*_3 for valid triples, N <= 50
+    (`e3_valid_le_50`).  The INVALID triples (no ordering is a valid 3-prefix) were never in
+    the scope of the 3-prefix programme (Live3p..Live3t), and they are most of the work here.
+  * NUMERICAL (section 1): the residual of the rules CoveredES for N = 5..150 (resid.txt).
+
+KEY STRUCTURAL FINDINGS
+  (a) E*_3 does not close on itself under the window copies.  Every copy of ratio >= 2 maps
+      1 to 1 or 2, so a triple {2, b, c} is (almost always) the image of a triple {1, j, l}
+      containing the end panel of the smaller strip, which is outside E*_3; such preimages are
+      covered only by Good3 p (proven for p <= 50, open beyond: its residual is the {1, 2, c}
+      family of live3r/live3t) or by Theorem G.  With the induction hypothesis restricted to
+      interior preimages only (ONLYINT=1 in cov.c), the residual roughly doubles (N = 60: 1436
+      instead of 673).
+  (b) For invalid triples Good3 is useless and transfers from VALID preimages never apply
+      (window copies preserve validity; hintsE.c with Live3q's trB finds T = 0 for every N).
+      Transfers of invalid triples need the E*_3 hypothesis itself (rule trEB).
+  (c) Adjacent pairs escape every window copy: all copies of Live3q have ratio >= 2 (2p <= N
+      or 2p <= N + 1), so {x, x+1} is an image only at special places.  The two largest
+      residual families contain an adjacent pair.
+  (d) E*_3 contains (interior) Conjecture C (experiments/ekstar section 3(a)), so a proof for
+      all N is at least as deep as ThinCover, unless it can use Conjecture C as a black box;
+      no reduction of triples to pairs was found (the pair theorem gives no control over the
+      first step of an ordering).
+
+
+1. The residual of the rules (cov.c; resid.txt; classify.py)
+-----------------------------------------------------------
+Rules (exactly Lean `CoveredES`, for the triple or its mirror image):
+   G  F3S (Theorem G for the triple; cov.c uses the separation form, equivalent by Live3p
+      Theorem 1);
+   S  Theorem G after <= 2 explicit valid steps (stepsB);
+   T  trEB: the triple is the image under a copy of Live3q (Z(N,p), right-aligned Beatty,
+      residue classes q <= 12, multiples, swapped Beatty, chiY) of a triple (i, j, l) of [p],
+      p < N, that is interior in [p] (induction hypothesis), or valid, non-dead, p <= 50,
+      p != 7 (good3_le_50), or F3S in [p].
+Canonical interior triples (a + c <= N + 1) not settled:
+      N   total    G      T      S    resid  (fraction)
+     10     34     24      3      4      3
+     20    444    213    123     72     36   0.081
+     40   4389   1698   2048    377    266   0.061
+     60  15834   5680   8703    778    673   0.042
+    100  ~1.1e5                    ~   1890
+    150  ~2.7e5                    ~   4791   0.017
+(full table in resid.txt; resid = 0 only for N <= 9, and grows like N^2 / 5.)  Theorem G after
+<= 4 steps instead of 2 roughly halves it (N = 60: 307) without changing its shape.
+Shape of the residual (classify.py), N = 150: 4791 triples =
+   top-adjacent {a, b, b+1}:      1425   (a <= ~N/4, b from ~N/2 + 3 to N - a; every a)
+   bottom-adjacent {a, a+1, c}:   1145   (c from ~N/2 to N - a; even a dense, odd a above 0.8N)
+   a in {2, 3}, b, c far right:   2151   (e.g. {2, 3, c} for c > 3N/4, {2, b, c} b, c > N/2)
+   a in 4..6:                       21
+   other (a = 7 only so far):       49
+The same proportions hold for every N = 50..150.  So the residual is three 2-parameter
+families, each the size of a whole corner family of Conjecture C.
+
+
+2. The endpoint lemma and strip extensions (exact.c, exact2.c)
+---------------------------------------------------------------
+* coReach_of_insert (Ek): CoReach(D + w), w valid on D  ==>  CoReach D.  With w = 1 or N
+  (reach 0, always valid) this is the "endpoint reserve": D is co-reachable if D + 1 (or
+  D + N, or D + 1 + N) is.  This is already a special case of rule S (a step at 1 or N), so
+  it adds nothing to the residual of section 1; adding 1 or N never helps Theorem G for the
+  residual families (it only increases the left-pull near the left end).
+* Strip extension.  In [N] a panel m of the right half has the arms of [N-1] plus the panel
+  2m - N on the left and N on the right, so a step of an [N-1]-ordering stays valid in [N]
+  iff [2m - N placed] = [N placed].  Extending at both ends ([N-2] shifted into [2, N-1], with
+  1 and N added) the condition is: x and its partner p(x) = 2x mod (N'+1) (the panel just
+  outside the window) are on the same side of the time at which 1 (left half) or N (right
+  half) is placed.  p is the doubling permutation mod N'+1, whose cycles are long, and no
+  ordering of [N'] is under control, so no lemma follows.
+* Numerically (exact DP over all subsets, N <= 20): "CoReach_{N-1}(S) ==> CoReach_N(S)" fails
+  for general S already for 4-sets, also interior ones ({2,6,7,11}: co-reachable in [11],
+  dead in [12] -- it is S_2; {2,3,4,5,9} at N = 10); for 3-sets it fails only for the dead
+  corner {1, 2, N-1} (odd N), i.e. it holds for triples only because E*_3 holds.
+
+
+3. Other attempts
+-----------------
+* Greedy (greedy.c, greedy2.c, gdepth.c).  The nearest-to-centre greedy with the middle centre
+  completes ~90% of the interior triples; with the best centre c2 in [2, 2N] it completes all
+  but a few (N <= 60: only {2,3,N-2}, {2,3,N-1}, {2,N-2,N-1}; N <= 100: 207 sets, of the
+  shapes {a, b, b+1} with b near N and {a, a+1, c}, {2,3,c} with c near N).  But the number of
+  greedy steps before Theorem G holds grows with N (max 30 at N = 60), so the greedy prefix is
+  not a bounded closed-form step list.
+* Near copies (Live3r): an adjacent pair {b, b+1} is the image of an adjacent pair under the
+  odd class with one panel moved by +1; the extra irregular panel (y0+1)/2 then has to lie in
+  the preimage, which holds only on a line of parameters.  Not pursued.
+
+
+4. Lean (Folds/EkStar3.lean)
+----------------------------
+  E3 N := forall a b c, 2 <= a -> a < b -> b < c -> c + 1 <= N -> CoReach N {a, b, c}
+  sort3, coReach_of_e3, ekStarConj_three_of, e3_of_ekStarConj_three
+  dead3B_inner, coReach_of_good3_inner, e3_valid_le_50
+  preOK, trEB, coReach_of_preOK, coReach_of_trEB        transfers inside the E*_3 induction
+  CoveredE, CoveredES, coReach_of_coveredE(S), ResidualE, e3_of_residualE
+  hintBE, hintOKE (Live3q.Hint / decH format, .tr read as trEB), needE (canonical, not valid
+  unless N = 7, not F3S), neededE, all2E, chkE, CovBE, CovAE, CovQE, e3_of_covE
+  che_N_a_k / cove_N_a / cove_N  certificates, N <= 40 (8037 hints: 3664 transfers, 3235 Theorem G
+                                 after <= 3 steps, 1138 witness orderings)
+  e3_le_40, ekStar_three_le_40, ekStar_three_of_residual
+Build: 355 s, peak 2.5 GB with lean -M 3000 (2.0 GB is the imported environment).
+The certificates for N = 31..40 alone cost ~4 min; N = 41..50 would add ~20 min, so the base
+was stopped at 40 (Good3 is available to 50, so going further is mechanical).
+
+
+5. Programs (C, 1 core; binaries in bin/, ignored)
+--------------------------------------------------
+  cov.c       coverage by CoveredES (G, T, S <= K) and the residual list; env ONLYINT=1:
+              interior preimages only; GOOD3ALL=1: Good3 assumed for every p
+  gk.c        Theorem G after <= K steps only;  valid.py  valid/invalid split of a residual
+  hintsE.c    hints for Lean (from live3t/hints256.c: interior canonical triples, invalid
+              unless N = 7, not F3S; transfers with the preOK condition)
+  mkE.py      packs bin/hE/<N>.txt into chkE certificates; final.py M assembles
+              Folds/EkStar3.lean from core.lean (python3 final.py 40 > ../../Folds/EkStar3.lean,
+              after: for N in 1..40: bin/hintsE N 3 > bin/hE/N.txt; touch bin/hE/0.txt)
+  dfs.c       a background ordering for one set (exploration)
+  exact.c, exact2.c   exact co-reachability of all subsets, N <= 22; strip-extension tests
+  greedy.c, greedy2.c, gdepth.c   the nearest-to-centre greedy (section 3)
+  classify.py, resid.txt          section 1
+  lean.sh, memrun.c               compile one file against this worktree's .lake, time + peak RSS
