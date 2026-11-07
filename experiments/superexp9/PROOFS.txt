@@ -98,8 +98,8 @@ rec_B12_K16_nosig.out    without the sig o pi move: 117 / 1984 (sig is essential
                          goodL_oddR constraints live on the sig side).
 rec_B12_K16_nopalin.out  without palindromic chains: 1223 / 1984 (nu = 1 at odd n then has
                          no reduction).
-b41.out                  + exhaustive search for nu = +-1 at odd n <= 41: 1630 / 1984; rho = 3
-                         still fails for odd q >= 65 (cause: the global doubling children).
+b41.out                  + exhaustive search for nu = +-1 at odd n <= 41: 1630 / 1984 (36 node-budget outs); rho = 3
+                         still fails for many odd q from 65 on (cause: the global doubling children).
 rho9_B16.out             (q, 9), q = 15 mod 16, 63 <= q <= 255, base n <= 16: only q = 63
                          solved (there the children are already base cases).
 excpairs.py    the exceptional pairs of section 1.     failset.py   summary of a rec output.
