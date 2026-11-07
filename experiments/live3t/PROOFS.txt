@@ -1,4 +1,4 @@
-Live 3-prefixes, part 5: the residual to N = 200, and parametric families beyond {1, 2, c}
+Live 3-prefixes, part 5: the residual to N = 150, and parametric families beyond {1, 2, c}
 =======================================================================================
 
 Notation as in experiments/live3p, live3q, live3r, live3s PROOFS.txt (valid steps, CoReach,
@@ -17,10 +17,12 @@ STATUS
     Beatty copies Z(N, p) with p depending irregularly on b (section 3).  A parametric
     Residual3T would need a parametric description of that whole residual, i.e. a closed-form
     analysis of the Live3q rules for every N; this is not attempted.  What is done:
-      - numerically: the residual of Covered3T for every N <= 200 (section 1);
-      - formally: closed-form proofs for all N of the two largest families beyond {1, 2, c}
-        that Live3r could only settle N by N, including the priority family {1, 3, N}.
-  * NUMERICAL (section 1): for N = 51..200 the residual of Covered3T consists ONLY of
+      - numerically: the residual of Covered3T for every N = 51..150 and N = 160, 175, 190
+        (section 1);
+      - formally: closed-form proofs for all N of the largest corner family {1, b, N} beyond
+        {1, 2, c} (for N = 2 mod 4), of the priority family {1, 3, N} (N = 1 mod 4), and of
+        {1, 2, N} for N = 4 mod 8 -- all of which Live3r could only settle N by N.
+  * NUMERICAL (section 1): for N = 51..150, 160, 175, 190 the residual of Covered3T consists ONLY of
     triples {1, 2, c} (and, for N = 64 and N = 128, the mirror {1, N - 1, N} of {1, 2, N}).
     The case {1, 3, 73} reported by live3s section 3' was an artefact: resid3t.py ran rcov
     without YPSI=1, i.e. without the rule nearTrP that Covered3R contains; with it,
@@ -51,8 +53,8 @@ STATUS
     complement rule), before the Lean proofs, which are for all N.
 
 
-1. The residual of Covered3T for N = 51..200 (resid.py, resid.txt)
------------------------------------------------------------------
+1. The residual of Covered3T for N = 51..150, 160, 175, 190 (resid.py, resid.txt)
+--------------------------------------------------------------------------------
 Pipeline per N: hints256 (the 256-bit version of live3r/hints128.c, witnesses off: NOWIT=1)
 gives the residual of Live3q's rules (no F3S, no transfer, no Theorem G after <= 2 steps, for
 the triple or its mirror; canonical orientation a + c <= N + 1); the {1, 2, c} in OneTwo are
@@ -60,12 +62,24 @@ dropped; rcov256 (256-bit live3r/rcov.c; base limit raised from 2000 to 12000, w
 128-bit version silently hit from N ~ 120 on) with YPSI=1 (nearTrP) and <= 4 steps for the
 image searches the Live3r rules.  Everything rcov256 finds is a hint of the Lean rule nearTrB /
 nearTrP / chiXB, so the lists below are UPPER bounds of the residual of Covered3T (rcov's
-search space is a subset of what Covered3R allows).  For N >= 141 the {1, 2, c} triples were
-searched with <= 2 image steps only (K12=2, for time), so those lines may over-report.
+search space is a subset of what Covered3R allows).  For time, the {1, 2, c} triples were
+searched with <= 2 image steps only for N = 129..150 (K12=2) and with none for N = 160, 175,
+190 (K12=0), so the {1, 2, c} part of those lines over-reports; in particular the long runs
+of c = 2 mod 4 for N = 1 mod 4, N >= 129, are the band of section 4(d), which needs 4 steps.
+The non-{1, 2, c} part was always searched with <= 4 steps.
 RESULT (resid.txt has every N):
   every triple left is {1, 2, c} except {1, 63, 64} (N = 64) and {1, 127, 128} (N = 128),
-  the mirror images of {1, 2, N};
-@@TABLE@@
+  the mirror images of {1, 2, N} (powers of 2: the copy Z(N, N/2 + 2^(v-1)) degenerates).
+  Live3q's residual has 116..531 canonical triples per N; the {1, 2, c} left (K = 4 range,
+  N <= 128), by class of N:
+     N = 0 mod 4:  none, except c = N for N = 64, 128;
+     N = 2 mod 4:  c = N - 1 only (every N);
+     N = 1 mod 4:  c = N - 2, N - 3 always, plus 0..9 even c >= ~0.75 N (mostly 2 mod 4),
+                   e.g. N = 97: 78 82 86 88 90 92 94 95; N = 125: 102 112 114 122 123;
+     N = 3 mod 4:  c = N - 3, N - 2 always; for some N (59, 67, 71, 79, 83, 103, 107, 127, 131,
+                   139, ...) also every c = 3 mod 4 from ~0.5 N (up to 16 values), e.g.
+                   N = 127: 67 71 75 79 87 91 ... 123 124 125; for others (63, 75, 87, 91, 95,
+                   99, 111, 115, 119, 123, ...) only N - 3, N - 2.
 
 
 2. The two closed forms
@@ -125,7 +139,7 @@ together with chiX), the rest still rests on the per-N hint search.
 
 4. {1, 2, c}: what was tried
 ---------------------------
-The {1, 2, c} left for N <= 200 follow the patterns of live3s section 2:
+The {1, 2, c} left for N <= 150 follow the patterns of live3s section 2:
    N = 0 mod 4: nothing, except c = N for N = 64, 128 (the copy Z(N, N/2 + 2^(v-1)),
                 v = v_2(N), that settles {1, 2, N} otherwise would be [N] itself);
    N = 2 mod 4: c = N - 1;
@@ -164,7 +178,7 @@ Not formalized; the dense-top-structure lemma of live3s section 3(c) remains the
 
 5. Files
 --------
-  resid.py, resid.txt   residual of Covered3T for N = 51..200 (section 1); bin/ (ignored) holds
+  resid.py, resid.txt   residual of Covered3T for N = 51..150, 160, 175, 190 (section 1); bin/ (ignored) holds
                         the binaries and the per-N lists l<N>.txt and hints c<N>.txt
   hints256.c, rcov256.c 256-bit versions of live3r/hints128.c and rcov.c (clang -std=c2x,
                         unsigned _BitInt(256)); build: clang -std=c2x -O2 -o bin/X X.c
