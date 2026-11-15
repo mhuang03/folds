@@ -1,0 +1,14 @@
+N 5 mode leftx
+total 80
+signed 0
+T 1 5 18 46 80 80
+reach 1 5 10 10 5 1
+alive 1 5 10 10 5 1
+deadsets 0 0 0 0 0 0
+deadprefixes 0 0 0 0 0 0
+moves 400 296 216 148 80
+pos 1 12 18 20 18 12
+pos 2 24 12 8 12 24
+pos 3 12 18 20 18 12
+pos 4 16 16 16 16 16
+pos 5 16 16 16 16 16

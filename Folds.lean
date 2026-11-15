@@ -65,3 +65,4 @@ import Folds.HypH
 import Folds.SuperExp8
 import Folds.SuperExp10
 import Folds.XdTraces
+import Folds.XdOlympiad

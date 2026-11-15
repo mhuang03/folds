@@ -1,0 +1,15 @@
+N 6 mode del1
+total 72
+signed 0
+T 1 6 18 36 66 72 72
+reach 1 6 12 16 13 6 1
+alive 1 6 10 14 10 6 1
+deadsets 0 0 1 0 3 0 0
+deadprefixes 0 0 2 0 14 0 0
+moves 432 216 182 168 112 72
+pos 1 5 15 16 16 15 5
+pos 2 13 18 5 5 18 13
+pos 3 20 5 11 11 5 20
+pos 4 13 0 23 23 0 13
+pos 5 11 18 7 7 18 11
+pos 6 10 16 10 10 16 10

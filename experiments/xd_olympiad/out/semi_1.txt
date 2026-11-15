@@ -1,0 +1,10 @@
+N 1 mode semi
+total 1
+signed 1
+T 1 1
+reach 1 1
+alive 1 1
+deadsets 0 0
+deadprefixes 0 0
+moves 1
+pos 1 1

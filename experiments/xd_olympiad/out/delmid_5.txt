@@ -1,0 +1,14 @@
+N 5 mode delmid
+total 8
+signed 0
+T 1 5 10 14 8 8
+reach 1 5 7 5 4 1
+alive 1 4 2 2 4 1
+deadsets 0 0 0 3 0 0
+deadprefixes 0 0 0 10 0 0
+moves 40 16 16 16 8
+pos 1 2 2 0 2 2
+pos 2 2 2 0 2 2
+pos 3 0 0 8 0 0
+pos 4 2 2 0 2 2
+pos 5 2 2 0 2 2
