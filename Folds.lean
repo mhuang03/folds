@@ -70,3 +70,4 @@ import Folds.XdConstTerm
 import Folds.XdRank
 import Folds.XdWeak
 import Folds.XdSymFun
+import Folds.XdEntropy

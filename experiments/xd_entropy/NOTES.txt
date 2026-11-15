@@ -1,0 +1,181 @@
+ENTROPY METHOD AND PERMANENT-TYPE BOUNDS FOR a(N)                    (experiments/xd_entropy/)
+=========================================================================================
+Labels: [Lean] = proven in Folds/XdEntropy.lean (no sorry, no native_decide; axioms propext,
+Classical.choice, Quot.sound).  [paper] = proved here, not formalised.  [sketch] = argument
+written down but neither formalised nor checked numerically.  [data N<=..] = computed.
+[conjecture].  Notation: t_m = time of panel m, r = reach, W_m = window of m (2r+1 panels),
+S_k = first k panels, f_k = N-k, V_k = number of valid moves at S_k, bad_k = f_k - V_k.
+
+SUMMARY
+-------
+* Target "a(N) <= N! e^{-cN} with c > 0.1255": NOT reached for even N.  Reached for nothing
+  beyond a constant; e^{-omega(N)} remains open.
+* New rigorous bound, valid for EVERY N [Lean: semiCount_le_kick]:
+        a(N) <= c! c^(N-c)   whenever (N-c)(N-c+1) <= E(N),
+  E(N) = #{x<y : y-x <= min(reach x, reach y)} ~ N^2/6 (pairs lying in each other's windows).
+  This is N! exp(-(0.11642+o(1))N), 0.11642 = -ln(c0)-1+c0, c0 = 1-1/sqrt(6).
+  For ODD N it improves the known constant 0.0878 to 0.1164 (0.1168 at N=4097 when combined
+  with the MaxMoves2 caps through semiCount_le_budget).  For EVEN N it is weaker than the
+  known 0.1255 and combining does not help (section 4).
+* The panel-by-panel entropy method proposed in the brief (reveal t_m after its window, count
+  admissible ranks) caps out: at most floor(log2 N)+1 panels per half can be revealed after
+  their own window [Lean], so it yields at most exp(-Theta(log^2 N)) (section 2).
+
+1. ADMISSIBLE RANKS (the random-walk lemma)
+-------------------------------------------
+Reveal t_m after the other 2r panels of W_m.  Sort those by time and write L/R for the arm.
+The rank j of t_m among them (j = 0..2r) is admissible iff the first j letters contain as
+many L as R, i.e. iff the bridge L=+1, R=-1 of length 2r is at 0 at time j.
+ [Lean] zero_mem_admissible, top_mem_admissible: ranks 0 and 2r are always admissible.
+ [Lean] card_admissible_le: at most r+1 of the 2r+1 ranks (zeros sit at even times; attained
+        by LRLR...).  So the worst case saves only a factor ~2 per panel.
+ [Lean] card_wallis_middle: summed over all (2r)! arrangements the number of admissible ranks
+        is 4^r (r!)^2, i.e. the mean is 4^r / C(2r,r) = sqrt(pi r)(1+o(1)) (not c sqrt(r) with
+        another constant: it is exactly the Wallis factor times 2r+1).  This is the identity
+        sum_j C(2j,j) C(2r-2j,r-j) = 4^r (Wallis.sum_centralBinom_antidiagonal).
+ Remark [paper].  When the revealed set R contains W_m \ {m} and more, the admissible VALUES
+ are the unrevealed values lying in a zero-gap of the bridge; when W_m \ {j} is revealed for
+ some j != m (and t_m is revealed), C_m forces the single bit [t_j < t_m].  These two are the
+ only inferences from a completed window.
+
+2. THE CAP OF "WINDOW-LAST" ORDERS
+----------------------------------
+ [Lean] last_in_window_double: for ANY revelation order, if two left-half panels m < m' are
+        both revealed after all other panels of their windows, then m' >= 2m.  (m lies in
+        W_{m'} = [1,2m'-1]; if m' <= 2m-1 then m' lies in W_m.)  By mirror symmetry the same
+        holds in the right half.  Hence at most floor(log2 N)+1 panels per half are
+        "last in their own window".
+ Consequence [paper].  The admissible-rank lemma can be applied to O(log N) panels only; the
+ centre-out, ends-in and random orders make no difference.  For the dyadic chain m = 2^j the
+ windows are pairwise compatible, the constraints are exactly independent
+ (Folds/Independence.lean) and the bound is the dyadic Wallis product
+ N! prod_j w(2^j) = N! exp(-Theta(log^2 N)), already known (semiCount_mul_le_dyadic).
+ So this route cannot give even e^{-cN}.
+ [Lean] card_windowsThrough_ge: every panel lies in >= floor(N/2) windows.  Hence the panel
+        revealed last completes >= N/2 windows simultaneously, and at most ceil(N/2)+1 windows
+        can be completed at pairwise different moments in any order.
+ [paper] In an order where W_m is completed by j < m (outer arm), j also completes every
+        window [1,2m'-1] with j <= 2m'-1 <= 2m-1: such completions come in clumps of size
+        >= m/2, and by the same doubling argument only O(log N) panels can complete a window
+        from the outer arm or the centre.  All useful completions are by an inner-arm panel
+        close to 2m-1, i.e. the order is essentially left-to-right on the left half.
+ [paper] Uniformly random order (Linial-Luria style) is bad here for the same reason: j
+        completes some left window iff it is a record, probability ~1/j, and then it
+        completes a whole clump.  Expected saving O(log^2 N) in total.
+ [sketch] Left-to-right order.  At j = 2m-1 the constraint C_m forces [t_j < t_m]; the
+        number of admissible relative ranks is 2A_m (forced below) or 2(r-A_m) (forced
+        above), A_m = number of left-arm panels placed before m.  The pointwise bound
+        a(N) <= max_t prod_j N_j(t) then saves a factor only when the forced side is not
+        the large side.  A clique/pigeonhole argument on the blocks (M,2M] (same-type panels
+        of a block see each other) gives a saving >= ~0.03 N: weaker than the known bounds.
+        One forced bit per panel also means that no order of this kind can save more than
+        O(N) pointwise.  Getting more would need the distribution of [t_j < t_m] under the
+        uniform valid measure, which is the original problem.
+ Why Bregman/Radhakrishnan does not transfer [paper]: there the number of choices at the
+ reveal time is uniformly distributed over the random order for EVERY fixed matching.  Here
+ the number of admissible ranks (zeros of the bridge of m) depends on the sequence itself,
+ between 1.. and r+1, and no symmetrisation makes it sequence-independent; an adversarial
+ (low-discrepancy) sequence has many zeros.  Linial-Luria works because every alternative is
+ killed by a fixed number of revealed elements; here an alternative value v for t_j is
+ killed only by panels m with t_m between t_j and v whose windows are complete, a
+ sequence-dependent set.
+
+3. THE KICK BUDGET (a time-averaged parity bound)                                   [Lean]
+---------------------------------------------------------------------------------------
+Time order.  Path form of the tree bound (PathLemma.lean): a(N) <= max over valid sequences
+of prod_k V_k.  Instead of bounding each V_k by a per-state maximum, bound the TOTAL
+deficiency sum_k bad_k along the path and use AM-GM.
+ (K1) kicked_not_both, kicked_card_add: when x = a_k is placed, every free panel m with
+      x in W_m changes the parity of |S cap W_m|; a valid move needs an even count
+      (window_count_even), so m is invalid before or after the step:
+            bad_{k-1} + bad_k >= c_k := #{m free after step k : a_k in W_m}.
+ (K2) card_mutualPairs_le_sum_kicked: sum_k c_k = #{(x,m): x in W_m, t_x < t_m} >= E(N), since
+      a pair of panels lying in each other's windows is counted in one of the two orders.
+ (K3) sum_moves_le:  E(N) + 2 sum_k V_k <= 2 sum_k (N-k), i.e. sum_k bad_k >= E(N)/2.
+ (K4) pathProd_le_of_budget (weighted AM-GM, via x <= e^{x-1}): if V_k <= B_k <= N-k and
+      2 sum (B_k - c)^+ + 2 sum (N-k-B_k) <= E(N) then prod V_k <= prod min(B_k, c).
+ semiCount_le_budget: the resulting bound for a(N) with arbitrary per-state caps B.
+ semiCount_le_kick:   B_k = N-k:  a(N) <= prod_{k<N} min(N-k, c) = c! c^(N-c)
+                      whenever 2 sum_{k<N} (N-k-c)^+ = (N-c)(N-c+1) <= E(N).
+ semiCount_ten_le:    instance N = 10 (E = 12, c = 7): a(10) <= 1728720.
+ [data N<=10] kick_check.py: (K1), (K2) and the final bound hold for every valid sequence.
+ [data] kick_check.py, budget_const.py: E(N)/N^2 = .1589, .1647, .1662, .1665 at N = 64, 256,
+        1024, 4096 (limit 1/6); saving/N of the kick bound: .1086, .1134, .1153, .1163
+        (limit 0.11642).
+
+4. COMBINATION WITH THE KNOWN CAPS, AND WHY EVEN N DOES NOT IMPROVE     [data, budget_const.py]
+---------------------------------------------------------------------------------------
+With B = the MaxMoves2 caps (parity at odd levels, 2-adic bound with size term at even ones):
+      N     caps only   kick only   caps + kick
+     1024    0.1256      0.1153      0.1256
+     1025    0.0878      0.1157      0.1161
+     4096    0.1255      0.1163      0.1255
+     4097    0.0878      0.1162      0.1168
+ Even N: the caps already force sum bad_k = 0.512 E(N) > E(N)/2, so the budget is not
+ binding: no gain.  Reason: (K1) is the path-wise form of the same parity fact that gives
+ V <= N/2 at odd levels, and an adversary may pay the kick budget with exactly the panels
+ that the 2-adic caps forbid.  Odd N: the caps force only 0.387 E(N), the budget binds.
+ NEGATIVE: c > 0.1255 for even N was not obtained.
+
+5. HOW MUCH ROOM IS LEFT IN THE BUDGET                               [data, minpath.c, exact DP]
+---------------------------------------------------------------------------------------
+Minimum over all valid sequences (subset DP), compared with the proven bounds:
+      N                       8     12     16     20     22     23     24
+  E(N)                        7     18     35     57     70     77     84
+  min sum c_k                10     22     44     70     86     94    102
+  min sum odd_k               6     13     28     44     54     56     63
+  min sum bad_k               6     17     34     57     71     78     85
+  min sum c_k  / E          1.43   1.22   1.26   1.23   1.23   1.22   1.21
+  min sum odd_k / (E/2)     1.71   1.44   1.60   1.54   1.54   1.45   1.50
+  min sum bad_k / (E/2)     1.71   1.89   1.94   2.00   2.03   2.03   2.02
+(odd_k = number of free panels with odd window count; bad_k >= odd_k >= ... >= E/2 is the
+proven chain.  The three minima are attained by different sequences.)
+ * (K2) has about 21% slack: validity (balance of the two arms) forces kicks between panels
+   that do not see each other mutually.
+ * (K1) has more: sum odd_k is ~1.5 E/2, and sum bad_k is ~2.0 E/2 on this range, i.e.
+   min sum bad_k ~ E(N) ([data N<=24]; in units of N^2 this is .148 at N = 24 and rising
+   with E(N)/N^2 -> 1/6).
+ A budget D = delta N^2 gives saving (-ln c - 1 + c) N with c = 1 - sqrt(2 delta):
+   delta = 1/12 (proven): 0.116;  0.0886: 0.1255 (break-even with the even-N caps);
+   delta = 1/8 (ratio 1.5): 0.193;  delta = 1/6 (ratio 2.0): 0.284.
+ [conjecture, data N<=24] sum_k bad_k >= E(N) (1-o(1)) for every valid sequence; it would give
+   a(N) <= N! e^{-0.28 N} for all N.  Even "ratio >= 1.07" would beat 0.1255 for even N.
+   (If the Path Lemma holds, sum bad_k / N^2 tends to 1/2.)
+ Where the slack in (K1) is [paper].  Exactly, sum_k odd_k = (1/2) sum_k c_k + U, where U counts
+ pairs (k, m) with m free, not kicked at step k and odd (an "odd gap" of m).  U = 0 would need
+ the window panels of every m to be placed in consecutive pairs.  In block coordinates
+ (blocks {2i,2i+1}, N even) the window parity of m is a prefix sum of block parities, and after
+ an odd step in block b the valid next moves are the left panels <= b and the right panels
+ > b + N/2: the block-mate 2b+1 is never among them.  So kicks cannot be paired by filling
+ blocks.  Turning this into a proof of U >= eta N^2 was not achieved; it is the concrete open
+ step that would give c > 0.1255 for every N.
+ [sketch] The linear relaxation of (K2) with the balance constraints but without
+ transitivity of the time order has value E(N), so an improvement of (K2) must use
+ transitivity.
+
+6. NOT DONE / NEGATIVE
+----------------------
+ * Exact conditional entropies H(t_m | revealed) by enumeration for several orders (item 1 of
+   the brief) were not computed; section 2 shows which orders can matter (only essentially
+   left-to-right ones), and section 5 gives the corresponding path-wise quantities instead.
+ * No lower-bound (randomised greedy / max-entropy Markov) result; nothing to compare with
+   the slip exponent 1/16.
+ * Shearer / Bregman-type product: no valid product over all panels was found.  Shearer over
+   coordinate sets loses about w(1 - w/2N) nats per window of size w against a saving of
+   (1/2) ln(pi r), so it is useless for small windows; the only valid Wallis-type products are
+   over compatible chains (O(log N) factors).  The kick bound prod_k min(N-k, c) is the
+   product-form bound obtained instead (a product over time steps, not panels).
+ * e^{-omega(N)}: open.  Every bound here saves O(N).
+
+7. FILES
+--------
+ minpath.c        exact subset DP: min over valid sequences of sum bad_k / sum odd_k / sum c_k
+                  / path deficit; prints an optimal path (N <= ~26)
+ kick_check.py    exhaustive check of (K1), (K2) and the kick bound; E(N); constants
+ budget_const.py  constants of caps-only / kick-only / combined bounds; budget_const.txt
+ Lean: Folds/XdEntropy.lean
+   admissible, zero_mem_admissible, top_mem_admissible, card_admissible_le,
+   card_wallis_middle, last_in_window_double, windowsThrough, card_windowsThrough_ge,
+   Sees, mutualPairs, kicked, kicked_not_both, kicked_card_add,
+   card_mutualPairs_le_sum_kicked, sum_moves_le, pathProd_le_of_budget,
+   semiCount_le_budget, semiCount_le_kick, semiCount_ten_le.

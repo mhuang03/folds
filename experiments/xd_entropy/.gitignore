@@ -1,0 +1,10 @@
+# compiled binaries and large outputs
+*.o
+*.bin
+*.out
+minpath
+enumh
+greedy
+beamkick
+lrmin
+__pycache__/
