@@ -39,7 +39,7 @@ exact subset recursion; a congruence $a(N)\equiv c(N)\pmod 4$; a classification 
 the ``neutral'' splittings with an exact decomposition identity; a generator for valid
 orders of any length (truncated bit reversal); a complete description of which
 two-step openings can be completed; and super-exponential growth bounds
-$(N/4096)^{N/16}\le a(N)\le N!\,e^{-0.0878N(1+o(1))}$. Results marked
+$(N/4096)^{N/16}\le a(N)\le N!\,e^{-0.1164N(1+o(1))}$. Results marked
 \textsf{[Lean]} are machine-checked in Lean~4 with Mathlib, with no \texttt{sorry}
 and no \texttt{native\_decide}.
 \end{abstract}
@@ -296,6 +296,33 @@ Its $i$-th term can be computed in $O(\log N)$ time.
 For example, for $N=6$ and $k=3$, the bit-reversal order $1,5,3,7,2,6,4,8$ truncates to
 the valid sequence $1,5,3,2,6,4$.
 
+\paragraph{Swap classes.}
+Call panels $x<y$ \emph{independent} if neither lies in the other's window, that is
+$2x\le y$ and $x+N+1\le 2y$. Independent panels lie in opposite halves.
+
+\begin{theorem}[swap criterion]
+Two adjacent steps of a valid sequence can be exchanged, keeping the sequence valid, if
+and only if the two panels are independent. Hence the valid sequences split into classes
+under such swaps, and $a(N)$ is the sum of the class sizes. The orders of the left-half
+panels and of the right-half panels are constant on each class.
+\lean{XdTraces.swap\_step\_iff, semiCount\_eq\_sum\_swapClasses}
+\end{theorem}
+
+\begin{proof}[Idea]
+Adding a panel $x$ to $S$ changes the imbalance at $y$ by $\pm1$ if $x$ is in the window
+of $y$, and by $0$ otherwise. So a step that is valid after $x$ is valid before $x$
+exactly when $x$ is outside its window.
+\end{proof}
+
+The number of classes is $1,1,2,2,6,12,20,54,192,412,1312,4746,\dots$ (computed to
+$N=28$). It equals the number of balanced acyclic orientations of the graph joining
+panels that see each other. It is not in the OEIS and no recurrence was found. In the
+symmetric case the analogous count is $2^{e(N)}$ with
+$e(N)=e(\lceil N/2\rceil)+e(\lfloor N/2\rfloor)+1$ in the data ($N\le22$).
+
+Separately, the mirror gives a sign law: for $N\equiv 2,3\pmod 4$ there are equally many
+even and odd valid permutations. \lean{XdOlympiad.signedCount\_eq\_zero}
+
 \paragraph{Which openings survive.}
 Some valid prefixes cannot be completed. For example, at $N=4$ the opening $1,4$
 leaves no valid move.
@@ -335,15 +362,21 @@ $b_j\ge j4^{j-1}\ln 2=\tfrac18 N\ln N$.
 \begin{theorem}[bounds for all $N$]
 For every $N\ge1$,
 \[
-  \Bigl(\frac{N}{4096}\Bigr)^{N/16}\ \le\ a(N)\ \le\ N!\,e^{-0.0878\,N(1+o(1))},
+  \Bigl(\frac{N}{4096}\Bigr)^{N/16}\ \le\ a(N)\ \le\ N!\,e^{-0.1164\,N(1+o(1))},
 \]
 and the upper bound improves to $e^{-0.1255N(1+o(1))}$ for even $N$.
 \lean{self\_pow\_le\_semiCount\_pow\_16, MaxMoves2}
 \end{theorem}
 
-The upper bound counts valid moves. When $|S|\equiv2\pmod4$, at most $\lfloor2N/3\rfloor$
-panels are valid next moves; a $2$-adic refinement covers the other sizes of $S$.
-\lean{card\_moves\_two\_mod\_four, card\_moves\_two\_adic} The lower bound for all $N$
+The upper bound counts valid moves. Let $E(N)\approx N^2/6$ be the number of pairs of
+panels lying in each other's windows. Placing a panel flips the window parity of every
+unplaced panel that sees it, so such a panel is invalid before or after the step. Summed
+along a sequence, the valid moves fall short of the free panels by at least $E(N)/2$ in
+total, which gives $a(N)\le c!\,c^{N-c}$ whenever $(N-c)(N-c+1)\le E(N)$.
+\lean{XdEntropy.semiCount\_le\_kick} For even $N$ a $2$-adic count of valid moves does
+better: when $|S|\equiv2\pmod4$, at most $\lfloor2N/3\rfloor$ panels are valid next moves.
+\lean{card\_moves\_two\_mod\_four, card\_moves\_two\_adic}
+The lower bound for all $N$
 uses an odd-$N$ variant of the slips.
 
 To raise the exponent to $1/12$ it would suffice to prove a combinatorial
@@ -390,6 +423,17 @@ The following searches were all negative, each with at least five spare equation
 \end{itemize}
 Even the simpler symmetric count $\theta(N)$ (A003407) has no known formula. We computed
 it exactly up to $N=2000$.
+
+\paragraph{Ten further angles.}
+Ten fields were then tried in parallel: generating trees, dual graded graphs,
+constant-term identities and tournaments, weak orders and reciprocity, heaps and partial
+commutation, connection-matrix ranks, symmetric functions and RSK, olympiad techniques,
+the entropy method, and words and doubling-map dynamics. None gave a formula. Each ended
+in an explicit obstruction; for example, the matrix counting valid interleavings of an
+ordering of the odd panels with one of the even panels has rank at least
+$0.896\,(N/2)!$ for $N\le14$, where the symmetric case has bounded rank. The swap
+classes and the upper bound above came from this campaign. See
+\texttt{docs/CROSS\_DOMAIN.md}.
 
 \paragraph{An arithmetic effect.}
 Let $y(N)=\ln(a(N)/a_W(N))$. The local bump $y(N)-\tfrac12(y(N-2)+y(N+2))$ is positive

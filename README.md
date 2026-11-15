@@ -23,8 +23,9 @@ Two corrections to the informal statement: the window size depends on the *panel
 | terms | a(1..38) exact; ln a(N) estimated to N = 4096 |
 | exact formulas for pieces | T(N,2) = ⌊N²/2⌋ and the period-6 quasi-polynomial T(N,3) (**proven in Lean**). **Exact** quasi-polynomials for T(N,4), T(N,5) and T(N,6), with periods 168, 1680 and 104160, derived from Ehrhart generating functions. The period of T(N,7) is 624960. Single-panel Wallis count (**proven**) |
 | congruences | a(N) ≡ c(N) (mod 4) (**proven**); 4 ∣ a(N) for N ≡ 3 (mod 4) (**proven**); no patterns modulo odd primes |
-| growth | **rigorously (N/4096)^{N/16} ≤ a(N) ≤ N!·e^{−0.0878N(1+o(1))} (e^{−0.1255N} for even N)** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
+| growth | **rigorously (N/4096)^{N/16} ≤ a(N) ≤ N!·e^{−0.1164N(1+o(1))} (e^{−0.1255N} for even N)** (super-exponential lower bound, proven in Lean; a(N) ≥ (N/2)^{N/6} for N = 2^L). **Conjecture:** a(N) = N!/(κ ln N)^N |
 | arithmetic effect | multiples of 3 sit above trend (all N ≤ 33). Mechanism: the 2-cycle {N/3, 2N/3} of the doubling map |
+| cross-domain campaign | ten fields tried (`docs/CROSS_DOMAIN.md`): **no formula**; new exact decomposition of a(N) over swap classes (class count 1, 1, 2, 2, 6, 12, 20, 54, 192, 412, …, not in the OEIS), the improved upper bound above, sign balance for N ≡ 2, 3 (mod 4) |
 
 Here T(N,k) is the number of valid k-step prefixes, and c(N) is the number of sequences
 fixed by reversal∘mirror.
@@ -159,6 +160,16 @@ change. There is no `sorry` and no
 | `SuperExp8` (M) | Theorem R (`goodL_oddR`); H(q,2), H(q,4) for all q (and H(q,3) for even q) with mirrors; a(n+1)^ρ·a(n)^{q−ρ} ≤ a(nq+ρ) for these ρ (`semiCount_smallRes`); exponent 1/12 for all N reduces to H for ρ ≤ q/16 (`allN_of_smallH`) |
 | `SuperExp10` (M) | **palindromic-chain obstruction** (`palin_mod_four`, `no_palin_three`): for odd q a palindromic chain needs ν ≡ 1 or q−ν ≡ 1 (mod 4), so these chains alone cannot give the all-N exponent 1/12 |
 | `Live` (M) | every first panel extends to a full sequence; every dead 2- and 3-prefix is proven dead |
+| `XdTraces` (M) | **swap criterion** (`swap_step_iff`: adjacent steps commute iff neither panel is in the other's window, context-free); a(N) = Σ over swap classes (`semiCount_eq_sum_swapClasses`); order-convexity in the weak order |
+| `XdOlympiad` (M) | independent pairs lie in opposite halves, at most two panels commute pairwise; **sign balance** for N ≡ 2, 3 (mod 4) (`signedCount_eq_zero`); exact effect of deleting panel 1 |
+| `XdConstTerm` (M) | constant-term form of a(N); balanced-tournament and mod-p relaxations (a ≤ B, a ≤ a_p, a_p = a for N ≤ 2p); pair-sum formula for Σ D_m; Σ_π Π(−1)^{D_m} = 0 when 4 ∣ N |
+| `XdWeak` (M) | valid weak orders in four conventions; W(N,N) = a(N); W(N,2) = copies / neutral sets; **Euler characteristic 0 for even N ≥ 4** (`euler_A_even`) |
+| `XdEntropy` (M) | **upper bound for all N** `semiCount_le_kick`: a(N) ≤ c!·c^(N−c) when (N−c)(N−c+1) ≤ #mutual pairs, i.e. N!·e^{−0.1164N}; admissible ranks; the cap of the revelation method (`last_in_window_double`) |
+| `XdIntervals` (M) | interval counts and offset strips; zero law for interior intervals; half-line model with its forced right half (`halfLine_getElem`); stabilisation |
+| `XdGraded` (M) | the graded step graph: U, D, self-duality, a(N) as an iterate of U; commutator diagonal and trace; DU − UD is not diagonal for N ≥ 3; twin live sets |
+| `XdRank` (M) | shuffle-count (cut) matrices: a(N) = Σ entries, symmetries, zero rows, the interface lemma `cutCount_map_eq` |
+| `XdSymFun` (M) | descent and inverse-descent polynomials of valid sequences: palindromic; extreme coefficients; non-symmetry of the quasisymmetric function at N = 5 |
+| `XdWords` (M) | orbit formula for the discrepancy along b ↦ 2b+1; discrepancy bound for every set; parking condition for reachable sets; truncated bit reversal gives Toeplitz words |
 
 ## Conjectures and open problems
 
@@ -282,6 +293,7 @@ change. There is no `sorry` and no
 | `experiments/superexp9/PROOFS.txt` | why iterating Theorem R cannot give H(q, ρ ≤ q/K): parity-tree obstruction at ρ = 9 for q ≡ 15 mod 16, global doubling constraints at odd/odd steps |
 | `experiments/superexp10/PROOFS.txt` | the mod-4 obstruction for palindromic chains; chain scans for odd q ≤ 101 |
 | `docs/LITERATURE.md` | literature and OEIS survey |
+| `docs/CROSS_DOMAIN.md` | the ten cross-domain angles: results, obstructions, literature; details in `experiments/xd_*/NOTES.txt` and `LITERATURE.md` |
 
 ## Generating valid sequences
 
