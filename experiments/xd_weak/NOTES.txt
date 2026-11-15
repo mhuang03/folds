@@ -1,0 +1,195 @@
+VALID WEAK ORDERS (SIMULTANEOUS FOLDS), EULER CHARACTERISTICS, RECIPROCITY   (experiments/xd_weak/)
+==================================================================================================
+
+Lean: Folds/XdWeak.lean (no sorry, no native_decide).  Literature: LITERATURE.md.
+Labels: [proven] = proof given here or in Lean (the Lean name is quoted), [data N <= n] = checked
+on all data up to n, [conjecture].
+
+Files
+  weak.c            W(N,k) for the four conventions, semi and sym (chain DP over subsets)
+  W_small.txt       N <= 18, all conventions, semi and sym
+  W_19_22.txt       N = 19..22, conventions a, b, c;   W_d_19_20.txt: N = 19, 20, convention d
+  brute.py          independent check (N <= 7) from the definitions; closure / containment tests
+  analyze.py        A_N(q), Euler characteristics, columns, diagonals, h-vectors -> analysis_out.txt
+  mobius.py         the fold poset and its Moebius function -> mobius_semi.txt, mobius_sym.txt
+  components.py     flip graph of valid sequences -> components_semi.txt, components_sym.txt
+  reciprocity_c.py  check of the reciprocity theorem for (c) -> reciprocity_c_out.txt
+  oeis_lookup.py    OEIS lookups of 80 derived sequences -> oeis_out.txt
+  checks_out.txt    diagonal identities, limits of the sym columns
+
+
+0. DEFINITIONS
+--------------
+A weak order of [N] is an ordered set partition (B_1,...,B_k); S_i = B_1 u ... u B_i.  It is a
+chain 0 = S_0 < S_1 < ... < S_k = [N] of sets, and all four conventions are "link" conditions on
+(S, B) = (S_{i-1}, B_i).  bal(S) = panels balanced w.r.t. S (the window of m never contains m).
+  (a)  B subset of bal(S);
+  (b)  B subset of bal(S) and of bal(S u B);
+  (c)  every m in B is balanced w.r.t. S u T for all T subset of B;
+  (d)  some ordering of B is a valid run of steps from S.
+W_x(N,k) = number of valid weak orders with k blocks, A^x_N(q) = sum_k W_x(N,k) C(q,k) = number
+of maps t:[N]->[q] whose level sets, in order, form a valid weak order.  For (a) this is the
+time-word form with ties: #{left smaller} = #{right smaller} (strictly smaller) for every m.
+A^x_N(-1) = sum_k (-1)^k W_x(N,k).   A^x_N(q) has degree N and leading coefficient a(N)/N!, so
+   a(N) = sum_{j=0..N} (-1)^(N-j) C(N,j) A^x_N(j)            (N-th difference)   [proven, trivial]
+The symmetric (3-AP-free) control uses "window symmetric" instead of "window balanced".
+
+
+1. WHICH CONVENTION IS A COMPLEX?                                              (question of the brief)
+-------------------------------------------------------------------------------------------------
+[proven, Lean]  (c) => (b) => (a) and (c) => (d)        linkC_imp_linkB, linkB_imp_linkA,
+                                                         linkC_imp_linkD
+[proven, Lean]  (c) <=> every linear refinement of the weak order is a valid sequence
+                (link form: linkC_iff_forall_orderings).  Equivalently: (a) and no panel of a block
+                lies in the window of another panel of the same block.
+[proven, Lean]  (c) is closed under refinement (validFrom_split_C); it is the largest
+                refinement-closed family inside (a).  So (c) is a SUBCOMPLEX K_N OF THE
+                PERMUTOHEDRON: the full subcomplex induced on the valid permutations (vertices).
+[proven, Lean]  (d) is closed under coarsening (validFrom_merge_D).  So (d) is a PURE SIMPLICIAL
+                SUBCOMPLEX OF THE COXETER COMPLEX of type A_{N-1} whose facets are exactly the
+                valid permutations (chambers).
+[proven, Lean]  Nothing else is closed (counterexamples at N = 3, 4: not_refine_A, not_coarsen_A,
+                not_refine_B, not_coarsen_B, not_coarsen_C, not_refine_D).  Convention (b) as
+                stated in the brief is NOT closed under refinement of ties: (123) is (b)-valid and
+                (1|23) is not.
+[proven]        (b) => (d): a (b)-block B is a window copy all of whose elements are balanced
+                w.r.t. S, so by the copy criterion (Neutral.isCopy_iff_winEmb) the valid orderings
+                of B from S are the images of the valid sequences of [|B|].  Hence a (b)-weak order
+                has exactly prod_i a(|B_i|) valid linear refinements.  (Not formalised; brute.py
+                confirms (b) subset (d) for N <= 7.)   (a) is not contained in (d) (N = 4).
+Answer: (a) is the natural "words with ties" count and has the best Euler characteristic; (c) and
+(d) are the two topological objects; (b) is the "copy block" convention with explicit small columns.
+
+
+2. COLUMNS AND DIAGONALS
+------------------------
+[proven, Lean]  W_x(N,N) = a(N) for x = a,b,c,d      WA_top, WB_top, WC_top, WD_top (general: W_top)
+[proven, Lean]  W_a(N,1) = W_b(N,1) = 1 (N >= 1)     WA_one, WB_one;  W_d(N,1) = 1 [proven, a(N) > 0];
+                W_c(N,1) = 0 for N >= 3.
+[proven, Lean]  W_a(N,2) = number of nonempty proper window copies of [N]              WA_two
+                = 2,4,7,10,15,20,28,36,47,61,82,99,125,154,208,250,318,388,490,598,747 (N = 2..22);
+                no closed form found, not in the OEIS.
+[proven, Lean]  W_b(N,2) = number of proper neutral sets = |NFam N|                    WB_two
+                = 2 * #{odd d | N, d < N}  (parity classes for d = 1, E_d and its complement for
+                3 <= d < N; the last equality by Neutral.neutral_classification, [data N <= 22]
+                for the count itself).
+[proven]        W_b(N,N-1) = W_c(N,N-1) = number of edges of the flip graph (adjacent swaps of two
+                mutually invisible panels), and W_d(N,N-1) + W_c(N,N-1) = (N-1) a(N).
+                (A block {x,y}: (d) iff at least one order is valid, (c) iff both.)  [data N <= 20]
+[data N <= 22]  W_d(N,2) + 2 = number of live sets = 4,8,14,28,54,92,192,378,722,1422,2818,...;
+                the density of live sets among all sets decreases slowly (0.664 at N = 20).
+[negative]      No column (k >= 3), diagonal, row sum or value A_N(2), A_N(3) of any convention is in
+                the OEIS (71 lookups without a match, oeis_out.txt), apart from the trivial ones in
+                section 6.  The recurrence programs of experiments/recsearch were NOT rerun on these
+                sequences (21 terms at most; budget).
+
+
+3. CONVENTION (a): THE EULER CHARACTERISTIC VANISHES FOR EVEN N
+----------------------------------------------------------------
+E(S) = sum_k (-1)^k #{valid chains of k blocks from S to [N]};  E(0) = A^a_N(-1).
+[proven, Lean: euler_step]   E([N]) = 1,  E(S) = - sum_{B admissible after S} E(S u B).
+[proven, Lean: euler_flip]   FLIP LEMMA.  If the panel x is balanced w.r.t. every set, then
+     E(S) = -E(S u {x}) for every S not containing x.
+     Proof: induction on |[N] \ S|.  Pair the admissible blocks B (x not in B) with B u {x};
+     by induction E(S u B) + E(S u B u {x}) = 0, and only the block {x} is left.
+     (Bijectively: move x between "tied with the block B_i" and "alone, right after B_i".)
+[proven, Lean: euler_A_even]  THEOREM.  For even N >= 4:  sum_k (-1)^k W_a(N,k) = 0, i.e.
+     (q+1) divides A^a_N(q).
+     Proof: panels 1 and N have empty windows, so E(0) = -E({1}) = E({1,N}).  Every other panel sees
+     exactly one of 1, N when N is even, so nothing is admissible after {1,N} and E({1,N}) = 0.
+     The same proof gives the symmetric case (euler_symA_even).  Moreover the polynomial
+     sum_k W_a(N,k) x^k is (1+x) times a polynomial with nonnegative coefficients (even N >= 4).
+[proven]  For odd N = 2c-1 >= 3:  A^a_N(-1) = -E({1,c,N}) (only c is admissible after {1,N}).
+[data N <= 22]  (-1)^N A^a_N(-1) at odd N = 1,3,...,21:  1, 1, 1, -1, -1, -2, -5, 1, -5, -1, 6.
+     Tiny compared with a(N) (a(21) = 2.5e15) but with no visible pattern.
+[data N <= 22]  symmetric case: A_N(-1) = 0 for all N >= 6 (odd N too), and
+     A^{a,sym}_N(2) = floor((N+2)^2/4) (number of "symmetric copies", A002620).
+[negative]  A^a_N(-2), A^a_N(-3) change sign irregularly: no reciprocity interpretation for (a).
+[data N <= 22]  For (b), (-1)^N A^b_N(-q) > 0 for q = 1, 2, 3 (q = 1: 1,1,3,1,9,19,25,61,387,581,
+     2163,10087,26009,92415,...), but no counting interpretation or formula was found.
+
+
+4. CONVENTION (c): A CHROMATIC-TYPE POLYNOMIAL WITH EXACT RECIPROCITY
+----------------------------------------------------------------------
+VISIBILITY GRAPH G_N: x ~ y iff x is in the window of y or y is in the window of x.
+A sequence induces the acyclic orientation O of G_N (x -> y iff x before y).  Validity of the
+sequence depends only on O (panel m needs as many in-neighbours in its left arm as in its right
+arm): call O BALANCED.
+[proven]  (i) Swapping two adjacent, mutually invisible panels preserves validity; two adjacent
+     panels that can be swapped (both orders valid) are mutually invisible.  (ii) Hence the
+     connected components of the flip graph are the commutation classes (Cartier-Foata traces) =
+     the sets of linear extensions of the posets P_O, O balanced acyclic.  (iii) The faces of K_N
+     in the component of O are the strict surjective P_O-partitions.  Therefore
+          A^c_N(q)         = sum_{O balanced acyclic} Omega°(P_O, q)      (strict order polynomials)
+          a(N)             = sum_{O balanced acyclic} e(P_O)              (linear extensions)
+          (-1)^N A^c_N(-q) = sum_{O balanced acyclic} Omega(P_O, q)       (Stanley reciprocity)
+                           = #{(O, t): O balanced acyclic, t:[N]->[q] weakly compatible with O}
+          (-1)^N A^c_N(-1) = chi(K_N) = ao(N) := number of balanced acyclic orientations of G_N
+                           = number of commutation classes of valid fold sequences.
+     This is Stanley's acyclic-orientation theorem restricted to the balanced orientations: A^c_N
+     is the part of the chromatic polynomial of G_N carried by them.  Every component of K_N has
+     Euler characteristic 1.  [checked: reciprocity_c.py, N <= 8 semi, N <= 9 sym, q = 1,2,3;
+     components.py: #components = chi(K_N) for N <= 10 semi, N <= 14 sym.]
+[conjecture]  Every component of K_N is contractible (it is the complex dual to the interior of an
+     order cone in the braid arrangement; see LITERATURE.md, COMs).
+[data N <= 22]  ao(N) = 1, 1, 2, 2, 6, 12, 20, 54, 192, 412, 1312, 4746, 13926, 49824, 216692,
+     702714, 2911068, 13281600, 49793300, 233423518, 1196154168, 5118304370.  Not in the OEIS.
+     Ratio ao(N+1)/ao(N) drifts upward (about 4.3 to 5.1 at N = 19..22): no closed form found.
+     A^c_N(q) <= chromatic polynomial of G_N, so it vanishes at q = 1, ..., chi(G_N) - 1
+     (observed roots: q = 1..4 at N = 9, 10).
+[data N <= 22, sym]  ao_sym(N) = 2^e(N), e(N) = e(ceil(N/2)) + e(floor(N/2)) + 1 (N >= 3),
+     e(1) = e(2) = 0:  1,1,2,2,4,8,8,8,16,32,64,128,128,128,128,128,256,...  This is what the merge
+     theorem (Folds/SymStructure.lean, merge_iff_apFree) predicts: a 3-AP-free order is a pair of
+     3-AP-free orders of the two parity classes plus ONE global choice of which class goes first
+     on linked pairs.  [conjecture: follows from the merge theorem; derivation not written out.]
+     So in the symmetric case the number of traces is explicit, while theta(N) itself is the sum of
+     the numbers of linear extensions.  In the semi-symmetric case even ao(N) has no formula.
+
+
+5. CONVENTION (d): THE FOLD POSET AND ITS MOEBIUS FUNCTION
+-----------------------------------------------------------
+FOLD POSET P_N: subsets of [N], S <= T iff T is reachable from S by valid steps.  It is a partial
+order (linkD_merge = transitivity), graded by cardinality, self-dual under complement, and its
+maximal chains are the valid fold sequences.  Convention (d) weak orders are the chains of the
+open interval, so
+[proven]  A^d_N(q) = zeta^q(0,[N]) is the ZETA POLYNOMIAL of P_N, the (d) complex is the order
+     complex of the open interval, and A^d_N(-1) = mu(0,[N]), A^d_N(-2) = sum_S mu(0,S) mu(0,S^c).
+[data N <= 20]  mu(0,[N]) = -1, 1, 1, 1, -1, -1, -1, 15, 23, 7, -11, -49, -129, 347, 1151, 1933,
+     103, -27335, -75989, -79199.  Erratic, small against a(N); not Eulerian, not a sphere
+     (h-vectors have negative entries, analysis_out.txt).  No pattern found.
+[data N <= 12]  mu(0,S) is sparse: nonzero for 545 of the 2818 live sets at N = 12, mostly +-1, +-2.
+[data N <= 20, sym]  mu(0,[N]) = 1 for all N >= 2;  A_N(-2) = 4 (N >= 4);  A_N(-3) = 17 (N >= 8).
+[data N <= 12, sym]  mu(0,S) is nonzero for exactly 2N sets: mu = 1 at S = 0, mu = -1 at the N
+     singletons, mu = +1 at the N-1 residue classes mod 2^j with at least two elements.
+     [conjecture] this holds for all N; it explains the stable "reciprocity"
+     A^{d,sym}_N(-q) = A^{b,sym}_N(q) for N large against q (checked q = 1,2,3): 1, 4, 17.
+[negative]  In the semi-symmetric case A^d_N(-q) and A^b_N(q) agree only for a few small N.
+
+
+6. THE SYMMETRIC CONTROL (theta(N) = A003407)
+----------------------------------------------
+Everything above was computed for the 3-AP-free case as well (N <= 22; (d): N <= 20).
+[data N <= 22]  X(N) := A^{b,sym}_N(-1) satisfies X(N) = 2 X(ceil(N/2)) X(floor(N/2)) - 1 (N >= 2,
+     X(1) = -1):  |X| = 1,1,3,1,7,17,7,1,15,97,239,577,239,97,15,1,31,449,2911,18817,46367,114241
+     (so |X(2n)| = T_2(|X(n)|), Chebyshev).  The polynomials themselves do NOT satisfy
+     F_N = x + 2 F_ceil F_floor (fails at N = 4); the extra terms cancel at x = -1.
+[data N <= 22]  the columns stabilise: W^{sym}_b(N,k) -> 1, 2, 8, 40, 224 for k = 1..5
+     (= 2^(k-1) Catalan(k-1); k = 5 is constant only on N = 20..22, so this is weak evidence).
+[data N <= 22]  W^{sym}_a(N,2) = floor((N+2)^2/4) - 2 (A014616).
+The recursive parity structure of the symmetric case shows up as exact doubling recursions for
+every Euler characteristic; NONE of them survives in the semi-symmetric case:
+[negative, data N <= 22]  semi: A^b_N(-1) = (-1)^N (1,1,3,1,9,19,25,61,387,581,2163,10087,...) fails
+     X(2n) = 2X(n)^2 - 1 already at N = 6;  ao(N) fails ao(2n) = 2 ao(n)^2 at N = 6.
+
+
+7. WHAT THIS GIVES FOR a(N)
+---------------------------
+No formula.  Exact statements obtained:
+  * a(N) = sum over balanced acyclic orientations O of G_N of e(P_O)                  [proven]
+  * a(N) = number of maximal chains of the fold poset; W_d(N,N-1) + W_c(N,N-1) = (N-1) a(N)
+  * a(N) = N-th difference of A^x_N(q) at 0 for each convention                       [proven]
+  * sum_k (-1)^k W_a(N,k) = 0 for even N >= 4                                         [proven, Lean]
+None of the "simpler" counts (copies, live sets, balanced acyclic orientations, mu) has a closed
+form in the semi-symmetric case; the only closed forms are W(N,1), W_b(N,2) and the vanishing
+Euler characteristic.  A Moebius-inversion formula for a(N) in terms of simpler counts was not
+found: the lower columns are as irregular as a(N).
