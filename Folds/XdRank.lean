@@ -2,6 +2,7 @@ import Folds.Congruence
 import Folds.Cyclic
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 
 /-!
 # Connection (cut) matrices of the semi-symmetric fold count
@@ -53,12 +54,11 @@ theorem mem_of_mem_semiSeqs {N : ℕ} {a : List ℕ} (ha : a ∈ semiSeqs N) {x 
 theorem semiCount_eq_sum_cutCount (N : ℕ) (X : Finset ℕ) :
     semiCount N = ∑ σ ∈ orderings (Icc 1 N ∩ X), ∑ τ ∈ orderings (Icc 1 N \ X),
       cutCount N X σ τ := by
-  rw [← Finset.sum_product']
   unfold semiCount
   rw [Finset.card_eq_sum_card_fiberwise
     (f := fun a : List ℕ => (a.filter (· ∈ X), a.filter (· ∉ X)))
-    (t := orderings (Icc 1 N ∩ X) ×ˢ orderings (Icc 1 N \ X))]
-  · refine Finset.sum_congr rfl fun p _ => ?_
+    (t := orderings (Icc 1 N ∩ X) ×ˢ orderings (Icc 1 N \ X)), Finset.sum_product]
+  · refine Finset.sum_congr rfl fun σ _ => Finset.sum_congr rfl fun τ _ => ?_
     unfold cutCount
     congr 1
     ext a
@@ -96,12 +96,12 @@ theorem cutCount_reverse (N : ℕ) (X : Finset ℕ) (σ τ : List ℕ) :
   unfold cutCount
   refine Finset.card_nbij' List.reverse List.reverse ?_ ?_ ?_ ?_
   · intro a ha
-    simp only [Finset.coe_filter, Set.mem_setOf_eq] at ha ⊢
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha ⊢
     refine ⟨reverse_mem_semiSeqs ha.1, ?_, ?_⟩
     · rw [List.filter_reverse, ha.2.1, List.reverse_reverse]
     · rw [List.filter_reverse, ha.2.2, List.reverse_reverse]
   · intro a ha
-    simp only [Finset.coe_filter, Set.mem_setOf_eq] at ha ⊢
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha ⊢
     refine ⟨reverse_mem_semiSeqs ha.1, ?_, ?_⟩
     · rw [List.filter_reverse, ha.2.1]
     · rw [List.filter_reverse, ha.2.2]
@@ -168,12 +168,12 @@ theorem cutCount_mirror (N : ℕ) (X : Finset ℕ) (σ τ : List ℕ) :
   symm
   refine Finset.card_nbij' (mirror N) (mirror N) ?_ ?_ ?_ ?_
   · intro a ha
-    simp only [Finset.coe_filter, Set.mem_setOf_eq] at ha ⊢
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha ⊢
     refine ⟨mirror_mem_semiSeqs ha.1, ?_, ?_⟩
     · rw [(filter_mirror ha.1 X).1, ha.2.1]
     · rw [(filter_mirror ha.1 X).2, ha.2.2]
   · intro a ha
-    simp only [Finset.coe_filter, Set.mem_setOf_eq] at ha ⊢
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha ⊢
     have hb : ∀ p : ℕ → Bool, ∀ x ∈ (mirror N a).filter p, 1 ≤ x ∧ x ≤ N := fun p x hx =>
       mem_of_mem_semiSeqs (mirror_mem_semiSeqs ha.1) (List.mem_of_mem_filter hx)
     refine ⟨mirror_mem_semiSeqs ha.1, ?_, ?_⟩
@@ -184,11 +184,95 @@ theorem cutCount_mirror (N : ℕ) (X : Finset ℕ) (σ τ : List ℕ) :
       rw [mirror_mirror (mem_semiSeqs.1 ha.1).1, ha.2.2] at h
       exact eq_of_mirror_eq (hb _) h
   · intro a ha
-    simp only [Finset.coe_filter, Set.mem_setOf_eq] at ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha
     exact mirror_mirror (mem_semiSeqs.1 ha.1).1
   · intro a ha
-    simp only [Finset.coe_filter, Set.mem_setOf_eq] at ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha
     exact mirror_mirror (mem_semiSeqs.1 ha.1).1
+
+/-! ## Arms, prefixes, and the zero rows -/
+
+/-- `x` lies in the left arm of the window of `m`. -/
+def inL (N m x : ℕ) : Prop := m - reach N m ≤ x ∧ x < m
+
+/-- `x` lies in the right arm of the window of `m`. -/
+def inR (N m x : ℕ) : Prop := m < x ∧ x ≤ m + reach N m
+
+instance (N m x : ℕ) : Decidable (inL N m x) := inferInstanceAs (Decidable (_ ∧ _))
+instance (N m x : ℕ) : Decidable (inR N m x) := inferInstanceAs (Decidable (_ ∧ _))
+
+theorem semiStep_iff_arms {N m : ℕ} {S : List ℕ} (hnd : S.Nodup) :
+    SemiStep N S m ↔ S.countP (fun x => decide (inL N m x)) = S.countP (fun x => decide (inR N m x)) := by
+  unfold SemiStep
+  rw [leftCount_eq hnd, rightCount_eq hnd]
+  rfl
+
+/-- Split a count according to membership in `X`. -/
+theorem countP_split (X : Finset ℕ) (S : List ℕ) (q : ℕ → Bool) :
+    S.countP q = (S.filter (· ∈ X)).countP q + (S.filter (· ∉ X)).countP q := by
+  induction S with
+  | nil => simp
+  | cons x S ih =>
+    by_cases hx : x ∈ X <;> by_cases hq : q x = true <;>
+      simp [List.filter_cons, List.countP_cons, hx, hq, ih] <;> omega
+
+/-- The `X`-part of a prefix of `a` is a prefix of the `X`-part of `a`; if the next entry is
+in `X`, it is the next entry of the `X`-part. -/
+theorem prefix_data {a σ : List ℕ} {X : Finset ℕ} (hσ : a.filter (· ∈ X) = σ) {k : ℕ}
+    (hk : k < a.length) (hm : a[k] ∈ X) :
+    ∃ p, ∃ hp : p < σ.length, σ[p] = a[k] ∧ (a.take k).filter (· ∈ X) = σ.take p := by
+  have h1 : (a.take (k + 1)).filter (· ∈ X) <+: σ := hσ ▸ (List.take_prefix _ _).filter _
+  have h2 : a.take (k + 1) = a.take k ++ [a[k]] := (List.take_append_getElem hk).symm
+  rw [h2, List.filter_append] at h1
+  have h3 : [a[k]].filter (· ∈ X) = [a[k]] := by simp [hm]
+  rw [h3] at h1
+  set SX := (a.take k).filter (· ∈ X) with hSX
+  have h4 := List.prefix_iff_eq_take.1 h1
+  have hlen : SX.length + 1 ≤ σ.length := by
+    have := h1.length_le; simpa using this
+  refine ⟨SX.length, by omega, ?_, ?_⟩
+  · have := h1.getElem (n := SX.length) (by simp)
+    rw [← this]; simp
+  · have h5 : SX <+: σ := (List.prefix_append SX [a[k]]).trans h1
+    exact List.prefix_iff_eq_take.1 h5
+
+/-- **Zero rows.**  If the window of the panel `σ[p]` contains no panel outside `X`, and the
+earlier panels of `σ` are not balanced around it, the row of `σ` vanishes. -/
+theorem cutCount_eq_zero_of_internal {N : ℕ} {X : Finset ℕ} {σ : List ℕ} (τ : List ℕ) {p : ℕ}
+    (hp : p < σ.length)
+    (hwin : ∀ y, 1 ≤ y → y ≤ N → (inL N σ[p] y ∨ inR N σ[p] y) → y ∈ X)
+    (hbad : (σ.take p).countP (fun x => decide (inL N σ[p] x)) ≠
+      (σ.take p).countP (fun x => decide (inR N σ[p] x))) :
+    cutCount N X σ τ = 0 := by
+  unfold cutCount
+  rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
+  rintro a ha ⟨hσ, -⟩
+  have hf := (mem_semiSeqs.1 ha).1
+  have hnd : a.Nodup := nodup_of_foldSeq hf
+  have hσnd : σ.Nodup := hσ ▸ hnd.filter _
+  have hmem : σ[p] ∈ a := List.mem_of_mem_filter (hσ ▸ List.getElem_mem hp)
+  obtain ⟨k, hk, hak⟩ := List.getElem_of_mem hmem
+  have hmX : a[k] ∈ X := by
+    have : σ[p] ∈ a.filter (· ∈ X) := hσ ▸ List.getElem_mem hp
+    rw [hak]; simpa using (List.mem_filter.1 this).2
+  obtain ⟨p', hp', e1, e2⟩ := prefix_data hσ hk hmX
+  have hpp : p' = p := (hσnd.getElem_inj_iff).1 (e1.trans hak)
+  subst hpp
+  have hstep := (mem_semiSeqs.1 ha).2 k hk
+  rw [semiStep_iff_arms (hnd.sublist (List.take_sublist _ _)), hak,
+    countP_split X (a.take k), countP_split X (a.take k) (fun x => decide (inR N σ[p'] x)), e2] at hstep
+  have z : ∀ q : ℕ → Prop, [DecidablePred q] → (∀ y, 1 ≤ y → y ≤ N → q y → y ∈ X) →
+      ((a.take k).filter (· ∉ X)).countP (fun x => decide (q x)) = 0 := by
+    intro q _ hq
+    rw [List.countP_eq_zero]
+    intro y hy
+    have hy1 := List.mem_filter.1 hy
+    have hb := mem_of_mem_semiSeqs ha (List.mem_of_mem_take hy1.1)
+    have hyX : y ∉ X := by simpa using hy1.2
+    simpa using fun h => hyX (hq y hb.1 hb.2 h)
+  rw [z _ (fun y h1 h2 h => hwin y h1 h2 (Or.inl h)), z _ (fun y h1 h2 h => hwin y h1 h2 (Or.inr h))]
+    at hstep
+  exact hbad (by simpa using hstep)
 
 end XdRank
 end Folds
