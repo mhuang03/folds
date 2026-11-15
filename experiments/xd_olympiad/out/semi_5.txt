@@ -1,0 +1,14 @@
+N 5 mode semi
+total 28
+signed -4
+T 1 5 12 24 28 28
+reach 1 5 8 10 5 1
+alive 1 5 8 8 5 1
+deadsets 0 0 0 2 0 0
+deadprefixes 0 0 0 6 0 0
+moves 140 70 60 48 28
+pos 1 4 8 4 8 4
+pos 2 7 6 2 6 7
+pos 3 6 0 16 0 6
+pos 4 7 6 2 6 7
+pos 5 4 8 4 8 4

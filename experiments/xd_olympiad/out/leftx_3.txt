@@ -1,0 +1,12 @@
+N 3 mode leftx
+total 6
+signed 0
+T 1 3 6 6
+reach 1 3 3 1
+alive 1 3 3 1
+deadsets 0 0 0 0
+deadprefixes 0 0 0 0
+moves 18 12 6
+pos 1 2 2 2
+pos 2 2 2 2
+pos 3 2 2 2

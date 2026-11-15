@@ -1,0 +1,8 @@
+xd
+enum
+invpoly
+lefthalf
+traces
+*.o
+*.bin
+out/raw_*

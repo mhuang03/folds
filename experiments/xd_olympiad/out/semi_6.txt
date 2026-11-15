@@ -1,0 +1,15 @@
+N 6 mode semi
+total 96
+signed 0
+T 1 6 18 40 80 96 96
+reach 1 6 12 18 14 6 1
+alive 1 6 11 18 11 6 1
+deadsets 0 0 1 0 3 0 0
+deadprefixes 0 0 2 0 14 0 0
+moves 576 288 262 216 156 96
+pos 1 10 20 18 18 20 10
+pos 2 18 23 7 7 23 18
+pos 3 20 5 23 23 5 20
+pos 4 20 5 23 23 5 20
+pos 5 18 23 7 7 23 18
+pos 6 10 20 18 18 20 10
