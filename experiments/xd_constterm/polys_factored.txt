@@ -1,0 +1,137 @@
+N=1 mode=0 [sum D_m (shifted by sum r_m)] degree=0 low=0 f(1)=1 c0=1
+   signed count sum_pi (-1)^(sum D) = 1;  central coeff (sum D = 0) = 1;  w3:1+0i w4:1+0i w5:1+0i w6:1+0i
+   content 1; factors: 
+N=1 mode=1 [sum |D_m|] degree=0 low=0 f(1)=1 c0=1
+   content 1; factors: 
+N=1 mode=3 [#{m: D_m != 0}] degree=0 low=0 f(1)=1 c0=1
+   content 1; factors: 
+N=1 mode=2 [sum D_m^2] degree=0 low=0 f(1)=1 c0=1
+   content 1; factors: 
+N=2 mode=0 [sum D_m (shifted by sum r_m)] degree=0 low=0 f(1)=2 c0=2
+   signed count sum_pi (-1)^(sum D) = 2;  central coeff (sum D = 0) = 2;  w3:2+0i w4:2+0i w5:2+0i w6:2+0i
+   content 2; factors: 
+N=2 mode=1 [sum |D_m|] degree=0 low=0 f(1)=2 c0=2
+   content 2; factors: 
+N=2 mode=3 [#{m: D_m != 0}] degree=0 low=0 f(1)=2 c0=2
+   content 2; factors: 
+N=2 mode=2 [sum D_m^2] degree=0 low=0 f(1)=2 c0=2
+   content 2; factors: 
+N=3 mode=0 [sum D_m (shifted by sum r_m)] degree=2 low=0 f(1)=6 c0=1
+   signed count sum_pi (-1)^(sum D) = 2;  central coeff (sum D = 0) = 4;  w3:3+0i w4:4+0i w5:4.61803-1.11e-16i w6:5+1.11e-16i
+   content 1; factors: (q**2 + 4*q + 1)
+N=3 mode=1 [sum |D_m|] degree=1 low=0 f(1)=6 c0=4
+   content 2; factors: (q + 2)
+N=3 mode=3 [#{m: D_m != 0}] degree=1 low=0 f(1)=6 c0=4
+   content 2; factors: (q + 2)
+N=3 mode=2 [sum D_m^2] degree=1 low=0 f(1)=6 c0=4
+   content 2; factors: (q + 2)
+N=4 mode=0 [sum D_m (shifted by sum r_m)] degree=4 low=0 f(1)=24 c0=1
+   signed count sum_pi (-1)^(sum D) = 0;  central coeff (sum D = 0) = 10;  w3:3+0i w4:8+1.22e-16i w5:12.0902-1.11e-15i w6:15+1.33e-15i
+   content 1; factors: (q + 1)^2 * (q**2 + 4*q + 1)
+N=4 mode=1 [sum |D_m|] degree=2 low=0 f(1)=24 c0=10
+   content 2; factors: (q + 1) * (q + 5)
+N=4 mode=3 [#{m: D_m != 0}] degree=2 low=0 f(1)=24 c0=10
+   content 2; factors: (q + 1) * (q + 5)
+N=4 mode=2 [sum D_m^2] degree=2 low=0 f(1)=24 c0=10
+   content 2; factors: (q + 1) * (q + 5)
+N=5 mode=0 [sum D_m (shifted by sum r_m)] degree=8 low=0 f(1)=120 c0=1
+   signed count sum_pi (-1)^(sum D) = 16;  central coeff (sum D = 0) = 40;  w3:6+2e-15i w4:16+1.53e-15i w5:31.1803-1.89e-15i w6:46+3.33e-15i
+   content 1; factors: (deg 8)
+N=5 mode=1 [sum |D_m|] degree=4 low=0 f(1)=120 c0=28
+   content 2; factors: (q**4 + 2*q**3 + 19*q**2 + 24*q + 14)
+N=5 mode=3 [#{m: D_m != 0}] degree=3 low=0 f(1)=120 c0=28
+   content 2; factors: (q**3 + 20*q**2 + 25*q + 14)
+N=5 mode=2 [sum D_m^2] degree=6 low=0 f(1)=120 c0=28
+   content 2; factors: (q**6 + 2*q**5 + q**4 + 18*q**2 + 24*q + 14)
+N=6 mode=0 [sum D_m (shifted by sum r_m)] degree=12 low=0 f(1)=720 c0=1
+   signed count sum_pi (-1)^(sum D) = 96;  central coeff (sum D = 0) = 192;  w3:9-7.44e-15i w4:24+8.14e-15i w5:87.3607+3.11e-15i w6:165+1.17e-15i
+   content 1; factors: (deg 12)
+N=6 mode=1 [sum |D_m|] degree=6 low=0 f(1)=720 c0=96
+   content 2; factors: (q**6 + 2*q**5 + 20*q**4 + 52*q**3 + 135*q**2 + 102*q + 48)
+N=6 mode=3 [#{m: D_m != 0}] degree=4 low=0 f(1)=720 c0=96
+   content 4; factors: (q**4 + 26*q**3 + 77*q**2 + 52*q + 24)
+N=6 mode=2 [sum D_m^2] degree=10 low=0 f(1)=720 c0=96
+   content 2; factors: (deg 10)
+N=7 mode=0 [sum D_m (shifted by sum r_m)] degree=18 low=0 f(1)=5040 c0=1
+   signed count sum_pi (-1)^(sum D) = -112;  central coeff (sum D = 0) = 920;  w3:-45+4.95e-14i w4:40+2.39e-14i w5:203.885+3.93e-14i w6:509+3.38e-14i
+   content 1; factors: (deg 18)
+N=7 mode=1 [sum |D_m|] degree=9 low=0 f(1)=5040 c0=256
+   content 2; factors: (deg 9)
+N=7 mode=3 [#{m: D_m != 0}] degree=5 low=0 f(1)=5040 c0=256
+   content 2; factors: (5*q**5 + 212*q**4 + 746*q**3 + 860*q**2 + 569*q + 128)
+N=7 mode=2 [sum D_m^2] degree=19 low=0 f(1)=5040 c0=256
+   content 2; factors: (deg 19)
+N=8 mode=0 [sum D_m (shifted by sum r_m)] degree=24 low=0 f(1)=40320 c0=1
+   signed count sum_pi (-1)^(sum D) = 0;  central coeff (sum D = 0) = 6522;  w3:72+1.65e-13i w4:128+1.18e-13i w5:549.959+4.98e-13i w6:1752+3.44e-13i
+   content 1; factors: (q + 1)^2 * (deg 22)
+N=8 mode=1 [sum |D_m|] degree=12 low=0 f(1)=40320 c0=1120
+   content 2; factors: (q + 1) * (deg 11)
+N=8 mode=3 [#{m: D_m != 0}] degree=6 low=0 f(1)=40320 c0=1120
+   content 4; factors: (12*q**6 + 387*q**5 + 2058*q**4 + 3348*q**3 + 2794*q**2 + 1201*q + 280)
+N=8 mode=2 [sum D_m^2] degree=28 low=0 f(1)=40320 c0=1120
+   content 2; factors: (q + 1) * (deg 27)
+N=9 mode=0 [sum D_m (shifted by sum r_m)] degree=32 low=0 f(1)=362880 c0=1
+   signed count sum_pi (-1)^(sum D) = -512;  central coeff (sum D = 0) = 49696;  w3:243+6.85e-12i w4:192-1.67e-13i w5:1334.92-5.52e-12i w6:5899+1.94e-12i
+   content 1; factors: (deg 32)
+N=9 mode=1 [sum |D_m|] degree=16 low=0 f(1)=362880 c0=4256
+   content 2; factors: (deg 16)
+N=9 mode=3 [#{m: D_m != 0}] degree=7 low=0 f(1)=362880 c0=4256
+   content 4; factors: (deg 7)
+N=9 mode=2 [sum D_m^2] degree=44 low=0 f(1)=362880 c0=4256
+   content 2; factors: (deg 44)
+N=10 mode=0 [sum D_m (shifted by sum r_m)] degree=40 low=0 f(1)=3628800 c0=1
+   signed count sum_pi (-1)^(sum D) = 17920;  central coeff (sum D = 0) = 431982;  w3:-2997-2.4e-11i w4:-640+1.85e-11i w5:2208.28+6.26e-11i w6:16543-5.87e-11i
+   content 1; factors: (deg 40)
+N=10 mode=1 [sum |D_m|] degree=20 low=0 f(1)=3628800 c0=17878
+   content 2; factors: (deg 20)
+N=10 mode=3 [#{m: D_m != 0}] degree=8 low=0 f(1)=3628800 c0=17878
+   content 2; factors: (deg 8)
+N=10 mode=2 [sum D_m^2] degree=60 low=0 f(1)=3628800 c0=17878
+   content 2; factors: (deg 60)
+N=11 mode=0 [sum D_m (shifted by sum r_m)] degree=50 low=0 f(1)=39916800 c0=1
+   signed count sum_pi (-1)^(sum D) = -2048;  central coeff (sum D = 0) = 4139512;  w3:405-1.73e-10i w4:384+3.05e-10i w5:3984.88-4.48e-10i w6:44875-6.86e-10i
+   content 1; factors: (deg 50)
+N=11 mode=1 [sum |D_m|] degree=25 low=0 f(1)=39916800 c0=70960
+   content 2; factors: (deg 25)
+N=11 mode=3 [#{m: D_m != 0}] degree=9 low=0 f(1)=39916800 c0=70960
+   content 2; factors: (deg 9)
+N=11 mode=2 [sum D_m^2] degree=85 low=0 f(1)=39916800 c0=70960
+   content 2; factors: (deg 85)
+N=12 mode=0 [sum D_m (shifted by sum r_m)] degree=60 low=0 f(1)=479001600 c0=1
+   signed count sum_pi (-1)^(sum D) = 0;  central coeff (sum D = 0) = 44467126;  w3:-8991+5.84e-09i w4:384-4.42e-10i w5:6892.15-1.46e-09i w6:121221+1.64e-09i
+   content 1; factors: (q + 1)^2 * (deg 58)
+N=12 mode=1 [sum |D_m|] degree=30 low=0 f(1)=479001600 c0=383476
+   content 2; factors: (q + 1) * (deg 29)
+N=12 mode=3 [#{m: D_m != 0}] degree=10 low=0 f(1)=479001600 c0=383476
+   content 4; factors: (deg 10)
+N=12 mode=2 [sum D_m^2] degree=110 low=0 f(1)=479001600 c0=383476
+   content 2; factors: (q + 1) * (deg 109)
+N=13 mode=0 [sum D_m (shifted by sum r_m)] degree=72 low=0 f(1)=6227020800 c0=1
+   signed count sum_pi (-1)^(sum D) = -215040;  central coeff (sum D = 0) = 514400708;  w3:45927-9.51e-08i w4:29568-1.42e-08i w5:1696.83-7.74e-08i w6:233907-3.08e-08i
+N=13 mode=1 [sum |D_m|] degree=36 low=0 f(1)=6227020800 c0=1620328
+N=13 mode=3 [#{m: D_m != 0}] degree=11 low=0 f(1)=6227020800 c0=1620328
+N=13 mode=2 [sum D_m^2] degree=146 low=0 f(1)=6227020800 c0=1620328
+N=14 mode=0 [sum D_m (shifted by sum r_m)] degree=84 low=0 f(1)=87178291200 c0=1
+   signed count sum_pi (-1)^(sum D) = 27496448;  central coeff (sum D = 0) = 6538475094;  w3:-13851-1.77e-07i w4:-67584-3.84e-07i w5:95196.9-8.33e-07i w6:442409-3.93e-07i
+N=14 mode=1 [sum |D_m|] degree=42 low=0 f(1)=87178291200 c0=9167908
+N=14 mode=3 [#{m: D_m != 0}] degree=12 low=0 f(1)=87178291200 c0=9167908
+N=14 mode=2 [sum D_m^2] degree=182 low=0 f(1)=87178291200 c0=9167908
+N=15 mode=0 [sum D_m (shifted by sum r_m)] degree=98 low=0 f(1)=1307674368000 c0=1
+   signed count sum_pi (-1)^(sum D) = 11796480;  central coeff (sum D = 0) = 88921501972;  w3:-288684-1.72e-05i w4:-118016-5.24e-06i w5:-767413+1.34e-06i w6:502332-2.35e-05i
+N=15 mode=1 [sum |D_m|] degree=49 low=0 f(1)=1307674368000 c0=47821296
+N=15 mode=3 [#{m: D_m != 0}] degree=13 low=0 f(1)=1307674368000 c0=47821296
+N=15 mode=2 [sum D_m^2] degree=231 low=0 f(1)=1307674368000 c0=47821296
+N=16 mode=0 [sum D_m (shifted by sum r_m)] degree=112 low=0 f(1)=20922789888000 c0=1
+   signed count sum_pi (-1)^(sum D) = 0;  central coeff (sum D = 0) = 1305734261624;  w3:250776-0.000103i w4:97280+1.99e-05i w5:194658+0.000106i w6:1.04164e+06-0.000267i
+N=16 mode=1 [sum |D_m|] degree=56 low=0 f(1)=20922789888000 c0=276182312
+N=16 mode=3 [#{m: D_m != 0}] degree=14 low=0 f(1)=20922789888000 c0=276182312
+N=16 mode=2 [sum D_m^2] degree=280 low=0 f(1)=20922789888000 c0=276182312
+N=17 mode=0 [sum D_m (shifted by sum r_m)] degree=128 low=0 f(1)=355687428096000 c0=1
+   signed count sum_pi (-1)^(sum D) = 207683584;  central coeff (sum D = 0) = 20355573027676;  w3:-1.82177e+06-0.00266i w4:-649216+0.000507i w5:-121269+0.000801i w6:-1.57525e+06+0.000629i
+N=17 mode=1 [sum |D_m|] degree=64 low=0 f(1)=355687428096000 c0=1481994716
+N=17 mode=3 [#{m: D_m != 0}] degree=15 low=0 f(1)=355687428096000 c0=1481994716
+N=17 mode=2 [sum D_m^2] degree=344 low=0 f(1)=355687428096000 c0=1481994716
+N=18 mode=0 [sum D_m (shifted by sum r_m)] degree=144 low=0 f(1)=6402373705728000 c0=1
+   signed count sum_pi (-1)^(sum D) = 56290443264;  central coeff (sum D = 0) = 339885012885250;  w3:-4.22528e+06-0.0632i w4:-629760-0.0169i w5:-2.65561e+06-0.0131i w6:-2.07267e+07-0.0671i
+N=18 mode=1 [sum |D_m|] degree=72 low=0 f(1)=6402373705728000 c0=10084180418
+N=18 mode=3 [#{m: D_m != 0}] degree=16 low=0 f(1)=6402373705728000 c0=10084180418
