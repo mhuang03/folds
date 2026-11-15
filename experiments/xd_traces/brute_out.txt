@@ -1,0 +1,9 @@
+N=1 a=1 swapcrit_bad=0 local_bad=0/0 K=1 Z=1 singletons=1 maxclass=1 LRconst=True interval=True
+N=2 a=2 swapcrit_bad=0 local_bad=0/2 K=1 Z=0 singletons=0 maxclass=2 LRconst=True interval=True
+N=3 a=4 swapcrit_bad=0 local_bad=0/8 K=2 Z=0 singletons=0 maxclass=2 LRconst=True interval=True
+N=4 a=10 swapcrit_bad=0 local_bad=0/26 K=2 Z=0 singletons=0 maxclass=5 LRconst=True interval=True
+N=5 a=28 swapcrit_bad=0 local_bad=0/72 K=6 Z=0 singletons=0 maxclass=6 LRconst=True interval=True
+N=6 a=96 swapcrit_bad=0 local_bad=0/186 K=12 Z=0 singletons=0 maxclass=12 LRconst=True interval=True
+N=7 a=256 swapcrit_bad=0 local_bad=0/448 K=20 Z=0 singletons=0 maxclass=16 LRconst=True interval=True
+N=8 a=1120 swapcrit_bad=0 local_bad=0/1068 K=54 Z=0 singletons=0 maxclass=46 LRconst=True interval=True
+N=9 a=4256 swapcrit_bad=0 local_bad=0/2452 K=192 Z=0 singletons=0 maxclass=38 LRconst=True interval=True

@@ -1,0 +1,96 @@
+N=2 a=2 K=1 bottoms=1 Z=0 indep_pairs=1
+ degree histogram (number of valid swaps): 1:2 
+ up histogram: 0:1 1:1 
+ class length (rank of top) histogram: 1:1 
+ |E-O| per class histogram: 0:1  (distinct 1)
+ sum of class sizes=2 (ok) sum|E-O|=0 odd-size classes=0
+ class size histogram (size:count): 2:1  (distinct sizes 1)
+ median class size=2 mean=2.000 max=2 at top 2 1 
+N=3 a=4 K=2 bottoms=2 Z=0 indep_pairs=1
+ degree histogram (number of valid swaps): 1:4 
+ up histogram: 0:2 1:2 
+ class length (rank of top) histogram: 1:2 
+ |E-O| per class histogram: 0:2  (distinct 1)
+ sum of class sizes=4 (ok) sum|E-O|=0 odd-size classes=0
+ class size histogram (size:count): 2:2  (distinct sizes 1)
+ median class size=2 mean=2.000 max=2 at top 2 3 1 
+N=4 a=10 K=2 bottoms=2 Z=0 indep_pairs=3
+ degree histogram (number of valid swaps): 1:2 2:6 3:2 
+ up histogram: 0:2 1:6 2:2 
+ class length (rank of top) histogram: 3:2 
+ |E-O| per class histogram: 1:2  (distinct 1)
+ sum of class sizes=10 (ok) sum|E-O|=2 odd-size classes=2
+ class size histogram (size:count): 5:2  (distinct sizes 1)
+ median class size=5 mean=5.000 max=5 at top 3 4 1 2 
+N=5 a=28 K=6 bottoms=6 Z=0 indep_pairs=4
+ degree histogram (number of valid swaps): 1:4 2:20 3:4 
+ up histogram: 0:6 1:16 2:6 
+ class length (rank of top) histogram: 2:4 4:2 
+ |E-O| per class histogram: 0:4 2:2  (distinct 2)
+ sum of class sizes=28 (ok) sum|E-O|=4 odd-size classes=0
+ class size histogram (size:count): 4:4 6:2  (distinct sizes 2)
+ median class size=4 mean=4.667 max=6 at top 3 5 4 1 2 
+N=6 a=96 K=12 bottoms=12 Z=0 indep_pairs=6
+ degree histogram (number of valid swaps): 1:8 2:40 3:32 4:16 
+ up histogram: 0:12 1:48 2:32 3:4 
+ class length (rank of top) histogram: 2:2 4:6 5:4 
+ |E-O| per class histogram: 0:6 1:4 2:2  (distinct 3)
+ sum of class sizes=96 (ok) sum|E-O|=8 odd-size classes=4
+ class size histogram (size:count): 4:2 6:2 7:4 12:4  (distinct sizes 4)
+ median class size=7 mean=8.000 max=12 at top 4 6 1 3 5 2 
+N=7 a=256 K=20 bottoms=20 Z=0 indep_pairs=8
+ degree histogram (number of valid swaps): 1:8 2:64 3:112 4:64 5:8 
+ up histogram: 0:20 1:108 2:108 3:20 
+ class length (rank of top) histogram: 4:8 5:4 7:8 
+ |E-O| per class histogram: 0:20  (distinct 1)
+ sum of class sizes=256 (ok) sum|E-O|=0 odd-size classes=0
+ class size histogram (size:count): 10:8 12:4 16:8  (distinct sizes 3)
+ median class size=12 mean=12.800 max=16 at top 4 6 5 7 2 1 3 
+N=8 a=1120 K=54 bottoms=54 Z=0 indep_pairs=11
+ degree histogram (number of valid swaps): 1:18 2:152 3:386 4:348 5:186 6:28 7:2 
+ up histogram: 0:54 1:358 2:504 3:190 4:14 
+ class length (rank of top) histogram: 3:2 5:16 6:8 7:16 8:4 9:2 10:4 11:2 
+ |E-O| per class histogram: 0:24 1:20 2:10  (distinct 3)
+ sum of class sizes=1120 (ok) sum|E-O|=40 odd-size classes=20
+ class size histogram (size:count): 8:2 10:4 12:8 14:8 18:4 20:2 21:8 29:8 30:4 33:4 46:2  (distinct sizes 11)
+ median class size=20 mean=20.741 max=46 at top 5 7 6 8 1 3 2 4 
+N=9 a=4256 K=192 bottoms=192 Z=0 indep_pairs=13
+ degree histogram (number of valid swaps): 1:28 2:494 3:1312 4:1496 5:780 6:146 
+ up histogram: 0:192 1:1256 2:1906 3:820 4:82 
+ class length (rank of top) histogram: 3:8 4:6 5:40 6:38 7:40 8:40 9:20 
+ |E-O| per class histogram: 0:124 1:16 2:52  (distinct 3)
+ sum of class sizes=4256 (ok) sum|E-O|=120 odd-size classes=16
+ class size histogram (size:count): 8:8 9:2 10:4 12:24 14:16 15:4 16:4 18:4 20:20 22:16 23:8 24:28 25:2 30:8 32:24 38:20  (distinct sizes 16)
+ median class size=22 mean=22.167 max=38 at top 5 8 6 9 2 1 4 7 3 
+N=10 a=17878 K=412 bottoms=412 Z=0 indep_pairs=17
+ degree histogram (number of valid swaps): 1:50 2:848 3:3488 4:5600 5:5090 6:2218 7:534 8:48 9:2 
+ up histogram: 0:412 1:3582 2:7626 3:5154 4:1062 5:42 
+ class length (rank of top) histogram: 5:18 6:52 7:52 8:90 9:60 10:64 11:16 12:42 13:16 14:2 
+ |E-O| per class histogram: 0:240 1:72 2:80 4:10 5:10  (distinct 5)
+ sum of class sizes=17878 (ok) sum|E-O|=322 odd-size classes=82
+ class size histogram (size:count): 20:34 21:4 24:48 25:16 27:8 30:32 32:44 35:16 36:10 40:16 42:20 44:12 45:8 50:28 51:4 53:18 57:8 60:8 62:12 70:24 78:12 80:8 84:8 98:4 108:8 134:2  (distinct sizes 26)
+ median class size=36 mean=43.393 max=134 at top 6 9 8 1 4 7 10 3 2 5 
+N=11 a=70960 K=1312 bottoms=1312 Z=0 indep_pairs=20
+ degree histogram (number of valid swaps): 1:80 2:1976 3:10392 4:19976 5:22072 6:12180 7:3844 8:428 9:12 
+ up histogram: 0:1312 1:11720 2:28208 3:22956 4:6328 5:436 
+ class length (rank of top) histogram: 4:12 5:12 6:196 7:92 8:268 9:244 10:272 11:76 12:48 13:40 14:8 15:28 16:4 17:12 
+ |E-O| per class histogram: 0:1028 1:20 2:180 3:32 4:48 5:4  (distinct 6)
+ sum of class sizes=70960 (ok) sum|E-O|=688 odd-size classes=56
+ class size histogram (size:count): 10:8 12:4 16:8 18:12 20:32 24:116 28:40 30:56 32:36 35:16 36:108 38:16 40:52 42:52 44:72 46:36 48:16 50:68 54:20 55:8 58:12 60:88 62:16 64:12 66:16 69:8 70:12 72:40 75:8 76:112 80:92 82:8 92:8 96:4 100:36 105:8 110:8 119:8 130:24 134:4 170:12  (distinct sizes 41)
+ median class size=46 mean=54.085 max=170 at top 6 9 8 11 3 4 7 10 1 2 5 
+N=12 a=383476 K=4746 bottoms=4746 Z=0 indep_pairs=24
+ degree histogram (number of valid swaps): 1:206 2:6242 3:36782 4:84902 5:113450 6:87848 7:41526 8:10862 9:1572 10:86 
+ up histogram: 0:4746 1:47558 2:133920 3:137038 4:53006 5:7000 6:208 
+ class length (rank of top) histogram: 4:16 5:48 6:240 7:358 8:730 9:680 10:692 11:734 12:420 13:448 14:222 15:146 16:12 
+ |E-O| per class histogram: 0:3242 1:596 2:692 3:72 4:112 5:32  (distinct 6)
+ sum of class sizes=383476 (ok) sum|E-O|=2804 odd-size classes=700
+ class size histogram (size:count): 8:8 12:16 15:4 16:14 18:52 20:108 21:8 24:122 25:8 26:8 27:28 28:48 30:152 32:28 35:44 36:128 39:4 40:230 42:120 44:148 45:20 46:54 48:112 49:26 50:128 51:12 53:20 54:60 55:4 56:20 57:4 58:36 60:332 62:12 63:36 64:132 65:4 68:8 70:176 72:140 75:16 76:190 77:12 78:40 79:8 80:100 81:2 82:28 84:94 85:8 90:84 94:4 95:4 96:100 97:4 99:20 100:108 101:4 102:52 105:56  (distinct sizes 107)
+ median class size=70 mean=80.800 max=318 at top 7 10 9 1 4 8 12 3 2 6 11 5 
+N=13 a=1620328 K=13926 bottoms=13926 Z=0 indep_pairs=28
+ degree histogram (number of valid swaps): 1:268 2:12306 3:95480 4:283186 5:456232 6:430616 7:247864 8:80514 9:13012 10:834 11:16 
+ up histogram: 0:13926 1:154448 2:501272 3:607204 4:291202 5:50216 6:2060 
+ class length (rank of top) histogram: 5:92 6:172 7:488 8:1172 9:2088 10:2022 11:2240 12:2026 13:1392 14:918 15:524 16:328 17:280 18:112 19:72 
+ |E-O| per class histogram: 0:10232 1:456 2:1788 3:552 4:590 5:264 6:20 8:24  (distinct 8)
+ sum of class sizes=1620328 (ok) sum|E-O|=9680 odd-size classes=1272
+ class size histogram (size:count): 14:20 16:20 18:20 20:40 21:12 24:64 27:12 28:56 30:32 32:12 36:180 37:4 40:332 42:116 44:28 45:36 48:316 50:224 52:8 54:200 55:52 60:968 62:12 64:400 66:44 68:96 69:36 70:388 72:552 73:8 75:32 76:96 80:348 81:72 82:36 84:560 87:4 88:112 90:256 92:4 93:32 96:488 97:8 100:682 102:104 105:168 106:112 108:268 110:192 112:248 114:76 115:80 118:24 119:12 120:592 123:12 124:88 125:32 126:272 127:8  (distinct sizes 128)
+ median class size=100 mean=116.353 max=445 at top 7 11 8 13 10 2 1 5 9 12 4 3 6 

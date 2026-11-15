@@ -1,0 +1,125 @@
+N=1 mode=k value=1 (unsigned 1) nonzero_states=2
+N=2 mode=k value=1 (unsigned 1) nonzero_states=4
+N=3 mode=k value=2 (unsigned 2) nonzero_states=8
+N=4 mode=k value=2 (unsigned 2) nonzero_states=15
+N=5 mode=k value=6 (unsigned 6) nonzero_states=30
+N=6 mode=k value=12 (unsigned 12) nonzero_states=58
+N=7 mode=k value=20 (unsigned 20) nonzero_states=110
+N=8 mode=k value=54 (unsigned 54) nonzero_states=222
+N=9 mode=k value=192 (unsigned 192) nonzero_states=441
+N=10 mode=k value=412 (unsigned 412) nonzero_states=859
+N=11 mode=k value=1312 (unsigned 1312) nonzero_states=1715
+N=12 mode=k value=4746 (unsigned 4746) nonzero_states=3409
+N=13 mode=k value=13926 (unsigned 13926) nonzero_states=6757
+N=14 mode=k value=49824 (unsigned 49824) nonzero_states=13523
+N=15 mode=k value=216692 (unsigned 216692) nonzero_states=27079
+N=16 mode=k value=702714 (unsigned 702714) nonzero_states=54000
+N=17 mode=k value=2911068 (unsigned 2911068) nonzero_states=107603
+N=18 mode=k value=13281600 (unsigned 13281600) nonzero_states=215552
+N=19 mode=k value=49793300 (unsigned 49793300) nonzero_states=429597
+N=20 mode=k value=233423518 (unsigned 233423518) nonzero_states=859790
+N=21 mode=k value=1196154168 (unsigned 1196154168) nonzero_states=1719580
+N=22 mode=k value=5118304370 (unsigned 5118304370) nonzero_states=3438443
+N=23 mode=k value=25434088572 (unsigned 25434088572) nonzero_states=6871448
+N=24 mode=k value=143067464082 (unsigned 143067464082) nonzero_states=13747250
+N=25 mode=k value=664542466734 (unsigned 664542466734) nonzero_states=27474107
+N=26 mode=k value=3684620863682 (unsigned 3684620863682) nonzero_states=54947141
+N=27 mode=k value=21744963635100 (unsigned 21744963635100) nonzero_states=109873471
+N=28 mode=k value=115540659988478 (unsigned 115540659988478) nonzero_states=219703175
+N=1 mode=s value=1 (unsigned 1) nonzero_states=2
+N=2 mode=s value=0 (unsigned 0) nonzero_states=3
+N=3 mode=s value=0 (unsigned 0) nonzero_states=6
+N=4 mode=s value=2 (unsigned 2) nonzero_states=10
+N=5 mode=s value=-4 (unsigned 18446744073709551612) nonzero_states=20
+N=6 mode=s value=0 (unsigned 0) nonzero_states=39
+N=7 mode=s value=0 (unsigned 0) nonzero_states=70
+N=8 mode=s value=-8 (unsigned 18446744073709551608) nonzero_states=146
+N=9 mode=s value=-8 (unsigned 18446744073709551608) nonzero_states=295
+N=10 mode=s value=0 (unsigned 0) nonzero_states=588
+N=11 mode=s value=0 (unsigned 0) nonzero_states=1158
+N=12 mode=s value=-116 (unsigned 18446744073709551500) nonzero_states=2471
+N=13 mode=s value=120 (unsigned 120) nonzero_states=4760
+N=14 mode=s value=0 (unsigned 0) nonzero_states=10296
+N=15 mode=s value=0 (unsigned 0) nonzero_states=20403
+N=16 mode=s value=572 (unsigned 572) nonzero_states=42274
+N=17 mode=s value=660 (unsigned 660) nonzero_states=84831
+N=18 mode=s value=0 (unsigned 0) nonzero_states=178045
+N=19 mode=s value=0 (unsigned 0) nonzero_states=352672
+N=20 mode=s value=-534 (unsigned 18446744073709551082) nonzero_states=735007
+N=21 mode=s value=11442 (unsigned 11442) nonzero_states=1473085
+N=22 mode=s value=0 (unsigned 0) nonzero_states=3033238
+N=23 mode=s value=0 (unsigned 0) nonzero_states=6050292
+N=24 mode=s value=388018 (unsigned 388018) nonzero_states=12467131
+N=25 mode=s value=618484 (unsigned 618484) nonzero_states=24807870
+N=26 mode=s value=0 (unsigned 0) nonzero_states=50865926
+N=27 mode=s value=0 (unsigned 0) nonzero_states=101272905
+N=28 mode=s value=-353754 (unsigned 18446744073709197862) nonzero_states=206650966
+N=1 mode=t value=1 (unsigned 1) nonzero_states=2
+N=2 mode=t value=1 (unsigned 1) nonzero_states=4
+N=3 mode=t value=4 (unsigned 4) nonzero_states=8
+N=4 mode=t value=8 (unsigned 8) nonzero_states=16
+N=5 mode=t value=36 (unsigned 36) nonzero_states=32
+N=6 mode=t value=162 (unsigned 162) nonzero_states=64
+N=7 mode=t value=864 (unsigned 864) nonzero_states=128
+N=8 mode=t value=4608 (unsigned 4608) nonzero_states=256
+N=9 mode=t value=38400 (unsigned 38400) nonzero_states=512
+N=10 mode=t value=240000 (unsigned 240000) nonzero_states=1024
+N=11 mode=t value=2160000 (unsigned 2160000) nonzero_states=2048
+N=12 mode=t value=19440000 (unsigned 19440000) nonzero_states=4096
+N=13 mode=t value=190512000 (unsigned 190512000) nonzero_states=8192
+N=14 mode=t value=1867017600 (unsigned 1867017600) nonzero_states=16384
+N=15 mode=t value=23897825280 (unsigned 23897825280) nonzero_states=32768
+N=16 mode=t value=254910136320 (unsigned 254910136320) nonzero_states=65536
+N=17 mode=t value=3441286840320 (unsigned 3441286840320) nonzero_states=131072
+N=18 mode=t value=46457372344320 (unsigned 46457372344320) nonzero_states=262144
+N=19 mode=t value=663676747776000 (unsigned 663676747776000) nonzero_states=524288
+N=20 mode=t value=9481096396800000 (unsigned 9481096396800000) nonzero_states=1048576
+N=21 mode=t value=163887523430400000 (unsigned 163887523430400000) nonzero_states=2097152
+N=22 mode=t value=2478798791884800000 (unsigned 2478798791884800000) nonzero_states=4194304
+N=23 mode=t value=7724890106507296768 (unsigned 7724890106507296768) nonzero_states=8388608
+N=24 mode=t value=-8525930672545071104 (unsigned 9920813401164480512) nonzero_states=16777216
+N=1 mode=f value=1 (unsigned 1) nonzero_states=2
+N=2 mode=f value=3 (unsigned 3) nonzero_states=4
+N=3 mode=f value=6 (unsigned 6) nonzero_states=8
+N=4 mode=f value=22 (unsigned 22) nonzero_states=15
+N=5 mode=f value=62 (unsigned 62) nonzero_states=30
+N=6 mode=f value=268 (unsigned 268) nonzero_states=58
+N=7 mode=f value=828 (unsigned 828) nonzero_states=110
+N=8 mode=f value=4530 (unsigned 4530) nonzero_states=222
+N=9 mode=f value=18200 (unsigned 18200) nonzero_states=441
+N=10 mode=f value=97648 (unsigned 97648) nonzero_states=859
+N=11 mode=f value=436432 (unsigned 436432) nonzero_states=1715
+N=12 mode=f value=2817254 (unsigned 2817254) nonzero_states=3409
+N=13 mode=f value=13583526 (unsigned 13583526) nonzero_states=6757
+N=14 mode=f value=92438244 (unsigned 92438244) nonzero_states=13523
+N=15 mode=f value=535384764 (unsigned 535384764) nonzero_states=27079
+N=16 mode=f value=3822551942 (unsigned 3822551942) nonzero_states=54000
+N=17 mode=f value=23065620492 (unsigned 23065620492) nonzero_states=107603
+N=18 mode=f value=186989400104 (unsigned 186989400104) nonzero_states=215552
+N=19 mode=f value=1178510028004 (unsigned 1178510028004) nonzero_states=429597
+N=20 mode=f value=10204915090090 (unsigned 10204915090090) nonzero_states=859790
+N=21 mode=f value=71469802403096 (unsigned 71469802403096) nonzero_states=1719580
+N=22 mode=f value=630600096805722 (unsigned 630600096805722) nonzero_states=3438443
+N=23 mode=f value=4683502836904868 (unsigned 4683502836904868) nonzero_states=6871448
+N=24 mode=f value=45599914876157082 (unsigned 45599914876157082) nonzero_states=13747250
+N=2 Z=0 rigid_prefix_sets=2  by size: 2 0
+N=3 Z=0 rigid_prefix_sets=5  by size: 3 2 0
+N=4 Z=0 rigid_prefix_sets=6  by size: 4 2 0 0
+N=5 Z=0 rigid_prefix_sets=11  by size: 5 4 2 0 0
+N=6 Z=0 rigid_prefix_sets=20  by size: 6 6 6 2 0 0
+N=7 Z=0 rigid_prefix_sets=25  by size: 7 8 8 2 0 0 0
+N=8 Z=0 rigid_prefix_sets=45  by size: 8 10 14 7 4 2 0 0
+N=9 Z=0 rigid_prefix_sets=77  by size: 9 14 24 16 10 4 0 0 0
+N=10 Z=0 rigid_prefix_sets=117  by size: 10 16 30 23 20 14 4 0 0 0
+N=11 Z=0 rigid_prefix_sets=206  by size: 11 20 42 34 36 32 21 8 2 0 0
+N=12 Z=0 rigid_prefix_sets=350  by size: 12 24 60 64 74 62 34 16 4 0 0 0
+N=13 Z=0 rigid_prefix_sets=608  by size: 13 28 74 85 111 112 85 60 32 8 0 0 0
+N=14 Z=0 rigid_prefix_sets=1138  by size: 14 32 94 116 176 206 194 160 82 44 14 6 0 0
+N=15 Z=0 rigid_prefix_sets=1959  by size: 15 38 122 171 281 356 319 294 157 90 82 32 2 0 0
+N=16 Z=0 rigid_prefix_sets=4025  by size: 16 42 144 211 398 572 642 646 590 402 228 112 22 0 0 0
+N=17 Z=0 rigid_prefix_sets=8102  by size: 17 48 176 278 554 852 1103 1366 1266 1123 673 424 172 46 4 0 0
+N=18 Z=0 rigid_prefix_sets=14533  by size: 18 54 216 374 822 1382 1810 2214 2088 1744 1612 1151 596 326 96 30 0 0
+N=19 Z=0 rigid_prefix_sets=31070  by size: 19 60 250 458 1074 1906 2885 4168 4745 4689 4105 3292 1868 952 445 130 24 0 0
+N=20 Z=0 rigid_prefix_sets=73111  by size: 20 66 294 571 1446 2722 4570 7177 9074 11009 10948 9918 7084 4405 2406 1089 270 42 0 0
+N=21 Z=0 rigid_prefix_sets=141585  by size: 21 74 350 727 1925 3892 6709 11346 14716 17751 19869 20467 17197 13646 7638 3596 1290 310 55 6 0
+N=22 Z=0 rigid_prefix_sets=311149  by size: 22 80 396 852 2434 5184 9654 17232 25314 35250 43878 48088 43688 34862 23922 12672 5390 1761 406 64 0 0

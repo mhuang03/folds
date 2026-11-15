@@ -1,0 +1,13 @@
+N=2 longest rigid prefix=1 (N-1) examples=[(1,), (2,)] | longest dependent run in a complete valid sequence=1 e.g. (1, 2)
+N=3 longest rigid prefix=2 (N-1) examples=[(2, 1), (2, 3)] | longest dependent run in a complete valid sequence=2 e.g. (1, 3, 2)
+N=4 longest rigid prefix=2 (N-2) examples=[(2, 1), (3, 4)] | longest dependent run in a complete valid sequence=2 e.g. (1, 3, 2, 4)
+N=5 longest rigid prefix=3 (N-2) examples=[(3, 1, 2), (3, 5, 4)] | longest dependent run in a complete valid sequence=3 e.g. (1, 4, 3, 2, 5)
+N=6 longest rigid prefix=4 (N-2) examples=[(3, 5, 4, 6), (4, 2, 3, 1)] | longest dependent run in a complete valid sequence=4 e.g. (1, 5, 3, 4, 2, 6)
+N=7 longest rigid prefix=4 (N-3) examples=[(4, 1, 3, 2), (4, 2, 3, 1), (4, 6, 5, 7)] | longest dependent run in a complete valid sequence=4 e.g. (1, 6, 4, 3, 2, 7, 5)
+N=8 longest rigid prefix=6 (N-2) examples=[(4, 7, 5, 2, 1, 3), (5, 2, 4, 7, 8, 6)] | longest dependent run in a complete valid sequence=6 e.g. (3, 1, 6, 8, 7, 4, 2, 5)
+N=9 longest rigid prefix=6 (N-3) examples=[(4, 7, 5, 2, 1, 3), (4, 7, 5, 9, 6, 8), (6, 3, 5, 1, 4, 2)] | longest dependent run in a complete valid sequence=6 e.g. (1, 7, 5, 6, 3, 2, 4, 9, 8)
+N=10 longest rigid prefix=7 (N-3) examples=[(5, 8, 6, 2, 1, 4, 3), (5, 8, 6, 2, 3, 4, 1), (5, 9, 6, 2, 1, 4, 3)] | longest dependent run in a complete valid sequence=7 e.g. (2, 1, 7, 10, 8, 5, 4, 6, 3, 9)
+N=11 longest rigid prefix=9 (N-2) examples=[(6, 1, 5, 9, 11, 7, 3, 2, 4), (6, 2, 5, 9, 11, 7, 3, 1, 4), (6, 10, 7, 3, 1, 5, 9, 11, 8)] | longest dependent run in a complete valid sequence=9 e.g. (4, 2, 8, 10, 9, 5, 1, 3, 7, 11, 6)
+N=12 longest rigid prefix=9 (N-3) examples=[(5, 9, 6, 11, 7, 2, 3, 1, 4), (5, 9, 7, 2, 6, 11, 10, 8, 12), (5, 9, 7, 2, 6, 11, 12, 8, 10)]
+N=13 longest rigid prefix=10 (N-3) examples=[(6, 10, 7, 12, 8, 3, 1, 2, 5, 4), (6, 10, 7, 12, 8, 3, 1, 4, 5, 2), (6, 10, 7, 13, 8, 3, 1, 2, 5, 4)]
+N=14 longest rigid prefix=12 (N-2) examples=[(7, 12, 8, 3, 1, 6, 11, 14, 9, 4, 2, 5), (7, 13, 8, 3, 1, 6, 11, 12, 9, 4, 2, 5), (7, 13, 8, 3, 1, 6, 11, 14, 9, 4, 2, 5)]
