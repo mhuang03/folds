@@ -450,5 +450,41 @@ theorem same_side_of_semiStep_del1 {N m : ℕ} {S : List ℕ} (h0 : 0 ∉ S) (h2
   rw [hl, hr, h'] at h
   by_cases h1 : 1 ∈ S <;> by_cases h3 : 2 * m - 1 ∈ S <;> simp [h1, h3] at h ⊢
 
+/-! ## The two half-orders and the number of commutation classes -/
+
+/-- The order in which the left-half panels (`2m ≤ N`) are placed, and the order of the
+others. -/
+def halves (N : ℕ) (a : List ℕ) : List ℕ × List ℕ :=
+  (a.filter (fun m => 2 * m ≤ N), a.filter (fun m => ¬ 2 * m ≤ N))
+
+/-- Commuting panels lie in different halves. -/
+theorem far_halves {N x y : ℕ} (hx : 1 ≤ x) (hxN : x ≤ N) (hy : 1 ≤ y) (hyN : y ≤ N)
+    (h : Far N x y) : (2 * x ≤ N ∧ ¬ 2 * y ≤ N) ∨ (¬ 2 * x ≤ N ∧ 2 * y ≤ N) := by
+  unfold Far reach at h; omega
+
+/-- A commuting swap does not change the two half-orders. -/
+theorem halves_far_swap {N x y : ℕ} (hx : 1 ≤ x) (hxN : x ≤ N) (hy : 1 ≤ y) (hyN : y ≤ N)
+    (h : Far N x y) (l t : List ℕ) :
+    halves N (l ++ x :: y :: t) = halves N (l ++ y :: x :: t) := by
+  unfold halves
+  rcases far_halves hx hxN hy hyN h with ⟨h1, h2⟩ | ⟨h1, h2⟩ <;>
+    simp [List.filter_cons, h1, h2]
+
+/-- `τ(N)`: the number of pairs (left order, right order) realised by valid sequences.
+By the diamond argument of the notes (proved on paper) this is the number of commutation
+classes of valid sequences. -/
+def classCount (N : ℕ) : ℕ := ((semiSeqs N).image (halves N)).card
+
+theorem classCount_le (N : ℕ) : classCount N ≤ semiCount N := Finset.card_image_le
+
+/-! ## Small cases -/
+
+theorem signedCount_one : signedCount 1 = 1 := by decide +kernel
+theorem signedCount_four : signedCount 4 = 2 := by decide +kernel
+theorem signedCount_five : signedCount 5 = -4 := by decide +kernel
+theorem classCount_three : classCount 3 = 2 := by decide +kernel
+theorem classCount_four : classCount 4 = 2 := by decide +kernel
+theorem classCount_five : classCount 5 = 6 := by decide +kernel
+
 end XdOlympiad
 end Folds
