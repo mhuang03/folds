@@ -1,0 +1,48 @@
+N=1 live support=bool: sizes=[1, 1] unknowns=3 equations=2 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, -1]
+N=1 live support=edge: sizes=[1, 1] unknowns=3 equations=2 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, -1]
+N=1 all support=bool: sizes=[1, 1] unknowns=3 equations=2 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, -1]
+N=1 all support=edge: sizes=[1, 1] unknowns=3 equations=2 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, -1]
+N=2 live support=bool: sizes=[1, 2, 1] unknowns=7 equations=6 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, 0, -1]
+N=2 live support=edge: sizes=[1, 2, 1] unknowns=7 equations=6 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, 0, -1]
+N=2 all support=bool: sizes=[1, 2, 1] unknowns=7 equations=6 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, 0, -1]
+N=2 all support=edge: sizes=[1, 2, 1] unknowns=7 equations=6 nullity=1 nullity_r0=0 dim r-space=1
+     r = [1, 0, -1]
+N=3 live support=bool: sizes=[1, 3, 3, 1] unknowns=16 equations=20 nullity=0 nullity_r0=0 dim r-space=0
+N=3 live support=edge: sizes=[1, 3, 3, 1] unknowns=14 equations=20 nullity=0 nullity_r0=0 dim r-space=0
+N=3 all support=bool: sizes=[1, 3, 3, 1] unknowns=16 equations=20 nullity=0 nullity_r0=0 dim r-space=0
+N=3 all support=edge: sizes=[1, 3, 3, 1] unknowns=14 equations=20 nullity=0 nullity_r0=0 dim r-space=0
+N=4 live support=bool: sizes=[1, 4, 4, 4, 1] unknowns=29 equations=46 nullity=0 nullity_r0=0 dim r-space=0
+N=4 live support=edge: sizes=[1, 4, 4, 4, 1] unknowns=25 equations=42 nullity=0 nullity_r0=0 dim r-space=0
+N=4 all support=bool: sizes=[1, 4, 6, 4, 1] unknowns=37 equations=60 nullity=0 nullity_r0=0 dim r-space=0
+N=4 all support=edge: sizes=[1, 4, 6, 4, 1] unknowns=29 equations=52 nullity=0 nullity_r0=0 dim r-space=0
+N=5 live support=bool: sizes=[1, 5, 8, 8, 5, 1] unknowns=66 equations=132 nullity=0 nullity_r0=0 dim r-space=0
+N=5 live support=edge: sizes=[1, 5, 8, 8, 5, 1] unknowns=52 equations=112 nullity=0 nullity_r0=0 dim r-space=0
+N=5 all support=bool: sizes=[1, 5, 10, 10, 5, 1] unknowns=86 equations=168 nullity=0 nullity_r0=0 dim r-space=0
+N=5 all support=edge: sizes=[1, 5, 10, 10, 5, 1] unknowns=60 equations=132 nullity=0 nullity_r0=0 dim r-space=0
+N=6 live support=bool: sizes=[1, 6, 11, 18, 11, 6, 1] unknowns=143 equations=326 nullity=0 nullity_r0=0 dim r-space=0
+N=6 live support=edge: sizes=[1, 6, 11, 18, 11, 6, 1] unknowns=107 equations=258 nullity=0 nullity_r0=0 dim r-space=0
+N=6 all support=bool: sizes=[1, 6, 15, 20, 15, 6, 1] unknowns=199 equations=444 nullity=0 nullity_r0=0 dim r-space=0
+N=6 all support=edge: sizes=[1, 6, 15, 20, 15, 6, 1] unknowns=127 equations=320 nullity=0 nullity_r0=0 dim r-space=0
+N=7 live support=bool: sizes=[1, 7, 15, 23, 23, 15, 7, 1] unknowns=254 equations=628 nullity=0 nullity_r0=0 dim r-space=0
+N=7 live support=edge: sizes=[1, 7, 15, 23, 23, 15, 7, 1] unknowns=184 equations=488 nullity=0 nullity_r0=0 dim r-space=0
+N=7 all support=bool: sizes=[1, 7, 21, 35, 35, 21, 7, 1] unknowns=456 equations=1128 nullity=0 nullity_r0=0 dim r-space=0
+N=7 all support=edge: sizes=[1, 7, 21, 35, 35, 21, 7, 1] unknowns=268 equations=756 nullity=0 nullity_r0=0 dim r-space=0
+N=8 live support=bool: sizes=[1, 8, 20, 44, 46, 44, 20, 8, 1] unknowns=625 equations=1700 nullity=0 nullity_r0=0 dim r-space=0
+N=8 live support=edge: sizes=[1, 8, 20, 44, 46, 44, 20, 8, 1] unknowns=417 equations=1204 nullity=0 nullity_r0=0 dim r-space=0
+N=8 all support=bool: sizes=[1, 8, 28, 56, 70, 56, 28, 8, 1] unknowns=1033 equations=2776 nullity=0 nullity_r0=0 dim r-space=0
+N=8 all support=edge: sizes=[1, 8, 28, 56, 70, 56, 28, 8, 1] unknowns=569 equations=1732 nullity=0 nullity_r0=0 dim r-space=0
+N=9 live support=bool: sizes=[1, 9, 27, 63, 89, 89, 63, 27, 9, 1] unknowns=1366 equations=3970 nullity=0 nullity_r0=0 dim r-space=0
+N=9 live support=edge: sizes=[1, 9, 27, 63, 89, 89, 63, 27, 9, 1] unknowns=850 equations=2678 nullity=0 nullity_r0=0 dim r-space=0
+N=9 all support=bool: sizes=[1, 9, 36, 84, 126, 126, 84, 36, 9, 1] unknowns=2314 equations=6672 nullity=0 nullity_r0=0 dim r-space=0
+N=9 all support=edge: sizes=[1, 9, 36, 84, 126, 126, 84, 36, 9, 1] unknowns=1200 equations=3980 nullity=0 nullity_r0=0 dim r-space=0
+N=10 live support=bool: sizes=[1, 10, 32, 92, 140, 172, 140, 92, 32, 10, 1] unknowns=2875 equations=8898 nullity=0 nullity_r0=0 dim r-space=0
+N=10 live support=edge: sizes=[1, 10, 32, 92, 140, 172, 140, 92, 32, 10, 1] unknowns=1715 equations=5726 nullity=0 nullity_r0=0 dim r-space=0
+N=10 all support=bool: sizes=[1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1] unknowns=5131 equations=15724 nullity=0 nullity_r0=0 dim r-space=0
+N=10 all support=edge: sizes=[1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1] unknowns=2531 equations=8856 nullity=0 nullity_r0=0 dim r-space=0
