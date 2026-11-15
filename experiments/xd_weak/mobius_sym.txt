@@ -1,0 +1,12 @@
+N= 1 sym  live=2  mu(0,[N])=-1  A(-2)=-2  #nonzero mu(0,S)=2  dist={-1: 1, 1: 1}
+N= 2 sym  live=4  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=4  dist={-1: 2, 1: 2}
+N= 3 sym  live=8  mu(0,[N])=1  A(-2)=0  #nonzero mu(0,S)=6  dist={-1: 3, 0: 2, 1: 3}
+N= 4 sym  live=14  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=8  dist={-1: 4, 0: 6, 1: 4}
+N= 5 sym  live=24  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=10  dist={-1: 5, 0: 14, 1: 5}
+N= 6 sym  live=40  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=12  dist={-1: 6, 0: 28, 1: 6}
+N= 7 sym  live=52  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=14  dist={-1: 7, 0: 38, 1: 7}
+N= 8 sym  live=72  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=16  dist={-1: 8, 0: 56, 1: 8}
+N= 9 sym  live=92  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=18  dist={-1: 9, 0: 74, 1: 9}
+N=10 sym  live=132  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=20  dist={-1: 10, 0: 112, 1: 10}
+N=11 sym  live=172  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=22  dist={-1: 11, 0: 150, 1: 11}
+N=12 sym  live=228  mu(0,[N])=1  A(-2)=4  #nonzero mu(0,S)=24  dist={-1: 12, 0: 204, 1: 12}
