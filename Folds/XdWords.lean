@@ -456,8 +456,8 @@ theorem reachable_exists_balanced (hN : 0 < N) {S : Finset Nat} (hS : S ⊆ Fins
 
 /-- The initial intervals `[1, k]` are reachable. -/
 theorem reachable_Icc {k : Nat} (hk : k < N) : 0 < g N (Finset.Icc 1 k) := by
-  have h := coReach_interval (N := N) (a := k + 1) (b := N) (by omega) (by omega) le_rfl
-  unfold CoReach at h
+  have h := Adjacent.coReach_interval (N := N) (a := k + 1) (b := N) (by omega) (by omega) le_rfl
+  unfold Live2.CoReach at h
   have e : Finset.Icc 1 N \ Finset.Icc (k + 1) N = Finset.Icc 1 k := by
     ext x; simp only [Finset.mem_sdiff, Finset.mem_Icc]; omega
   rwa [e] at h
