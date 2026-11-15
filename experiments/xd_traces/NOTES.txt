@@ -1,0 +1,179 @@
+PARTIAL COMMUTATION, TRACES, HEAPS AND THE WEAK ORDER             (experiments/xd_traces/)
+==========================================================================================
+Notation.  V_N = valid (semi-symmetric) sequences of [N], a(N) = |V_N|.  W(m) = window of m
+= {x != m : |x-m| <= reach(m)}, reach(m) = min(m-1, N-m).  L = left half {x : 2x <= N},
+R = the rest (contains the middle panel when N is odd).  A = |L| = floor(N/2), B = |R|.
+Labels: [proven] (argument given here; [Lean] = also in Folds/XdTraces.lean),
+[data N<=..], [conjecture].  All runs single core, < 2.2 GB.
+
+SHORT ANSWER
+  * The brief assumed that commutation of two adjacent steps depends on the context S.
+    It does not.  Two adjacent steps m, m' of a valid sequence can be exchanged iff
+    m' is outside W(m) and m is outside W(m')  -- a FIXED relation I_N on panels; there is
+    no "inside the window with compensation" case.  [Lean]
+  * Hence V_N is a union of traces (Cartier-Foata classes, heaps) of ONE trace monoid, and
+    a(N) = sum over the K(N) valid traces of the number of linear extensions.  Every trace is
+    a set of shuffles of a fixed word on L with a fixed word on R, it is an interval of the
+    weak order of S_N, and it is isomorphic to an interval of Young's lattice L(A,B); its
+    size is a count of lattice paths between two boundaries.
+  * V_N is ORDER-CONVEX in the weak order: two valid sequences that are comparable lie in
+    the same trace.  [Lean]  So V_N is an antichain of K(N) intervals.
+  * What does NOT survive: validity is not a local (multiplicative) condition on heaps, so
+    the Cartier-Foata inversion gives a formula only for the number of ALL traces
+    (AO(N), a product, section 4), not for the valid ones.  K(N) obeys an inclusion-exclusion
+    over maximal pieces that needs the same 2^N subset DP as a(N).  No recurrence for K(N).
+  * There are NO rigid sequences: Z(N) = 0 for 2 <= N <= 22 [data; Lean for N <= 8].
+    So "a(N) from rigid sequences" is vacuous.  (experiments/mod8 measured a different
+    thing: sequences rigid for a fixed family of disjoint position pairs.)
+  * No formula or recurrence for a(N) came out of this angle.
+
+------------------------------------------------------------------------------------------
+1. EXACT SWAP CRITERION                                          [proven, Lean; data N<=10]
+------------------------------------------------------------------------------------------
+Let (S,m) and (S+m, m') be valid steps.  bal_S(y) = #left - #right placed panels in W(y).
+Adding a panel x to S changes bal(y) by +-1 if x in W(y) and by 0 otherwise.  Therefore
+  (S,m') valid      <=>  m not in W(m')        (since bal_{S+m}(m') = 0),
+  (S+m', m) valid   <=>  m' not in W(m)        (since bal_S(m) = 0).
+So the swap is valid iff m, m' are INDEPENDENT:  m not in W(m') and m' not in W(m).
+No compensation is possible because one new panel moves a balance by exactly one.
+Every later step sees the same set, so the whole sequence stays valid ("the finer graph is
+the same graph").
+  Lean: not_semiStep_cons_of_inWindow, semiStep_cons_of_not_inWindow, swap_step_iff,
+        both_orders_iff, semiSymmetric_swap_iff, SwapStep.semiSymmetric,
+        swapStep_of_semiSymmetric.
+  Data: brute.py (all valid sequences N <= 9, all positions; all (S,m,m') for N <= 10):
+        0 violations (brute_out.txt).
+Explicit form [Lean indep_iff]: for 1 <= x < y <= N,
+        x, y independent  <=>  2x <= y  and  x + N + 1 <= 2y.
+With j = N+1-y:  2x + j <= N+1 and x + 2j <= N+1.  Consequences:
+  * independent panels lie in opposite halves [Lean Indep.left_right]; the dependence
+    graph D_N is two cliques L, R plus the cross pairs with max(2x+j, x+2j) >= N+2;
+    about 1/3 of all pairs are independent (|I_N| = 1,1,3,4,6,8,11,13,17,20,24,28,33,37,43
+    for N = 2..16);
+  * I_N is an upper set for inclusion of [x,y] [Lean Indep.widen]; the cross pairs form a
+    Ferrers board (rows nested; ao.py).
+
+------------------------------------------------------------------------------------------
+2. SWAP CLASSES = TRACES                                                 [proven + data]
+------------------------------------------------------------------------------------------
+K(N) = number of classes of V_N under valid swaps = number of connected components of V_N
+in the permutohedron graph (adjacent steps).
+Structure [proven]:
+  (a) L-word and R-word are constant on a class [Lean SwapEquiv.filter_left/right]; a class
+      is a set of shuffles of two words l_1..l_A, r_1..r_B.
+  (b) A shuffle is a lattice path in the A x B grid.  Validity of l_p placed after q right
+      panels reads  #{q' <= q : r_q' in W(l_p)} = c_p(sigma_L)  (c_p = #smaller - #larger
+      earlier left panels in W(l_p)); the left side is monotone in q, so the admissible
+      heights form an interval [lo_p, hi_p]; same for the columns of r_q.  A class = all
+      paths between a lowest and a highest path = an interval [lambda, mu] of Young's
+      lattice L(A,B); its size is a Kreweras/LGV determinant.  classes.c computes sizes by
+      the path DP and re-derives a(N) = sum of sizes (ok for N <= 16).
+  (c) Since x < y for x in L, y in R, the cross inversions are the cells under the path:
+      the class is an interval of the weak order of S_N (brute.py checks the class is the
+      WHOLE interval [min,max] of S_N, N <= 8), a distributive lattice; unique top = the
+      sequence with no independent adjacent pair in increasing order.
+      K(N) = #{a in V_N : no adjacent independent pair (x,y) with x < y}.
+  (d) Cartier-Foata inclusion-exclusion on the set of maximal pieces (cliques of I_N have
+      size <= 2):
+        K(S) = sum_{m valid for S-m} K(S-m)
+               - sum_{ {m,m'} independent, both valid for S-m-m' } K(S-m-m'),   K(N) = K([N]).
+      Equivalently K(N) = sum_k (-1)^k P_k, P_k = #(valid sequence, k marked disjoint
+      independent adjacent pairs in increasing order) = sum_a C(up(a), k).  [proven;
+      kdp.c mode k agrees with the enumeration for N <= 16]
+Lean: SwapStep, SwapEquiv (+ refl/symm/trans, mem_semiSeqs_iff, reverse, mirror),
+      swapClass, swapClasses, classCount, semiCount_eq_sum_swapClasses  (a(N) = sum |c|).
+
+K(N), N = 1..28 (dp_out.txt, kdp.c):
+  1 1 2 2 6 12 20 54 192 412 1312 4746 13926 49824 216692 702714 2911068 13281600 49793300
+  233423518 1196154168 5118304370 25434088572 143067464082 664542466734 3684620863682
+  21744963635100 115540659988478
+Mean class size a/K: 1 2 2 5 4.7 8 12.8 20.7 22.2 43.4 54.1 80.8 116 184 221 393 509 759
+  1106 1709 2095 3550 4679 6848 9878 15085 18998 31185  (grows like ~1.47^N, with a wobble).
+Largest class: 2 2 5 6 12 16 46 38 134 170 318 445 870 1385 3737 (N = 2..16); smallest:
+  2 2 5 4 4 10 8 8 20 10 8 14 10 6 12.  Class-size and length histograms: classes*_out.txt.
+Recurrence tests on K(1..28) [negative]: P-recursive, order r <= 7, degree d <= 5 with
+  (r+1)(d+1)+3 <= 28-r: no fit (ao.py, ao_out.txt).  Ratios K(N)/K(N-1) wobble with period 3
+  like a(N).  K is not in the OEIS as far as I can tell from memory (no network lookup
+  done) -- to be checked.
+F(N) = sum_a 2^{up(a)} (valid "parallel schedules": blocks = single panels or independent
+  pairs, no sign): 1 3 6 22 62 268 828 4530 18200 97648 ... (dp_out.txt, mode f).
+
+------------------------------------------------------------------------------------------
+3. WEAK-ORDER STRUCTURE OF V_N                                           [proven + data]
+------------------------------------------------------------------------------------------
+Sequence encoding (covers = exchange of adjacent steps):
+  * THEOREM [Lean before_iff_of_weakLE, semiSymmetric_of_weak_between].  If a <= b in the
+    weak order (Inv(a) subset Inv(b)) and both are valid, then for every m and every x in
+    W(m), x precedes m in a iff it does in b; and every fold sequence c with a <= c <= b is
+    valid.  Proof: going up, the set of earlier left neighbours of m can only shrink and the
+    set of earlier right neighbours can only grow; both balances are 0, so nothing changes.
+    Hence a, b have the same heap (all dependent pairs are window pairs): V_N is
+    order-convex, its connected components are exactly the K(N) classes, each an interval,
+    pairwise incomparable; these are the maximal intervals inside V_N; the Moebius number
+    of V_N with 0^,1^ adjoined is K(N)-1 (weak.py: 0,1,1,5,11,19,53 for N = 2..8 ok).
+  * Trace equivalence of I_N on ALL of S_N is a lattice congruence Theta_N of the weak
+    order (I_N is an upper set of pairs, section 1; polygon-forcing closure checked N <= 6
+    in weak.py: the contracted edges are exactly the |I_N| (N-1)! swaps of independent
+    pairs).  V_N is a union of Theta_N-classes and an ANTICHAIN in the quotient lattice
+    S_N / Theta_N, which has AO(N) elements.  [proven given Reading's forcing rule; data N<=6]
+  * V_N is not closed under join or meet (N=6: 390 of 4560 pairs), not a sublattice.
+  * Sign balance: s(N) = sum_{a in V_N} sgn(a) is tiny (kdp.c mode s): N = 1..28:
+    1 0 0 2 -4 0 0 -8 -8 0 0 -116 120 0 0 572 660 0 0 -534 11442 0 0 388018 618484 0 0
+    -353754.  (0 for N = 2,3 mod 4 by reversal [proven].)  Per class E-O is small too
+    (sum over classes of |E-O|: 583632 of 276182312 at N = 16).  No pattern found.  [data]
+Time-word encoding (covers = exchange of the times of panels m, m+1): no structure:
+  V_N is not convex (N=8: 4100 holes), has many components (8,16,40,128,474 for N = 4..8),
+  many singletons, Moebius numbers -1,5,1,39,-67.  [data N<=8, negative]
+
+------------------------------------------------------------------------------------------
+4. THE CONTEXT-FREE CORE AND CARTIER-FOATA                               [proven + data]
+------------------------------------------------------------------------------------------
+The largest independence relation valid in every context is I_N itself (section 1).
+AO(N) = number of all traces with every panel once = acyclic orientations of D_N
+      = |S_N / Theta_N|.  Cartier-Foata / Viennot inversion (multilinear part of
+1/(1 - sum x_i + sum_{I_N} x_i x_j)):
+      AO(N) = sum_k (-1)^k r_k (N-k)!,   r_k = k-matchings of I_N = rook numbers of a
+      Ferrers board with row lengths b_x = N + 1 - max(2x, ceil((x+N+1)/2)), x = 1..A.
+D_N is chordal (R first, then L by decreasing dependence), so
+      AO(N) = B! * prod_{i=1..A} (B - b_(i) + i),   b_(1) <= ... <= b_(A).
+[proven; both formulas agree with the subset DP for N <= 22 and with each other N <= 30]
+AO(1..16) = 1 1 4 8 36 162 864 4608 38400 240000 2160000 19440000 190512000 1867017600
+            23897825280 254910136320.
+Does a(N) decompose over these traces with simple multiplicities?  No: a trace is either
+entirely valid or entirely invalid (multiplicity e(trace) or 0); the valid fraction
+K(N)/AO(N) = 0.25 0.167 0.074 0.023 0.0117 0.005 0.0017 0.0006 (N = 4..11) decays like a(N)/N!
+and the valid traces are selected by the N balance equations, which couple the two
+chains (window of a left panel l > N/4 reaches into R).  Validity is not a product of
+local weights on the heap, so the inversion lemma does not apply to K or a.  [negative]
+
+------------------------------------------------------------------------------------------
+5. RIGID SEQUENCES                                                               [data]
+------------------------------------------------------------------------------------------
+Z(N) = #valid sequences without any valid swap (= singleton classes) = 0 for 2 <= N <= 22
+(zdp.c, DP over (set, last panel); classes.c N <= 16).  Lean: not_rigid_small (N <= 8,
+kernel-checked DFS allExt + allExt_sound).
+[conjecture]  Z(N) = 0 for all N >= 2: every valid sequence has a valid swap.
+  * minimum number of valid swaps is 1; #sequences with exactly one: 2 4 8 8 18 28 50 80
+    206 268 718 1416 3754 (N = 4..16).
+  * the longest run of consecutive dependent steps in a valid sequence is N-2 or N-3
+    (rigidprefix.py, N <= 14); rigid valid PREFIXES die at length N-2/N-3 (zdp.c lists the
+    number of prefix sets by size).
+  * tested and FALSE: "the first adjacent pair of panels from opposite halves is
+    independent" (fails from N = 6: 3,5,...; firstswitch.py).  No proof found; the
+    obstruction is global (a rigid prefix of length N-2 and a rigid reversed suffix of
+    length 2 exist, the junction is independent, e.g. N=8: 4,7,5,2,1,3 | 8,6).
+Inclusion-exclusion from rigid sequences: vacuous (Z = 0).  The heap analogue that does
+hold is 2(d) above (K as an alternating sum over marked independent pairs).
+
+------------------------------------------------------------------------------------------
+6. FILES
+------------------------------------------------------------------------------------------
+brute.py      independent brute-force checks (criterion, union-find classes, intervals)
+classes.c     enumeration of V_N, tops, class sizes by path DP, histograms (N <= 16)
+kdp.c         subset DP: a, K (inclusion-exclusion), signed count, AO, F   (N <= 28)
+zdp.c         rigid sequences, DP over (set, last)                         (N <= 22)
+weak.py       weak-order structure in both encodings, congruence test      (N <= 8)
+ao.py         AO(N): rook formula, product formula; P-recursive test on K
+deg1.py, firstswitch.py, rigidprefix.py   toward Z(N) = 0
+*_out.txt     outputs.   run_dp.sh reproduces dp_out.txt.
+Lean: Folds/XdTraces.lean (no sorry, no native_decide).
