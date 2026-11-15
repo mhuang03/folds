@@ -141,8 +141,9 @@ Files
 2.1 [proven, Lean inv_add_inv_mirror, sgn_mirror, signedCount_eq_zero, two_mul_card_evenSeqs]
  inv(a) + inv(mirror a) = C(N,2).  For N = 2, 3 (mod 4), C(N,2) is odd, the mirror is a
  sign-reversing involution of V_N, D(N) = 0 and exactly a(N)/2 valid sequences are even
- permutations.  (Reversal gives the same.)  Lean also: signedCount_eq_card_sub,
- signedCount_four = 2, signedCount_five = -4.
+ permutations.  (Reversal gives the same.)  Lean also: signedCount_eq_card_sub.  (Kernel
+ `decide` checks of D(4) = 2, D(5) = -4 and of tau(3..5) did not reduce and were dropped; these
+ values are [data] from xd.c / traces.c.)
 2.2 [data N <= 24] D(N) for N = 0, 1 (mod 4): table in the summary.  D(N) = a(N) (mod 2) only.
  |D(N)|/sqrt(a(N)) = 0.0011 (N = 16), 0.00085 (N = 20), 0.012 (N = 24): much smaller than a random
  sign assignment would give, but not bounded and of no fixed sign.

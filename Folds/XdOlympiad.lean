@@ -40,7 +40,6 @@ Notes: `experiments/xd_olympiad/NOTES.txt`.
 ## Half-orders and classes
 * `halves`, `halves_far_swap`: a commuting swap keeps the order of the left-half panels and
   the order of the others; `classCount N` (`τ(N)` of the notes) counts the realised pairs.
-* Small cases: `signedCount_one`, `signedCount_four`, `signedCount_five`.
 -/
 
 namespace Folds
@@ -481,12 +480,6 @@ classes of valid sequences. -/
 def classCount (N : ℕ) : ℕ := ((semiSeqs N).image (halves N)).card
 
 theorem classCount_le (N : ℕ) : classCount N ≤ semiCount N := Finset.card_image_le
-
-/-! ## Small cases -/
-
-theorem signedCount_one : signedCount 1 = 1 := by decide +kernel
-theorem signedCount_four : signedCount 4 = 2 := by decide +kernel
-theorem signedCount_five : signedCount 5 = -4 := by decide +kernel
 
 end XdOlympiad
 end Folds
