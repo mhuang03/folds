@@ -1,0 +1,9 @@
+# compiled binaries and large dumps
+enum
+statdp
+permuton
+minstat
+heaps
+*.bin
+*.o
+__pycache__/

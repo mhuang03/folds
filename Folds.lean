@@ -69,3 +69,4 @@ import Folds.XdOlympiad
 import Folds.XdConstTerm
 import Folds.XdRank
 import Folds.XdWeak
+import Folds.XdSymFun

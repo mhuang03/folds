@@ -1,0 +1,176 @@
+N=1 |V|=1
+  shapes occurring: 1/1  TV distance to Plancherel: 0.0000  transpose-symmetric: True
+  union of Knuth classes (a): True   union of dual Knuth classes (a) = Knuth classes of t: True
+    (1,): count 1  f^lam 1  (uniform-on-shape would be 1.0)  #P 1  #Q 1
+  sequences all of whose Knuth neighbours are valid: 1/1;  dual Knuth: 1/1
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 1 (uniform expectation 1.0);  involutions in V = 1
+  Foata fundamental map: 1 images valid;  Foata second map: 1 images valid (random expectation 1.0)
+  (P,Q)->(P,evac Q): 1 valid;  (evac P,Q): 1;  (P^T,Q^T): 1;  (P,P): 1
+  fixed points: {1: 1}  mean 1.0000
+  cycles: {1: 1}  mean 1.0000 (H_N = 1.0000)
+  N-cycles: 1 (uniform 1.0);  distinct cycle types: 1/1
+    {(1,): 1}
+N=2 |V|=2
+  shapes occurring: 2/2  TV distance to Plancherel: 0.0000  transpose-symmetric: True
+  union of Knuth classes (a): True   union of dual Knuth classes (a) = Knuth classes of t: True
+    (2,): count 1  f^lam 1  (uniform-on-shape would be 1.0)  #P 1  #Q 1
+    (1, 1): count 1  f^lam 1  (uniform-on-shape would be 1.0)  #P 1  #Q 1
+  sequences all of whose Knuth neighbours are valid: 2/2;  dual Knuth: 2/2
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 2 (uniform expectation 2.0);  involutions in V = 2
+  Foata fundamental map: 2 images valid;  Foata second map: 2 images valid (random expectation 2.0)
+  (P,Q)->(P,evac Q): 2 valid;  (evac P,Q): 2;  (P^T,Q^T): 2;  (P,P): 2
+  fixed points: {0: 1, 2: 1}  mean 1.0000
+  cycles: {1: 1, 2: 1}  mean 1.5000 (H_N = 1.5000)
+  N-cycles: 1 (uniform 1.0);  distinct cycle types: 2/2
+    {(1, 1): 1, (2,): 1}
+N=3 |V|=4
+  shapes occurring: 1/3  TV distance to Plancherel: 0.3333  transpose-symmetric: True
+  union of Knuth classes (a): True   union of dual Knuth classes (a) = Knuth classes of t: True
+    (3,): count 0  f^lam 1  (uniform-on-shape would be 0.7)  #P 0  #Q 0
+    (2, 1): count 4  f^lam 2  (uniform-on-shape would be 2.7)  #P 2  #Q 2
+    (1, 1, 1): count 0  f^lam 1  (uniform-on-shape would be 0.7)  #P 0  #Q 0
+  sequences all of whose Knuth neighbours are valid: 4/4;  dual Knuth: 4/4
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 4 (uniform expectation 2.7);  involutions in V = 2
+  Foata fundamental map: 3 images valid;  Foata second map: 4 images valid (random expectation 2.7)
+  (P,Q)->(P,evac Q): 4 valid;  (evac P,Q): 4;  (P^T,Q^T): 4;  (P,P): 4
+  fixed points: {0: 2, 1: 2}  mean 0.5000
+  cycles: {1: 2, 2: 2}  mean 1.5000 (H_N = 1.8333)
+  N-cycles: 2 (uniform 1.3);  distinct cycle types: 2/3
+    {(2, 1): 2, (3,): 2}
+N=4 |V|=10
+  shapes occurring: 3/5  TV distance to Plancherel: 0.2333  transpose-symmetric: True
+  union of Knuth classes (a): True   union of dual Knuth classes (a) = Knuth classes of t: False
+    (4,): count 0  f^lam 1  (uniform-on-shape would be 0.4)  #P 0  #Q 0
+    (3, 1): count 3  f^lam 3  (uniform-on-shape would be 3.8)  #P 1  #Q 3
+    (2, 2): count 4  f^lam 2  (uniform-on-shape would be 1.7)  #P 2  #Q 2
+    (2, 1, 1): count 3  f^lam 3  (uniform-on-shape would be 3.8)  #P 1  #Q 3
+    (1, 1, 1, 1): count 0  f^lam 1  (uniform-on-shape would be 0.4)  #P 0  #Q 0
+  sequences all of whose Knuth neighbours are valid: 10/10;  dual Knuth: 4/10
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 6 (uniform expectation 4.2);  involutions in V = 4
+  Foata fundamental map: 6 images valid;  Foata second map: 10 images valid (random expectation 4.2)
+  (P,Q)->(P,evac Q): 10 valid;  (evac P,Q): 10;  (P^T,Q^T): 10;  (P,P): 10
+  fixed points: {0: 4, 1: 4, 2: 2}  mean 0.8000
+  cycles: {1: 2, 2: 6, 3: 2}  mean 2.0000 (H_N = 2.0833)
+  N-cycles: 2 (uniform 2.5);  distinct cycle types: 4/5
+    {(2, 1, 1): 2, (2, 2): 2, (3, 1): 4, (4,): 2}
+N=5 |V|=28
+  shapes occurring: 3/7  TV distance to Plancherel: 0.2833  transpose-symmetric: True
+  union of Knuth classes (a): False   union of dual Knuth classes (a) = Knuth classes of t: False
+    (5,): count 0  f^lam 1  (uniform-on-shape would be 0.2)  #P 0  #Q 0
+    (4, 1): count 0  f^lam 4  (uniform-on-shape would be 3.7)  #P 0  #Q 0
+    (3, 2): count 6  f^lam 5  (uniform-on-shape would be 5.8)  #P 2  #Q 5
+    (3, 1, 1): count 16  f^lam 6  (uniform-on-shape would be 8.4)  #P 4  #Q 4
+    (2, 2, 1): count 6  f^lam 5  (uniform-on-shape would be 5.8)  #P 2  #Q 5
+    (2, 1, 1, 1): count 0  f^lam 4  (uniform-on-shape would be 3.7)  #P 0  #Q 0
+    (1, 1, 1, 1, 1): count 0  f^lam 1  (uniform-on-shape would be 0.2)  #P 0  #Q 0
+  sequences all of whose Knuth neighbours are valid: 16/28;  dual Knuth: 8/28
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 20 (uniform expectation 6.5);  involutions in V = 6
+  Foata fundamental map: 7 images valid;  Foata second map: 22 images valid (random expectation 6.5)
+  (P,Q)->(P,evac Q): 20 valid;  (evac P,Q): 20;  (P^T,Q^T): 20;  (P,P): 22
+  fixed points: {0: 8, 1: 8, 2: 8, 3: 4}  mean 1.2857
+  cycles: {1: 2, 2: 12, 3: 10, 4: 4}  mean 2.5714 (H_N = 2.2833)
+  N-cycles: 2 (uniform 5.6);  distinct cycle types: 6/7
+    {(2, 1, 1, 1): 4, (2, 2, 1): 2, (3, 1, 1): 8, (3, 2): 6, (4, 1): 6, (5,): 2}
+N=6 |V|=96
+  shapes occurring: 7/11  TV distance to Plancherel: 0.4708  transpose-symmetric: True
+  union of Knuth classes (a): False   union of dual Knuth classes (a) = Knuth classes of t: False
+    (6,): count 0  f^lam 1  (uniform-on-shape would be 0.1)  #P 0  #Q 0
+    (5, 1): count 0  f^lam 5  (uniform-on-shape would be 3.3)  #P 0  #Q 0
+    (4, 2): count 1  f^lam 9  (uniform-on-shape would be 10.8)  #P 1  #Q 1
+    (4, 1, 1): count 4  f^lam 10  (uniform-on-shape would be 13.3)  #P 1  #Q 4
+    (3, 3): count 5  f^lam 5  (uniform-on-shape would be 3.3)  #P 1  #Q 5
+    (3, 2, 1): count 76  f^lam 16  (uniform-on-shape would be 34.1)  #P 8  #Q 16
+    (3, 1, 1, 1): count 4  f^lam 10  (uniform-on-shape would be 13.3)  #P 1  #Q 4
+    (2, 2, 2): count 5  f^lam 5  (uniform-on-shape would be 3.3)  #P 1  #Q 5
+    (2, 2, 1, 1): count 1  f^lam 9  (uniform-on-shape would be 10.8)  #P 1  #Q 1
+    (2, 1, 1, 1, 1): count 0  f^lam 5  (uniform-on-shape would be 3.3)  #P 0  #Q 0
+    (1, 1, 1, 1, 1, 1): count 0  f^lam 1  (uniform-on-shape would be 0.1)  #P 0  #Q 0
+  sequences all of whose Knuth neighbours are valid: 64/96;  dual Knuth: 16/96
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 52 (uniform expectation 12.8);  involutions in V = 12
+  Foata fundamental map: 14 images valid;  Foata second map: 64 images valid (random expectation 12.8)
+  (P,Q)->(P,evac Q): 68 valid;  (evac P,Q): 68;  (P^T,Q^T): 68;  (P,P): 94
+  fixed points: {0: 27, 1: 34, 2: 28, 3: 6, 4: 1}  mean 1.1667
+  cycles: {1: 12, 2: 32, 3: 35, 4: 16, 5: 1}  mean 2.6042 (H_N = 2.4500)
+  N-cycles: 12 (uniform 16.0);  distinct cycle types: 10/11
+    {(2, 1, 1, 1, 1): 1, (2, 2, 1, 1): 10, (2, 2, 2): 1, (3, 1, 1, 1): 6, (3, 2, 1): 16, (3, 3): 8, (4, 1, 1): 18, (4, 2): 6, (5, 1): 18, (6,): 12}
+N=7 |V|=256
+  shapes occurring: 4/15  TV distance to Plancherel: 0.3875  transpose-symmetric: True
+  union of Knuth classes (a): False   union of dual Knuth classes (a) = Knuth classes of t: False
+    (7,): count 0  f^lam 1  (uniform-on-shape would be 0.1)  #P 0  #Q 0
+    (6, 1): count 0  f^lam 6  (uniform-on-shape would be 1.8)  #P 0  #Q 0
+    (5, 2): count 0  f^lam 14  (uniform-on-shape would be 10.0)  #P 0  #Q 0
+    (5, 1, 1): count 0  f^lam 15  (uniform-on-shape would be 11.4)  #P 0  #Q 0
+    (4, 3): count 0  f^lam 14  (uniform-on-shape would be 10.0)  #P 0  #Q 0
+    (4, 2, 1): count 56  f^lam 35  (uniform-on-shape would be 62.2)  #P 8  #Q 22
+    (4, 1, 1, 1): count 0  f^lam 20  (uniform-on-shape would be 20.3)  #P 0  #Q 0
+    (3, 3, 1): count 72  f^lam 21  (uniform-on-shape would be 22.4)  #P 6  #Q 20
+    (3, 2, 2): count 72  f^lam 21  (uniform-on-shape would be 22.4)  #P 6  #Q 20
+    (3, 2, 1, 1): count 56  f^lam 35  (uniform-on-shape would be 62.2)  #P 8  #Q 22
+    (3, 1, 1, 1, 1): count 0  f^lam 15  (uniform-on-shape would be 11.4)  #P 0  #Q 0
+    (2, 2, 2, 1): count 0  f^lam 14  (uniform-on-shape would be 10.0)  #P 0  #Q 0
+    (2, 2, 1, 1, 1): count 0  f^lam 14  (uniform-on-shape would be 10.0)  #P 0  #Q 0
+    (2, 1, 1, 1, 1, 1): count 0  f^lam 6  (uniform-on-shape would be 1.8)  #P 0  #Q 0
+    (1, 1, 1, 1, 1, 1, 1): count 0  f^lam 1  (uniform-on-shape would be 0.1)  #P 0  #Q 0
+  sequences all of whose Knuth neighbours are valid: 136/256;  dual Knuth: 0/256
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 64 (uniform expectation 13.0);  involutions in V = 8
+  Foata fundamental map: 12 images valid;  Foata second map: 122 images valid (random expectation 13.0)
+  (P,Q)->(P,evac Q): 80 valid;  (evac P,Q): 80;  (P^T,Q^T): 80;  (P,P): 88
+  fixed points: {0: 114, 1: 90, 2: 40, 3: 12}  mean 0.8047
+  cycles: {1: 46, 2: 98, 3: 78, 4: 30, 5: 4}  mean 2.4062 (H_N = 2.5929)
+  N-cycles: 46 (uniform 36.6);  distinct cycle types: 12/15
+    {(2, 2, 1, 1, 1): 4, (2, 2, 2, 1): 4, (3, 2, 1, 1): 18, (3, 2, 2): 10, (3, 3, 1): 16, (4, 1, 1, 1): 8, (4, 2, 1): 30, (4, 3): 36, (5, 1, 1): 22, (5, 2): 22, (6, 1): 40, (7,): 46}
+N=8 |V|=1120
+  shapes occurring: 6/22  TV distance to Plancherel: 0.3567  transpose-symmetric: True
+  union of Knuth classes (a): False   union of dual Knuth classes (a) = Knuth classes of t: False
+    (8,): count 0  f^lam 1  (uniform-on-shape would be 0.0)  #P 0  #Q 0
+    (7, 1): count 0  f^lam 7  (uniform-on-shape would be 1.4)  #P 0  #Q 0
+    (6, 2): count 0  f^lam 20  (uniform-on-shape would be 11.1)  #P 0  #Q 0
+    (6, 1, 1): count 0  f^lam 21  (uniform-on-shape would be 12.2)  #P 0  #Q 0
+    (5, 3): count 0  f^lam 28  (uniform-on-shape would be 21.8)  #P 0  #Q 0
+    (5, 2, 1): count 0  f^lam 64  (uniform-on-shape would be 113.8)  #P 0  #Q 0
+    (5, 1, 1, 1): count 0  f^lam 35  (uniform-on-shape would be 34.0)  #P 0  #Q 0
+    (4, 4): count 0  f^lam 14  (uniform-on-shape would be 5.4)  #P 0  #Q 0
+    (4, 3, 1): count 144  f^lam 70  (uniform-on-shape would be 136.1)  #P 8  #Q 62
+    (4, 2, 2): count 237  f^lam 56  (uniform-on-shape would be 87.1)  #P 14  #Q 37
+    (4, 2, 1, 1): count 274  f^lam 90  (uniform-on-shape would be 225.0)  #P 16  #Q 70
+    (4, 1, 1, 1, 1): count 0  f^lam 35  (uniform-on-shape would be 34.0)  #P 0  #Q 0
+    (3, 3, 2): count 84  f^lam 42  (uniform-on-shape would be 49.0)  #P 4  #Q 42
+    (3, 3, 1, 1): count 237  f^lam 56  (uniform-on-shape would be 87.1)  #P 14  #Q 37
+    (3, 2, 2, 1): count 144  f^lam 70  (uniform-on-shape would be 136.1)  #P 8  #Q 62
+    (3, 2, 1, 1, 1): count 0  f^lam 64  (uniform-on-shape would be 113.8)  #P 0  #Q 0
+    (3, 1, 1, 1, 1, 1): count 0  f^lam 21  (uniform-on-shape would be 12.2)  #P 0  #Q 0
+    (2, 2, 2, 2): count 0  f^lam 14  (uniform-on-shape would be 5.4)  #P 0  #Q 0
+    (2, 2, 2, 1, 1): count 0  f^lam 28  (uniform-on-shape would be 21.8)  #P 0  #Q 0
+    (2, 2, 1, 1, 1, 1): count 0  f^lam 20  (uniform-on-shape would be 11.1)  #P 0  #Q 0
+    (2, 1, 1, 1, 1, 1, 1): count 0  f^lam 7  (uniform-on-shape would be 1.4)  #P 0  #Q 0
+    (1, 1, 1, 1, 1, 1, 1, 1): count 0  f^lam 1  (uniform-on-shape would be 0.0)  #P 0  #Q 0
+  sequences all of whose Knuth neighbours are valid: 584/1120;  dual Knuth: 98/1120
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 278 (uniform expectation 31.1);  involutions in V = 24
+  Foata fundamental map: 30 images valid;  Foata second map: 422 images valid (random expectation 31.1)
+  (P,Q)->(P,evac Q): 656 valid;  (evac P,Q): 656;  (P^T,Q^T): 656;  (P,P): 560
+  fixed points: {0: 417, 1: 440, 2: 195, 3: 54, 4: 14}  mean 0.9357
+  cycles: {1: 132, 2: 370, 3: 385, 4: 177, 5: 47, 6: 9}  mean 2.7000 (H_N = 2.7179)
+  N-cycles: 132 (uniform 140.0);  distinct cycle types: 19/22
+N=9 |V|=4256
+  shapes occurring: 9/30  TV distance to Plancherel: 0.5563  transpose-symmetric: True
+  union of Knuth classes (a): False   union of dual Knuth classes (a) = Knuth classes of t: False
+    LIS distribution: {1: 0, 2: 0, 3: 575, 4: 3624, 5: 57, 6: 0, 7: 0, 8: 0, 9: 0}
+    #P-tableaux/#SYT, #Q-tableaux/#SYT: 144 688 2620
+  sequences all of whose Knuth neighbours are valid: 1378/4256;  dual Knuth: 0/4256
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 876 (uniform expectation 49.9);  involutions in V = 42
+  Foata fundamental map: 43 images valid;  Foata second map: 1026 images valid (random expectation 49.9)
+  (P,Q)->(P,evac Q): 988 valid;  (evac P,Q): 988;  (P^T,Q^T): 988;  (P,P): 1924
+  fixed points: {0: 1408, 1: 1732, 2: 834, 3: 245, 4: 36, 5: 1}  mean 1.0066
+  cycles: {1: 404, 2: 1230, 3: 1439, 4: 862, 5: 280, 6: 40, 7: 1}  mean 2.8844 (H_N = 2.8290)
+  N-cycles: 404 (uniform 472.9);  distinct cycle types: 26/30
+N=10 |V|=17878
+  shapes occurring: 14/42  TV distance to Plancherel: 0.4534  transpose-symmetric: True
+  union of Knuth classes (a): False   union of dual Knuth classes (a) = Knuth classes of t: False
+    LIS distribution: {1: 0, 2: 0, 3: 918, 4: 14307, 5: 2653, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0}
+    #P-tableaux/#SYT, #Q-tableaux/#SYT: 364 3004 9496
+  sequences all of whose Knuth neighbours are valid: 5898/17878;  dual Knuth: 324/17878
+  closed under: complement True, reversal True;  |V ∩ V^-1| = 1764 (uniform expectation 88.1);  involutions in V = 80
+  Foata fundamental map: 111 images valid;  Foata second map: 3130 images valid (random expectation 88.1)
+  fixed points: {0: 6808, 1: 6946, 2: 3222, 3: 814, 4: 88}  mean 0.9052
+  cycles: {1: 1705, 2: 5015, 3: 5950, 4: 3699, 5: 1273, 6: 225, 7: 11}  mean 2.9183 (H_N = 2.9290)
+  N-cycles: 1705 (uniform 1787.8);  distinct cycle types: 35/42

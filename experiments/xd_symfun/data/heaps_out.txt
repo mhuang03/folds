@@ -1,0 +1,13 @@
+1 sequences=1 independent-pairs=0 classes=1 largest=1 singletons=1 sumsq=1 canonical-not-valid=0
+2 sequences=2 independent-pairs=1 classes=1 largest=2 singletons=0 sumsq=4 canonical-not-valid=0
+3 sequences=4 independent-pairs=1 classes=2 largest=2 singletons=0 sumsq=8 canonical-not-valid=0
+4 sequences=10 independent-pairs=3 classes=2 largest=5 singletons=0 sumsq=50 canonical-not-valid=0
+5 sequences=28 independent-pairs=4 classes=6 largest=6 singletons=0 sumsq=136 canonical-not-valid=0
+6 sequences=96 independent-pairs=6 classes=12 largest=12 singletons=0 sumsq=876 canonical-not-valid=0
+7 sequences=256 independent-pairs=8 classes=20 largest=16 singletons=0 sumsq=3424 canonical-not-valid=0
+8 sequences=1120 independent-pairs=11 classes=54 largest=46 singletons=0 sumsq=27788 canonical-not-valid=0
+9 sequences=4256 independent-pairs=13 classes=192 largest=38 singletons=0 sumsq=108896 canonical-not-valid=0
+10 sequences=17878 independent-pairs=17 classes=412 largest=134 singletons=0 sumsq=963354 canonical-not-valid=0
+11 sequences=70960 independent-pairs=20 classes=1312 largest=170 singletons=0 sumsq=4831464 canonical-not-valid=0
+12 sequences=383476 independent-pairs=24 classes=4746 largest=318 singletons=0 sumsq=43229324 canonical-not-valid=0
+13 sequences=1620328 independent-pairs=28 classes=13926 largest=445 singletons=0 sumsq=244316696 canonical-not-valid=0
