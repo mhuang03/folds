@@ -1,0 +1,106 @@
+N=1: elements=2 covers=1 comparable=1 inclusions=1
+   mu(0,1)=-1  chi coefficients (t^N ... t^0) = [1, -1]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 1]
+   length-2 intervals by Moebius value (#atoms - 1): {}
+   Eulerian: True  (intervals with mu != (-1)^length: 0 of 1)
+   lattice: True  (pairs without a meet: 0 of 1)
+N=2: elements=4 covers=4 comparable=5 inclusions=5
+   mu(0,1)=1  chi coefficients (t^N ... t^0) = [1, -2, 1]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 2, 1]
+   length-2 intervals by Moebius value (#atoms - 1): {1: 1}
+   Eulerian: True  (intervals with mu != (-1)^length: 0 of 5)
+   lattice: True  (pairs without a meet: 0 of 6)
+   flag h-vector: min beta=1 negative entries=0 of 2; beta_[N-1]=1 (= (-1)^N mu(0,1): True)
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): True
+      alpha by |J|: 0:1, 1:2
+N=3: elements=8 covers=10 comparable=17 inclusions=19
+   mu(0,1)=1  chi coefficients (t^N ... t^0) = [1, -3, 1, 1]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 3, 1, 1]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 4, 1: 2}
+   Eulerian: False  (intervals with mu != (-1)^length: 5 of 17)
+   lattice: True  (pairs without a meet: 0 of 28)
+   flag h-vector: min beta=-1 negative entries=1 of 4; beta_[N-1]=-1 (= (-1)^N mu(0,1): True)
+      first negative: beta_[1, 2] = -1
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:6, 2:4
+N=4: elements=14 covers=20 comparable=45 inclusions=53
+   mu(0,1)=1  chi coefficients (t^N ... t^0) = [1, -4, 2, 0, 1]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 4, 2, 0, 1]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 10, 1: 6}
+   Eulerian: False  (intervals with mu != (-1)^length: 18 of 45)
+   lattice: True  (pairs without a meet: 0 of 91)
+   flag h-vector: min beta=-1 negative entries=2 of 8; beta_[N-1]=1 (= (-1)^N mu(0,1): True)
+      first negative: beta_[1, 2] = -1
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:12, 2:20, 3:10
+N=5: elements=28 covers=46 comparable=135 inclusions=171
+   mu(0,1)=-1  chi coefficients (t^N ... t^0) = [1, -5, 4, 1, 0, -1]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 5, 4, 1, 0, 1]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 32, 1: 14}
+   Eulerian: False  (intervals with mu != (-1)^length: 74 of 135)
+   lattice: False  (pairs without a meet: 2 of 378)
+   flag h-vector: min beta=-3 negative entries=5 of 16; beta_[N-1]=1 (= (-1)^N mu(0,1): True)
+      first negative: beta_[2, 3] = -3
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:26, 2:82, 3:84, 4:28
+N=6: elements=54 covers=100 comparable=381 inclusions=505
+   mu(0,1)=-1  chi coefficients (t^N ... t^0) = [1, -6, 5, 2, 1, -2, -1]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 6, 5, 2, 1, 2, 1]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 82, 1: 38}
+   Eulerian: False  (intervals with mu != (-1)^length: 233 of 381)
+   lattice: False  (pairs without a meet: 28 of 1431)
+   flag h-vector: min beta=-7 negative entries=10 of 32; beta_[N-1]=-1 (= (-1)^N mu(0,1): True)
+      first negative: beta_[1, 2, 3] = -2
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:52, 2:276, 3:484, 4:356, 5:96
+N=7: elements=92 covers=176 comparable=847 inclusions=1245
+   mu(0,1)=-1  chi coefficients (t^N ... t^0) = [1, -7, 7, 3, 1, -2, -2, -1]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 7, 7, 3, 1, 2, 2, 1]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 160, 1: 68}
+   Eulerian: False  (intervals with mu != (-1)^length: 592 of 847)
+   lattice: False  (pairs without a meet: 197 of 4186)
+   flag h-vector: min beta=-10 negative entries=27 of 64; beta_[N-1]=1 (= (-1)^N mu(0,1): True)
+      first negative: beta_[2, 3] = -2
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:90, 2:666, 3:1696, 4:2016, 5:1152, 6:256
+N=8: elements=192 covers=408 comparable=2537 inclusions=3957
+   mu(0,1)=15  chi coefficients (t^N ... t^0) = [1, -8, 10, 4, 5, -6, -11, -10, 15]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 8, 10, 4, 5, 6, 11, 10, 15]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 404, 1: 186}
+   Eulerian: False  (intervals with mu != (-1)^length: 1881 of 2537)
+   lattice: False  (pairs without a meet: 1499 of 18336)
+   flag h-vector: min beta=-34 negative entries=53 of 128; beta_[N-1]=15 (= (-1)^N mu(0,1): True)
+      first negative: beta_[1, 2, 3] = -7
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:190, 2:2156, 3:7908, 4:13648, 5:12450, 6:5848, 7:1120
+N=9: elements=378 covers=840 comparable=6921 inclusions=11675
+   mu(0,1)=23  chi coefficients (t^N ... t^0) = [1, -9, 13, 8, 4, -11, -17, -7, -5, 23]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 9, 13, 8, 4, 15, 17, 17, 11, 23]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 948, 1: 378}
+   Eulerian: False  (intervals with mu != (-1)^length: 5557 of 6921)
+   flag h-vector: min beta=-109 negative entries=117 of 256; beta_[N-1]=-23 (= (-1)^N mu(0,1): True)
+      first negative: beta_[1, 2, 3] = -13
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:376, 2:6168, 3:30768, 4:72062, 5:92436, 6:67262, 7:26192, 8:4256
+N=10: elements=722 covers=1704 comparable=17757 inclusions=32573
+   mu(0,1)=7  chi coefficients (t^N ... t^0) = [1, -10, 16, 8, 10, -12, -27, -32, 3, 36, 7]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 10, 16, 8, 10, 16, 27, 36, 27, 36, 7]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 2000, 1: 860}
+   Eulerian: False  (intervals with mu != (-1)^length: 14715 of 17757)
+   flag h-vector: min beta=-277 negative entries=236 of 512; beta_[N-1]=7 (= (-1)^N mu(0,1): True)
+      first negative: beta_[1, 2, 3] = -15
+      beta_J = beta_(N-J): True;  beta_J = beta_(complement J): False
+      alpha by |J|: 0:1, 1:720, 2:16316, 3:106490, 4:325960, 5:560516, 6:578120, 7:356948, 8:122148, 9:17878
+N=11: elements=1422 covers=3460 comparable=46069 inclusions=93709
+   mu(0,1)=-11  chi coefficients (t^N ... t^0) = [1, -11, 20, 13, 16, -20, -59, -33, -20, 47, 57, -11]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 11, 20, 13, 16, 24, 59, 51, 78, 75, 57, 11]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 4388, 1: 1718}
+   Eulerian: False  (intervals with mu != (-1)^length: 39885 of 46069)
+N=12: elements=2818 covers=7292 comparable=131039 inclusions=275121
+   mu(0,1)=-49  chi coefficients (t^N ... t^0) = [1, -12, 23, 16, 19, -32, -101, -90, 68, 46, 189, -78, -49]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 12, 23, 16, 19, 52, 103, 102, 200, 110, 197, 134, 49]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 9874, 1: 3984}
+N=13: elements=5482 covers=14624 comparable=336741 inclusions=0
+   mu(0,1)=-129  chi coefficients (t^N ... t^0) = [1, -13, 28, 21, 25, -58, -133, -173, -14, 205, 322, 186, -268, -129]  chi(1)=0
+   sum_S |mu(0,S)| by rank = [1, 13, 28, 21, 25, 70, 141, 207, 412, 433, 406, 328, 336, 129]
+   length-2 intervals by Moebius value (#atoms - 1): {0: 20696, 1: 8070}

@@ -72,3 +72,4 @@ import Folds.XdWeak
 import Folds.XdSymFun
 import Folds.XdEntropy
 import Folds.XdIntervals
+import Folds.XdGraded

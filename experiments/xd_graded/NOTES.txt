@@ -1,0 +1,202 @@
+CROSS-DOMAIN ANGLE: DIFFERENTIAL POSETS AND DUAL GRADED GRAPHS
+================================================================
+
+Object.  Gamma_N = graded graph on the subsets S of [N] (rank |S|), edge S -> S+{m} iff the
+step (S, m) is semi-symmetric.  a(N) = number of maximal chains 0 -> [N].
+U = up operator, D = U^T = down operator.  Vertex sets used:
+   all   = all 2^N subsets,
+   reach = sets with g(S) > 0,
+   live  = sets with g(S) g(S^c) > 0 (the sets lying on a maximal chain).
+L_N = the poset of live sets ordered by reachability (graded by |S|).
+
+Labels: [proven] (Lean name given when formalized, file Folds/XdGraded.lean),
+        [data N <= ...], [conjecture].
+
+Bottom line.  None of the operator relations that make chain counting exact (Stanley's
+DU - UD = rI, the sequential version r_k I, Fomin's dual graded graphs, Lam's quantized and
+signed versions, Benkart-Roby down-up relations, an sl_2 / Peck structure) holds for
+Gamma_N, with or without edge weights, on any of the three vertex sets.  There is a clean
+structural obstruction ("twin" live sets), proven in Lean for N = 3 and N = 9.  The only
+exact formulas found are edge counts (Wallis-type) and bookkeeping identities.  No formula
+or recurrence for a(N) comes out of this angle.
+
+
+1. THE COMMUTATOR  C_k = D_{k+1} U_k - U_{k-1} D_k   (exp1_commutator.py)
+--------------------------------------------------------------------------
+Write v(S, m) = [the window of m is balanced in S]; it does not depend on whether m is in S
+[proven: valid_insert_self, valid_erase_self] and only on S inside the window of m
+[proven: valid_insert_of_outside].
+
+(1a) [proven: comm_diag]  C(S, S) = #valid additions to S - #valid removals from S
+     = |up S| - |down S|.
+(1b) [proven on paper, immediate from the definitions]  For S = R+a, T = R+b (a != b):
+        C(S, T) = v(R+a, b) v(R+b, a) - v(R, a) v(R, b)   in {-1, 0, 1},
+     all other off-diagonal entries are 0.  The entry is 0 when neither of a, b lies in the
+     window of the other.  If a is in the window of b, then v(R+a, b) and v(R, b) cannot both
+     hold, so C(S,T) = +1 iff the exchange a <-> b works through the top R+a+b only, and -1
+     iff it works through the bottom R only.
+(1c) [proven: comm_offdiag]  For every N >= 3 the entry at ({1}, {2}) is -1: C is not
+     diagonal.
+(1d) [proven: trace_comm, edges_symm, sum_down_card]  trace C_k = e_k - e_{k-1}, where
+     e_k = number of edges from rank k to k+1, and e_k = e_{N-1-k}.
+(1e) [data N <= 13, all three vertex sets]  C_k is never scalar for 0 < k < N (N >= 3), is
+     not diagonal, and has almost full rank (e.g. N = 12 live, k = 5: 554 x 554, rank 552,
+     3284 nonzero off-diagonal entries, diagonal values from -2 to 3).  Only exception: N = 4
+     live, k = 2, where C = 0.
+(1f) [data N <= 24]  'effective r_k' = trace(C_k)/C(N,k) on all subsets, e.g. N = 24:
+     24, 11, 10.43, 7.04, 6.56, 4.78, 4.32, 3.15, 2.67, 1.80, 1.28, 0.59, 0  (k = 0..12),
+     against N - 2k for the Boolean lattice (out/exp7_edges.txt).
+
+2. EDGE COUNTS (exact)                                        (levels.c, exp7_edges.py)
+----------------------------------------------------------------------------------------
+(2a) [proven on paper; data N <= 24]  With r_m = min(m-1, N-m):
+        e_k(N) = sum_m sum_j C(r_m, j)^2 C(N-1-2 r_m, k-2j),
+        e(N)   = sum_k e_k = sum_m 2^(N-1-2 r_m) C(2 r_m, r_m)
+               = N C(N, N/2)                (N even)
+               = (2N-1) C(N-1, (N-1)/2)     (N odd).
+     Proof: for fixed m the balanced sets S (m not in S) correspond, via S -> S xor (right
+     half of the window), to the sets meeting the window in exactly r_m points; then
+     sum_{r<n} 4^(n-r) C(2r, r) = 2n C(2n, n).   e(N) = 1, 4, 10, 24, 54, 120, 260, 560, ...
+     is OEIS A152548.  Not formalized (it is the subset form of the single-panel Wallis count
+     in Folds/Wallis.lean).
+(2b) [proven: sum_g_succ]  T(N,k+1) = sum_{|S|=k} g(S) |up S|   (prefix counts).
+(2c) [data N <= 24]  number of 2-sets {a,b} with both orders valid ('diamonds' at rank 0)
+     = floor(N^2/2) - floor(N^2/3) = A156040(N-2); follows from the Lean facts in
+     Folds/Prefix.lean.
+
+3. RANKS, SPECTRA, SMITH FORMS                                 (exp2_rank_spectra.py)
+----------------------------------------------------------------------------------------
+(3a) [data N <= 11]  U_k is NOT injective below the middle, on any of the three vertex sets:
+     live: first failure N = 3 (k = 1), then N = 7 (k = 3: 23 -> 23, rank 22), N = 8
+     (k = 3: 44 -> 46, rank 41), N = 9 (k = 3: 63 -> 89, rank 62), ...
+(3b) [data N <= 11]  Eigenvalues of D U are not integers; the characteristic polynomial
+     splits only into the two mirror-symmetry blocks (irreducible factors of degree about
+     |V_k|/2), apart from a few small integer eigenvalues (0, 1, 2, 3, 4).
+(3c) [data, matrices of size <= 50, i.e. all ranks for N <= 7 and the low ranks to N = 11]
+     Smith normal form of U_k: ones and zeros, except for a pair of 2's at N = 7 (k = 3) and
+     N = 8 live (k = 3, 4).  Smith form of D U: 1,...,1, d with d large and unstructured
+     (e.g. N = 8 live, k = 2: 1^18, 4, 187182396).  Nothing like the Miller-Reiner structure.
+(3d) [data N <= 9]  The chain matrix M_k[S, S'] = #valid chains from S to complement(S')
+     (|S| = |S'| = k < N/2) is symmetric [proven on paper from self-duality], M_0 = a(N).
+     det M_1 = 1, -, 2^5 7^2, 2^6 3^5, -2^2 3 5693 9377, -2^8 7 29 241 4287583 for
+     N = 4..9: no structure.  M_k is singular for N = 3 (k=1), N = 5 (k=1), N = 7 (k=2,3),
+     N = 8 (k=3), N = 9 (k=3,4).
+
+4. sl_2 / PECK / SPERNER                           (exp3_peck.py, exp3b_hall.py, exp3c_twins.py)
+----------------------------------------------------------------------------------------
+Proctor's theorem: a ranked poset is Peck iff some weighted order-raising operator X and a
+lowering operator Y satisfy XY - YX = (2i - n) on rank i.  Generic weights were tested
+modulo a 31-bit prime (two independent trials; by Schwartz-Zippel the ranks are generic).
+(4a) [data N <= 24]  The rank sizes of L_N are symmetric [proven: self-duality] and
+     unimodal [data N <= 24]; the rank sizes of the reachable sets are unimodal [data
+     N <= 24] (peak at rank ceil(N/2)).
+(4b) [data N <= 11]  L_N is Peck (generic U^(N-2k) : V_k -> V_{N-k} invertible for all k)
+     exactly for N = 1, 2, 4, 5, 6.  For N = 3 and 7 <= N <= 11 it is not: even a maximum
+     matching between consecutive ranks below the middle is not full (deficiencies:
+     N=7: 1; N=8: 3; N=9: 1, 13; N=10: 2, 5; N=11: 4, 20; N=12: 2, 0, 20).
+(4c) [data 4 <= N <= 12]  L_N is Sperner for N <= 6 and NOT Sperner for 7 <= N <= 12:
+     width 24, 50, 102, 182, 348, 656 against largest rank 23, 46, 89, 172, 320, 616.
+(4d) [proven: twins_three, twins_nine]  Twins.  N = 3: {1} and {3} have the single valid
+     addition leading to {1,3}.  N = 9: the live sets {1,4,9} and {1,6,9} have one and the
+     same unique live successor {1,4,6,9}.  Hence for ANY edge weights the up operator of
+     the live graph is not injective on rank 3 < 9/2, so L_9 is not an sl_2-poset.
+     [data N <= 14]  twin groups below the middle exist for N = 9, 11, 12, 13, 14 (5, 5, 7,
+     26, 10 groups), none for N = 7, 8, 10 (there the Hall violators are larger).
+     [conjecture]  L_N is not Peck for every N >= 7.
+
+5. DUAL LOWERING OPERATORS  D'U - q U D' = r_k I          (exp4_dual.py; linear in (D', r))
+----------------------------------------------------------------------------------------
+U = unweighted up operator of the vertex set; unknown D'_k : V_k -> V_{k-1} and r_0..r_N.
+(5a) support 'bool' (D' supported on Boolean covers; contains every weighting by a function
+     of the imbalance, and the relaxed problem) and support 'edge' (weighted U^T):
+     [data 3 <= N <= 10, live and all, q = 1; 3 <= N <= 9, q = -1, 2, 3]  the solution space
+     is {0}: no relation of differential, sequentially differential, signed or quantized
+     type.  (N = 1, 2: one-dimensional.)
+(5b) arbitrary D' (no support condition), q = 1: [data N <= 7]
+        N        r-space (achievable sequences r)
+        4 live   span(e0-e4, e1-e3, e2-e3)
+        5        span(e0-e5, e2-e3)
+        6 live   span(e0-e6, e1-e5, e2-e4)       (contains N-2k: 6 live IS an sl_2 poset
+                                                  with the unweighted U, but D' is not local)
+        7        span(e0-e7, e1-e6)
+     [proven on paper]  if the chain map U^(j-i) : V_i -> V_j is invertible then
+     D'_{l+1} = U^(l-i) (U^(j-i))^(-1) U^(j-l-1) (i <= l < j) solves the system with
+     r = e_i - e_j; the data agree with: r-space = span of these.  These solutions only
+     restate the invertibility of chain matrices; the identity they give is
+     sum_S g(S) e'(S) = 1.  r_k = N - 2k is not achievable for N = 5, 7.
+(5c) [data N <= 9]  With D = U^T: DU is not in span(UD, I), DU and UD do not commute, and
+     D^2 U is not in span(DUD, UD^2, D) (no down-up algebra relation), at every rank for
+     N >= 5 (exp6_relations.py).
+
+6. COUNT IDENTITIES                                   (levels.c, levels_summary.py, N <= 24)
+----------------------------------------------------------------------------------------
+(6a) [proven: semiCount_eq_sum_co, semiCount_eq_iterate, g_eq_iterate]
+     a(N) = <[N]| U^N |0> = sum_{|S|=k} g(S) g(S^c).
+(6b) [data N <= 24; OEIS: no match]
+     Q(N,k) = sum_{|S|=k} g(S)^2 = <0| D^k U^k |0> (pairs of valid k-prefixes with the same
+     set).  Qmid(N) = Q(N, floor(N/2)) = 1, 2, 3, 14, 20, 108, 194, 1684, 2524, 26696, ...
+     Qtot(N) = sum_S g(S)^2 = 2, 7, 26, 145, 1042, 11521, 81318, 1486207, ...
+     Q(N, N-1) = 1, 2, 6, 26, 166, 1648, 11156, 174824, ...
+     In a differential poset Q(N,k) would be r^k k!; here Q(N,k)/k! is irregular.
+     The cosine a(N)/sqrt(Q(N,k) Q(N,N-k)) at k = N/2 decreases slowly: 0.71 (N=4),
+     0.67 (8), 0.58 (12), 0.50 (16), 0.48 (20), 0.46 (24).
+(6c) [data N <= 24; OEIS: no match]  numbers of live sets 2, 4, 8, 14, 28, 54, 92, 192,
+     378, 722, 1422, 2818, 5482, 11074, ...; reachable sets 2, 4, 8, 15, 30, 58, 110, 222,
+     441, 859, ...; live sets at the middle rank 1, 2, 3, 4, 8, 18, 23, 46, 89, 172, 320,
+     616, ... (about 0.67 C(N, N/2)); live 3-sets 1, 4, 8, 18, 23, 44, 63, 92, 120, ...
+     Sequences sent to the OEIS: totals of live / reachable sets, middle rank, Qmid, Qtot,
+     Q(N,N-1), sum_S g(S), diamond and one-way totals, live and reachable 3-sets.  Only the
+     edge total (A152548) and the rank-0 diamonds (A156040) matched.
+
+7. THE POSET L_N OF LIVE SETS                                  (exp5_poset.py)
+----------------------------------------------------------------------------------------
+(7a) [proven: reach_iff_g_pos, live_iff_g_pos, chain_co, coReach_iff_reach_co]
+     reachable <=> g > 0; co-reachable <=> complement reachable; complementation reverses
+     chains, so L_N is self-dual, graded, with a(N) maximal chains.
+(7b) [data N <= 13]  mu(0, [N]) = -1, 1, 1, 1, -1, -1, -1, 15, 23, 7, -11, -49, -129.
+     Characteristic polynomials (coefficients of t^N..t^0), e.g.
+     N=8: 1,-8,10,4,5,-6,-11,-10,15;  N=12: 1,-12,23,16,19,-32,-101,-90,68,46,189,-78,-49.
+     chi(1) = 0 always (trivial).  No pattern, no factorisation.
+(7c) [data]  L_N is Eulerian only for N <= 2; a lattice only for N <= 4 (N = 5: 2 pairs
+     without a meet; N = 8: 1499); not thin: about 2/3 of the length-2 intervals are chains
+     (N = 9: 948 chains, 378 diamonds).
+(7d) [data 3 <= N <= 10]  The flag h-vector has negative entries (N = 3: beta_{1,2} = -1;
+     N = 10: 236 of 512 entries negative, minimum -277), so L_N is not Cohen-Macaulay, hence
+     not shellable / EL-shellable.  beta is symmetric under J -> N - J (self-duality).
+(7e) [data N <= 12]  reachability is strictly weaker than inclusion on live sets
+     (N = 12: 131039 comparable pairs against 275121 inclusions).
+
+NEGATIVE RESULTS, SUMMARY (what exactly was tested)
+----------------------------------------------------------------------------------------
+- DU - UD scalar / diagonal / low rank: no (N <= 13, all vertex sets); not diagonal for all
+  N >= 3 [proven].
+- D'U - UD' = r_k I with D' on Boolean covers or on the edges: only D' = 0 (3 <= N <= 10).
+- D'U - qUD' = r_k I, q = -1, 2, 3, same supports: only D' = 0 (3 <= N <= 9).
+- sl_2 / Peck with arbitrary edge weights: fails for N = 3 and 7 <= N <= 11; Lean-proven
+  obstruction at N = 3 and N = 9.  Sperner fails for 7 <= N <= 12.
+- down-up algebra relations, [DU, UD] = 0: fail for N >= 5 (N <= 9).
+- integrality / product structure of the spectrum of DU, Smith forms, chain-matrix
+  determinants: none (N <= 11).
+- Moebius function, characteristic polynomial, flag h-vector: no structure; L_N is not
+  Eulerian, not a lattice, not Cohen-Macaulay.
+- OEIS: no match for any rank-size or sum-of-squares sequence.
+
+Why the method cannot work here (heuristic): a relation D'U - UD' = r I forces U to be
+injective wherever r_0 + ... + r_k > 0 and makes every length-2 interval balanced
+(#common covers = #common co-covers).  In Gamma_N the exchange a <-> b is asymmetric as soon
+as one of a, b lies in the window of the other, and windows are not symmetric
+(a in W(b) does not imply b in W(a)); live sets with a single live successor then merge.
+
+FILES
+  common.py              g table, vertex sets, edges
+  exp1_commutator.py     commutator statistics            -> out/exp1_commutator.txt
+  exp2_rank_spectra.py   ranks, chain matrices, spectra, SNF -> out/exp2_rank_spectra.txt
+  exp3_peck.py           generic-weight Peck test          -> out/exp3_peck.txt
+  exp3b_hall.py          Hall violators, width (Sperner)   -> out/exp3b_hall.txt
+  exp3c_twins.py         twin live sets, death depths      -> out/exp3c_twins.txt
+  exp4_dual.py           linear system for D' (q, support) -> out/exp4_*.txt
+  exp5_poset.py          Moebius, lattice, Eulerian, flag h -> out/exp5_poset.txt
+  exp6_relations.py      q-commutation, down-up relations  -> out/exp6_relations.txt
+  exp7_edges.py          exact edge formulas               -> out/exp7_edges.txt
+  levels.c, run_levels.sh, levels_summary.py   rank statistics to N = 24
+                                               -> out/levels.txt, out/levels_summary.txt

@@ -1,0 +1,50 @@
+N=7: 0 twin groups; by rank: {}
+N=8: 0 twin groups; by rank: {}
+N=9: 5 twin groups; by rank: {3: 1, 4: 4}
+  rank 3: ['{1,4,9}', '{1,6,9}'] -> {1,4,6,9}
+     {1,4,9} + 3: death depth 1
+     {1,4,9} + 6: death depth None
+     {1,6,9} + 4: death depth None
+     {1,6,9} + 7: death depth 1
+  rank 4: ['{1,2,5,9}', '{1,2,7,9}'] -> {1,2,5,7,9}
+     {1,2,5,9} + 6: death depth 2
+     {1,2,5,9} + 7: death depth None
+     {1,2,7,9} + 5: death depth None
+     {1,2,7,9} + 8: death depth 0
+N=10: 0 twin groups; by rank: {}
+N=11: 5 twin groups; by rank: {5: 5}
+  rank 5: ['{1,3,4,7,11}', '{1,4,7,9,11}'] -> {1,3,4,7,9,11}
+     {1,3,4,7,11} + 2: death depth 3
+     {1,3,4,7,11} + 8: death depth 3
+     {1,3,4,7,11} + 9: death depth None
+     {1,4,7,9,11} + 3: death depth None
+     {1,4,7,9,11} + 5: death depth 3
+     {1,4,7,9,11} + 10: death depth 3
+N=12: 7 twin groups; by rank: {5: 7}
+  rank 5: ['{1,2,4,7,12}', '{1,2,4,9,12}'] -> {1,2,4,7,9,12}
+     {1,2,4,7,12} + 9: death depth None
+     {1,2,4,9,12} + 7: death depth None
+     {1,2,4,9,12} + 10: death depth 2
+N=13: 26 twin groups; by rank: {5: 4, 6: 22}
+  rank 5: ['{1,2,6,10,12}', '{1,2,10,11,12}'] -> {1,2,6,10,11,12}
+     {1,2,6,10,12} + 11: death depth None
+     {1,2,6,10,12} + 13: death depth 5
+     {1,2,10,11,12} + 6: death depth None
+     {1,2,10,11,12} + 13: death depth 1
+  rank 6: ['{1,2,3,5,8,12}', '{1,2,3,5,10,12}'] -> {1,2,3,5,8,10,12}
+     {1,2,3,5,8,12} + 10: death depth None
+     {1,2,3,5,8,12} + 13: death depth 4
+     {1,2,3,5,10,12} + 8: death depth None
+     {1,2,3,5,10,12} + 11: death depth 2
+     {1,2,3,5,10,12} + 13: death depth 0
+N=14: 10 twin groups; by rank: {5: 4, 6: 6}
+  rank 5: ['{1,2,7,12,14}', '{1,2,8,12,14}'] -> {1,2,7,8,12,14}
+     {1,2,7,12,14} + 8: death depth None
+     {1,2,7,12,14} + 13: death depth 0
+     {1,2,8,12,14} + 7: death depth None
+     {1,2,8,12,14} + 13: death depth 0
+  rank 6: ['{1,2,6,10,12,13}', '{1,2,7,10,12,13}'] -> {1,2,6,7,10,12,13}
+     {1,2,6,10,12,13} + 7: death depth None
+     {1,2,6,10,12,13} + 14: death depth 5
+     {1,2,7,10,12,13} + 6: death depth None
+     {1,2,7,10,12,13} + 14: death depth 5

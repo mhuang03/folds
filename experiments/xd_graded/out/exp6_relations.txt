@@ -1,0 +1,32 @@
+N=2 all: sizes=[1, 2, 1]
+   ranks k=1..N-1:  DU in span(UD, I): Y   [DU, UD] = 0: Y   D^2U in span(DUD, UD^2, D): Y
+N=2 live: sizes=[1, 2, 1]
+   ranks k=1..N-1:  DU in span(UD, I): Y   [DU, UD] = 0: Y   D^2U in span(DUD, UD^2, D): Y
+N=3 all: sizes=[1, 3, 3, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nn   [DU, UD] = 0: YY   D^2U in span(DUD, UD^2, D): Yn
+N=3 live: sizes=[1, 3, 3, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nn   [DU, UD] = 0: YY   D^2U in span(DUD, UD^2, D): Yn
+N=4 all: sizes=[1, 4, 6, 4, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnn   [DU, UD] = 0: nnn   D^2U in span(DUD, UD^2, D): nnn
+N=4 live: sizes=[1, 4, 4, 4, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nYn   [DU, UD] = 0: nYn   D^2U in span(DUD, UD^2, D): nYn
+N=5 all: sizes=[1, 5, 10, 10, 5, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnn   [DU, UD] = 0: nnnn   D^2U in span(DUD, UD^2, D): nnnn
+N=5 live: sizes=[1, 5, 8, 8, 5, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnn   [DU, UD] = 0: nnnn   D^2U in span(DUD, UD^2, D): nnnn
+N=6 all: sizes=[1, 6, 15, 20, 15, 6, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnn   [DU, UD] = 0: nnnnn   D^2U in span(DUD, UD^2, D): nnnnn
+N=6 live: sizes=[1, 6, 11, 18, 11, 6, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnn   [DU, UD] = 0: nnnnn   D^2U in span(DUD, UD^2, D): nnnnn
+N=7 all: sizes=[1, 7, 21, 35, 35, 21, 7, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnnn   [DU, UD] = 0: nnnnnn   D^2U in span(DUD, UD^2, D): nnnnnn
+N=7 live: sizes=[1, 7, 15, 23, 23, 15, 7, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnnn   [DU, UD] = 0: nnnnnn   D^2U in span(DUD, UD^2, D): nnnnnn
+N=8 all: sizes=[1, 8, 28, 56, 70, 56, 28, 8, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnnnn   [DU, UD] = 0: nnnnnnn   D^2U in span(DUD, UD^2, D): nnnnnnn
+N=8 live: sizes=[1, 8, 20, 44, 46, 44, 20, 8, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnnnn   [DU, UD] = 0: nnnnnnn   D^2U in span(DUD, UD^2, D): nnnnnnn
+N=9 all: sizes=[1, 9, 36, 84, 126, 126, 84, 36, 9, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnnnnn   [DU, UD] = 0: nnnnnnnn   D^2U in span(DUD, UD^2, D): nnnnnnnn
+N=9 live: sizes=[1, 9, 27, 63, 89, 89, 63, 27, 9, 1]
+   ranks k=1..N-1:  DU in span(UD, I): nnnnnnnn   [DU, UD] = 0: nnnnnnnn   D^2U in span(DUD, UD^2, D): nnnnnnnn
