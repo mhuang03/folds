@@ -1,0 +1,112 @@
+N=1 (sym)
+   W_a: 1
+   W_b: 1
+   W_c: 1
+   W_d: 1
+   (c) == formula: True
+   (c) subset of (b): True
+   (b) subset of (a): True
+   (c) subset of (d): True
+   (b) subset of (d): True
+   (a) subset of (d): True
+   (d) subset of (a): True
+   (a) closed under refinement: True;  under coarsening: True
+   (b) closed under refinement: True;  under coarsening: True
+   (c) closed under refinement: True;  under coarsening: True
+   (d) closed under refinement: True;  under coarsening: True
+N=2 (sym)
+   W_a: 1 2
+   W_b: 1 2
+   W_c: 1 2
+   W_d: 1 2
+   (c) == formula: True
+   (c) subset of (b): True
+   (b) subset of (a): True
+   (c) subset of (d): True
+   (b) subset of (d): True
+   (a) subset of (d): True
+   (d) subset of (a): True
+   (a) closed under refinement: True;  under coarsening: True
+   (b) closed under refinement: True;  under coarsening: True
+   (c) closed under refinement: True;  under coarsening: True
+   (d) closed under refinement: True;  under coarsening: True
+N=3 (sym)
+   W_a: 1 4 4
+   W_b: 1 2 4
+   W_c: 0 2 4
+   W_d: 1 6 4
+   (c) == formula: True
+   (c) subset of (b): True
+   (b) subset of (a): True
+   (c) subset of (d): True
+   (b) subset of (d): True
+   (a) subset of (d): True
+   (d) subset of (a): False   e.g. (1 | 2 3)
+   (a) closed under refinement: False  e.g. (1 2 3) -> (1 | 2 3);  under coarsening: False  e.g. (1 | 3 | 2) -> (1 | 2 3)
+   (b) closed under refinement: False  e.g. (1 2 3) -> (1 | 2 3);  under coarsening: False  e.g. (1 | 3 | 2) -> (1 | 2 3)
+   (c) closed under refinement: True;  under coarsening: False  e.g. (1 3 | 2) -> (1 2 3)
+   (d) closed under refinement: False  e.g. (1 2 | 3) -> (1 | 2 | 3);  under coarsening: True
+N=4 (sym)
+   W_a: 1 7 16 10
+   W_b: 1 2 10 10
+   W_c: 0 2 10 10
+   W_d: 1 12 20 10
+   (c) == formula: True
+   (c) subset of (b): True
+   (b) subset of (a): True
+   (c) subset of (d): True
+   (b) subset of (d): True
+   (a) subset of (d): False   e.g. (2 3 | 1 4)
+   (d) subset of (a): False   e.g. (1 2 | 3 4)
+   (a) closed under refinement: False  e.g. (1 2 3 4) -> (1 | 2 3 4);  under coarsening: False  e.g. (1 2 | 4 | 3) -> (1 2 | 3 4)
+   (b) closed under refinement: False  e.g. (1 2 3 4) -> (1 | 2 3 4);  under coarsening: False  e.g. (1 3 | 2 | 4) -> (1 2 3 | 4)
+   (c) closed under refinement: True;  under coarsening: False  e.g. (1 3 | 2 4) -> (1 2 3 4)
+   (d) closed under refinement: False  e.g. (1 2 3 4) -> (2 3 | 1 4);  under coarsening: True
+N=5 (sym)
+   W_a: 1 10 32 42 20
+   W_b: 1 2 8 20 20
+   W_c: 0 0 4 20 20
+   W_d: 1 22 60 60 20
+   (c) == formula: True
+   (c) subset of (b): True
+   (b) subset of (a): True
+   (c) subset of (d): True
+   (b) subset of (d): True
+   (a) subset of (d): False   e.g. (1 3 4 | 2 5)
+   (d) subset of (a): False   e.g. (1 2 3 | 4 5)
+   (a) closed under refinement: False  e.g. (1 2 3 4 5) -> (1 | 2 3 4 5);  under coarsening: False  e.g. (1 2 3 | 5 | 4) -> (1 2 3 | 4 5)
+   (b) closed under refinement: False  e.g. (1 2 3 4 5) -> (1 | 2 3 4 5);  under coarsening: False  e.g. (1 3 5 | 2 | 4) -> (1 2 3 5 | 4)
+   (c) closed under refinement: True;  under coarsening: False  e.g. (1 5 | 3 | 2 4) -> (1 3 5 | 2 4)
+   (d) closed under refinement: False  e.g. (1 2 3 4 5) -> (2 3 | 1 4 5);  under coarsening: True
+N=6 (sym)
+   W_a: 1 14 59 118 120 48
+   W_b: 1 2 8 28 52 48
+   W_c: 0 0 0 12 52 48
+   W_d: 1 38 164 268 188 48
+   (c) == formula: True
+   (c) subset of (b): True
+   (b) subset of (a): True
+   (c) subset of (d): True
+   (b) subset of (d): True
+   (a) subset of (d): False   e.g. (1 2 4 5 | 3 6)
+   (d) subset of (a): False   e.g. (1 2 3 4 | 5 6)
+   (a) closed under refinement: False  e.g. (1 2 3 4 5 6) -> (1 | 2 3 4 5 6);  under coarsening: False  e.g. (1 2 3 4 | 6 | 5) -> (1 2 3 4 | 5 6)
+   (b) closed under refinement: False  e.g. (1 2 3 4 5 6) -> (1 | 2 3 4 5 6);  under coarsening: False  e.g. (1 3 5 | 2 6 | 4) -> (1 2 3 5 6 | 4)
+   (c) closed under refinement: True;  under coarsening: False  e.g. (1 5 | 3 6 | 2 | 4) -> (1 3 5 6 | 2 | 4)
+   (d) closed under refinement: False  e.g. (1 2 3 4 5 6) -> (2 3 | 1 4 5 6);  under coarsening: True
+N=7 (sym)
+   W_a: 1 18 96 263 410 330 104
+   W_b: 1 2 8 36 88 156 104
+   W_c: 0 0 0 8 68 156 104
+   W_d: 1 50 300 716 828 468 104
+   (c) == formula: True
+   (c) subset of (b): True
+   (b) subset of (a): True
+   (c) subset of (d): True
+   (b) subset of (d): True
+   (a) subset of (d): False   e.g. (1 2 4 5 7 | 3 6)
+   (d) subset of (a): False   e.g. (1 2 3 4 6 | 5 7)
+   (a) closed under refinement: False  e.g. (1 2 3 4 5 6 7) -> (1 | 2 3 4 5 6 7);  under coarsening: False  e.g. (1 2 3 4 5 | 7 | 6) -> (1 2 3 4 5 | 6 7)
+   (b) closed under refinement: False  e.g. (1 2 3 4 5 6 7) -> (1 | 2 3 4 5 6 7);  under coarsening: False  e.g. (1 3 5 7 | 2 6 | 4) -> (1 2 3 5 6 7 | 4)
+   (c) closed under refinement: True;  under coarsening: False  e.g. (1 5 | 3 7 | 2 6 | 4) -> (1 3 5 7 | 2 6 | 4)
+   (d) closed under refinement: False  e.g. (1 2 3 4 5 6 7) -> (1 2 | 3 4 5 6 7);  under coarsening: True

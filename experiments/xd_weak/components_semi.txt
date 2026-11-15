@@ -1,0 +1,10 @@
+N= 1 semi  vertices=1 edges=0 components=1  sizes(size:count)={1: 1}
+N= 2 semi  vertices=2 edges=1 components=1  sizes(size:count)={2: 1}
+N= 3 semi  vertices=4 edges=2 components=2  sizes(size:count)={2: 2}
+N= 4 semi  vertices=10 edges=10 components=2  sizes(size:count)={5: 2}
+N= 5 semi  vertices=28 edges=28 components=6  sizes(size:count)={4: 4, 6: 2}
+N= 6 semi  vertices=96 edges=124 components=12  sizes(size:count)={4: 2, 6: 2, 7: 4, 12: 4}
+N= 7 semi  vertices=256 edges=384 components=20  sizes(size:count)={10: 8, 12: 4, 16: 8}
+N= 8 semi  vertices=1120 edges=1992 components=54  sizes(size:count)={8: 2, 10: 4, 12: 8, 14: 8, 18: 4, 20: 2, 21: 8, 29: 8, 30: 4, 33: 4, 46: 2}
+N= 9 semi  vertices=4256 edges=7856 components=192  sizes(size:count)={8: 8, 9: 2, 10: 4, 12: 24, 14: 16, 15: 4, 16: 4, 18: 4, 20: 20, 22: 16, 23: 8, 24: 28, 25: 2, 30: 8, 32: 24, 38: 20}
+N=10 semi  vertices=17878 edges=38754 components=412  sizes(size:count)={20: 34, 21: 4, 24: 48, 25: 16, 27: 8, 30: 32, 32: 44, 35: 16, 36: 10, 40: 16, 42: 20, 44: 12, 45: 8, 50: 28, 51: 4, 53: 18, 57: 8, 60: 8, 62: 12, 70: 24, 78: 12, 80: 8, 84: 8, 98: 4, 108: 8, 134: 2}

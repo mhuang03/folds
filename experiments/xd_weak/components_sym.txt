@@ -1,0 +1,14 @@
+N= 1 sym  vertices=1 edges=0 components=1  sizes(size:count)={1: 1}
+N= 2 sym  vertices=2 edges=1 components=1  sizes(size:count)={2: 1}
+N= 3 sym  vertices=4 edges=2 components=2  sizes(size:count)={2: 2}
+N= 4 sym  vertices=10 edges=10 components=2  sizes(size:count)={5: 2}
+N= 5 sym  vertices=20 edges=20 components=4  sizes(size:count)={4: 2, 6: 2}
+N= 6 sym  vertices=48 edges=52 components=8  sizes(size:count)={4: 2, 6: 2, 7: 4}
+N= 7 sym  vertices=104 edges=156 components=8  sizes(size:count)={10: 4, 16: 4}
+N= 8 sym  vertices=282 edges=564 components=8  sizes(size:count)={29: 2, 33: 4, 46: 2}
+N= 9 sym  vertices=496 edges=992 components=16  sizes(size:count)={24: 4, 30: 4, 32: 4, 38: 4}
+N=10 sym  vertices=1066 edges=2156 components=32  sizes(size:count)={20: 2, 24: 10, 32: 4, 36: 6, 40: 4, 44: 4, 53: 2}
+N=11 sym  vertices=2460 edges=5172 components=64  sizes(size:count)={24: 16, 28: 4, 36: 8, 40: 4, 42: 12, 44: 12, 46: 4, 75: 4}
+N=12 sym  vertices=6128 edges=13568 components=128  sizes(size:count)={24: 16, 28: 8, 36: 8, 42: 24, 44: 24, 46: 8, 49: 16, 72: 4, 76: 4, 79: 4, 84: 4, 96: 4, 97: 4}
+N=13 sym  vertices=12840 edges=33404 components=128  sizes(size:count)={60: 20, 64: 16, 70: 12, 96: 12, 100: 4, 106: 12, 110: 8, 112: 20, 114: 4, 124: 4, 156: 4, 166: 4, 187: 4, 211: 4}
+N=14 sym  vertices=29380 edges=88780 components=128  sizes(size:count)={116: 2, 120: 8, 150: 8, 160: 32, 164: 4, 184: 6, 190: 8, 256: 16, 260: 4, 265: 8, 268: 8, 280: 4, 292: 2, 316: 4, 406: 4, 436: 8, 554: 2}
