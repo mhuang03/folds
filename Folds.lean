@@ -67,3 +67,4 @@ import Folds.SuperExp10
 import Folds.XdTraces
 import Folds.XdOlympiad
 import Folds.XdConstTerm
+import Folds.XdRank

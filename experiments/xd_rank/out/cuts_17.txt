@@ -1,0 +1,1 @@
+N=17 cut=spatial_8 |X|=8 |Y|=9 a=1481994716 | all: nzr=4158 nzc=18588 dr=2666 dc=11192 rank=2548 (|X|!=40320 |Y|!=362880) | valid x valid: vr=1120 vc=4256 nzr=1120 nzc=4226 dr=954 dc=2736 rank=934 sum=211652878

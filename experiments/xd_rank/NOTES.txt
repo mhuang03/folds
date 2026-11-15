@@ -1,0 +1,208 @@
+CONNECTION MATRICES AND TENSOR-NETWORK RANK OF THE FOLD COUNT        (experiments/xd_rank/)
+==========================================================================================
+Lean: Folds/XdRank.lean (no sorry, no native_decide).  Literature: LITERATURE.md.
+Earlier work this builds on: experiments/fastalg/NOTES.txt sections 1 and 3 (time cut;
+spatial and parity cuts for N = 10, 12 only), experiments/symratio/PROOFS.txt.
+
+Question.  For a partition [N] = X u Y let
+     M_{X,Y}[sigma, tau] = number of shuffles of the ordering sigma of X and the ordering
+                           tau of Y that are valid N-sequences,
+so a(N) = sum of all entries [proven, Lean: semiCount_eq_sum_cutCount].  Any transfer scheme
+(deterministic, or weighted/linear = matrix product state) that handles the panels of X
+before those of Y needs >= rank M states (Fliess / Schmidt rank / log-rank bound), and any
+exact state-merging scheme needs >= #distinct rows.  Is some cut cheap, as the parity cut is
+in the 3-AP-free case (bounded rank, SymRatio)?
+
+ANSWER: NO.  Every cut examined has rank equal or close to the trivial bound, and the one
+cut whose rank is far below the trivial bound (the spatial cut) still grows like
+(N/2)! c^(N/2).  No finite description, recursion or faster counter comes out.  Details
+below; every statement is labelled.
+
+Files
+  cutmat.cpp     enumerates the a(N) valid sequences, buckets them by (sigma, tau); prints
+                 nonzero rows/columns (nzr, nzc), distinct rows/columns (dr, dc), the rank
+                 modulo p = 2^31 - 1, and the same for the submatrix of orderings that are
+                 valid sequences of the relabelled strips ("valid x valid").
+                 build: g++ -O3 -march=native -o cutmat.bin cutmat.cpp
+  run_cuts.sh    all cuts for a range of N   -> out/cuts_*.txt
+  table.py       tables                     -> out/summary.txt
+  descriptor.py  checks the interface lemma and its converse on the row dumps
+  reflect.py     reflection-positivity test -> out/reflect.txt
+"rank" below is the rank mod 2^31 - 1.  It is a lower bound for the rank over Q and it is
+exact whenever it equals min(dr, dc) (rows marked "full").  Otherwise it is [data].
+
+
+------------------------------------------------------------------------------------------
+1. PARITY CUT  X = odd panels                                           [data N <= 14]
+------------------------------------------------------------------------------------------
+   N   |X|! |Y|!    nzr   nzc     dr    dc   rank        valid x valid: size, rank, share
+   4     2    2      2     2      2     2      2  full     2 x 2     2    1.000
+   6     6    6      6     6      6     6      6  full     4 x 4     4    0.500
+   8    24   24     24    24     24    24     24  full    10 x 10   10    0.304
+  10   120  120    116   116    116   116    116  full    28 x 28   24    0.167
+  12   720  720    684   684    682   682    672          96 x 96   82    0.099
+  14  5040 5040   4622  4622   4604  4604   4518         256 x 256 204    0.030
+   5     6    2      6     2      4     2      2  full
+   7    24    6     22     6     22     6      6  full
+   9   120   24    114    24    114    24     24  full
+  11   720  120    646   120    622   120    120  full
+  13  5040  720   4234   718   4166   714    714  full
+ * rank / (N/2)! = 1, 1, 1, 0.967, 0.933, 0.896 for N = 4..14; for odd N the rank is the
+   number of distinct columns, 714 of 720 at N = 13.  So the parity-cut rank is
+   (1 - o(1))-ish times the trivial bound floor(N/2)! on this range: FULL RANK up to a
+   slowly falling constant.  Fit: rank ~ 0.9 (N/2)!, superexponential.
+ * "share" = fraction of a(N) carried by the valid x valid block.  It tends to 0 (0.03 at
+   N = 14).  In the 3-AP-free case this block is everything (merge theorem); here almost
+   every valid sequence has parity subsequences that are NOT valid half-sequences.
+ * The valid x valid block is not low rank either (204 of 256 at N = 14).
+ * Row merging is negligible: 4604 distinct rows of 4622 at N = 14.  There is no statistic
+   of sigma (last/first entries, boundary pattern, ...) that determines the row: the row
+   determines sigma up to at most a handful of exceptions.
+ Verdict: the mechanism behind the O(n^3) algorithm for theta(n) (rank bounded by the
+ 6+6-entry window) has no analogue.  The "rank 672 of 684" at N = 12 in fastalg section 3
+ is confirmed and extended.
+
+
+------------------------------------------------------------------------------------------
+2. SPATIAL CUT  X = [1, j]                                               [data N <= 17]
+------------------------------------------------------------------------------------------
+Middle cut j = floor(N/2):
+   N   (N/2)!   nzr     dr    rank          C(N, N/2)   rank / C     valid x valid rank
+   4      2       2      2      2  full          6       0.33          2 of 2
+   6      6       4      4      4  full         20       0.20          4 of 4
+   8     24      14     14     14  full         70       0.20          8 of 10
+  10    120      38     32     32  full        252       0.127        28 of 28
+  12    720     186    142    142  full        924       0.154        82 of 96
+  14   5040     666    576    572             3432       0.167       256 of 256
+  16  40320    4156   3338   3110            12870       0.242       872 of 1120
+   5,7,...,17:  rank = 2, 3, 10, 30, 146, 414, 2548   (dr = 2, 3, 10, 30, 146, 434, 2666)
+ * Growth.  Two-step ratios of the middle rank: even N: 2, 2, 3.5, 2.3, 4.4, 4.0, 5.4;
+   odd N: 1.5, 3.3, 3.0, 4.9, 2.8, 6.2.  rank^(1/N) = 1.39, 1.41, 1.51, 1.57, 1.65 for
+   N = 8..16: no exponential rate.  Fit: rank(2k) ~ k! * c^k with c = 0.77, 0.76, 0.73,
+   0.73 for k = 5..8 (c is expected to fall like 1/log).  [data; conjecture: the rank is
+   superexponential, k! c_k^k with c_k -> 0 slowly.]
+ * Comparison with the time DP.  The time cut needs exactly #live sets states
+   (~0.66 C(N, N/2) at the middle, fastalg section 1).  The spatial middle rank is 4x
+   smaller at N = 14-16, but rank/C(N,N/2) has been RISING since N = 10 (0.127 -> 0.242),
+   and the fit puts the crossover at N ~ 20-22.  So the spatial matrix-product
+   representation (letters = insertion positions of the panels 1, 2, ..., N, i.e. the
+   insertion encoding) has smaller bond dimension than the time-ordered one only for
+   N <= ~20, where the count is trivial anyway.
+ * A sweep cannot even use that: its state at cut j is a row class, and for j > N/2 the
+   number of row classes is far above the rank (N = 14: rank 156, 32, 14 at j = 8, 9, 10
+   but dr = 2160, 2649, 7526; the peak 7526 already exceeds the 2265 live middle sets).
+   A two-sided sweep meeting at the middle needs the class-by-class matrix, cost rank^2,
+   which exceeds 2^N from N = 12 on (142^2 = 20164 > 4096).  NO FASTER COUNTER.
+ * Stabilisation [data N <= 16]: for fixed j the rank of the cut [1, j] depends only on the
+   parity of N once N >= 2j + 2 (even N) or N >= 2j + 1 (odd N):
+        even N:  1, 2, 4, 14, 32, 156, 580      (j = 1..7)
+        odd N:   1, 2, 3, 10, 30, 146           (j = 1..6)
+   and there rank = dr.  (At N = 2j the middle cut is smaller: 142 instead of 156 at
+   j = 6.)  This is the "boundary layer" form of the result: a boundary layer of width j
+   talks to the rest of the strip through that many classes, and the number grows
+   superexponentially in j.
+ * Full table rank / dr / nzr by (N, j): end of out/summary.txt.  rank(N, j) = rank(N, N-j)
+   (mirror + transpose) [proven, Lean: cutCount_mirror, cutCount_compl].
+
+
+------------------------------------------------------------------------------------------
+3. RESIDUE CUTS AND NEUTRAL SETS                                        [data N <= 14]
+------------------------------------------------------------------------------------------
+ X = {x : x mod 3 = r}, r = 0, 1, 2, and X = {x : x mod 4 = r}: in EVERY case (N <= 14)
+     nzr = dr = rank = |X|!   (the smaller side; e.g. 120 for |X| = 5 at N = 13, 14).
+ X = E_d (the neutral sets of Folds/Neutral.lean; E_3 is the class 2 mod 3):
+     N = 6, 9, 12 (d = 3): rank 2, 6, 24 = |X|!;   N = 10 (d = 5): 24 = 4!;
+     N = 14 (d = 7): 720 = 6!.
+ So neutral sets, although "X then Y" block sequences factor through them (identity (A)),
+ give full-rank cut matrices: neutrality is a statement about ONE entry pattern (the block
+ shuffle), not about the matrix.  The valid x valid block has full rank a(|X|) as well
+ (10 of 10, 28 of 28, 96 of 96).
+
+
+------------------------------------------------------------------------------------------
+4. WHAT DETERMINES A ROW: THE INTERFACE LEMMA      [proven; Lean: cutCount_map_eq]
+------------------------------------------------------------------------------------------
+For x in X let YL(x), YR(x) be the Y-panels in the left / right arm of x, and for an
+ordering sigma let c_x(sigma) = #(earlier X-panels in the left arm of x) - #(... right arm).
+The step of x in a shuffle is valid iff  #(YR(x) placed) - #(YL(x) placed) = c_x(sigma).
+The step of y in Y sees sigma only through the numbers of placed X-panels in its two arms.
+DESCRIPTOR  D(sigma) = ( kappa(sigma_p), YL(sigma_p), YR(sigma_p), c_{sigma_p}(sigma) )_p,
+where kappa(x) records which arms of which y contain x.
+   LEMMA.  D(sigma) = D(sigma') implies that sigma and sigma' have the same row.
+   Proof: relabel the X-entries of a shuffle; every step keeps its two arm counts.
+   Lean form: if a relabelling f of the panels of sigma preserves kappa, YL, YR and c
+   (structure Compat), then cutCount N X (sigma.map f) tau = cutCount N X sigma tau.
+   ZERO ROWS [proven; Lean: cutCount_eq_zero_of_internal]: if the window of sigma_p lies
+   inside X and the earlier entries of sigma are not balanced around it, the row is 0.
+Check and converse (descriptor.py) [data N <= 12]: no violation; distinct descriptors of
+nonzero rows versus distinct rows:
+   spatial j <= N/2 - 1: equal (e.g. N = 12: 2, 4, 14, 32 for j = 2..5);
+   spatial middle N = 12: 156 descriptors, 142 rows; N = 12, j = 8: 1644 versus 1168;
+   parity N = 12: 684 versus 682; residues: equal.
+For the spatial cut with j <= N/2 the descriptor is explicit: panels x <= (j+1)/2 have
+their window inside X (constraint c_x = 0, internal) and are remembered only up to the
+pairs {2i, 2i+1} (N even) or {2i-1, 2i} (N odd), because the windows of the right-half
+panels y are the suffixes [2y - N, N]; the "pending" panels (j+1)/2 < x <= j are remembered
+individually together with c_x in [0, 2x-1-j].  So the state is a TIME-ORDERED WORD of
+about j/2 distinguishable pending panels plus anonymous ones: that is where the factorial
+comes from, and why the number depends only on j and the parity of N.
+This is the finite description asked for in item 5, and it is not small.
+
+
+------------------------------------------------------------------------------------------
+5. REFLECTION POSITIVITY FAILS                      [data N <= 12; trace identity proven]
+------------------------------------------------------------------------------------------
+For even N the mirror exchanges the two sides of the middle spatial cut and of the parity
+cut, so K[sigma, sigma'] = M[sigma, mirror(sigma')] is symmetric.  A Freedman-Lovasz-
+Schrijver type realisation (a(N) as a partition function with a positive transfer
+operator across the cut) needs K to be positive semidefinite.  Inertia (+, -, 0), out/reflect.txt:
+     spatial:  N = 6: (2,2,0)   8: (7,7,0)   10: (17,15,6)   12: (72,70,44)
+     parity:   N = 6: (4,2,0)   8: (12,12,0) 10: (57,59,0)   12: (336,336,12)
+About half of the eigenvalues are negative, also for the form twisted by reversal.
+THEOREM (trace) [proven on paper, not in Lean].  For N = 2k and the middle cut,
+M[sigma, mirror(sigma)] = 0 for every sigma: the right half is never bisected in the
+mirror image of the order of the left half.
+Proof.  Suppose tau = mirror(sigma) and, after mirroring the whole sequence if necessary,
+k is placed before k+1.  Let p = #(left panels before k) = #(right panels before k+1).
+Panel k has arms [1, k-1] and [k+1, 2k-1], so exactly p panels of [k+1, 2k-1] precede k.
+They precede k+1, so they are exactly the first p entries of tau, and N is not among them;
+by the mirror, 1 is not among the first p entries of sigma.  Panel k+1 has arms [2, k] and
+[k+2, 2k]: on the right p placed panels, on the left the p first entries of sigma (none is
+panel 1) and k itself, p + 1 > p.  Contradiction.                                        QED
+So K has zero diagonal and is not positive semidefinite for a structural reason.
+
+
+------------------------------------------------------------------------------------------
+6. THE "HANKEL IN N" VARIANT
+------------------------------------------------------------------------------------------
+ * [proven] There is no transfer matrix in N of fixed size for counts refined by a boundary
+   pattern of fixed width w: such counts would be C-finite in N, hence at most exponential,
+   but their sum a(N) is superexponential (Lean: self_pow_le_semiCount_pow_17 in
+   Folds/SuperExp4.lean).  The block-Hankel rank experiment was therefore NOT run; the scalar
+   Hankel / C-finite / P-recursive searches are already negative (recsearch, recsearch2).
+ * The meaningful replacement is section 2 (stabilisation): for a boundary layer [1, j]
+   and N >= 2j + 2 the number of classes of boundary orderings is finite and independent of
+   N, but it is 1, 2, 4, 14, 32, 156, 580 for j = 1..7, superexponential in the width.
+   A vector recurrence with polynomial coefficients on these classes was not tested.
+
+
+------------------------------------------------------------------------------------------
+7. SUMMARY OF STATEMENTS
+------------------------------------------------------------------------------------------
+ [proven, Lean]  a(N) = sum of M; transpose, reversal and mirror symmetries; zero rows;
+                 interface lemma (rows depend only on the descriptor).
+ [proven, paper] M[sigma, mirror sigma] = 0 at the middle cut of even N; no fixed-size
+                 transfer matrix in N.
+ [data N<=14]    parity cut: rank >= 0.896 (N/2)!; residue cuts mod 3, mod 4 and E_d: rank
+                 = |X|! exactly.
+ [data N<=17]    spatial middle cut: rank 1,1,2,2,4,3,14,10,32,30,142,146,572,414,3110,2548
+                 for N = 2..17, fit (N/2)! * 0.73^(N/2).
+ [data N<=12]    not reflection positive.
+ [conjecture]    every cut matrix M_{X,Y} with |X|, |Y| -> infinity has superexponential
+                 rank; for the parity cut rank/(N/2)! stays bounded below.
+ [negative]      no bounded or polynomial rank, no exponential rank with base < 2 that
+                 survives past N ~ 20, no row statistic coarser than the descriptor, no
+                 recursion, no faster algorithm for a(N).
+ Not done: a proof of any superexponential lower bound for the rank (only for the number
+ of nonzero rows: nzr * nzc >= a(N) / C(N, |X|)); N = 15, 16 for the parity cut (8! x 8!
+ is too large here); N >= 18 for the spatial cut; the block-Hankel experiment.
