@@ -1,0 +1,3 @@
+N=16 cut=spatial_6 |X|=6 |Y|=10 a=276182312 | all: nzr=186 nzc=116738 dr=156 dc=23150 rank=156 (|X|!=720 |Y|!=3628800) | valid x valid: vr=96 vc=16896 nzr=96 nzc=16806 dr=82 dc=5424 rank=82 sum=42294732
+N=16 cut=spatial_7 |X|=7 |Y|=9 a=276182312 | all: nzr=666 nzc=17868 dr=580 dc=8684 rank=580 (|X|!=5040 |Y|!=362880) | valid x valid: vr=256 vc=4198 nzr=256 nzc=4154 dr=256 dc=2784 rank=256 sum=44011596
+N=16 cut=spatial_8 |X|=8 |Y|=8 a=276182312 | all: nzr=4156 nzc=4156 dr=3338 dc=3338 rank=3110 (|X|!=40320 |Y|!=40320) | valid x valid: vr=1120 vc=1120 nzr=1120 nzc=1120 dr=976 dc=976 rank=872 sum=41905842
