@@ -21,7 +21,7 @@ a block are folded simultaneously.  Writing `S = B₁ ∪ … ∪ B_{i-1}`, a we
 * `mem_chains`, `card_chains_succ`: the chains of length `k` from `S`, and their recursion.
 * `W_top`: `W(N, N) = a(N)` for every link relation that is `BalF` on singletons
   (`WA_top`, `WB_top`, `WC_top`, `WD_top`).
-* `W_one`: `W(N, 1) = 1` (`WA_one`, `WB_one`, `WD_one`).
+* `W_one`: `W(N, 1) = 1` (`WA_one`, `WB_one`).
 * `W_two`; `WA_two`: `W_a(N, 2)` is the number of proper nonempty window copies;
   `WB_two`: `W_b(N, 2)` is the number of proper neutral sets, `= |NFam N|`.
 * closure: `validFrom_refine` (splitting a block) for relations with the splitting property,
@@ -33,8 +33,8 @@ a block are folded simultaneously.  Writing `S = B₁ ∪ … ∪ B_{i-1}`, a we
 * `euler_flip`: if a panel `x` is always admissible, the alternating sums satisfy
   `E(S) = -E(S ∪ {x})`.
 * `euler_A_even`: for even `N ≥ 4`, `∑_k (-1)^k W_a(N, k) = 0`
-  (and `euler_symA_even` for the symmetric analogue).
-* `euler_A_odd`: for odd `N = 2c - 1 ≥ 3`, `∑_k (-1)^k W_a(N, k) = -E({1, c, N})`.
+  (and `euler_symA_even` for the symmetric analogue); the general criterion is
+  `euler_linkOf_eq_zero`.
 -/
 
 namespace Folds
@@ -447,7 +447,7 @@ theorem euler_flip {x : ℕ} (hx : x ∈ Icc 1 N) (h0 : ∀ S, R S ∅)
     · intro B _ _
       by_cases hxB : x ∈ B
       · simp only [hxB, ↓reduceIte]
-        exact fun h => notMem_erase x B (h ▸ hxB)
+        exact fun h => notMem_erase x B (by rw [h]; exact hxB)
       · simp only [hxB, ↓reduceIte]
         exact fun h => hxB (h ▸ mem_insert_self x B)
     · intro B hB
@@ -692,6 +692,34 @@ theorem validFrom_merge_D {N : ℕ} {S B C : Finset ℕ} {l₁ l₂ : List (Fins
     ValidFrom N (linkD N) S (l₁ ++ (B ∪ C) :: l₂) :=
   validFrom_coarsen N (linkD N) (fun _ _ _ hd h1 h2 => linkD_merge hd h1 h2) h
 
+/-! ### Nothing else is closed (small counterexamples) -/
+
+/-- (a) is not closed under refinement: `(123)` is valid, `(1 | 23)` is not (`N = 3`). -/
+theorem not_refine_A : linkA 3 ∅ {1, 2, 3} ∧ ¬linkA 3 {1} {2, 3} := by decide +kernel
+
+/-- (a) is not closed under coarsening: `(1 | 3 | 2)` is valid, `(1 | 23)` is not. -/
+theorem not_coarsen_A : linkA 3 {1} {3} ∧ linkA 3 {1, 3} {2} ∧ ¬linkA 3 {1} {2, 3} := by
+  decide +kernel
+
+/-- (b) is not closed under refinement: `(123)` is valid, `(1 | 23)` is not. -/
+theorem not_refine_B : linkB 3 ∅ {1, 2, 3} ∧ ¬linkB 3 {1} {2, 3} := by decide +kernel
+
+/-- (b) is not closed under coarsening: `(13 | 2 | 4)` is valid, `(123 | 4)` is not
+(`N = 4`). -/
+theorem not_coarsen_B : linkB 4 ∅ {1, 3} ∧ linkB 4 {1, 3} {2} ∧ ¬linkB 4 ∅ {1, 2, 3} := by
+  decide +kernel
+
+/-- (c) is not closed under coarsening: `(13 | 2)` is valid, `(123)` is not. -/
+theorem not_coarsen_C : linkC 3 ∅ {1, 3} ∧ linkC 3 {1, 3} {2} ∧ ¬linkC 3 ∅ {1, 2, 3} := by
+  decide +kernel
+
+/-- (d) is not closed under refinement: `(12 | 3)` is valid (fold `2`, then `1`), but
+`(1 | 2 | 3)` is not. -/
+theorem not_refine_D : linkD 3 ∅ {1, 2} ∧ ¬linkD 3 {1} {2} := by
+  refine ⟨⟨[2, 1], mem_orderings.2 ⟨by decide, by decide⟩, by decide +kernel⟩, ?_⟩
+  rw [linkD_singleton]
+  decide +kernel
+
 /-! ### Columns -/
 
 theorem WA_top (N : ℕ) : W N (linkA N) N = semiCount N := W_top N _ (linkA_singleton N)
@@ -718,28 +746,28 @@ theorem WA_two (N : ℕ) : W N (linkA N) 2 = (((Icc 1 N).powerset).filter fun Y 
       exact fun h => hneq (subset_antisymm hsub h)
     · intro h
       obtain ⟨x, hx⟩ := hne
-      have : x ∈ Icc 1 N \ X := h ▸ hsub hx
+      have : x ∈ Icc 1 N \ X := by rw [h]; exact hsub hx
       exact (mem_sdiff.1 this).2 hx
     · intro m hm
       exact (balF_compl_iff hsub (mem_sdiff.1 hm).1).2 (h2 m hm)
   · intro X hX Y hY h
     have hXs : X ⊆ Icc 1 N := (by simpa using hX : _ ∧ _).1
     have hYs : Y ⊆ Icc 1 N := (by simpa using hY : _ ∧ _).1
-    rw [← sdiff_sdiff_eq_self hXs, ← sdiff_sdiff_eq_self hYs, h]
+    rw [← Finset.sdiff_sdiff_eq_self hXs, ← Finset.sdiff_sdiff_eq_self hYs, h]
   · intro Y hY
     obtain ⟨hsub, hne, hneq, hc⟩ := by simpa using hY
-    refine ⟨Icc 1 N \ Y, ?_, sdiff_sdiff_eq_self hsub⟩
+    refine ⟨Icc 1 N \ Y, ?_, Finset.sdiff_sdiff_eq_self hsub⟩
     simp only [mem_filter, mem_powerset]
     refine ⟨sdiff_subset, ?_, ?_, fun m _ => balF_empty N m, ?_⟩
     · rw [nonempty_iff_ne_empty, Ne, sdiff_eq_empty_iff_subset]
       exact fun h => hneq (subset_antisymm hsub h)
     · intro h
       obtain ⟨x, hx⟩ := hne
-      have : x ∈ Icc 1 N \ Y := h ▸ hsub hx
+      have : x ∈ Icc 1 N \ Y := by rw [h]; exact hsub hx
       exact (mem_sdiff.1 this).2 hx
     · intro m hm
-      rw [sdiff_sdiff_eq_self hsub] at hm
-      exact (balF_compl_iff hsub (hsub hm)).1 (hc m hm)
+      rw [Finset.sdiff_sdiff_eq_self hsub] at hm
+      exact (balF_compl_iff hsub (hsub hm)).2 (hc m hm)
 
 /-- `W_b(N, 2)` is the number of proper neutral sets, which are classified: the two parity
 classes and `E_d`, `E_dᶜ` for the odd divisors `3 ≤ d < N` of `N`. -/
@@ -756,7 +784,7 @@ theorem WB_two {N : ℕ} (hN : 2 ≤ N) : W N (linkB N) 2 = (NFam N).card := by
       · have := (h1 m hm).2
         rwa [empty_union] at this
       · exact (balF_compl_iff hsub (mem_sdiff.1 hm).1).2 (h2 m hm).1
-    · have := card_lt_card (ssubset_iff_subset_ne.2 ⟨hsub, hneq⟩)
+    · have := card_lt_card (Finset.ssubset_iff_subset_ne.2 ⟨hsub, hneq⟩)
       simpa using this
   · intro hX
     have hsub := nfam_sub hX
@@ -822,11 +850,13 @@ theorem not_balF_ends {N m : ℕ} (he : N % 2 = 0) (hm : m ∈ Icc 2 (N - 1)) :
     have e1 : ({N, 1} : Finset ℕ).filter (fun x => m - reach N m ≤ x ∧ x < m) = {1} := by
       ext x; simp only [mem_filter, mem_insert, mem_singleton, hr]; omega
     have e2 : ({N, 1} : Finset ℕ).filter (fun x => m < x ∧ x ≤ m + reach N m) = ∅ := by
-      ext x; simp only [mem_filter, mem_insert, mem_singleton, hr, notMem_empty]; omega
+      rw [hr]; apply filter_false_of_mem; intro x hx
+      simp only [mem_insert, mem_singleton] at hx; omega
     rw [e1, e2]; simp
   · have hr : reach N m = N - m := by unfold reach; omega
     have e1 : ({N, 1} : Finset ℕ).filter (fun x => m - reach N m ≤ x ∧ x < m) = ∅ := by
-      ext x; simp only [mem_filter, mem_insert, mem_singleton, hr, notMem_empty]; omega
+      rw [hr]; apply filter_false_of_mem; intro x hx
+      simp only [mem_insert, mem_singleton] at hx; omega
     have e2 : ({N, 1} : Finset ℕ).filter (fun x => m < x ∧ x ≤ m + reach N m) = {N} := by
       ext x; simp only [mem_filter, mem_insert, mem_singleton, hr]; omega
     rw [e1, e2]; simp
