@@ -64,3 +64,4 @@ import Folds.SuperExp7
 import Folds.HypH
 import Folds.SuperExp8
 import Folds.SuperExp10
+import Folds.XdSymFun

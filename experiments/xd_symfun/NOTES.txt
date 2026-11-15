@@ -1,0 +1,247 @@
+SYMMETRIC / QUASISYMMETRIC FUNCTIONS, RSK AND EULERIAN-TYPE POLYNOMIALS FOR V_N
+================================================================================
+(experiments/xd_symfun/; Lean: Folds/XdSymFun.lean; literature: LITERATURE.md)
+
+V_N = set of semi-symmetric fold sequences of length N, |V_N| = a(N).  Two encodings:
+  a = fold sequence (a_k = panel placed at step k),   t = a^{-1} = time word (t_m = step of m).
+Reversal R(a) = a reversed  <->  t -> N+1-t (complement of t).
+Mirror   M(a) = N+1-a       <->  t reversed.
+Labels: [proven] (paper proof here or Lean), [data N <= ..] (checked exhaustively on that
+range), [conjecture].  All runs: one core, < 2.5 GB.
+
+BOTTOM LINE
+  * No formula or recurrence for a(N) comes out of this angle.
+  * Q_N = sum_{pi in V_N} F_{Des pi} is NOT symmetric for N >= 5, in either encoding, also
+    with peak functions; V_N is not a union of Knuth or dual Knuth classes for N >= 5; it is
+    not closed under inverse, evacuation of one tableau, Foata's maps or valley hopping.
+  * The structure that IS there: V_N is a union of commutation (Cartier-Foata) classes for
+    the independence relation "neither panel lies in the other's window" [proven, Lean].
+    So Q_N is a sum of (P,omega)-partition enumerators of width-2 heaps, and
+    a(N) = sum over valid heaps of their numbers of linear extensions.
+  * Both descent polynomials (of a and of t) are palindromic [proven, Lean], and real-rooted,
+    hence gamma-positive and log-concave, for every N computed (a: N <= 19, t: N <= 23)
+    [data].  4554 searches for linear operator recurrences A_{N+s} = T_N[A_N] over 14
+    polynomial families: none [data].
+  * New extremal conjecture: min number of inverse descents = F(floor((N-1)/4)) + 1, where
+    F is the known max-free-steps function [data N <= 30, one confirmed prediction].
+
+FILES
+  enum.c, run_enum.sh      enumerate V_N (N <= 13) into data/V<N>.bin (git-ignored)
+  common.py                loaders, descent / peak masks, subset zeta transform
+  qsym.py                  part 1: M-basis symmetry test for Des and Peak, both encodings
+  rsk.py                   part 2: RSK shapes, Knuth closure, classical maps, cycle types
+  stats.py                 parts 3/4: 21 statistics x 2 encodings, equidistribution classes
+  statdp.c, run_statdp.sh  subset DP for statistic polynomials (13 modes), data/dp_polys.txt
+  polys.py                 palindromic / unimodal / log-concave / real-rooted / gamma tests
+  oprec.py                 operator-recurrence search (exact nullspaces mod 2^61-1)
+  minstat.c                tropical (min/max) subset DP, one byte per set, N <= 30
+  heaps.c, run_heaps.sh    commutation classes of V_N (N <= 13)
+  permuton.c, permuton.py  averaged permutation matrix, N = 12, 13, 14, 20, 24
+  data/*_out.txt           outputs of the above
+
+--------------------------------------------------------------------------------
+1. THE QUASISYMMETRIC FUNCTION
+--------------------------------------------------------------------------------
+1.1 Symmetry test.  Q is symmetric iff [M_beta] Q = #{pi : Des(pi) subset S(beta)} depends
+only on the sorted beta.  (qsym.py, data/qsym_out.txt.)
+  * The descent-set distribution of V_N is invariant under D -> complement (mirror for a,
+    reversal for t) and under D -> {N-i : i in D} composed with complement (reversal for a),
+    hence under reversal of compositions.  [proven; data N <= 12]
+  * Q_N is symmetric for N <= 4 (both encodings) and NOT symmetric for every 5 <= N <= 12,
+    in both encodings.  [data N <= 12; N = 5 in Lean: subDesCount_five, subIdesCount_five]
+    N = 5, a: M_(1,3,1): 6, M_(1,1,3) = M_(3,1,1): 1;  M_(2,1,2): 8, M_(1,2,2): 7.
+    N = 5, t: M_(1,3,1): 4, M_(1,1,3): 0;  M_(2,1,2): 4, M_(1,2,2): 10.
+    Share of partitions lambda |- N with non-constant M-coefficients (a / t):
+      N=6: 4/11, 3/11;  N=8: 11/22, 9/22;  N=10: 25/42 (a);  N=12: 48/77, 33/77.
+    Relative L1 distance from the symmetrisation: a: 0.07 (N=5) .. 0.12 (N=12), slowly
+    increasing; t: 0.12 .. 0.28.  So Q_N is not "nearly" symmetric either.
+  * For N <= 4 the Schur expansions are (a-encoding) Q_3 = 2 s_21, Q_4 = s_31 + 2 s_22 +
+    s_211 (V_4 is a union of Knuth classes, section 2).  Nothing of this survives N = 5.
+  * Peak version (Stembridge K_Lambda): not symmetric for 5 <= N <= 12, both encodings.
+    [data N <= 12]
+  * The two encodings have different descent-set distributions from N = 4.  [data]
+1.2 Support.  Number of distinct descent sets: a: 1,2,2,6,8,18,30,70,110,..,536,1172 of
+2^{N-1} (about 57%); t: 1,2,2,2,4,6,8,18,28,52,92,186 (N = 1..12), about 9% of 2^{N-1} at
+N = 12.  Reason for the small t-support: descents of t are the pairs (m, m+1) placed in
+decreasing order, and panel 2 (and N-1) is always a peak or valley of t [proven, Lean:
+ides_two]; more generally every panel's window balance restricts the pattern.  [data]
+1.3 What Q_N is.  [proven]
+  COMMUTATION LEMMA (Lean: swap_mem_semiSeqs, indep_of_swap_mem_semiSeqs).  Let x, y be
+  adjacent in a in V_N.  Swapping them gives an element of V_N iff x, y are INDEPENDENT:
+  |x - y| > max(reach x, reach y).  (The sets before and after the pair are unchanged; the
+  first of the two must not see the other in its window.)
+  Hence V_N is a union of classes of the trace monoid M([N], I_N).  Each class is the set of
+  linear extensions of a poset (heap) H labelled by panel numbers, and by Stanley/Gessel
+      Q_N = sum_{valid heaps H} K_{H,omega},     a(N) = sum_H e(H).
+  Two panels in the same half are never independent (Lean: not_indep_of_left), so a heap is
+  two chains (an order sigma of the left-half panels, an order tau of the right-half panels)
+  plus cross relations; the number of independent pairs is floor((N^2+2)/6) [data N <= 13;
+  = number of 2-sets valid in both orders, cf. Copies2].
+  Number of classes h(N), N = 1..13 (heaps.c):
+      1, 1, 2, 2, 6, 12, 20, 54, 192, 412, 1312, 4746, 13926      (not in a(N)'s shape:
+  a(N)/h(N) = 1, 2, 2, 5, 4.7, 8, 12.8, 20.7, 22.2, 43.4, 54.1, 80.8, 116.4); largest class
+  1, 2, 2, 5, 6, 12, 16, 46, 38, 134, 170, 318, 445; no singleton class for N >= 2.
+  The K_{H,omega} are not symmetric (Stanley's P-partitions conjecture: only skew shapes),
+  consistent with 1.1.  The heap decomposition is a reformulation of the count, not a
+  formula: the valid heaps are as hard to count as V_N.
+
+--------------------------------------------------------------------------------
+2. RSK, KNUTH CLASSES, CLASSICAL MAPS   (rsk.py, data/rsk_out.txt, N <= 10)
+--------------------------------------------------------------------------------
+  * Shape distribution is invariant under transpose (reversal) [proven: P(a^r) = P(a)^t].
+    Only few shapes occur: 3/7 (N=5), 7/11, 4/15, 6/22, 9/30, 14/42 (N=10); LIS = LDS is
+    concentrated: N = 9: LIS 3,4,5 with 575, 3624, 57; N = 10: 918, 14307, 2653.  TV distance
+    to Plancherel 0.28 .. 0.56, not decreasing.  (LIS extremes: Folds/Descents, README 4.)
+  * V_N is a union of Knuth classes iff N <= 4; a union of dual Knuth classes (= Knuth
+    classes of t) iff N <= 3.  [data N <= 10; first failures N = 5 resp. N = 4]
+    Sequences all of whose elementary Knuth neighbours are valid: 16/28, 64/96, 136/256,
+    584/1120, 1378/4256, 5898/17878 (N = 5..10); dual Knuth: 8, 16, 0, 98, 0, 324.
+    The roughly 1/3-1/2 share for Knuth moves is the commutation lemma at work (a Knuth move
+    swaps adjacent entries).
+  * Number of distinct P-tableaux / Q-tableaux of V_N: N=9: 144 / 688 (of 2620 SYT);
+    N=10: 364 / 3004 (of 9496).
+  * Closed under complement and reversal [proven].  NOT closed under:
+      inverse:  |V_N n V_N^{-1}| = 1, 2, 4, 6, 20, 52, 64, 278, 876, 1764 (N = 1..10); this
+        is 3-20 times the value a(N)^2/N! expected for a random set, but a vanishing share;
+      (P,Q) -> (P, evac Q), (evac P, Q), (P^t, Q^t): 20/28, 68/96, 80/256, 656/1120, 988/4256;
+      Foata's fundamental map (cycles -> word): 7/28 .. 111/17878 (random level);
+      Foata's second map (maj -> inv): 22/28, 64/96, 122/256, 422/1120, 1026/4256,
+        3130/17878 (elevated because the map preserves the inverse descent set).  [data]
+    (evac P, evac Q) is reversal o mirror, so the pair is closed [proven].
+  * Involutions in V_N: 1, 2, 2, 4, 6, 12, 8, 24, 42, 80 (N = 1..10).  Fixed points: mean
+    0.80 .. 1.29, cycles: mean within 0.2 of H_N, N-cycles within 15% of a(N)/N for N >= 8:
+    the cycle structure looks like that of a uniform random permutation.  [data]
+
+--------------------------------------------------------------------------------
+3. STATISTIC POLYNOMIALS
+--------------------------------------------------------------------------------
+3.1 Data.  Enumeration (N <= 12, 21 statistics per encoding, data/enum_polys.txt) and subset
+DP (statdp.c; data/dp_polys.txt): a_des N <= 19, a_pk N <= 18, a_maj N <= 16, inv, t_maj
+N <= 20, a_exc, a_fix, a_lrmax, t_des, t_exc, t_lrmax, t_pk N <= 23; joint (des, last panel)
+N <= 19 (data/dp_deslast.txt).  DP and enumeration agree on all 144 common polynomials.
+Set-computable statistics (state = set S of placed panels, m = new panel, k = |S|):
+  inv: #{x in S, x > m};  exc(a): m > k+1;  des(t): m+1 in S;  maj(t): m [m+1 in S];
+  pk(t): m-1, m+1 in S;  lrmax(a): m > max S;  lrmax(t): {1..m-1} subset S.
+3.2 Properties (polys.py, data/polys_out.txt; "all" = every N >= 4 in the range).
+  statistic        palindromic  unimodal  log-concave  real-rooted     gamma-positive
+  des(a)  N<=19    all [proven] all       all          all             all
+  des(t)  N<=23    all [proven] all       all          all             all
+  pk(a)   N<=18    no           all       all          all
+  pk(t)   N<=23    no           all       all          all
+  lrmax   N<=23    no           all       all          all            (a and t: same)
+  exc     N<=23    no           all       all          fails 6,14,18,20
+  fix     N<=23    no           all       all          never
+  inv     N<=20    all [proven] fails 4   fails 4      never (N<=17 tested)
+  maj(a)  N<=16    all          fails even N, 11       never           no
+  maj(t)  N<=20    all          fails most N           never           no
+  cyc     N<=12    no           all       all          never (N>=5)
+  first panel      all          fails     fails        never           no
+  [all entries data on the stated range unless marked proven]
+  Palindromicity: des(M a) = N-1-des(a) (Lean: des_mirror, desCount_symm);
+  ides(R a) = N-1-ides(a) (Lean: ides_reverse, idesCount_symm); inv by reversal.
+  Extreme coefficients: [q^0] = [q^{N-1}] = 0 for N >= 3 in both descent polynomials
+  (Lean: desCount_zero/top, idesCount_zero/top).  The true minimum of des(a) is the known
+  floor(log2(N+1)) - 1 conjecture; for des(t) see 3.5.
+  gamma-vectors (data/polys_out.txt), e.g. des(a): N=12: [6, 2953, 27288, 34954];
+  N=19: [1698, 724260, 34532858, 374413846, 1121714880, 871319178, 97978288];
+  des(t): N=12: [676, 31989, 52966]; N=23: [13044294, 3499831268, 111363852826,
+  881757408334, 1675677359908, 881985344462, 88871431388].
+  CONJECTURE.  The descent polynomials of V_N in both encodings are real-rooted for all N.
+  [data: a N <= 19, t N <= 23]   No mechanism: see 3.3.
+3.3 Why the standard proofs do not apply.
+  * Valley hopping (modified Foata-Strehl): for an invariant set gamma_j = #{pk = j} /
+    2^{N-1-2j}.  At N = 9 #{pk(a) = 2} = 1546 is not divisible by 16 (and gamma_2 = 31), so
+    V_N is not invariant.  [data]
+  * des(a)-polynomial = sum of W_{H,omega} over heaps (1.3): Neggers-Stanley polynomials
+    need not be real-rooted, and a sum needs a common interleaver.
+  * Two-sided: sum x^{des a} y^{des t} is not symmetric in x <-> y (N >= 5), so no
+    Gessel-Lin gamma-expansion.  [data N <= 12, data/enum_joint.txt]
+3.4 Operator recurrences (oprec.py, data/oprec_out.txt).  Ansatz
+      sum_{j=0..s} sum_{i=0..I} p_ij(x, N) (d/dx)^i A_{N+j}(x) = 0,
+  deg_x p <= dx, deg_N p <= dn, s in {1,2}, I <= 3, dx <= 4, dn <= 3 (I, dx <= 2 for inv,
+  maj), for N stepping by 1, and separately for even N and odd N stepping by 2.  Families:
+  des(a), des(t), exc(a), exc(t), lrmax(a), lrmax(t), pk(a), pk(t), fix, inv, maj(a),
+  maj(t), and the gamma-polynomials of des(a), des(t).  A search is run only if
+  #equations >= #unknowns + 12 and #training indices >= dn + 3; nullspace mod 2^61 - 1 on
+  all but the last index, last index held out.  The code finds the Eulerian recurrence
+  A_{n+1} = (1+nx)A_n + x(1-x)A_n' in its validation run.
+  RESULT: 4554 searches, no nontrivial nullspace.  [data]   (Unknowns up to 240; the largest
+  admissible searches have e.g. 60-120 unknowns for des(t).)  So there is no Eulerian-type
+  recurrence of these shapes; consistent with the non-P-recursiveness evidence for a(N).
+3.5 Extremes by tropical DP (minstat.c, N <= 30, data/minstat.txt).
+  * min des(t) (fewest pairs (m, m+1) placed in decreasing order), N = 1..30:
+      0,0,1,1,2,2,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,6,6;  max = N-1-min.
+    It increases at N = 3, 5, 9, 13, 21, 29 = 4j+1 for j = 1, 2, 3, 5, 7 (and N = 3).
+    The j are the first elements of {2^k - 1, 3*2^k - 1}, the jump set of the max-free-step
+    function F(n) = floor(log2(n+1)) + floor(log2((n+1)/3)) + 1 (Folds/Extremal).
+    CONJECTURE.  min des(t) = F(floor((N-1)/4)) + 1 for N >= 3 (F(0) = 0, F(1) = 1).
+    [data N <= 30; the jump at N = 29 was predicted from N <= 23 and confirmed.  Next
+    predicted jump: N = 45.]
+  * pk(t): max = floor((N-1)/2) (alternating time words exist); min = 0,0,0,1,1,1,2,2,2,2,
+    3 (N=11..16), 4 (17..24), 5 (25..30).  [data N <= 30]
+  * exc(a): max = floor((3N-1)/4) [data N <= 30]; min = floor((N+1)/4) except N = 10 (3).
+
+--------------------------------------------------------------------------------
+4. EQUIDISTRIBUTION   (stats.py, data/stats_out.txt, N = 4..12)
+--------------------------------------------------------------------------------
+42 statistics (des, maj, inv, exc, aexc, fix, pk, val, ddes, dasc, lpk, epk, lrmax, lrmin,
+rlmax, rlmin, cyc, first, last, longest increasing run, initial run; for a and for t).
+Equidistribution classes found (up to shift and reflection):
+  {lrmax, lrmin, rlmax, rlmin} x {a, t};  {exc, aexc} x {a, t};  {pk, val, epk} for a, and
+  separately for t;  inv(a) = inv(t);  fix;  cyc;  {first, last} for a, and for t;
+  {ddes, dasc} for a, and for t.
+Every one is forced: t-statistics are a-statistics of the inverse (lrmax(t) = rlmin(a),
+exc(t) = aexc(a)), and R, M, RM map the statistics onto each other.  [proven]
+No other coincidence: des(a) != des(t), des != exc (V_N is not "Eulerian"), maj != inv
+(no Mahonian pair), pk(a) != pk(t).  [data N <= 12]
+OEIS: no lookup was possible from this environment beyond what docs/LITERATURE.md and
+experiments/structure2 already record (the row polynomials start with large prime
+factors, like a(N)); the rows of the des(t) triangle 5,5 | 28 | 48,48 | 24,208,24 |
+29,531,531,29 | 756,2744,756 are recorded here for a later lookup.  [not done]
+
+--------------------------------------------------------------------------------
+5. PERMUTON   (permuton.c, permuton.py, data/permuton_out.txt; N = 12, 13, 14, 20, 24)
+--------------------------------------------------------------------------------
+C[k][m] = #{a in V_N : a_k = m} = sum_{|S|=k-1} g(S) g([N] \ S \ {m}) [valid (S,m)].
+  * Symmetric under m -> N+1-m and k -> N+1-k [proven]; not under transpose (so the
+    "average inverse" differs).  [data]
+  * Row 1 (= row N) is the first-panel law, TV 0.03 from (3/sqrt 2) sqrt(min(x,1-x)).
+  * The matrix is NOT close to a smooth permuton at these sizes: density N*P(a_k = m) ranges
+    over 0.07 .. 2.2 (N = 20), with zeros for odd N (the middle panel is placed only at odd
+    steps: density 0, 2.49, 0, 1.45, 0, 2.59 at N = 13).  Step 2 is strongly depleted in the
+    middle (density 0.15 at N = 12, 0.09 at N = 14) and enriched near m = N/6, the valid
+    2-prefix geometry.  6 x 6 block averages at N = 12 (time sextile x panel sextile):
+        0.94 1.21 0.85 0.85 1.21 0.94
+        1.11 0.65 1.24 1.24 0.65 1.11
+        0.95 1.14 0.91 0.91 1.14 0.95      (rows 4-6 mirror rows 3-1)
+    At N = 24 the 6 x 6 block averages lie in 0.93 .. 1.08 (N = 12: 0.65 .. 1.24), so the
+    coarse-grained matrix flattens towards uniform, while single entries still range over
+    0.04 .. 2.1 (parity and window texture).  [data]  No limit shape beyond the
+    first-panel law is claimed.
+
+--------------------------------------------------------------------------------
+6. LEAN (Folds/XdSymFun.lean; no sorry, no native_decide)
+--------------------------------------------------------------------------------
+  Indep, SemiSymmetric.swap, swap_mem_semiSeqs, indep_of_swap_mem_semiSeqs,
+  not_indep_of_left                                   commutation structure (section 1.3)
+  des_mirror, desCount, desPolyList, desCount_symm, sum_desCount, one_le_des,
+  desCount_zero, desCount_top                         descent polynomial of a
+  ides, ides_reverse, idesCount, idesPolyList, idesCount_symm, ides_two, one_le_ides,
+  idesCount_zero, idesCount_top                       descent polynomial of t
+  semiList, mem_semiList, card_filter_semiSeqs        kernel-computable enumeration
+  desPolyList_four/five, idesPolyList_four/five       small cases (decide +kernel)
+  desSet, idesSet, subDesCount, subIdesCount, subDesCount_five, subIdesCount_five
+                                                      Q_5 is not symmetric (both encodings)
+
+--------------------------------------------------------------------------------
+7. NEGATIVE RESULTS, EXACTLY AS TESTED
+--------------------------------------------------------------------------------
+  * Symmetry of Q_N (Des, Peak; a, t): fails for every 5 <= N <= 12.
+  * Unions of Knuth / dual Knuth classes: fails for N >= 5 / N >= 4 (N <= 10).
+  * Closure under inverse, single-tableau evacuation or transpose, Foata's two maps, valley
+    hopping: fails (N <= 9 or 10).
+  * Operator recurrences: 4554 searches, 14 families, none (3.4).
+  * Non-forced equidistributions among 42 statistics: none (N <= 12).
+  * Real-rootedness fails for exc (N = 6, 14, 18, 20), fix, inv, maj, cyc, first panel.
+  * Not tested: Schur expansions of symmetrised Q_N, cyclic descents, type-B analogues,
+    N >= 13 for the set-level tests (parts 1, 2), OEIS lookups of the new triangles.

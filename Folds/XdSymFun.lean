@@ -324,7 +324,27 @@ theorem log_add_two_lt {n : ℕ} (hn : 5 ≤ n) : Nat.log 2 n + 2 < n := by
   have := Nat.log_lt_of_lt_pow (b := 2) (by omega : n ≠ 0) h
   omega
 
-theorem one_le_des_three : ∀ a ∈ semiSeqs 3, 1 ≤ des a := by decide +kernel
+/-- A kernel-computable enumeration of `V_N` (`List.permutations'` is structurally
+recursive, unlike `List.permutations`). -/
+def semiList (N : ℕ) : List (List ℕ) :=
+  (List.range' 1 N).permutations'.filter (fun a => decide (SemiSymmetric N a))
+
+theorem mem_semiList {N : ℕ} {a : List ℕ} : a ∈ semiList N ↔ a ∈ semiSeqs N := by
+  rw [mem_semiSeqs]
+  simp [semiList, List.mem_permutations', IsFoldSeq]
+
+/-- Counting in `V_N` through the computable enumeration. -/
+theorem card_filter_semiSeqs (N : ℕ) (p : List ℕ → Prop) [DecidablePred p]
+    (hnd : (semiList N).Nodup) :
+    ((semiSeqs N).filter p).card = ((semiList N).filter (fun a => decide (p a))).length := by
+  have e : (semiSeqs N).filter p = ((semiList N).filter (fun a => decide (p a))).toFinset := by
+    ext a
+    simp [mem_semiList]
+  rw [e, List.toFinset_card_of_nodup (hnd.filter _)]
+
+theorem one_le_des_three : ∀ a ∈ semiSeqs 3, 1 ≤ des a := by
+  have h : ∀ a ∈ semiList 3, 1 ≤ des a := by decide +kernel
+  exact fun a ha => h a (mem_semiList.2 ha)
 
 /-- Every semi-symmetric fold sequence of length `N ≥ 3` has a descent
 (from `descents_bound`; `N = 3` by enumeration). -/
@@ -442,11 +462,11 @@ theorem ides_two {N : ℕ} {a : List ℕ} (hN : 3 ≤ N) (ha : a ∈ semiSeqs N)
   constructor
   · intro h
     by_contra h'
-    rw [if_pos h, if_neg h'] at hb
+    simp only [h, h', ite_true, ite_false] at hb
     omega
   · intro h
     by_contra h'
-    rw [if_neg h', if_pos h] at hb
+    simp only [h, h', ite_true, ite_false] at hb
     omega
 
 /-- The time word of a semi-symmetric sequence of length `N ≥ 3` has a descent. -/
@@ -483,13 +503,33 @@ theorem idesCount_top {N : ℕ} (hN : 3 ≤ N) : idesCount N (N - 1) = 0 := by
 
 /-! ## Small cases (kernel computation) -/
 
-theorem desPolyList_four : desPolyList 4 = [0, 5, 5, 0] := by decide +kernel
+theorem nodup_semiList_four : (semiList 4).Nodup := by decide +kernel
 
-theorem desPolyList_five : desPolyList 5 = [0, 2, 24, 2, 0] := by decide +kernel
+theorem nodup_semiList_five : (semiList 5).Nodup := by decide +kernel
 
-theorem idesPolyList_four : idesPolyList 4 = [0, 5, 5, 0] := by decide +kernel
+theorem desPolyList_four : desPolyList 4 = [0, 5, 5, 0] := by
+  have h : desPolyList 4 = (List.range 4).map
+      (fun k => ((semiList 4).filter (fun a => decide (des a = k))).length) :=
+    List.map_congr_left (fun k _ => card_filter_semiSeqs 4 _ nodup_semiList_four)
+  rw [h]; decide +kernel
 
-theorem idesPolyList_five : idesPolyList 5 = [0, 0, 28, 0, 0] := by decide +kernel
+theorem desPolyList_five : desPolyList 5 = [0, 2, 24, 2, 0] := by
+  have h : desPolyList 5 = (List.range 5).map
+      (fun k => ((semiList 5).filter (fun a => decide (des a = k))).length) :=
+    List.map_congr_left (fun k _ => card_filter_semiSeqs 5 _ nodup_semiList_five)
+  rw [h]; decide +kernel
+
+theorem idesPolyList_four : idesPolyList 4 = [0, 5, 5, 0] := by
+  have h : idesPolyList 4 = (List.range 4).map
+      (fun k => ((semiList 4).filter (fun a => decide (ides a = k))).length) :=
+    List.map_congr_left (fun k _ => card_filter_semiSeqs 4 _ nodup_semiList_four)
+  rw [h]; decide +kernel
+
+theorem idesPolyList_five : idesPolyList 5 = [0, 0, 28, 0, 0] := by
+  have h : idesPolyList 5 = (List.range 5).map
+      (fun k => ((semiList 5).filter (fun a => decide (ides a = k))).length) :=
+    List.map_congr_left (fun k _ => card_filter_semiSeqs 5 _ nodup_semiList_five)
+  rw [h]; decide +kernel
 
 /-! ## The quasisymmetric generating function is not symmetric -/
 
@@ -521,10 +561,14 @@ def subIdesCount (N : ℕ) (D : List ℕ) : ℕ :=
 positions `{1,4}`, 0-based `[0,3]`) and `(1,1,3)` (positions `{1,2}`, 0-based `[0,1]`) are
 rearrangements of each other but have different monomial coefficients. -/
 theorem subDesCount_five : subDesCount 5 [0, 3] = 6 ∧ subDesCount 5 [0, 1] = 1 := by
+  unfold subDesCount
+  rw [card_filter_semiSeqs 5 _ nodup_semiList_five, card_filter_semiSeqs 5 _ nodup_semiList_five]
   decide +kernel
 
 /-- The quasisymmetric function of the time words of `V_5` is not symmetric either. -/
 theorem subIdesCount_five : subIdesCount 5 [1, 4] = 4 ∧ subIdesCount 5 [1, 2] = 0 := by
+  unfold subIdesCount
+  rw [card_filter_semiSeqs 5 _ nodup_semiList_five, card_filter_semiSeqs 5 _ nodup_semiList_five]
   decide +kernel
 
 end XdSymFun
