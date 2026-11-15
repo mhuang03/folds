@@ -29,10 +29,9 @@ before those of `Y`.
   `Y`-windows containing `x` on either side, (ii) the `Y`-panels in the two arms of `x`, and
   (iii) the imbalance of the earlier `X`-panels around `x`, then `σ.map f` and `σ` have the
   same row.
-* `row_seven_example`: an instance at `N = 7`, `X = {1, 2, 3}` (two orderings with equal rows).
-* `cutCount_mirror_diag`: for `N = 2k` and the middle cut, `M[σ, mirror σ] = 0`: the right
-  half is never bisected in the mirror image of the order of the left half.  (The diagonal of
-  the reflection form vanishes, so the form is not positive semidefinite.)
+
+The trace identity `M[σ, mirror σ] = 0` for the middle cut of even `N`, and all rank
+computations, are in the notes (paper proof / data), not formalised here.
 -/
 
 namespace Folds
@@ -61,8 +60,6 @@ theorem semiCount_eq_sum_cutCount (N : ℕ) (X : Finset ℕ) :
   · refine Finset.sum_congr rfl fun σ _ => Finset.sum_congr rfl fun τ _ => ?_
     unfold cutCount
     congr 1
-    ext a
-    simp only [Finset.mem_filter, Prod.ext_iff]
   · intro a ha
     have hf := (isFoldSeq_iff.1 (mem_semiSeqs.1 ha).1)
     simp only [Finset.coe_product, Set.mem_prod, Finset.mem_coe, mem_orderings]
@@ -214,7 +211,7 @@ theorem countP_split (X : Finset ℕ) (S : List ℕ) (q : ℕ → Bool) :
   | nil => simp
   | cons x S ih =>
     by_cases hx : x ∈ X <;> by_cases hq : q x = true <;>
-      simp [List.filter_cons, List.countP_cons, hx, hq, ih] <;> omega
+      simp [hx, hq, ih] <;> omega
 
 /-- The `X`-part of a prefix of `a` is a prefix of the `X`-part of `a`; if the next entry is
 in `X`, it is the next entry of the `X`-part. -/
@@ -231,7 +228,7 @@ theorem prefix_data {a σ : List ℕ} {X : Finset ℕ} (hσ : a.filter (· ∈ X
   have hlen : SX.length + 1 ≤ σ.length := by
     have := h1.length_le; simpa using this
   refine ⟨SX.length, by omega, ?_, ?_⟩
-  · have := h1.getElem (n := SX.length) (by simp)
+  · have := h1.getElem (i := SX.length) (by simp)
     rw [← this]; simp
   · have h5 : SX <+: σ := (List.prefix_append SX [a[k]]).trans h1
     exact List.prefix_iff_eq_take.1 h5
@@ -247,20 +244,21 @@ theorem cutCount_eq_zero_of_internal {N : ℕ} {X : Finset ℕ} {σ : List ℕ} 
   unfold cutCount
   rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
   rintro a ha ⟨hσ, -⟩
+  subst hσ
   have hf := (mem_semiSeqs.1 ha).1
   have hnd : a.Nodup := nodup_of_foldSeq hf
-  have hσnd : σ.Nodup := hσ ▸ hnd.filter _
-  have hmem : σ[p] ∈ a := List.mem_of_mem_filter (hσ ▸ List.getElem_mem hp)
+  have hσnd : (a.filter (· ∈ X)).Nodup := hnd.filter _
+  have hmem : (a.filter (· ∈ X))[p] ∈ a := List.mem_of_mem_filter (List.getElem_mem hp)
   obtain ⟨k, hk, hak⟩ := List.getElem_of_mem hmem
   have hmX : a[k] ∈ X := by
-    have : σ[p] ∈ a.filter (· ∈ X) := hσ ▸ List.getElem_mem hp
-    rw [hak]; simpa using (List.mem_filter.1 this).2
-  obtain ⟨p', hp', e1, e2⟩ := prefix_data hσ hk hmX
+    have := (List.mem_filter.1 (List.getElem_mem hp)).2
+    rw [hak]; simpa using this
+  obtain ⟨p', hp', e1, e2⟩ := prefix_data rfl hk hmX
   have hpp : p' = p := (hσnd.getElem_inj_iff).1 (e1.trans hak)
   subst hpp
   have hstep := (mem_semiSeqs.1 ha).2 k hk
   rw [semiStep_iff_arms (hnd.sublist (List.take_sublist _ _)), hak,
-    countP_split X (a.take k), countP_split X (a.take k) (fun x => decide (inR N σ[p'] x)), e2] at hstep
+    countP_split X (a.take k), countP_split X (a.take k) (fun x => decide (inR N (a.filter (· ∈ X))[p'] x)), e2] at hstep
   have z : ∀ q : ℕ → Prop, [DecidablePred q] → (∀ y, 1 ≤ y → y ≤ N → q y → y ∈ X) →
       ((a.take k).filter (· ∉ X)).countP (fun x => decide (q x)) = 0 := by
     intro q _ hq
@@ -273,6 +271,211 @@ theorem cutCount_eq_zero_of_internal {N : ℕ} {X : Finset ℕ} {σ : List ℕ} 
   rw [z _ (fun y h1 h2 h => hwin y h1 h2 (Or.inl h)), z _ (fun y h1 h2 h => hwin y h1 h2 (Or.inr h))]
     at hstep
   exact hbad (by simpa using hstep)
+
+/-! ## The interface lemma: the row of `σ` depends only on its descriptor -/
+
+/-- Relabel the panels of `X` by `f`, keep the others. -/
+def relabel (X : Finset ℕ) (f : ℕ → ℕ) (x : ℕ) : ℕ := if x ∈ X then f x else x
+
+theorem relabel_of_mem {X : Finset ℕ} {x : ℕ} (f : ℕ → ℕ) (h : x ∈ X) : relabel X f x = f x := by
+  simp [relabel, h]
+
+theorem relabel_of_not_mem {X : Finset ℕ} {x : ℕ} (f : ℕ → ℕ) (h : x ∉ X) :
+    relabel X f x = x := by
+  simp [relabel, h]
+
+/-- `f` preserves the *descriptor* of the ordering `σ` of `X`-panels: for every panel `x` of
+`σ`, the windows of outside panels that contain `x` (`kL`, `kR`), the outside panels in the two
+arms of `x` (`yL`, `yR`), and the imbalance of the earlier panels of `σ` around `x` (`c`). -/
+structure Compat (N : ℕ) (X : Finset ℕ) (f : ℕ → ℕ) (σ : List ℕ) : Prop where
+  sub : ∀ x ∈ σ, x ∈ X
+  perm : (σ.map f).Perm σ
+  kL : ∀ x ∈ σ, ∀ y, 1 ≤ y → y ≤ N → y ∉ X → (inL N y (f x) ↔ inL N y x)
+  kR : ∀ x ∈ σ, ∀ y, 1 ≤ y → y ≤ N → y ∉ X → (inR N y (f x) ↔ inR N y x)
+  yL : ∀ x ∈ σ, ∀ y, 1 ≤ y → y ≤ N → y ∉ X → (inL N (f x) y ↔ inL N x y)
+  yR : ∀ x ∈ σ, ∀ y, 1 ≤ y → y ≤ N → y ∉ X → (inR N (f x) y ↔ inR N x y)
+  c : ∀ p (hp : p < σ.length),
+    ((σ.take p).map f).countP (fun x => decide (inL N (f σ[p]) x)) +
+        (σ.take p).countP (fun x => decide (inR N σ[p] x)) =
+      (σ.take p).countP (fun x => decide (inL N σ[p] x)) +
+        ((σ.take p).map f).countP (fun x => decide (inR N (f σ[p]) x))
+
+theorem filter_relabel {X : Finset ℕ} {f : ℕ → ℕ} {σ : List ℕ} (hsub : ∀ x ∈ σ, x ∈ X)
+    (hperm : (σ.map f).Perm σ) :
+    ∀ S : List ℕ, (∀ x ∈ S, x ∈ X → x ∈ σ) →
+      (S.map (relabel X f)).filter (· ∈ X) = (S.filter (· ∈ X)).map f ∧
+      (S.map (relabel X f)).filter (· ∉ X) = S.filter (· ∉ X)
+  | [], _ => by simp
+  | x :: S, h => by
+    have ih := filter_relabel hsub hperm S (fun y hy => h y (List.mem_cons_of_mem _ hy))
+    simp only [List.map_cons, List.filter_cons]
+    rw [ih.1, ih.2]
+    by_cases hx : x ∈ X
+    · have hfx : f x ∈ X :=
+        hsub _ (hperm.subset (List.mem_map.2 ⟨x, h x List.mem_cons_self hx, rfl⟩))
+      have e : relabel X f x = f x := relabel_of_mem f hx
+      rw [e]; simp [hx, hfx]
+    · have e : relabel X f x = x := relabel_of_not_mem f hx
+      rw [e]; simp [hx]
+
+/-- Relabelling by a descriptor-preserving `f` maps the fibre of `(σ, τ)` into that of
+`(σ.map f, τ)`. -/
+theorem relabel_mem {N : ℕ} {X : Finset ℕ} {f : ℕ → ℕ} {a : List ℕ}
+    (h : Compat N X f (a.filter (· ∈ X))) (ha : a ∈ semiSeqs N) :
+    a.map (relabel X f) ∈ semiSeqs N ∧
+      (a.map (relabel X f)).filter (· ∈ X) = (a.filter (· ∈ X)).map f ∧
+      (a.map (relabel X f)).filter (· ∉ X) = a.filter (· ∉ X) := by
+  have hf := (mem_semiSeqs.1 ha).1
+  have hnd : a.Nodup := nodup_of_foldSeq hf
+  have A := filter_relabel h.sub h.perm
+  have Aa := A a (fun x hx hxX => List.mem_filter.2 ⟨hx, by simpa using hxX⟩)
+  have e : ∀ l : List ℕ, l.filter (fun x => !decide (x ∈ X)) = l.filter (· ∉ X) := fun l => by
+    congr 1
+  have p1 := List.filter_append_perm (fun x => decide (x ∈ X)) (a.map (relabel X f))
+  have p2 := List.filter_append_perm (fun x => decide (x ∈ X)) a
+  rw [e] at p1 p2
+  rw [Aa.1, Aa.2] at p1
+  have hf' : IsFoldSeq N (a.map (relabel X f)) :=
+    (p1.symm.trans ((h.perm.append_right _).trans p2)).trans hf
+  have hnd' := nodup_of_foldSeq hf'
+  refine ⟨mem_semiSeqs.2 ⟨hf', ?_⟩, Aa.1, Aa.2⟩
+  intro k hk
+  simp only [List.length_map] at hk
+  rw [List.getElem_map, semiStep_iff_arms (hnd'.sublist (List.take_sublist _ _)), ← List.map_take]
+  have hs := (mem_semiSeqs.1 ha).2 k hk
+  rw [semiStep_iff_arms (hnd.sublist (List.take_sublist _ _))] at hs
+  have Ak := A (a.take k) (fun x hx hxX =>
+    List.mem_filter.2 ⟨List.mem_of_mem_take hx, by simpa using hxX⟩)
+  rw [countP_split X ((a.take k).map (relabel X f)),
+    countP_split X ((a.take k).map (relabel X f)) (fun x => decide (inR N _ x)), Ak.1, Ak.2]
+  rw [countP_split X (a.take k), countP_split X (a.take k) (fun x => decide (inR N _ x))] at hs
+  have hm := mem_of_mem_semiSeqs ha (List.getElem_mem hk)
+  have hSY : ∀ y ∈ (a.take k).filter (· ∉ X), (1 ≤ y ∧ y ≤ N) ∧ y ∉ X := fun y hy =>
+    ⟨mem_of_mem_semiSeqs ha (List.mem_of_mem_take (List.mem_filter.1 hy).1),
+      by simpa using (List.mem_filter.1 hy).2⟩
+  have hSX : ∀ x ∈ (a.take k).filter (· ∈ X), x ∈ a.filter (· ∈ X) := fun x hx =>
+    List.mem_filter.2 ⟨List.mem_of_mem_take (List.mem_filter.1 hx).1, (List.mem_filter.1 hx).2⟩
+  by_cases hmX : a[k] ∈ X
+  · have e1 : relabel X f a[k] = f a[k] := relabel_of_mem f hmX
+    rw [e1]
+    obtain ⟨p, hp, ep, eS⟩ := prefix_data (σ := a.filter (· ∈ X)) rfl hk hmX
+    have hc := h.c p hp
+    rw [ep, ← eS] at hc
+    have y1 : ((a.take k).filter (· ∉ X)).countP (fun x => decide (inL N (f a[k]) x)) =
+        ((a.take k).filter (· ∉ X)).countP (fun x => decide (inL N a[k] x)) := by
+      apply List.countP_congr
+      intro y hy
+      simp only [decide_eq_true_eq]
+      have := h.yL _ (List.getElem_mem hp) y (hSY y hy).1.1 (hSY y hy).1.2 (hSY y hy).2
+      rwa [ep] at this
+    have y2 : ((a.take k).filter (· ∉ X)).countP (fun x => decide (inR N (f a[k]) x)) =
+        ((a.take k).filter (· ∉ X)).countP (fun x => decide (inR N a[k] x)) := by
+      apply List.countP_congr
+      intro y hy
+      simp only [decide_eq_true_eq]
+      have := h.yR _ (List.getElem_mem hp) y (hSY y hy).1.1 (hSY y hy).1.2 (hSY y hy).2
+      rwa [ep] at this
+    rw [y1, y2]
+    omega
+  · have e1 : relabel X f a[k] = a[k] := relabel_of_not_mem f hmX
+    rw [e1]
+    have x1 : (((a.take k).filter (· ∈ X)).map f).countP (fun x => decide (inL N a[k] x)) =
+        ((a.take k).filter (· ∈ X)).countP (fun x => decide (inL N a[k] x)) := by
+      rw [List.countP_map]
+      apply List.countP_congr
+      intro x hx
+      simp only [Function.comp_apply, decide_eq_true_eq]
+      exact h.kL x (hSX x hx) _ hm.1 hm.2 hmX
+    have x2 : (((a.take k).filter (· ∈ X)).map f).countP (fun x => decide (inR N a[k] x)) =
+        ((a.take k).filter (· ∈ X)).countP (fun x => decide (inR N a[k] x)) := by
+      rw [List.countP_map]
+      apply List.countP_congr
+      intro x hx
+      simp only [Function.comp_apply, decide_eq_true_eq]
+      exact h.kR x (hSX x hx) _ hm.1 hm.2 hmX
+    rw [x1, x2]
+    exact hs
+
+/-- The inverse relabelling preserves the descriptor of the relabelled ordering. -/
+theorem Compat.inv {N : ℕ} {X : Finset ℕ} {f g : ℕ → ℕ} {σ : List ℕ} (h : Compat N X f σ)
+    (hg : ∀ x ∈ σ, g (f x) = x) : Compat N X g (σ.map f) := by
+  have hmap : ∀ S : List ℕ, (∀ x ∈ S, x ∈ σ) → (S.map f).map g = S := by
+    intro S hS
+    rw [List.map_map]
+    conv => rhs; rw [← List.map_id S]
+    apply List.map_congr_left
+    intro x hx; simpa using hg x (hS x hx)
+  refine ⟨fun x hx => h.sub x (h.perm.subset hx), ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [hmap σ (fun x hx => hx)]; exact h.perm.symm
+  · intro x' hx' y h1 h2 h3
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hx'
+    rw [hg x hx]; exact (h.kL x hx y h1 h2 h3).symm
+  · intro x' hx' y h1 h2 h3
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hx'
+    rw [hg x hx]; exact (h.kR x hx y h1 h2 h3).symm
+  · intro x' hx' y h1 h2 h3
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hx'
+    rw [hg x hx]; exact (h.yL x hx y h1 h2 h3).symm
+  · intro x' hx' y h1 h2 h3
+    obtain ⟨x, hx, rfl⟩ := List.mem_map.1 hx'
+    rw [hg x hx]; exact (h.yR x hx y h1 h2 h3).symm
+  · intro p hp
+    have hp' : p < σ.length := by simpa using hp
+    have hc := h.c p hp'
+    simp only [List.getElem_map, ← List.map_take]
+    rw [hmap (σ.take p) (fun x hx => List.mem_of_mem_take hx), hg _ (List.getElem_mem hp')]
+    omega
+
+/-- **Interface lemma.**  If `f` preserves the descriptor of `σ` (and `g` undoes `f` on the
+panels of `σ`), then `σ.map f` and `σ` have the same row of the cut matrix. -/
+theorem cutCount_map_eq {N : ℕ} {X : Finset ℕ} {f g : ℕ → ℕ} {σ : List ℕ}
+    (h : Compat N X f σ) (hg : ∀ x ∈ σ, g (f x) = x) (τ : List ℕ) :
+    cutCount N X (σ.map f) τ = cutCount N X σ τ := by
+  unfold cutCount
+  symm
+  have h' := h.inv hg
+  refine Finset.card_nbij' (List.map (relabel X f)) (List.map (relabel X g)) ?_ ?_ ?_ ?_
+  · intro a ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha ⊢
+    obtain ⟨ha1, rfl, rfl⟩ := ha
+    exact relabel_mem h ha1
+  · intro b hb
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at hb ⊢
+    obtain ⟨hb1, hb2, rfl⟩ := hb
+    have r := relabel_mem (hb2 ▸ h') hb1
+    refine ⟨r.1, ?_, r.2.2⟩
+    rw [r.2.1, hb2, List.map_map]
+    conv => rhs; rw [← List.map_id σ]
+    apply List.map_congr_left
+    intro x hx; simpa using hg x hx
+  · intro a ha
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at ha
+    obtain ⟨ha1, rfl, rfl⟩ := ha
+    rw [List.map_map]
+    conv => rhs; rw [← List.map_id a]
+    apply List.map_congr_left
+    intro x hx
+    simp only [Function.comp_apply, id_eq]
+    by_cases hxX : x ∈ X
+    · have hxσ : x ∈ a.filter (· ∈ X) := List.mem_filter.2 ⟨hx, by simpa using hxX⟩
+      have hfx : f x ∈ X := h.sub _ (h.perm.subset (List.mem_map.2 ⟨x, hxσ, rfl⟩))
+      rw [relabel_of_mem f hxX, relabel_of_mem g hfx]
+      exact hg x hxσ
+    · rw [relabel_of_not_mem f hxX, relabel_of_not_mem g hxX]
+  · intro b hb
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq] at hb
+    obtain ⟨hb1, hb2, rfl⟩ := hb
+    rw [List.map_map]
+    conv => rhs; rw [← List.map_id b]
+    apply List.map_congr_left
+    intro x hx
+    simp only [Function.comp_apply, id_eq]
+    by_cases hxX : x ∈ X
+    · have hxσ : x ∈ σ.map f := hb2 ▸ List.mem_filter.2 ⟨hx, by simpa using hxX⟩
+      obtain ⟨z, hz, rfl⟩ := List.mem_map.1 hxσ
+      have hzX : z ∈ X := h.sub z hz
+      rw [relabel_of_mem g hxX, hg z hz, relabel_of_mem f hzX]
+    · rw [relabel_of_not_mem g hxX, relabel_of_not_mem f hxX]
 
 end XdRank
 end Folds
