@@ -64,7 +64,9 @@ def search(polys, s, I, dx, dn, step=1, N0=None):
     if N0 is None:
         N0 = Ns[0]
     usable = [N for N in Ns if N >= N0 and all((N + j * step) in polys for j in range(s + 1))]
-    if len(usable) < 3:
+    # need more training indices than the N-degree allows to interpolate away
+    # (otherwise prod (N - N_i) times anything is a trivial solution)
+    if len(usable) - 1 < dn + 3:
         return None
     train, test = usable[:-1], usable[-1]
     U = (s + 1) * (I + 1) * (dx + 1) * (dn + 1)
