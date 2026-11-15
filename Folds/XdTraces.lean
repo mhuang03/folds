@@ -36,8 +36,8 @@ Main results.
   every pair `(x, m)`, `x` in the window of `m`, in the same way.
   `semiSymmetric_of_weak_between`: a fold sequence weakly between two semi-symmetric fold
   sequences is semi-symmetric.
-* `Rigid`, `hasSwap`: sequences without a valid swap; `hasSwap_of_mem_semiSeqs_small`: there
-  is none for `2 ≤ N ≤ 6` (numerically none for `N ≤ 22`).
+* `Rigid`, `hasSwap`: sequences without a valid swap; `not_rigid_small`: there is none for
+  `2 ≤ N ≤ 8` (kernel-checked search `allExt`; numerically none for `N ≤ 22`).
 -/
 
 namespace Folds
@@ -54,16 +54,19 @@ theorem countP_lt_countP_of {α : Type*} {p q : α → Bool} {l : List α}
     have hmono : t.countP p ≤ t.countP q :=
       List.countP_mono_left fun y hy => h y (List.mem_cons_of_mem _ hy)
     have ha := h a (by simp)
-    rw [List.countP_cons, List.countP_cons]
-    rcases List.mem_cons.1 hxm with rfl | hxt
-    · simp only [hq, hp, if_true]
-      simp only [Bool.false_eq_true, if_false]
+    have key : t.countP p < t.countP q ∨ (p a = false ∧ q a = true) := by
+      rcases List.mem_cons.1 hxm with rfl | hxt
+      · exact Or.inr ⟨hp, hq⟩
+      · exact Or.inl (ih (fun y hy => h y (List.mem_cons_of_mem _ hy)) ⟨x, hxt, hq, hp⟩)
+    by_cases hpa : p a = true
+    · rw [List.countP_cons_of_pos hpa, List.countP_cons_of_pos (ha hpa)]
+      have : t.countP p < t.countP q :=
+        key.resolve_right fun ⟨h', _⟩ => by rw [hpa] at h'; cases h'
       omega
-    · have := ih (fun y hy => h y (List.mem_cons_of_mem _ hy)) ⟨x, hxt, hq, hp⟩
-      by_cases hpa : p a = true
-      · simp only [hpa, ha hpa, if_true]; omega
-      · simp only [hpa, if_false]
-        split_ifs <;> omega
+    · by_cases hqa : q a = true
+      · rw [List.countP_cons_of_neg hpa, List.countP_cons_of_pos hqa]; omega
+      · rw [List.countP_cons_of_neg hpa, List.countP_cons_of_neg hqa]
+        exact key.resolve_right fun ⟨_, h'⟩ => hqa h'
 
 theorem countP_eq_imp {α : Type*} {p q : α → Bool} {l : List α}
     (h : ∀ x ∈ l, p x = true → q x = true) (he : l.countP p = l.countP q) :
@@ -226,23 +229,20 @@ theorem semiSymmetric_two_iff {N m m' : ℕ} {u v : List ℕ} :
   have e1 : ∀ x, x ∈ u ++ [m] ↔ x ∈ m :: u := by intro x; simp [or_comm]
   have e2 : ∀ k x, x ∈ u ++ m :: m' :: v.take k ↔ x ∈ m :: m' :: (u ++ v.take k) := by
     intro k x; simp only [List.mem_append, List.mem_cons]; tauto
+  have e0 : ∀ x, x ∈ u ++ List.take 0 (m :: m' :: v) ↔ x ∈ u := by intro x; simp
   rw [semiSymmetric_append_iff]
   constructor
   · rintro ⟨hu, hB⟩
     refine ⟨hu, ?_, ?_, fun k hk => ?_⟩
-    · simpa using hB 0 (by simp)
-    · have := hB 1 (by simp)
-      exact (semiStep_congr e1).1 (by simpa using this)
-    · have := hB (k + 2) (by simp; omega)
-      exact (semiStep_congr (e2 k)).1 (by simpa using this)
+    · exact (semiStep_congr e0).1 (hB 0 (by simp))
+    · exact (semiStep_congr e1).1 (hB 1 (by simp))
+    · exact (semiStep_congr (e2 k)).1 (hB (k + 2) (by simp; omega))
   · rintro ⟨hu, h0, h1, hv⟩
     refine ⟨hu, fun k hk => ?_⟩
     match k, hk with
-    | 0, _ => simpa using h0
-    | 1, _ => simpa using (semiStep_congr e1).2 h1
-    | k + 2, hk =>
-      have := (semiStep_congr (e2 k)).2 (hv k (by simpa using hk))
-      simpa using this
+    | 0, _ => exact (semiStep_congr e0).2 h0
+    | 1, _ => exact (semiStep_congr e1).2 h1
+    | k + 2, hk => exact (semiStep_congr (e2 k)).2 (hv k (by simpa using hk))
 
 /-- **Exact swap criterion (sequence level).**  Exchanging two adjacent entries `m, m'` of a
 semi-symmetric sequence gives a semi-symmetric sequence iff each of the two panels lies
@@ -292,7 +292,7 @@ theorem SwapStep.semiSymmetric {N : ℕ} {a b : List ℕ} (h : SwapStep N a b) (
 
 theorem SwapStep.mem_semiSeqs {N : ℕ} {a b : List ℕ} (h : SwapStep N a b)
     (ha : a ∈ semiSeqs N) : b ∈ semiSeqs N := by
-  rw [mem_semiSeqs] at ha ⊢
+  rw [Folds.mem_semiSeqs] at ha ⊢
   exact ⟨h.isFoldSeq ha.1, h.semiSymmetric (nodup_of_foldSeq ha.1) ha.2⟩
 
 /-- Converse: an exchange of adjacent entries that stays semi-symmetric is a valid swap. -/
@@ -322,10 +322,12 @@ theorem SwapStep.mirror {N : ℕ} {a b : List ℕ} (h : SwapStep N a b) (ha : Is
   obtain ⟨u, v, m, m', hI⟩ := h
   have bm := (mem_range'_of_perm ha (x := m)).1 (by simp)
   have bm' := (mem_range'_of_perm ha (x := m')).1 (by simp)
-  have e1 : mirror N (u ++ m :: m' :: v) =
-      mirror N u ++ (N + 1 - m) :: (N + 1 - m') :: mirror N v := by simp [mirror]
-  have e2 : mirror N (u ++ m' :: m :: v) =
-      mirror N u ++ (N + 1 - m') :: (N + 1 - m) :: mirror N v := by simp [mirror]
+  have e1 : Folds.mirror N (u ++ m :: m' :: v) =
+      Folds.mirror N u ++ (N + 1 - m) :: (N + 1 - m') :: Folds.mirror N v := by
+    simp [Folds.mirror]
+  have e2 : Folds.mirror N (u ++ m' :: m :: v) =
+      Folds.mirror N u ++ (N + 1 - m') :: (N + 1 - m) :: Folds.mirror N v := by
+    simp [Folds.mirror]
   rw [e1, e2]
   exact SwapStep.mk _ _ _ _ ((indep_mirror bm.1 bm.2 bm'.1 bm'.2).2 hI)
 
@@ -653,6 +655,7 @@ theorem hasSwap_iff {N : ℕ} : ∀ {a : List ℕ}, hasSwap N a = true ↔ ∃ b
     obtain ⟨u, v, m, m', hI⟩ := hb
     have := congrArg List.length hE
     simp at this
+    omega
   | x :: y :: w => by
     have ih := hasSwap_iff (N := N) (a := y :: w)
     simp only [hasSwap, Bool.or_eq_true, decide_eq_true_eq]
@@ -662,8 +665,7 @@ theorem hasSwap_iff {N : ℕ} : ∀ {a : List ℕ}, hasSwap N a = true ↔ ∃ b
       · obtain ⟨b, hb⟩ := ih.1 h
         generalize hE : y :: w = e at hb
         obtain ⟨u, v, m, m', hI⟩ := hb
-        exact ⟨x :: (u ++ m' :: m :: v), by
-          rw [hE]; exact SwapStep.mk (x :: u) v m m' hI⟩
+        exact ⟨x :: (u ++ m' :: m :: v), SwapStep.mk (x :: u) v m m' hI⟩
     · rintro ⟨b, hb⟩
       generalize hE : x :: y :: w = e at hb
       obtain ⟨u, v, m, m', hI⟩ := hb
@@ -676,7 +678,7 @@ theorem hasSwap_iff {N : ℕ} : ∀ {a : List ℕ}, hasSwap N a = true ↔ ∃ b
         simp only [List.cons_append, List.cons.injEq] at hE
         obtain ⟨rfl, hE⟩ := hE
         right
-        exact ih.2 ⟨_, hE ▸ SwapStep.mk u' v m m' hI⟩
+        exact ih.2 ⟨u' ++ m' :: m :: v, by rw [hE]; exact SwapStep.mk u' v m m' hI⟩
 
 theorem rigid_iff {N : ℕ} {a : List ℕ} : Rigid N a ↔ hasSwap N a = false := by
   rw [Rigid, ← Bool.not_eq_true, hasSwap_iff]
@@ -689,10 +691,52 @@ theorem Rigid.reverse {N : ℕ} {a : List ℕ} (h : Rigid N a) : Rigid N a.rever
   rw [List.reverse_reverse] at this
   exact h _ this
 
-/-- **No rigid semi-symmetric sequence for `2 ≤ N ≤ 6`**: every semi-symmetric sequence
-admits a valid swap.  (Numerically true for all `2 ≤ N ≤ 22`.) -/
-theorem hasSwap_of_mem_semiSeqs_small :
-    ∀ N ∈ [2, 3, 4, 5, 6], ∀ a ∈ semiSeqs N, hasSwap N a = true := by
+/-- Depth-first search over all semi-symmetric extensions of the prefix `S` by `f` more
+panels, checking `Q` on every complete extension (kernel-friendly: structural recursion). -/
+def allExt (N : ℕ) (Q : List ℕ → Bool) : ℕ → List ℕ → Bool
+  | 0, S => Q S
+  | f + 1, S => (List.range' 1 N).all fun m =>
+      decide (m ∈ S) || !decide (SemiStep N S m) || allExt N Q f (S ++ [m])
+
+theorem allExt_sound {N : ℕ} {Q : List ℕ → Bool} : ∀ (f : ℕ) (S t : List ℕ),
+    allExt N Q f S = true → t.length = f → (∀ x ∈ t, 1 ≤ x ∧ x ≤ N) → (S ++ t).Nodup →
+    SemiSymmetric N (S ++ t) → Q (S ++ t) = true
+  | 0, S, t, h, ht, _, _, _ => by
+    obtain rfl := List.length_eq_zero_iff.1 ht
+    simpa [allExt] using h
+  | f + 1, S, t, h, ht, hb, hnd, hs => by
+    match t, ht with
+    | m :: t', ht =>
+      simp only [allExt, List.all_eq_true] at h
+      have hm := h m (by rw [List.mem_range'_1]; have := hb m (by simp); omega)
+      have hmS : m ∉ S := fun hmS => (List.nodup_append.1 hnd).2.2 m hmS m (by simp) rfl
+      have hstep : SemiStep N S m := by
+        have := (semiSymmetric_append_iff.1 hs).2 0 (by simp)
+        exact (semiStep_congr (by intro x; simp)).1 this
+      simp only [hmS, hstep, decide_false, decide_true, Bool.not_true, Bool.false_or] at hm
+      have := allExt_sound f (S ++ [m]) t' hm (by simpa using ht)
+        (fun x hx => hb x (by simp [hx])) (by simpa using hnd) (by simpa using hs)
+      simpa using this
+
+theorem forall_semiSeqs_of_allExt {N : ℕ} {Q : List ℕ → Bool} (h : allExt N Q N [] = true)
+    {a : List ℕ} (ha : a ∈ semiSeqs N) : Q a = true := by
+  rw [mem_semiSeqs] at ha
+  have hlen : a.length = N := by rw [ha.1.length_eq]; simp
+  simpa using allExt_sound N [] a h hlen (fun x hx => (mem_range'_of_perm ha.1).1 hx)
+    (by simpa using nodup_of_foldSeq ha.1) (by simpa using ha.2)
+
+theorem allExt_hasSwap_small :
+    ∀ N ∈ [2, 3, 4, 5, 6, 7, 8], allExt N (hasSwap N) N [] = true := by
   decide +kernel
+
+/-- **No rigid semi-symmetric sequence for `2 ≤ N ≤ 8`**: every semi-symmetric sequence
+admits a valid swap.  (Numerically true for all `2 ≤ N ≤ 22`, `experiments/xd_traces`.) -/
+theorem hasSwap_of_mem_semiSeqs_small {N : ℕ} (hN : N ∈ [2, 3, 4, 5, 6, 7, 8]) {a : List ℕ}
+    (ha : a ∈ semiSeqs N) : hasSwap N a = true :=
+  forall_semiSeqs_of_allExt (allExt_hasSwap_small N hN) ha
+
+theorem not_rigid_small {N : ℕ} (hN : N ∈ [2, 3, 4, 5, 6, 7, 8]) {a : List ℕ}
+    (ha : a ∈ semiSeqs N) : ¬ Rigid N a := by
+  rw [rigid_iff, hasSwap_of_mem_semiSeqs_small hN ha]; simp
 
 end Folds
