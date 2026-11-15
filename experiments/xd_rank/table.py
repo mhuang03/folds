@@ -45,6 +45,8 @@ for r in rows:
         tab[(r[0], r[2])] = (r[9], r[7], r[5])
 Ns = sorted({k[0] for k in tab})
 for N in Ns:
-    print('%3d rank: ' % N + ' '.join('%5d' % tab[(N, j)][0] for j in range(1, N)))
-    print('    dr:   ' + ' '.join('%5d' % tab[(N, j)][1] for j in range(1, N)))
-    print('    nzr:  ' + ' '.join('%5d' % tab[(N, j)][2] for j in range(1, N)))
+    def cell(j, i):
+        return '%5d' % tab[(N, j)][i] if (N, j) in tab else '    .'
+    print('%3d rank: ' % N + ' '.join(cell(j, 0) for j in range(1, N)))
+    print('    dr:   ' + ' '.join(cell(j, 1) for j in range(1, N)))
+    print('    nzr:  ' + ' '.join(cell(j, 2) for j in range(1, N)))
