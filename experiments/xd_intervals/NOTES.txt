@@ -1,0 +1,187 @@
+STRENGTHENING THE INDUCTION: INTERVAL COUNTS, OFFSET STRIPS, HALF-LINE AND WALL MODELS
+======================================================================================
+(experiments/xd_intervals/, Lean: Folds/XdIntervals.lean)
+
+Question: is there a larger family of numbers that contains a(N) and satisfies a closed
+recurrence?  Labels: [proven] (paper proof below, "Lean" if formalised), [data ...],
+[conjecture].
+
+SHORT ANSWER
+  * No family containing a(N) with a closed recurrence was found.  The natural families
+    (interval counts, offset strips) are either zero or as irregular as a(N) itself, and
+    every insertion/deletion scheme tested needs a number of catalytic labels that is a
+    constant fraction of a(N) (section 5): the label has to be the whole sequence.
+  * One family with a genuine closed recurrence was found, but it does NOT contain a(N):
+    the half-line model H(N) (all windows are prefixes [1, 2m-1]) satisfies
+          H(2n+1) = H(n)                                       [proven; data n <= 23]
+    and more generally the two-parameter "wall" family satisfies the halving identity
+          W(n, 2j+1) = W(j, n)   for n-1 <= 2j <= 2n           [data n <= 24, 179 cases]
+    The even values E(n) = H(2n) = W(n, 2n) are new data (28 terms) with no P-recursive
+    recurrence at the orders tested.
+
+Files
+  off.c        a(N; al, be) by subset DP (u128).  out/row0.txt (al = 0, N <= 22),
+               out/row1.txt (al = 1, odd N <= 21), out/table.txt (full tables, N <= 13)
+  hl.c         H(N) through the reduction to the left half (section 2); N <= 56
+  wall.c       wall model W(n, B).  out/wall_rows.txt (n <= 24, B = n..2n+2)
+  hl_enum.py   lists the left orders of H(N)
+  relations.py checks every identity below on the tables
+  fit.py       P-recursive / C-finite fits (engine of experiments/recsearch).  out/fit.txt
+  futures.cpp  counting-bisimulation classes of deletion schemes.  out/futures.txt
+  delstat.py   how often a deletion keeps a sequence valid.  out/delstat.txt
+
+--------------------------------------------------------------------------------------
+1. INTERVAL COUNTS AND OFFSET STRIPS
+--------------------------------------------------------------------------------------
+G_M(i,j) = g_M([i,j]) = number of valid orderings of [i,j] in the M-strip, outside panels
+never placed.  a(N; al, be) = G_{N+al+be}(al+1, al+N): radius min(m-1+al, N-m+be).
+Items 1 and 3 of the brief are the same three-parameter family.  a(N;0,0) = a(N).
+(Lean: intervalCount, offsetCount, intervalCount_one_self.)
+
+1a. Dependence on the strip [proven, Lean g_of_clip, g_of_reach_eq].  g_M(S) depends on M
+    only through the radii clipped to the hull of S.  Hence a(N; al, be) is constant in be
+    for be >= N-1 (Lean offsetCount_stable), and a(N; 0, be) = H(N) for be >= N-1
+    (Lean offsetCount_zero_eq_halfLine).  [data N <= 22]: for odd N >= 5 the row is
+    already stable from be = N-3; for even N only from be = N-1.
+
+1b. Zero law [proven, Lean intervalCount_eq_zero_of_odd, intervalCount_eq_zero,
+    offsetCount_eq_zero, offsetCount_eq_zero_of_even].
+      (i)  If al, be >= 1 the last panel placed is the exact middle (the two real arms of
+           the last panel must have equal length, and with a phantom panel on each side the
+           window is larger than the shorter arm).  So a(N; al, be) = 0 for even N.
+      (ii) If al, be >= 2 and N >= 2 then a(N; al, be) = 0: with the middle c last, the
+           second to last panel m < c has left count m-1 and right count >= m.
+    So G_M(i,j) is nonzero only if the interval touches an end of the strip (i = 1 or
+    j = M), or is at distance exactly 1 from one end and has odd length.  [data N <= 13:
+    these are the only zeros apart from a(5;1,1) = 0.]
+
+1c. The nonzero part [data].  Row al = 0 (out/row0.txt), e.g.
+       N=8 :  1120 238 75 35 27 14 11 10
+       N=12:  383476 44193 11581 4088 2101 799 438 230 143 98 89 85
+    It decreases from a(N) (be = 0) to H(N) (be >= N-1).  Row al = 1, odd N
+    (out/row1.txt): 75 24 5 5 3 3 2 (N = 7).  Its stable end a(N;1,inf), N = 3,5,..,21:
+       1, 1, 2, 3, 10, 18, 59, 138, 652, 1352.
+    Negative results:
+      - no P-recursive recurrence in N for the columns be = 1, 2, 3, 4 (N <= 22; all shapes
+        (order r, degree d) with >= 3 spare equations; out/fit.txt);
+      - no equalities between entries with different (N, be) apart from 7 coincidences of
+        small values (14, 18, 26, 28, 57, 75, 191; relations.py), no doubling law
+        a(2n+1;0,be) = a(n;0,be') for finite be;
+      - the subset recursion does not close on intervals: the last panel of [1,j], j < M,
+        is a left panel m <= (j+1)/2, and removing it leaves a non-interval.
+
+--------------------------------------------------------------------------------------
+2. THE HALF-LINE MODEL H(N)
+--------------------------------------------------------------------------------------
+H(N) = G_M(1,N) for any M >= 2N-1 [proven, Lean halfLine_stable]: panel m has the window
+[1, min(2m-1, N)].  In doubling form: F(2c) = 2F(c) on the half line [0, inf), where F is
+constant beyond N (no wrap-around).
+  H(1..24) = 1 1 1 2 1 4 1 10 2 26 1 85 4 242 1 908 10 2801 2 12855 26 38504 1 206147
+
+2a. Forced right half [proven, Lean halfLine_getElem, halfLine_head].  Every panel p with
+    2p-1 >= N has the full window [1,N], so at its step k (0-based) the k earlier panels
+    split evenly: k = 2 #{earlier panels > p}.  Downward induction on p gives: panel N-c
+    is placed at index 2c (time 2c+1), for all c with 2c+1 <= N.  So the right half is a
+    WALL that moves inwards one panel every second step, and the n = floor(N/2) left
+    panels take the even times.
+
+2b. Reduction to the left half [proven].  H(N) = number of orderings of [1,n] such that,
+    with S the left panels placed before m and k = |S|+1,
+       |S cap [1,m-1]| = |S cap [m+1, min(n,2m-1)]| + max(0, 2m-1 - max(n, N-k)).
+    (hl.c; agrees with the direct DP off.c for N <= 22.)
+
+2c. H(2n+1) = H(n) [proven; data n <= 23; Lean: kernel check n <= 7, halfLineC_odd_small].
+    Proof.  Put N = 2n+1 in 2b.  For a left panel m = n-d with 2m-1 >= n, placed at left
+    rank k, let j <= d be the number of higher left panels placed before it.  The window
+    contains all left panels, so the rule reads k-1-j = j + w, w = max(0, k-2d-2).
+    If k >= 2d+2 this gives 2j = 2d+1, impossible.  So w = 0 and k = 2j+1; by induction on
+    d the ranks 1, 3, .., 2d-1 are taken by n, n-1, .., n-d+1, hence k = 2d+1.  For a left
+    panel with 2m-1 < n the wall is out of reach (w = 0) trivially.  So the wall is never
+    seen, and the rule is exactly the rule of H(n).  Conversely an H(n)-order has, by 2a,
+    panel n-d at rank 2d+1 <= 2(n-m)+2, so it never sees the wall either.  QED.
+    Consequence [proven]: H(N) = E(v) where N+1 = 2^a (2v+1) and E(v) = H(2v).
+
+2d. The even values E(n) = H(2n), n = 1..28 [data, hl.c]:
+      1, 2, 4, 10, 26, 85, 242, 908, 2801, 12855, 38504, 206147, 636679, 3970770,
+      11621713, 82671119, 243913088, 1942005916, 5474577211, 50053324642, 138958367833,
+      1373148776905, 3616570697148, 41547901039087, 106203160900505, 1296104868304615,
+      3147128863129092, 44793512820208900
+    E(1..5) agree with the involution numbers, E(6) = 85 does not (76).  The ratios
+    alternate: E(2k+1)/E(2k) is about 3, E(2k)/E(2k-1) grows about 0.8k.  In E(n) the top
+    left panel n is free (its rule is an identity).
+    Negative: no P-recursive or C-finite recurrence for E(n), E(n)/n!, the two bisections
+    or the two ratio sequences (out/fit.txt; 35 shapes for E).  The DP is still 2^n.
+
+--------------------------------------------------------------------------------------
+3. THE WALL FAMILY W(n, B)
+--------------------------------------------------------------------------------------
+W(n,B) = number of orderings of [1,n] with the rule of 2b where N is replaced by B: before
+the k-th left panel, exactly the panels p > max(n, B-k) are placed (Lean wallCount).
+It is not an interval count G; it contains H: H(N) = W(floor(N/2), N).
+  n=8, B=8..18:   10 10 16 6 46 7 162 1 908 10 10
+
+3a. [proven] W(n,B) = H(n) for B <= n (wall complete from the start: complement lemma,
+    time reversal) and for B >= 2n+1 (the argument of 2c only uses B >= 2n+1).
+3b. Halving identity [data: all 179 cases with n <= 24; Lean kernel check n <= 9,
+    wallCount_halving_small]:
+          W(n, 2j+1) = W(j, n)      for n-1 <= 2j <= 2n.
+    j = n is H(2n+1) = H(n).  Mechanism (paper, not written out in full): in W(n,2j+1) the
+    panels j+1..n are forced to the ranks 2p-n, and the panels 1..j then see two walls.
+    A proof needs a non-identity bijection on the orders of [1,j]; not done.
+3c. [data n <= 24, 12 cases] W(2j, 2j+2) = H(2j) + W(j+1, 2j)
+    (first-step decomposition: with B = n+2 only the first step sees an incomplete wall).
+3d. Negative: no P-recursive recurrence for the diagonals W(n,2n-2), W(n,2n-4), W(n,2n-6),
+    W(2j,2j+2), W(2j,2j+4) (out/fit.txt).  No two-term relation was found for the other
+    even-B entries (relations.py), so the even-B part of the table is new data, not
+    reduced by 3b.
+
+--------------------------------------------------------------------------------------
+4. WHY THE HALF LINE CLOSES AND THE CIRCLE DOES NOT
+--------------------------------------------------------------------------------------
+On the half line the doubling map x -> 2x has no periodic point except 0, and the lattice
+of panel centres is self-similar under N+1 -> (N+1)/2; 2c is this self-similarity.  a(N)
+is the same condition on the circle R/NZ, where the wrap-around couples the two halves:
+the left half sees the right half not as a wall (an interval that grows at a fixed rate)
+but as an arbitrary subset.  The offset family a(N;0,be) interpolates, and nothing of the
+halving survives for finite be (1c).
+
+--------------------------------------------------------------------------------------
+5. CATALYTIC REFINEMENTS: HOW MANY LABELS DOES AN INSERTION SCHEME NEED?
+--------------------------------------------------------------------------------------
+5a. No deletion map is well defined [data N <= 11, out/delstat.txt].  Fraction of valid
+    N-sequences that stay valid after deleting panels and standardising, N = 8, 9, 10, 11:
+       ends {1,N}        0.36 0.20 0.20 0.18      two central panels  0.27 0.17 0.14 0.11
+       {N-1,N}           0.63 0.47 0.37 0.37      last panel N        0.51 0.44 0.43 0.36
+       middle panel      0.19 0.17 0.20 0.18      first/last in time  0.16 0.15 0.11 0.06
+    The best single panel is always N; for N = 7..10 the best pair is {N-1,N}.
+5b. So a generating tree must contain invalid nodes.  For each scheme take the tree of ALL
+    time words (parent = deletion), mark the valid ones, and compute the counting
+    bisimulation (coarsest label set for which "children of a label" is well defined),
+    truncated at size Tmax <= 14 (futures.cpp; a lower bound that increases with Tmax).
+    Classes among VALID nodes of size N (converged values; ">=" = still growing at Tmax 14):
+       N                    3  4   5   6    7     8      9      10
+       a(N)                 4  10  28  96   256   1120   4256   17878
+       delete N             2  5   14  48   >=128 >=516  >=1735 >=5557
+       delete middle        2  5   14  48   128   560    >=2125 >=6383
+       delete {1,N}         1  4   8   27   >=59  >=277
+       delete central pair  2  4   10  27   76    >=299  >=1045
+       delete {N-1,N}       2  5   10  41   >=86  >=405
+    For the one-panel schemes the number of classes is a(N)/2: the label determines the
+    sequence up to one symmetry.  For the two-panel schemes it is 0.23 to 0.36 of a(N)
+    at the sizes reached, and still growing with Tmax where marked.
+    All classes (including invalid live nodes) grow faster still: 8, 88, >= 3241 for the
+    central pair at N = 4, 6, 8.
+    Conclusion [data]: no finite, polynomial or even exponential set of catalytic
+    parameters exists for these five schemes; the number of labels grows like a(N).
+    This complements experiments/fastalg (time-ordered automata need one state per live
+    set; prefix-cut ranks grow superexponentially).
+
+--------------------------------------------------------------------------------------
+6. OPEN
+--------------------------------------------------------------------------------------
+  [conjecture] W(n, 2j+1) = W(j, n) for all n-1 <= 2j <= 2n.
+  A formula or recurrence for E(n) = H(2n) (the only missing piece of the H family).
+  The stable end a(N;1,inf) for odd N (1, 1, 2, 3, 10, 18, 59, 138, 652, 1352): the same
+  forced right half applies (windows [1,2m]); not analysed.
+  Lean: the full identity H(2n+1) = H(n) is proven on paper only; the formal part is the
+  forced right half plus the kernel check for n <= 7.
