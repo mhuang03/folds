@@ -148,12 +148,15 @@ window contains `a[k]`. -/
 def kicked (N : ℕ) (a : List ℕ) (k : ℕ) : Finset ℕ :=
   (Icc 1 N).filter fun m => m ∉ a.take (k + 1) ∧ Sees N m (a.getD k 0)
 
+theorem getD_zero_eq {a : List ℕ} {k : ℕ} (hk : k < a.length) : a.getD k 0 = a[k] := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hk, Option.getD_some]
+
 /-- A kicked panel is not a valid move both before and after the kick: its window count
 changes parity. -/
 theorem kicked_not_both {N : ℕ} {a : List ℕ} (hnd : a.Nodup) {k : ℕ} (hk : k < a.length)
     {m : ℕ} (hm : m ∈ kicked N a k) (h1 : m ∈ moves N (a.take k))
     (h2 : m ∈ moves N (a.take (k + 1))) : False := by
-  simp only [kicked, mem_filter, mem_Icc, List.getD_eq_getElem _ _ hk] at hm
+  simp only [kicked, mem_filter, mem_Icc, getD_zero_eq hk] at hm
   simp only [moves, mem_filter, mem_Icc] at h1 h2
   have c1 := window_count_even (hnd.sublist (List.take_sublist _ _)) h1.2.1 h1.2.2
   have c2 := window_count_even (hnd.sublist (List.take_sublist _ _)) h2.2.1 h2.2.2
@@ -162,7 +165,7 @@ theorem kicked_not_both {N : ℕ} {a : List ℕ} (hnd : a.Nodup) {k : ℕ} (hk :
   have : decide (m - reach N m ≤ a[k] ∧ a[k] ≤ m + reach N m) = true := by
     simp only [decide_eq_true_eq]; exact ⟨hlo, hhi⟩
   rw [this] at c2
-  simp only [if_true] at c2
+  simp only [ite_true] at c2
   omega
 
 theorem card_free {N : ℕ} {p : List ℕ} (hnd : p.Nodup) (hb : ∀ x ∈ p, 1 ≤ x ∧ x ≤ N) :
@@ -221,14 +224,16 @@ theorem kicked_card_add {N : ℕ} {a : List ℕ} (ha : a ∈ semiSeqs N) {k : �
     refine le_trans (card_le_card ?_) (card_union_le _ _)
     intro m hm
     simp only [mem_union, mem_sdiff]
-    by_contra hcon
-    push_neg at hcon
-    exact kicked_not_both hnd (by omega) hm (hcon.1 hm) (hcon.2 hm)
+    by_cases h0 : m ∈ M0
+    · by_cases h1 : m ∈ M1
+      · exact (kicked_not_both hnd (by omega) hm h0 h1).elim
+      · exact Or.inr ⟨hm, h1⟩
+    · exact Or.inl ⟨hm, h0⟩
   omega
 
 theorem getD_idxOf {a : List ℕ} {x : ℕ} (hx : x ∈ a) : a.getD (a.idxOf x) 0 = x := by
   have h := List.idxOf_lt_length_of_mem hx
-  rw [List.getD_eq_getElem _ _ h, List.getElem_idxOf h]
+  rw [getD_zero_eq h, List.getElem_idxOf h]
 
 theorem idxOf_injOn {a : List ℕ} {x y : ℕ} (hx : x ∈ a) (hy : y ∈ a)
     (e : a.idxOf x = a.idxOf y) : x = y := by
@@ -253,7 +258,7 @@ theorem card_mutualPairs_le_sum_kicked {N : ℕ} {a : List ℕ} (ha : IsFoldSeq 
     (fun p : ℕ × ℕ => if a.idxOf p.1 < a.idxOf p.2 then (⟨a.idxOf p.1, p.2⟩ : (_ : ℕ) × ℕ)
       else ⟨a.idxOf p.2, p.1⟩)
   · intro p hp
-    simp only [mutualPairs, coe_filter, mem_product, mem_Icc, Set.mem_setOf_eq] at hp
+    simp only [mutualPairs, coe_filter, mem_product, mem_Icc, Set.mem_ofPred_eq] at hp
     obtain ⟨⟨hx, hy⟩, hlt, h1, h2⟩ := hp
     have hxa : p.1 ∈ a := (mem_range'_of_perm ha).2 hx
     have hya : p.2 ∈ a := (mem_range'_of_perm ha).2 hy
@@ -261,26 +266,36 @@ theorem card_mutualPairs_le_sum_kicked {N : ℕ} {a : List ℕ} (ha : IsFoldSeq 
     have iy := List.idxOf_lt_length_of_mem hya
     have hne : a.idxOf p.1 ≠ a.idxOf p.2 := fun e => by
       have := idxOf_injOn hxa hya e; omega
-    simp only [coe_sigma, Set.mem_sigma_iff, mem_coe, mem_range]
-    split
-    · next h =>
-      exact ⟨by omega, mem_kicked_of_before ha hxa hya h ⟨by omega, by omega, by omega⟩⟩
-    · next h =>
-      exact ⟨by omega, mem_kicked_of_before ha hya hxa (by omega) ⟨by omega, by omega, by omega⟩⟩
+    have s1 : Sees N p.2 p.1 := ⟨by omega, by omega, by omega⟩
+    have s2 : Sees N p.1 p.2 := ⟨by omega, by omega, by omega⟩
+    rw [mem_coe]
+    by_cases h : a.idxOf p.1 < a.idxOf p.2
+    · simp only [h, ↓reduceIte]
+      refine mem_sigma.2 ⟨mem_range.2 ?_, mem_kicked_of_before ha hxa hya h s1⟩
+      show a.idxOf p.1 < N - 1
+      omega
+    · have h' : a.idxOf p.2 < a.idxOf p.1 := by omega
+      simp only [h, ↓reduceIte]
+      refine mem_sigma.2 ⟨mem_range.2 ?_, mem_kicked_of_before ha hya hxa h' s2⟩
+      show a.idxOf p.2 < N - 1
+      omega
   · intro p hp q hq e
-    simp only [mutualPairs, coe_filter, mem_product, mem_Icc, Set.mem_setOf_eq] at hp hq
+    simp only [mutualPairs, coe_filter, mem_product, mem_Icc, Set.mem_ofPred_eq] at hp hq
     obtain ⟨⟨hx, hy⟩, hlt, -, -⟩ := hp
     obtain ⟨⟨hx', hy'⟩, hlt', -, -⟩ := hq
     have hxa : p.1 ∈ a := (mem_range'_of_perm ha).2 hx
     have hya : p.2 ∈ a := (mem_range'_of_perm ha).2 hy
     have hxa' : q.1 ∈ a := (mem_range'_of_perm ha).2 hx'
     have hya' : q.2 ∈ a := (mem_range'_of_perm ha).2 hy'
-    simp only at e
-    split at e <;> split at e <;> simp only [Sigma.mk.injEq, heq_eq_eq] at e
-    · exact Prod.ext (idxOf_injOn hxa hxa' e.1) e.2
-    · have := idxOf_injOn hxa hya' e.1; omega
-    · have := idxOf_injOn hya hxa' e.1; omega
-    · exact Prod.ext e.2 (idxOf_injOn hya hya' e.1)
+    by_cases h : a.idxOf p.1 < a.idxOf p.2 <;> by_cases h' : a.idxOf q.1 < a.idxOf q.2
+    · simp only [h, h', ↓reduceIte, Sigma.mk.injEq, heq_eq_eq] at e
+      exact Prod.ext (idxOf_injOn hxa hxa' e.1) e.2
+    · simp only [h, h', ↓reduceIte, Sigma.mk.injEq, heq_eq_eq] at e
+      have := idxOf_injOn hxa hya' e.1; omega
+    · simp only [h, h', ↓reduceIte, Sigma.mk.injEq, heq_eq_eq] at e
+      have := idxOf_injOn hya hxa' e.1; omega
+    · simp only [h, h', ↓reduceIte, Sigma.mk.injEq, heq_eq_eq] at e
+      exact Prod.ext e.2 (idxOf_injOn hya hya' e.1)
 
 /-- **The kick budget.**  Along every valid sequence the total deficiency
 `∑_k ((N - k) - V_k)` is at least half the number of mutually visible pairs. -/
@@ -293,10 +308,9 @@ theorem sum_moves_le {N : ℕ} {a : List ℕ} (ha : a ∈ semiSeqs N) :
   rcases Nat.eq_zero_or_pos N with h0 | hpos
   · subst h0; simp [mutualPairs]
   obtain ⟨n, rfl⟩ : ∃ n, N = n + 1 := ⟨N - 1, by omega⟩
-  set V : ℕ → ℕ := fun k => (moves (n + 1) (a.take k)).card with hV
-  set f : ℕ → ℕ := fun k => n + 1 - k with hf
-  have hstep : ∑ k ∈ range n, ((kicked (n + 1) a k).card + V k + V (k + 1)) ≤
-      ∑ k ∈ range n, (f k + f (k + 1)) := by
+  have hstep : ∑ k ∈ range n, ((kicked (n + 1) a k).card + (moves (n + 1) (a.take k)).card +
+      (moves (n + 1) (a.take (k + 1))).card) ≤
+      ∑ k ∈ range n, ((n + 1 - k) + (n + 1 - (k + 1))) := by
     apply sum_le_sum
     intro k hk
     rw [mem_range] at hk
@@ -304,20 +318,24 @@ theorem sum_moves_le {N : ℕ} {a : List ℕ} (ha : a ∈ semiSeqs N) :
   rw [sum_add_distrib, sum_add_distrib, sum_add_distrib] at hstep
   have hE := card_mutualPairs_le_sum_kicked ha'.1
   rw [Nat.add_sub_cancel] at hE
-  have T1 : ∑ k ∈ range (n + 1), V k = ∑ k ∈ range n, V k + V n := sum_range_succ _ _
-  have T2 : ∑ k ∈ range (n + 1), V k = ∑ k ∈ range n, V (k + 1) + V 0 := sum_range_succ' _ _
-  have F1 : ∑ k ∈ range (n + 1), f k = ∑ k ∈ range n, f k + f n := sum_range_succ _ _
-  have F2 : ∑ k ∈ range (n + 1), f k = ∑ k ∈ range n, f (k + 1) + f 0 := sum_range_succ' _ _
-  have hV0 : V 0 ≤ n + 1 := by
+  have T1 : ∑ k ∈ range (n + 1), (moves (n + 1) (a.take k)).card =
+      ∑ k ∈ range n, (moves (n + 1) (a.take k)).card + (moves (n + 1) (a.take n)).card :=
+    sum_range_succ _ _
+  have T2 : ∑ k ∈ range (n + 1), (moves (n + 1) (a.take k)).card =
+      ∑ k ∈ range n, (moves (n + 1) (a.take (k + 1))).card + (moves (n + 1) (a.take 0)).card :=
+    sum_range_succ' _ _
+  have F1 : ∑ k ∈ range (n + 1), (n + 1 - k) = ∑ k ∈ range n, (n + 1 - k) + (n + 1 - n) :=
+    sum_range_succ _ _
+  have F2 : ∑ k ∈ range (n + 1), (n + 1 - k) =
+      ∑ k ∈ range n, (n + 1 - (k + 1)) + (n + 1 - 0) := sum_range_succ' _ _
+  have hV0 : (moves (n + 1) (a.take 0)).card ≤ n + 1 := by
     have := card_moves_le (N := n + 1) (p := []) List.nodup_nil (by simp)
-    simpa [hV] using this
-  have hVn : V n ≤ 1 := by
+    simpa using this
+  have hVn : (moves (n + 1) (a.take n)).card ≤ 1 := by
     have := card_moves_le (N := n + 1) (p := a.take n) (hnd.sublist (List.take_sublist _ _))
       (fun x hx => (mem_range'_of_perm ha'.1).1 (List.mem_of_mem_take hx))
     rw [List.length_take] at this
-    simp only [hV]; omega
-  have hfn : f n = 1 := by simp only [hf]; omega
-  have hf0 : f 0 = n + 1 := by simp only [hf]; omega
+    omega
   omega
 
 /-- **Weighted AM–GM along a path.**  Per-state caps `V_k ≤ B k ≤ N - k` together with the
@@ -346,10 +364,8 @@ theorem pathProd_le_of_budget {N c : ℕ} (hc : 1 ≤ c) (B : ℕ → ℕ) {a : 
   have key : ∏ k ∈ range N, ((V k : ℝ) / (min (B k) c : ℕ)) ≤ 1 := by
     have h1 : ∏ k ∈ range N, ((V k : ℝ) / (min (B k) c : ℕ)) ≤
         ∏ k ∈ range N, Real.exp ((V k : ℝ) / (min (B k) c : ℕ) - 1) := by
-      apply prod_le_prod
-      · intro k _; positivity
-      · intro k _
-        have := Real.add_one_le_exp ((V k : ℝ) / (min (B k) c : ℕ) - 1)
+      refine Finset.prod_le_prod₀ (fun k _ => by positivity) (fun k _ => ?_)
+      · have := Real.add_one_le_exp ((V k : ℝ) / (min (B k) c : ℕ) - 1)
         linarith
     rw [← Real.exp_sum] at h1
     refine h1.trans (Real.exp_le_one_iff.2 ?_)
@@ -370,7 +386,8 @@ theorem pathProd_le_of_budget {N c : ℕ} (hc : 1 ≤ c) (B : ℕ → ℕ) {a : 
         have e : (V k : ℝ) / B k - 1 = -(((B k : ℝ) - V k) / B k) := by
           field_simp; ring
         rw [e, Nat.cast_zero, zero_sub, neg_div, neg_le_neg_iff]
-        exact div_le_div_of_nonneg_left (by linarith) hBpos hle'
+        rw [div_le_div_iff₀ hcpos hBpos]
+        exact mul_le_mul_of_nonneg_left hle' (by linarith)
       · rw [min_eq_right hgt.le, Nat.cast_sub hgt.le]
         have e : (V k : ℝ) / c - 1 = ((B k : ℝ) - c - ((B k : ℝ) - V k)) / c := by
           field_simp; ring
@@ -387,9 +404,7 @@ theorem pathProd_le_of_budget {N c : ℕ} (hc : 1 ≤ c) (B : ℕ → ℕ) {a : 
       (∏ k ∈ range N, ((V k : ℝ) / (min (B k) c : ℕ))) *
         ((∏ k ∈ range N, min (B k) c : ℕ) : ℝ) := by
     unfold pathProd
-    rw [hlen]
-    push_cast
-    rw [← prod_mul_distrib]
+    rw [hlen, Nat.cast_prod, Nat.cast_prod, ← prod_mul_distrib]
     apply prod_congr rfl
     intro k hk
     rw [mem_range] at hk
@@ -399,8 +414,7 @@ theorem pathProd_le_of_budget {N c : ℕ} (hc : 1 ≤ c) (B : ℕ → ℕ) {a : 
       have : 0 < min (B k) c := by
         rw [lt_min_iff]; omega
       exact_mod_cast this
-    simp only [hV]
-    field_simp
+    exact (div_mul_cancel₀ _ this.ne').symm
   have hfin : ((pathProd N a : ℕ) : ℝ) ≤ ((∏ k ∈ range N, min (B k) c : ℕ) : ℝ) := by
     rw [hprod]
     have hnn : (0 : ℝ) ≤ ((∏ k ∈ range N, min (B k) c : ℕ) : ℝ) := by positivity
