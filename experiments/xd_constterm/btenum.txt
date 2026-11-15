@@ -1,0 +1,14 @@
+N=3 B=4 transitive=4 window-transitive=4 locally-transitive=4 mutual-triangle-free=4 mean3cyc=0.0000 (random: 0.2500)
+  3-cycle histogram: 0:4
+N=4 B=16 transitive=10 window-transitive=16 locally-transitive=16 mutual-triangle-free=16 mean3cyc=0.5000 (random: 1.0000)
+  3-cycle histogram: 0:10 1:4 2:2
+N=5 B=96 transitive=28 window-transitive=28 locally-transitive=48 mutual-triangle-free=96 mean3cyc=1.6667 (random: 2.5000)
+  3-cycle histogram: 0:28 1:16 2:28 3:8 4:16
+N=6 B=1152 transitive=96 window-transitive=164 locally-transitive=336 mutual-triangle-free=1152 mean3cyc=3.8889 (random: 5.0000)
+  3-cycle histogram: 0:96 1:84 2:146 3:160 4:232 5:88 6:206 7:100 8:40
+N=7 B=22528 transitive=256 window-transitive=256 locally-transitive=1280 mutual-triangle-free=14336 mean3cyc=7.5000 (random: 8.7500)
+  3-cycle histogram: 0:256 1:316 2:776 3:860 4:1844 5:1344 6:2920 7:1960 8:3296 9:2028 10:3536 11:1724 12:1452 13:216
+N=8 B=901120 transitive=1120 window-transitive=1952 locally-transitive=15392 mutual-triangle-free=458752 mean3cyc=12.5091 (random: 14.0000)
+  3-cycle histogram: 0:1120 1:1612 2:3726 3:5592 4:11900 5:14008 6:26986 7:29424 8:45504 9:45904 10:77388 11:64832 12:88770 13:80728 14:106586 15:78880 16:94036 17:56852 18:46786 19:16408 20:4078
+N=9 B=63143936 transitive=4256 window-transitive=4256 locally-transitive=83328 mutual-triangle-free=24887296 mean3cyc=19.3386 (random: 21.0000)
+  3-cycle histogram: 0:4256 1:7248 2:18768 3:30630 4:69796 5:91600 6:201468 7:251372 8:442880 9:525152 10:993330 11:949114 12:1643348 13:1766382 14:2677592 15:2593572 16:4040096 17:3379404 18:5220172 19:4583070 20:5817496 21:4932808 22:6459184 23:4291088 24:4883640 25:3076516 26:2449146 27:1057378 28:595576 29:90138 30:1716
