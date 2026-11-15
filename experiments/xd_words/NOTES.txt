@@ -1,0 +1,286 @@
+WORDS, THE DOUBLING MAP AND DISCREPANCY                              (experiments/xd_words/)
+==========================================================================================
+Cross-domain campaign, angle: combinatorics on words / symbolic dynamics of x -> 2x / origami.
+Labels: [proven] = proved here (Lean name given when formalised, file Folds/XdWords.lean,
+namespace Folds.XdWords, no sorry, no native_decide, axioms propext/Classical.choice/Quot.sound);
+[data N <= ..] = checked by computation on that range; [conj] = conjecture.
+
+Notation.  S subset [1,N], s = |S|, x_m = [m in S], P(t) = |S cap [1,t]| extended to all t >= 0
+by P(t+N) = P(t)+s (Neutral.P).  e(t) = N P(t) - s t (Neutral.hd; N-periodic).
+J(m) = |S cap R(m)| - |S cap L(m)|  (imbalance; a free m is a valid next step iff J(m) = 0;
+m in S is a valid LAST step of S iff J(m) = 0).   delta(m) = P(2m-1) - 2P(m-1) = J(m) + x_m
+(cyclic defect).  In Lean: jm N X k = J(k+1), dfc N X k = delta(k+1).
+R(N) = #reachable sets (sets of valid prefixes), A(N) = #live sets (reachable and completable).
+
+Files
+  sets.c       reach/co-reach DP over all subsets; by size: R, A, maxima of |e| and |J|,
+               the necessary conditions REM, PK, REMADD, PK2 (section 1).   out/sets_N.txt, N <= 24
+  minimax.c    discrepancy along sequences: minimax values, canonical / tree family values,
+               full distribution of the maximal discrepancy (section 3).  out/minimax.txt, out/dist.txt
+  orbits.py    functional graph of the doubling map on Z/N and regression of the residual of
+               ln a(N) on orbit statistics (section 2).  out/orbits.txt
+  leanbuild.sh builds Folds.XdWords through the shared semaphore
+
+SUMMARY
+ 1. [proven, Lean] ORBIT FORMULA.  With phi(b) = 2b+1 mod N (in panel coordinates m = b+1 this is
+    m -> 2m mod N),   2^n e(k) = e(phi^n k) + (2^n - 1) s - N sum_{i<n} 2^(n-1-i) delta(phi^i(k)+1),
+    i.e.  P(m-1) = s m / N - sum_{i>=0} delta(2^i m mod N) / 2^(i+1):  the discrepancy at a
+    boundary is a binary expansion whose digits are the cyclic defects along its doubling orbit.
+    For neutral sets the digits are the membership bits: neutral sets are exactly the sets that
+    are at once the mechanical (Sturmian/Christoffel) word of slope s/N and its doubling itinerary.
+ 2. [proven, Lean] |e(t)| <= min(s, N-s) + N max_m |J(m)| for EVERY set (Neutral.hd_bounds is
+    the case J = 0).  But no sup-norm discrepancy inequality separates reachable sets: [1,k] is
+    reachable and has e(k) = k(N-k), the trivial maximum (true also for live sets, N <= 24).
+ 3. [proven, Lean] PARKING CONDITION: in a reachable set, for every i < s at least i+1 elements
+    have |J| <= i.  It is necessary but weak: 99.0% of all subsets satisfy it at N = 24,
+    while 81.9% are reachable.  Unreachability is not a local-imbalance phenomenon.
+ 4. [data N <= 38] Orbit structure of the doubling map on Z/N (number of cycles, ord(2),
+    N = 2^L, 2^L +- 1, primes, 2 a primitive root) explains nothing in a(N) beyond parity and the
+    known 3 | N term.  A possible 5 | N term (the 4-cycle N/5 -> 2N/5 -> 4N/5 -> 3N/5) has
+    t = 3.5 in one specification but is driven by N = 10, 15, 20 and absent at N = 25, 30, 35:
+    not established.
+ 5. [data N <= 22] The most balanced valid sequences are (almost) as balanced as the most
+    balanced of all N! orderings: the two minimax discrepancies agree for every N <= 22 except
+    N = 11, 17, 18, 19 (off by 1, 1, 2, 1 in units of 1/N).  They are NOT the truncated bit
+    reversal (which is about twice as bad) and usually not symmetric.  A typical valid sequence
+    is not low-discrepancy at all: mean maximal discrepancy ~ 0.39 sqrt(N) (all orderings:
+    ~0.52 sqrt(N)).
+ 6. [proven, Lean] The prefix sets of the truncated bit-reversal order are prefixes of ONE-HOLE
+    TOEPLITZ WORDS (the period-doubling family), not of the paperfolding sequence.
+ 7. Literature: this counting problem does not appear in the origami or words literature
+    (LITERATURE.md).  Nearest: stamp folding A000136 / meanders, Fujimoto's approximation and
+    Lang's binary algorithm (the same doubling map, but one orbit, no counting), folding
+    complexity of pleats (Ito-Kiyomi-Imahori-Uehara; Demaine et al.).
+
+
+1. WHICH SETS OCCUR
+-------------------
+1.1 Counts (sets.c; agree with rust/results/stats where both exist).
+     N     R(N)      A(N)     R/2^N   A/2^N  |  REM/2^N  PK/2^N  PK2/2^N
+     12     3409      2818    .8323   .6880  |  .9702    .9648   .9297
+     16    54000     44104    .8240   .6730  |  .9808    .9784   .9568
+     20   859790    696408    .8200   .6641  |  .9870    .9859   .9717
+     22  3438443   2782952    .8198   .6635  |  .9890    .9883   .9765
+     23  6871448   5546926    .8191   .6612  |  .9907    .9900   .9800
+     24 13747250  11120738    .8194   .6628  |  .9907    .9902   .9804
+   REM  = S empty or S has a removable element (m in S, J(m) = 0);
+   PK   = parking condition on S;  PK2 = parking condition on S and on the unplaced panels
+          (necessary for live).  All three tend to 1 while R/2^N and A/2^N do not.
+   R(N), A(N) and their rows are not in the OEIS (already checked in ../structure2,
+   data/oeis_out.txt; not repeated).  No recurrence was looked for beyond ../structure2 (none).
+
+1.2 Profile by size (N = 24, out/sets_24.txt).  R(N,k)/C(N,k) rises from 0.62-0.70 for small
+   k to 1 for large k:   k = 2: .696, 4: .619, 6: .639, 8: .698, 12: .822, 16: .920, 20: .981.
+   A(N,k)/C(N,k) is roughly flat, 0.61-0.69, for 2 <= k <= N-2, with a parity oscillation.
+   [data N <= 24]  A(N,k)/C(N,k) is within 0.01 of (R(N,k)/C(N,k)) * (R(N,N-k)/C(N,N-k)), i.e.
+   "reachable" and "co-reachable" are nearly independent events for a uniform k-set
+   (k = 12: .8216^2 = .675 vs .668; k = 6: .6388*.9551 = .610 vs .607).
+   Reading: for a sparse set the binding condition is reachability (the order-type polytopes
+   of ../prefix; limit fraction 2/3 at k = 2), and almost every sparse set can be completed
+   (cf. the E*_k results: O(N^(k-1)) dead k-sets); for a dense set it is the mirror image
+   (S reachable iff [N] \ S co-reachable, by reversal).
+
+1.3 Sup-norm discrepancy.  [proven] For every k-set |e(t)| <= k(N-k).  [proven, Lean
+   reachable_Icc, hd_Icc]  [1,k] is reachable (complement of a co-reachable interval,
+   Adjacent.coReach_interval) and e(k) = k(N-k).  So max_t |e(t)| over reachable k-sets is
+   the trivial k(N-k); the same holds for live sets and for max |J| [data N <= 24: the columns
+   "all / reach / live" of out/sets_N.txt coincide for every k].
+   NEGATIVE: there is no Sturmian-type bound (like |e| <= min(s, N-s) for neutral sets) for
+   reachable or live sets, and "van der Corput-like" discrepancy O(log N) is not forced.
+
+1.4 The bound that does hold (for every set).  [proven, Lean hd_bounds_of_jm, abs_hd_le_of_jm]
+   If -A <= J(m) <= B for all m, then
+        -(min(s, N-s) + N B)  <=  e(t)  <=  min(s, N-s) + N A.
+   Proof: e(2k+1) = e(k) + e(k+1) + N J(k+1) (hd_jm); apply it at a maximiser t of e with
+   k = t and k = t-1, using e(t+1) - e(t) = N x_{t+1} - s.  This sharpens
+   Upper.disc_le_of_cycDefect_le (N(B+1)) and contains Neutral.hd_bounds (A = B = 0).
+   It says: bounded imbalance field => Sturmian-type balance.  Along a valid sequence the
+   field cannot stay bounded (Schmidt; ../upper), so this cannot be upgraded to reachable sets.
+
+1.5 Parking condition.  [proven, Lean imb_le_of_semiSymmetric, parking, reachable_parking,
+   reachable_exists_balanced]  Let a = (a_1..a_s) be valid with set S.  Then
+        J_S(a_k) = #{l > k : a_l in R(a_k)} - #{l > k : a_l in L(a_k)},   so |J_S(a_k)| <= s - k:
+   the panel was balanced when placed and each later panel moves its imbalance by at most 1
+   (dipole lemma).  Hence the sorted values of |J_S| on S are dominated by 0, 1, 2, ...
+   (#{m in S : |J_S(m)| <= i} >= i+1), the defining inequality of parking functions.
+   By reversal the same holds on the unplaced panels of a co-reachable set.
+   [data N <= 24] necessary, far from sufficient (table 1.1; no reachable set violates it:
+   the program checks this for every set).  The exact statement "S reachable iff some
+   ordering realises J_S(a_k) = (later right) - (later left) for all k" is reachability itself.
+
+1.6 What the unreachable sets are.  [data N <= 24]  Only about 1% of all subsets have no
+   removable element; the other ~17% of subsets are unreachable because every removal chain
+   gets stuck later.  At size 3, N = 24: 95.9% have a removable element, 70.0% are reachable.
+   No word-combinatorial (balance, discrepancy, factor) criterion was found.  NEGATIVE.
+
+
+2. ORBIT DECOMPOSITION
+----------------------
+2.1 The graph.  The constraint at panel m links boundary m-1 to boundary 2m-1 (mod N):
+   phi(b) = 2b+1 mod N.  [proven, Lean]
+   * phi_iter_modEq: phi^k(b) + 1 = 2^k (b+1) mod N: phi is the doubling map m -> 2m on panels
+     (panel N = residue 0 is the fixed point phi_fixed; its window is empty).
+   * phi_injOn: N odd => phi is a permutation; cycles = cyclotomic cosets of 2 mod N.
+   * phi_iter_pow_two: N = 2^L => phi^L(b) = N-1 for all b: a tree of depth L.
+   * phi_iter_dvd, phi_inj_periodic: N = 2^a q, q odd => after a steps every boundary is in
+     {b : 2^a | b+1}, on which phi is injective (a copy of doubling on Z/q).
+2.2 Orbit formula.  [proven, Lean hd_phi, hd_orbit, hd_cycle, osum_eq_sum]
+        e(phi k) = 2 e(k) - s + N delta(k+1),
+        2^n e(k) = e(phi^n k) + (2^n - 1) s - N sum_{i<n} 2^(n-1-i) delta(phi^i(k)+1),
+   and on a cycle of length n:  (2^n - 1)(s - e(k)) = N sum_{i<n} 2^(n-1-i) delta(phi^i(k)+1).
+   Since |e| <= N^2/4, letting n -> infinity:
+        P(m-1) = s m/N - sum_{i>=0} delta(2^i m mod N) 2^-(i+1)            (*)
+   For N = 2^L the sum is finite (L terms, then the fixed point) and (*) is the binary-digit
+   decomposition of Asymptotics.dyadic_defect read along the tree.
+2.3 Neutral sets as rotation codings.  [proven, Lean hd_cycle_neutral, dfc_neutral]  For a
+   neutral set delta(m) = x_m, so by (*) the binary digits of s m/N - P(m-1) in [0,1] are the
+   membership bits x_m, x_2m, x_4m, ...  Hence P(m-1) = floor(s m/N) (ceil - 1 at the dyadic
+   ambiguity) and x_m = first binary digit of {s m/N}: the indicator word of a neutral set is
+   simultaneously the mechanical word of slope s/N and the itinerary of the rotation orbit
+   {s m/N} with respect to the half-circle [1/2, 1).  These two codings use the intervals
+   [1 - s/N, 1) and [1/2, 1); they agree only if no multiple of gcd(s,N)/N lies between
+   1 - s/N and 1/2, i.e. s/N in {1/2, j/(2j+1), (j+1)/(2j+1)} -- which matches the
+   classification Neutral.neutral_classification (that theorem is the Lean statement; this
+   paragraph is a sketch of a second derivation, with the conventions at the points where
+   s m/N is an integer left unchecked).  This is the discrete form
+   of the Bullett-Sentenac theorem (an orbit of the doubling map is cyclically ordered iff it
+   lies in a closed half-circle, and then it is Sturmian).
+   Answer to "is every valid prefix the beginning of an ordered-orbit structure": NO.  Only
+   neutral prefix sets are; for a general prefix set (*) holds with digits delta outside {0,1}.
+2.4 Does the count factor along the cycles?  NEGATIVE.  The constraints are indexed by the
+   edges of the graph, but the unknowns P_t(b) are coupled across orbits by monotonicity
+   (0 <= P(b+1) - P(b) <= 1), which does not respect the orbit partition.  Consistently, the
+   values at Mersenne numbers and powers of 2 show no product structure:
+   a(15) = 2^4 * 3 * 107 * 9311,  a(31) = 2^4 * 3 * 5 * 11 * 31 * 24893051164663183 (the last
+   factor not tested for primality), a(16) = 2^3 * 7 * 29 * 170063; a(7) = 2^8 is an accident
+   (cf. ../structure2 section 3).  No candidate product formula over cycles was found; none
+   was tested beyond these factorisations.
+2.5 a(N) against the cycle structure (orbits.py, out/orbits.txt).  Residual of
+   y(N) = ln a(N) - ln a_W(N) after smooth(1, N, ln N, N/ln N) + parity + [3|N]/N, N = 10..38
+   (sd 0.0082, 29 points).  One extra regressor at a time:
+     #cycles            t = -0.2      ord_q(2)        t = -0.4     v_2(N)          t = +0.1
+     [N = 2^L]          t = -0.1      [N = 2^L - 1]   t = +0.2     [N = 2^L + 1]   t = +0.8
+     [N prime]          t = -1.1      [2 prim. root]  t = -0.3     [7 | N]         t = -0.4
+     [9 | N]            t = +0.3      [15 | N]        t = +1.2     [5 | N]         t = +2.1
+     [5 | N]/N          t = +3.5      (coefficient 0.21 +- 0.06; cf. 0.67 for [3|N]/N)
+   [data N <= 38]  Nothing is significant except possibly 5 | N.  That signal comes from
+   N = 10, 15, 20 (residuals +13, +14, +12 e-3), where the residual scatter is three times
+   larger than for N >= 22, and N = 25, 30, 35 show nothing (+1.0, -2.5, -3.5 e-3).  The
+   trend-free bump statistics N*b(N), N*c(N) (second / fourth differences within the parity
+   class) put N = 10, 20, 25 slightly above the other non-multiples of 3 (-0.22 vs -0.41 on
+   average, spread 0.2) and N = 15, 30 not above the other multiples of 3.  Verdict: the
+   3 | N effect (2-cycle) is the only established arithmetic effect; a 5 | N effect (4-cycle)
+   of about a third of its size is possible but NOT established; 7 | N (3-cycles), Mersenne
+   numbers, powers of 2 and the order of 2 show nothing.  a(39), a(40), a(45) would help.
+
+
+3. DISCREPANCY ALONG SEQUENCES
+------------------------------
+D(S) = max_t |e(t)| = N * (star discrepancy of S at integer points); M(a) = max over the
+prefix sets of a.  (minimax.c)
+3.1 Minimax values [data N <= 22].  Bu = min of M over all N! orderings, Bv over valid
+   sequences, Bs over symmetric ones, Mc = M of the truncated bit reversal:
+      N    8   10   12   14   16   17   18   19   20   21   22
+      Bu   6    8    9   11   12   13   14   16   16   18   18
+      Bv   6    8    9   11   12   14   16   17   16   18   18
+      Bs   6    8   10   12   12   16   18   17   20   21   20
+      Mc   9   12   16   18   23   21   24   27   30   28   33
+   * Bv = Bu for every N <= 22 except N = 11 (9 vs 8), 17, 18, 19: some optimal ordering is
+     semi-symmetric.  #valid sequences attaining Bu: 50 (N=16), 32 (N=20), 3432 (21), 8 (22).
+   * The truncated bit reversal is not optimal: Mc/Bv -> about 1.5-1.9.  Reason: it starts at
+     panel 1 (D = N-1); optimal sequences start in the middle.
+   * [data N <= 20] Bs = min of M over the 2^(N-1) members of the parity-block tree family
+     (Gen.gen), and max of M over the family = Mc: the canonical member is the WORST of the
+     family, and the best symmetric value is attained by tree-family members ("twisted" bit
+     reversals).  For every N <= 20 except 18 and 20 the symmetric minimisers are exactly
+     the tree-family minimisers (equal counts; at N = 18: 11304 vs 8712, N = 20: 8064 vs 4608).
+   * Size: Bu/N = 0.75 (N = 16), 0.82 (N = 22): logarithmic growth is not visible yet.
+3.2 The tree family is nested scrambling.  [proven on paper, from the definition of gen]
+   The time word of gen ch N (t(m) = step at which m is placed) orders panels by comparing
+   the binary digits of m-1 from the lowest, with the comparison at each node twisted by ch:
+   it is the radical inverse of m-1 with Owen's nested base-2 digit scrambling, so
+   {(m, t(m))} is a (0,L,2)-net for N = 2^L.  The canonical member is the unscrambled van der
+   Corput sequence.
+3.3 Distribution of M over V_N (out/dist.txt) [data N <= 20].
+      N        8     10     12     14     16     18     19     20
+      valid   1.12   1.27   1.38   1.49   1.58   1.66   1.69   1.74    mean M / N
+      all N!  1.31   1.51   1.70   1.87   2.03   2.18   2.26   2.33
+      ratio   .86    .84    .81    .795   .778   .762   .751   .748
+   mean M/N = 0.39 sqrt(N) for valid sequences (0.397, 0.401, 0.399, 0.398, 0.395, 0.392,
+   0.389 for N = 8..20) against 0.52 sqrt(N) for all orderings.  [conj] E M / N ~ c sqrt(N)
+   with c < c_all; valid sequences are smoother than random ones by a slowly decreasing
+   constant factor, not by an order of magnitude.  The distribution is strongly lattice-like
+   (peaks at multiples of N/5, N/4, ...; N = 20: 114,808,984 sequences have M <= 20 but only
+   87,652 have M <= 19).
+   NEGATIVE: "valid => low discrepancy" fails for typical sequences; low-discrepancy
+   (log N) sequences are an exponentially small part of V_N.
+
+
+4. THE CANONICAL WORD: TOEPLITZ, NOT PAPERFOLDING
+-------------------------------------------------
+4.1 Words that are trivial for the canonical order (truncated bit reversal, N = 2^L):
+   [proven on paper] descent word of the sequence: alternating; descent word of the time
+   word: alternating; nearer-edge (left/right) word: alternating in time; "is the left
+   neighbour placed before the right neighbour": period 4; mountain/valley word: constant if
+   every bisection is a valley fold from the nearer edge.  The jump sizes
+   c(i+1) - c(i) = 2^(L-t-1)(3 - 2^(t+1)), t = v_2(i+1), are a ruler sequence.
+4.2 Theorem [proven, Lean canon_prefix_word, tword, tword_add_pow].  Let c be the (k+1)-st
+   panel of gen canon N and rho = c-1.  For m in [1,N]:
+        m is among the first k+1 panels   iff   m = c, or the lowest binary digit in which
+        m-1 and rho differ is a 1 in rho.
+   So the indicator word of every canonical prefix set is the length-N prefix of
+        T_rho(j) = digit number v_2(j - rho) of rho          (j != rho),
+   a Toeplitz word: at stage i every position j with j != rho mod 2^i is already filled and
+   2^i-periodic (tword_add_pow), and exactly one residue class mod 2^i (that of rho) is
+   still a hole.  Equivalently x_m = [radinv(m-1) <= radinv(rho)]: codings of the 2-adic
+   odometer by an interval [0, alpha].
+4.3 Identification.  One-hole Toeplitz words with constant fills are the period-doubling
+   family: the period-doubling word d_n = v_2(n+1) mod 2 is T with rho = -1 and digits
+   alternating.  The canonical prefix sets with density -> 1/3 (alpha = 0.0101..., hole
+   rho = -2/3 in Z_2) give x_j = [v_2(3j+2) odd], a point of the period-doubling subshift
+   that is not a shift of d.  The regular paperfolding sequence (p_n = j mod 2 for
+   n = 2^k (2j+1)) needs the two-hole pattern (0 ? 1 ?) and is NOT of this form: in a one-hole
+   word at most one residue class mod 2^i fails to be 2^i-periodic (tword_add_pow), while in
+   the paperfolding sequence two classes fail for every i >= 1 (the class of 2^(i-1), where
+   p_n != p_{n+2^i} always, and the class of 0, along which the sequence is p itself); shifting
+   the word does not change this count.  [proven on paper]
+4.4 Discrepancy of these words: P(t) - alpha t = sum_i a_i (ceil((t - r_{i-1})/2^i) - t/2^i),
+   each term in (-1/2, 1): the classical van der Corput bound, O(log N).  [proven on paper]
+
+
+5. ORIGAMI LITERATURE CHECK
+---------------------------
+See LITERATURE.md.  The counting problem (orders of bisecting N panels with a balanced or
+symmetric reference) was not found anywhere.  The doubling map is classical in origami
+(Fujimoto's approximation; Lang's binary algorithm): there one follows ONE orbit of
+x -> 2x mod 1 and reads the left/right fold sequence from binary digits.  Here every panel is
+one edge of the functional graph and the question is in which orders all edges can be used.
+
+
+6. NEGATIVE RESULTS (collected)
+-------------------------------
+ * No balance/discrepancy inequality characterises reachable or live sets; the sup-norm
+   maximum is trivial (1.3); the parking condition holds but is satisfied by 99% of sets.
+ * No factorisation of a(N) or g(S) along the cycles of the doubling map (2.4).
+ * No arithmetic signal from cycle counts, ord(2), Mersenne numbers, powers of 2, primes;
+   5 | N unconfirmed (2.5).
+ * Valid sequences are not low-discrepancy in general; bit reversal is not the most balanced
+   valid sequence (3.1, 3.3).
+ * The canonical word is not the paperfolding sequence (4.3); the mountain/valley word of the
+   physical folds is constant under the natural convention.
+ * R(N), A(N): no OEIS entry, no recurrence (from ../structure2; the new sequences REM, PK
+   were not submitted to the OEIS search: the server was not queried in this run).
+
+
+7. LEAN (Folds/XdWords.lean)
+----------------------------
+ A  jm, dfc, hd_jm, hd_dfc, jm_eq_arms, imb_eq_jm, hd_bounds_of_jm, abs_hd_le_of_jm, jm_neutral
+ B  phi, phi_iter_modEq, phi_fixed, phi_injOn, phi_iter_pow_two, phi_iter_dvd,
+    phi_inj_periodic, osum, osum_eq_sum, hd_phi, hd_orbit, hd_cycle, dfc_neutral,
+    hd_cycle_neutral
+ C  imb_append_le, imb_mid_le, imb_le_of_semiSymmetric, parking, reachable_parking,
+    reachable_exists_balanced, reachable_Icc, hd_Icc
+ D  tword, tword_self, tword_even_even, tword_odd_odd, tword_even_odd, tword_odd_even,
+    tword_add_pow, canon_word_aux, canon_prefix_word
+Not formalised: the trivial bound |e| <= k(N-k), the limit form (*), 2.3's rederivation of the
+classification, 3.2, 4.3, 4.4.

@@ -1,0 +1,21 @@
+N=2  Bu=1 (#perms 2, #valid with M<=Bu: 2)  Bv=1 (#valid attaining 2)  Bs=1 (#sym attaining 2)  canon M=1  tree family: min 1 (2 of 2) max 1
+N=3  Bu=2 (#perms 6, #valid with M<=Bu: 4)  Bv=2 (#valid attaining 4)  Bs=2 (#sym attaining 4)  canon M=2  tree family: min 2 (4 of 4) max 2
+N=4  Bu=2 (#perms 2, #valid with M<=Bu: 2)  Bv=2 (#valid attaining 2)  Bs=2 (#sym attaining 2)  canon M=3  tree family: min 2 (2 of 8) max 3
+N=5  Bu=3 (#perms 2, #valid with M<=Bu: 2)  Bv=3 (#valid attaining 2)  Bs=4 (#sym attaining 16)  canon M=4  tree family: min 4 (16 of 16) max 4
+N=6  Bu=4 (#perms 42, #valid with M<=Bu: 16)  Bv=4 (#valid attaining 16)  Bs=4 (#sym attaining 8)  canon M=6  tree family: min 4 (8 of 32) max 6
+N=7  Bu=5 (#perms 70, #valid with M<=Bu: 16)  Bv=5 (#valid attaining 16)  Bs=5 (#sym attaining 8)  canon M=6  tree family: min 5 (8 of 64) max 6
+N=8  Bu=6 (#perms 272, #valid with M<=Bu: 50)  Bv=6 (#valid attaining 50)  Bs=6 (#sym attaining 18)  canon M=9  tree family: min 6 (18 of 128) max 9
+N=9  Bu=6 (#perms 68, #valid with M<=Bu: 8)  Bv=6 (#valid attaining 8)  Bs=8 (#sym attaining 96)  canon M=9  tree family: min 8 (96 of 256) max 9
+N=10  Bu=8 (#perms 5314, #valid with M<=Bu: 220)  Bv=8 (#valid attaining 220)  Bs=8 (#sym attaining 32)  canon M=12  tree family: min 8 (32 of 512) max 12
+N=11  Bu=8 (#perms 18, #valid with M<=Bu: 0)  Bv=9 (#valid attaining 660)  Bs=9 (#sym attaining 32)  canon M=13  tree family: min 9 (32 of 1024) max 13
+N=12  Bu=9 (#perms 600, #valid with M<=Bu: 18)  Bv=9 (#valid attaining 18)  Bs=10 (#sym attaining 18)  canon M=16  tree family: min 10 (18 of 2048) max 16
+N=13  Bu=10 (#perms 68, #valid with M<=Bu: 14)  Bv=10 (#valid attaining 14)  Bs=11 (#sym attaining 96)  canon M=15  tree family: min 11 (96 of 4096) max 15
+N=14  Bu=11 (#perms 334, #valid with M<=Bu: 6)  Bv=11 (#valid attaining 6)  Bs=12 (#sym attaining 162)  canon M=18  tree family: min 12 (162 of 8192) max 18
+N=15  Bu=12 (#perms 45300, #valid with M<=Bu: 308)  Bv=12 (#valid attaining 308)  Bs=15 (#sym attaining 6912)  canon M=20  tree family: min 15 (6912 of 16384) max 20
+N=16  Bu=12 (#perms 68, #valid with M<=Bu: 50)  Bv=12 (#valid attaining 50)  Bs=12 (#sym attaining 8)  canon M=23  tree family: min 12 (8 of 32768) max 23
+N=17  Bu=13 (#perms 32, #valid with M<=Bu: 0)  Bv=14 (#valid attaining 300)  Bs=16 (#sym attaining 1536)  canon M=21  tree family: min 16 (1536 of 65536) max 21
+N=18  Bu=14 (#perms 8, #valid with M<=Bu: 0)  Bv=16 (#valid attaining 8056)  Bs=18 (#sym attaining 11304)  canon M=24  tree family: min 18 (8712 of 131072) max 24
+N=19  Bu=16 (#perms 88410, #valid with M<=Bu: 0)  Bv=17 (#valid attaining 92828)  Bs=17 (#sym attaining 64)  canon M=27  tree family: min 17 (64 of 262144) max 27
+N=20  Bu=16 (#perms 24750, #valid with M<=Bu: 32)  Bv=16 (#valid attaining 32)  Bs=20 (#sym attaining 8064)  canon M=30  tree family: min 20 (4608 of 524288) max 30
+N=21  Bu=18 (#perms 3487556, #valid with M<=Bu: 3432)  Bv=18 (#valid attaining 3432)  Bs=21 (#sym attaining 26880)  canon M=28
+N=22  Bu=18 (#perms 588, #valid with M<=Bu: 8)  Bv=18 (#valid attaining 8)  Bs=20 (#sym attaining 200)  canon M=33
