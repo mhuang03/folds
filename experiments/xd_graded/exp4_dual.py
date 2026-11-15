@@ -1,10 +1,11 @@
 """Experiment 4: linear feasibility of a dual lowering operator D'.
 
-Usage: python3 exp4_dual.py NMAX support[,support...] [kinds]
+Usage: python3 exp4_dual.py NMAX support[,support...] [kinds] [q,q,...]
    support in {gen, bool, edge}
 
 Unknowns: matrices D'_k : V_k -> V_{k-1} (1 <= k <= N) with the given support, and scalars
-r_0..r_N.  Equations:  D'_{k+1} U_k - U_{k-1} D'_k = r_k I   on V_k,  for 0 <= k <= N,
+r_0..r_N.  Equations:  D'_{k+1} U_k - q U_{k-1} D'_k = r_k I   on V_k,  for 0 <= k <= N
+(q = 1 by default; other integers q give Lam's quantized relation, q = -1 the signed one),
 where U is the (unweighted) up operator of Gamma_N restricted to the vertex set.
 
   gen : D' arbitrary
@@ -41,7 +42,7 @@ def ratrec(a, p=P):
     return Fraction(r1, s1)
 
 
-def solve(N, kind, support):
+def solve(N, kind, support, q=1):
     lev, g, pc = vertex_sets(N, kind)
     E = up_edges(N, lev, pc)
     sizes = [len(l) for l in lev]
@@ -80,7 +81,7 @@ def solve(N, kind, support):
                 for t in down[k].get(a, ()):
                     v = var.get((k, t, b))
                     if v is not None:
-                        row[v] = row.get(v, 0) - 1
+                        row[v] = row.get(v, 0) - q
                 if a == b:
                     row[nD + k] = -1
                 if row:
@@ -88,8 +89,8 @@ def solve(N, kind, support):
     return sizes, nD, nvar, rows
 
 
-def analyse(N, kind, support):
-    sizes, nD, nvar, rows = solve(N, kind, support)
+def analyse(N, kind, support, q=1):
+    sizes, nD, nvar, rows = solve(N, kind, support, q)
     M = flint.nmod_mat(len(rows), nvar, P)
     for i, row in enumerate(rows):
         for j, v in row.items():
@@ -105,7 +106,7 @@ def analyse(N, kind, support):
     for i in range(rk):
         vec = [ratrec(int(Rr[i, k])) for k in range(N + 1)]
         basis.append(vec)
-    print(f"N={N} {kind} support={support}: sizes={sizes} unknowns={nvar} equations={len(rows)}"
+    print(f"N={N} {kind} support={support} q={q}: sizes={sizes} unknowns={nvar} equations={len(rows)}"
           f" nullity={nullity} nullity_r0={nullity - rk} dim r-space={rk}")
     for vec in basis:
         print("     r = [" + ", ".join("?" if x is None else str(x) for x in vec) + "]")
@@ -116,10 +117,12 @@ def main():
     NMAX = int(sys.argv[1])
     supports = sys.argv[2].split(',')
     kinds = sys.argv[3].split(',') if len(sys.argv) > 3 else ['live', 'all']
+    qs = [int(x) for x in sys.argv[4].split(',')] if len(sys.argv) > 4 else [1]
     for N in range(1, NMAX + 1):
         for kind in kinds:
             for support in supports:
-                analyse(N, kind, support)
+                for q in qs:
+                    analyse(N, kind, support, q)
 
 
 if __name__ == '__main__':
