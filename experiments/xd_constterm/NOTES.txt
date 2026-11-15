@@ -1,0 +1,268 @@
+CONSTANT-TERM IDENTITIES, CHARACTER SUMS AND THE BALANCED-TOURNAMENT RELAXATION
+================================================================================
+Cross-domain campaign, angle "xd_constterm".  Lean: Folds/XdConstTerm.lean (namespace
+Folds.XdConstTerm).  Labels: [proven] (hand proof, given here), [Lean] (also formalised),
+[data N <= ..], [conjecture].
+
+0. Set-up
+---------
+W(m) = window of m = [m-r, m+r] \ {m}, r = r_m = min(m-1, N-m); left arm L(m), right arm R(m).
+For a permutation pi (panel m placed at time t_m):
+    D_m(pi) = #{x in L(m) : t_x < t_m} - #{y in R(m) : t_y < t_m}.
+pi is valid iff D_m = 0 for all m, so
+    a(N) = CT_z F_N(z),   F_N(z) = sum_pi prod_m z_m^{D_m(pi)}.        [Lean: semiCount_eq_card_Dp]
+For x < y:  x in W(y) iff 2y - x <= N;  y in W(x) iff y <= 2x - 1.  Put c_xy = [x in W(y)],
+d_xy = [y in W(x)].  A pair is "mutual" if c = d = 1, "one-sided" if c + d = 1, "free" if 0.
+
+Summary of the outcome: no closed form and no recurrence for a(N) came out of this angle.
+What did come out: (i) the tournament relaxation is, to within 7%, the independent
+"Wallis product" model, exactly so for N <= 6, so all of the difficulty of a(N) sits in
+transitivity; (ii) one genuinely new exact identity, the vanishing of the signed count for
+4 | N, by a rotation argument (in Lean); (iii) exact descriptions of a_p(N) - a(N) at the
+threshold N = 2p+1 through interval counts c(d), with c(2j+1) = c(j) and a 2^j algorithm
+for c(2j); (iv) a C-finite closed form for the radius-2 tournament relaxation.
+
+1. Balanced tournaments B(N)
+----------------------------
+Definition. Orient every pair independently ("x earlier than y" or the reverse); D_m as above;
+B(N) = number of orientations with all D_m = 0.
+    B(N) = CT prod_{x<y} ( z_y^{c_xy} + z_x^{-d_xy} ).                               [proven]
+a(N) = number of transitive balanced tournaments, so a(N) <= B(N).   [Lean: semiCount_le_balCount]
+
+Data (btour.py, exact; brute-force checked for N <= 6; btenum.c re-counts N <= 9):
+ N    B(N)
+ 1    1
+ 2    2
+ 3    4
+ 4    16
+ 5    96
+ 6    1152
+ 7    22528
+ 8    901120
+ 9    63143936
+ 10   8759017472
+ 11   2199946002432
+ 12   1106373442011136
+ 13   1017320638223745024
+ ...  (B_true.txt, N <= 23)
+Not in the OEIS (searched B(N), and B(N)/2^{#free pairs} = 1,1,2,2,6,18,88,440,7708,66826,..).
+[Lean: balCount_one/two/three by kernel evaluation.]
+
+(1a) Degree-constrained-subgraph form.  [proven]  Put T_m = (earlier panels in L(m)) u
+(later panels in R(m)).  Balanced iff |T_m| = r_m for all m, and for a mutual pair x in T_y
+iff y in T_x.  Hence, with G2 = graph of mutual pairs and u_m = number of one-sided slots of m,
+    B(N) = 2^{#free} * sum_{H subset G2} prod_m C(u_m, r_m - deg_H(m)).
+G2 has about N^2/6 edges and each neighbourhood is an interval, bandwidth ~ N/3.
+
+(1b) Product formula on forests.  [proven]  In a uniformly random tournament the event
+{D_m = 0} has probability C(2r_m, r_m)/4^{r_m} and is independent of the orientation of any
+single pair (C(2r-1, r)/2^{2r-1} = C(2r, r)/4^r).  Two events share at most the mutual pair
+{m, m'}.  So if G2 is a forest the events are jointly independent (peel leaves) and
+    B(N) = Bprod(N) := 2^{C(N,2)} prod_m C(2r_m, r_m) / 4^{r_m}.
+G2 is a forest exactly for N <= 6 (first triangle {3,4,5} at N = 7), and indeed
+B(N) = Bprod(N) for N <= 6 and B(7)/Bprod(7) = 44/45.                           [data agrees]
+
+(1c) In general B(N)/Bprod(N) decreases slowly:                              [data N <= 23]
+ N        7,8     9        10       12      16      20      23
+ ratio    .9778   .9788    .9698    .9645   .9514   .9426   .9372
+(analyze_B.py).  So the tournament relaxation is the "Wallis product model" of
+experiments/cluster up to a slowly varying factor: window constraints are nearly independent
+once transitivity is dropped.  The correlation is slightly NEGATIVE (ratio < 1), the opposite
+sign to Eulerian orientations (Schrijver's lower bound, see LITERATURE.md), because a mutual
+pair here is a shared "selected / not selected" slot, not an in/out arc.
+No closed form: the odd part of B(N) has large primes (33413 at N = 10, 1268173 at N = 12,
+6073421 at N = 13); no P-recursive or C-finite relation for B(N) or for B/Bprod
+(recsearch_all.py, 23 terms).                                               [data, negative]
+
+(1d) a(N) versus B(N).  rho(N) = [a(N)/N!] / [B(N)/2^{C(N,2)}] = 1.33, 1.67, 2.49, 3.79, 4.73,
+8.27, 12.8, 19.8, 29.1, 53.4, 77.3, 139, 231, 400, 644, 1242, 1931, 3777, 6421, 12043, 20428
+for N = 3..23.  It grows super-exponentially (B/2^{C(N,2)} ~ prod (pi r_m)^{-1/2} ~ N^{-N/2},
+while a(N)/N! = (kappa ln N)^{-N} conjecturally).  Transitive tournaments are balanced far
+more often than random ones; the relaxation gives no useful upper bound.            [data]
+
+(1e) Intermediate objects (btenum.c, all balanced tournaments, N <= 9).           [data N <= 9]
+ N   B         transitive(=a)  window-transitive  locally-transitive  no mutual 3-cycle
+ 4   16        10              16                 16                  16
+ 5   96        28              28                 48                  96
+ 6   1152      96              164                336                 1152
+ 7   22528     256             256                1280                14336
+ 8   901120    1120            1952               15392               458752
+ 9   63143936  4256            4256               83328               24887296
+window-transitive: every W(m) u {m} induces a transitive tournament (for odd N the middle
+window is everything, so this equals a(N): trivial).  locally-transitive: no 3-cycle through
+m inside W(m) u {m}.  Mean number of 3-cycles of a balanced tournament: 12.51 (N = 8),
+19.34 (N = 9), against 14 and 21 for a random tournament: balance barely reduces cycles.
+No pattern recognised in the intermediate counts (4,16,48,336,1280,15392,83328 not in OEIS).
+
+(1f) Simplified variants.
+ * all windows complete (L(m) = [1,m-1], R(m) = [m+1,N]): the count is 0 for N >= 2.
+   [proven: CT prod_{x<y}(z_y + 1/z_x) = number of graphs with degree sequence
+   (N-1, N-2, .., 0), impossible; directly, panel 1 must precede everything and panel N must
+   precede everything.]  Data agrees.
+ * radius 1 (r = min(m-1, N-m, 1)): B_1(N) = 2^{C(N-1,2)+1} for N >= 2.  [proven: D_m = 0 iff
+   m-1 and m+1 are on the same side of m, so the N-1 adjacent pairs alternate: 2 choices,
+   all other pairs free.]  Data N <= 13 agrees.
+ * radius 2: rho_N := B_2(N)/Bprod_2(N) satisfies
+        rho_N = (2/3) rho_{N-1} + (8/27) rho_{N-3}     (N >= 7),
+   rho_4..rho_6 = 1, i.e. rho_N = c_N/3^{N-4} with c = 1,3,9,26,76,224,656,1920,5632,16512,..,
+   c_N = 2 c_{N-1} + 8 c_{N-3}.                                      [data N <= 20, 11 checks]
+   For every fixed radius R the normalised count is C-finite by a transfer matrix [proven in
+   principle: interactions have range R]; for R = 3, 4 the order exceeds 8 (not found with 17
+   terms).  The orders grow with R, so this gives nothing for the true problem (R = N/2).
+ * left half only (constraints for m <= (N+1)/2; windows are the nested prefixes [1,2m-1]):
+   product formula exact up to N = 8 (forest), then ratios 104/105, 934/945, 10228/10395, ..
+   (denominators (2k-3)!!, k = ceil(N/2)); numerators 1,1,3,15,104,934,10228,.. not in OEIS; no
+   recurrence found.  The permutation version (left_perm_counts.txt) 1,4,40,780,22720,949912,
+   51995504,.. (odd N) is not in OEIS either and has no recurrence (12 terms).   [data, negative]
+
+2. One-variable specialisations
+-------------------------------
+(2a) Pair-sum formula.  [Lean: sum_DT, sum_Dp]
+    sum_m D_m(pi) = sum_{x<y} ( c_xy [x before y] - d_xy [y before x] )
+                  = sum_{x<y} c_xy - sum_{x<y} (c_xy + d_xy) inv_xy(pi),   inv_xy = [y before x].
+So sum_m D_m is a WEIGHTED graph-inversion statistic: weight 2 on the mutual graph G2
+(x < y <= 2x-1 and 2y-x <= N), weight 1 on the one-sided graph G1 (exactly one of the two
+conditions), weight 0 on free pairs.  Reversal and mirror both negate sum D (so
+f_N(q) = sum_pi q^{sum D} is palindromic).
+
+(2b) Factorisation (polydp.c, factor_polys.py; all N <= 18 computed, factored for N <= 12).
+ f_N(q) = sum_pi q^{sum_m D_m}: irreducible over Z for N = 3, 5, 6, 7, 9, 10, 11; for
+ N = 4, 8, 12 it is (q+1)^2 times an irreducible factor.  No cyclotomic or q-integer factors
+ other than (q+1)^2: NOT Mahonian-like.                                      [data N <= 12]
+ This is what Foata-Zeilberger predicts: a product formula needs a "bipartitional" graph,
+ and G1, G2 are not.
+ sum_pi q^{sum |D_m|}, sum_pi q^{sum D_m^2}: content 2, a factor (q+1) exactly when 4 | N,
+ otherwise irreducible.  Defect polynomial sum_pi q^{#{m : D_m != 0}}: irreducible up to
+ content for N >= 5.                                                                    [data N <= 12]
+ Central coefficient #{pi : sum D = 0} = 1,2,4,10,40,192,920,6522,49696,431982,4139512,..
+
+3. Signed and character counts
+------------------------------
+(3a) Signed count  s(N) = sum_pi prod_m (-1)^{D_m(pi)} = f_N(-1)   (gendp true sign):
+ N    1 2 3 4 5  6  7    8 9    10    11    12 13      14       15       16 17
+ s    1 2 2 0 16 96 -112 0 -512 17920 -2048 0  -215040 27496448 11796480 0  207683584
+ and s(18) = 56290443264, s(19) = -6152257536, s(20) = 0, .., s(24) = 0 (signed_counts.txt).
+
+ THEOREM.  s(N) = 0 whenever 4 | N.                             [Lean: sum_sgn_eq_zero]
+ Proof (rotation).  Let rho move the first panel p of pi to the end.  D_p = 0 before and
+ after (nothing earlier / the whole window earlier).  For m != p, the panel p changes from
+ earlier to later, so D_m changes by -+1 iff p in W(m).  Hence
+     prod_m (-1)^{D_m(rho pi)} = (-1)^{#{m != p : p in W(m)}} prod_m (-1)^{D_m(pi)}.
+                                                                         [Lean: sgn_rotate]
+ The number of windows containing p is floor((p-1)/2) + floor((N-p)/2); for N = 2n this is
+ n - 1 for every p [Lean: card_inWindow].  For n even rho is a sign-reversing bijection.  QED
+ (rho is not an involution; the argument only needs a bijection.)
+ Consequences of the same lemma:                                                 [proven]
+ * refinement by the first panel, for every N:  if p lies in an odd number of windows then
+       sum_{pi : pi_1 = p} prod_m (-1)^{D_m(pi)} = 0.
+   (rho maps {first = p} onto {last = p} with sign (-1)^{w(p)}, and reversal maps {last = p}
+   back onto {first = p} preserving the sign since D_m -> -D_m.)  For odd N these are the odd
+   panels p when N = 3 mod 4 and the even panels when N = 1 mod 4; for 4 | N all panels.
+   Brute force N = 5..9 agrees: first-panel sums are (8,0,0,0,8), (16 x 6), (0,-16,0,-80,0,-16,0),
+   (0 x 8), (-384,0,0,0,256,0,0,0,-384).  [The zeros at p = 3 (N = 5) and p = 3, 7 (N = 9) are
+   not explained by this argument: data.]
+ * 2^{floor(N/2)} divides s(N) (from the algebra form below).
+ * more generally, for any character chi_k(pi) = omega^{sum k_m D_m} of (Z/q)^N,
+   sum_p (1 - omega^{e_k(p)}) F^{(p)}(omega^k) = 0, where F^{(p)} is the sum over sequences
+   starting with p and e_k(p) = sum_{m: p in R(m)} k_m - sum_{m: p in L(m)} k_m.
+ * in algebra language: with generators c_m, c_m^2 = 0, c_m c_m' = -c_m' c_m on G1 and
+   commuting otherwise, s(N) is the coefficient of c_1...c_N in (sum c_m)^N, and
+   (sum c_m)^2 = 2 sum_{non-edges of G1} c_m c_m'.  This explains the large powers of 2 in
+   s(N) (2^9 | s(9), 2^11 | s(11), 2^18 | s(15)).
+ The non-zero values have no recognisable form (not in OEIS; no recurrence; N = 13:
+ -2^11 * 105, N = 17: 2^16 * 3169).                                          [data, negative]
+
+(3b) Mod-d relaxations a_d(N) = #{pi : d | D_m for all m}   (apdp.c, ap_table.txt, N <= 24,
+ d = 2..12).  a <= a_d [Lean: semiCount_le_modCount]; a_d(N) = a(N) for N <= 2d
+ [Lean: modCount_eq_semiCount]; first difference at N = 2d + 1.
+ N     a          a_2          a_3        a_4       a_5       a_7
+ 5     28         30           28         28        28        28
+ 7     256        336          258        256       256       256
+ 9     4256       7450         4460       4264      4256      4256
+ 11    70960      207896       80460      71268     70962     70960
+ 13    1620328    8417628      2032026    1641718   1621556   1620328
+ 15    47821296   459751456    68811596   48963520  47882520  47821298
+ 16    276182312  3826323428   436134960  284450354 276565768 276182418
+ a_2 = 1,2,4,10,30,102,336,1568,7450,38714,207896,1337242,..; a_3 = 1,2,4,10,28,96,258,1146,
+ 4460,19144,80460,..: neither is in the OEIS; no C-finite or P-recursive relation for a_2..a_5
+ (24 terms each, same engine and box as experiments/recsearch/precursive.py).
+                                                                             [data, negative]
+ Relations between the a_d and a.                                                [proven]
+ * Fourier inversion: a_q(N) = q^{-N} sum_{k in (Z/q)^N} F_N(omega^{k_1},..,omega^{k_N}),
+   and a = a_q for q >= N/2.  For coprime d, e: a_{de} counts both conditions at once and
+   a = a_{de} once de >= N/2; but there is no inclusion-exclusion between a, a_d, a_e alone:
+   the conditions are strongly positively correlated (N = 16: a_2 a_3 / N! = 8.0e4 against
+   a_6 = 2.8e8).
+ * Threshold identity:  a_d(2d+1) = a(2d+1) + 2 c(d)^2,                           [proven]
+   c(d) = number of valid orderings of the interval [1,d] at the end of a long strip
+        = g_N([1,d]) for N >= 2d - 1.
+   Proof: for N = 2d+1 only the middle panel M = d+1 has r = d, so the extra sequences have
+   D_M = +-d and all other steps valid; D_M = d means [1,d] before M before [d+2,N]; the
+   first block is an ordering counted by c(d), the last block is one read backwards (mirror
+   and complement symmetry).  Data: excess = 2,2,8,2,32,2,200,8,1352,2 for d = 2..11 and
+   c(d) = 1,1,2,1,4,1,10,2,26,1.                                              [data d <= 11]
+   (Excess at N = 2d+2: 26,16,42,48,106,280,456,1456,822 for d = 3..11: no formula sought.)
+
+(3c) The interval counts c(d).                                    (gendp prefix, prefix_even.c)
+ c(1..24) = 1,1,1,2,1,4,1,10,2,26,1,85,4,242,1,908,10,2801,2,12855,26,38504,1,206147.
+ THEOREM.  c(2j+1) = c(j).                                                        [proven]
+ Proof.  Doubling form: at the placement of m, P(2m-1) = 2 P(m-1) with P(i) = |S n [1,i]|
+ and P(i) = |S| for i >= d.  For m >= (d+1)/2 this reads |S| = 2 P(m-1): m is placed at an
+ odd time with equally many earlier panels below and above.  For d = 2j+1 the j+1 upper
+ panels j+1..2j+1 fill the j+1 odd times, hence in decreasing order, and the lower panels
+ [1,j] fill the even times in some order tau.  The i-th element m of tau sees i upper
+ panels {2j+2-i,..,2j+1}, of which e = max(0, 2m+i-2j-2) are <= 2m-1.  If 2m <= j then
+ e = 0.  If 2m > j the condition is i - 1 + e = 2 P'(m-1), and e > 0 would give
+ i - 1 + e = 2i + 2m - 2j - 3, odd: impossible.  So e = 0 always and the condition on tau is
+ exactly the condition defining c(j).  QED   (Checked by listing the sequences, j = 2,4,6,8.)
+ For d = 2j the same analysis gives: uppers j+1..2j at the odd times in decreasing order, and
+ tau in S_j with  |S n (m, min(2m-1,j)]| + max(0, 2m+i-2j-1) = |S n [1,m-1]|   [proven],
+ a 2^j subset DP instead of 2^{2j} (prefix_even.c; agrees with the direct DP for j <= 12):
+ E(j) = c(2j) = 1,2,4,10,26,85,242,908,2801,12855,38504,206147,636679,3970770,11621713,
+        82671119,243913088,1942005916,5474577211,50053324642,138958367833,1373148776905,
+        3616570697148,41547901039087,106203160900505,1296104868304615   (j = 1..26).
+ Not in the OEIS (it starts like the involution numbers 1,2,4,10,26 but then 85 != 76); no
+ C-finite or P-recursive relation (26 terms).                                [data, negative]
+
+4. Walsh spectrum (walsh.c; walsh_16.txt, walsh_20.txt)
+-------------------------------------------------------
+ghat(T) = sum_S g(S) (-1)^{|S n T|}.
+ * (N+1) a(N) = 2^{-N} sum_T (-1)^{|T|} ghat(T)^2   [proven: a(N) = sum_{|S|=k} g(S) g(S^c)
+   for each k, and the Walsh transform of S -> g(S^c) is (-1)^{|T|} ghat(T)].  Checked
+   numerically N = 12, 16, 20.
+ * The weight of g by degree is spread like a binomial centred near N/2 (N = 12: degrees
+   0..12 carry .003,.021,.066,.134,.194,.210,.175,.113,.056,.021,.006,.001,.0001): NOT
+   concentrated on low degrees.  (g is dominated by sets close to [N].)        [data N <= 20]
+ * The bridge function p(S) = g(S) g(S^c) (p/a(N) = probability that S is a prefix set) has
+   no odd-degree weight [proven: p(S) = p(S^c)], and is equally spread; restricted to the
+   middle layer its largest degree-2 coefficients sit on adjacent pairs ({4,5}, {16,17},
+   {1,2}, {19,20}, {2,3} at N = 20, all negative, relative size about 0.5: adjacent panels tend
+   to be separated by the half-time cut, the parity-block effect), and its largest degree-4
+   coefficients on unions of two such pairs.  No family indexed by doubling orbits stands
+   out.                                                                 [data N <= 20, negative]
+
+5. What this says about a formula for a(N)
+------------------------------------------
+ * The constant term CT F_N has no Dyson-type product structure: the pair factor
+   z_y^{c} + z_x^{-d} depends on the pair through the window relation, and already the
+   tournament relaxation (where a product over pairs exists) has no closed form beyond the
+   forest range N <= 6.
+ * The proofs of Dyson-type identities that go through tournaments (Zeilberger, Bressoud-
+   Goulden) cancel NON-transitive tournaments and keep the transitive ones.  Here the
+   transitive ones are a(N) itself and the non-transitive balanced ones do not cancel
+   (B(N) - a(N) > 0 with no sign).  A signed weight that kills the non-transitive balanced
+   tournaments was not found.                                                    [negative]
+ * The only exact cancellation found is the rotation identity of section 3a.
+
+Files
+-----
+ btour.py         B(N) and variants (exact DP + brute force);  B_true.txt, B_left.txt, B_rad*.txt
+ analyze_B.py     B/Bprod, factorisations, forest test, rho(N)
+ btenum.c         all balanced tournaments, N <= 9, intermediate classes;  btenum.txt
+ apdp.c           a_d(N);  ap_table.txt (columns d = 0,2,3,..,12; d = 0 is a(N))
+ gendp.c          generic subset DP (arms true/left/prefix/radR; tests exact/modD/sign);
+                  prefix_counts.txt, signed_counts.txt, left_perm_counts.txt
+ prefix_even.c    E(j) = c(2j) by the 2^j reduction;  prefix_even.txt
+ polydp.c         one-variable specialisations;  polys.txt, factor_polys.py, polys_factored.txt
+ walsh.c          Walsh spectra;  walsh_16.txt, walsh_20.txt
+ recsearch_all.py recurrence searches on all sequences;  recsearch_out.txt

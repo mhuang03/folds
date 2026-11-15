@@ -1,0 +1,29 @@
+== C-finite test (Berlekamp-Massey over Q; a genuine recurrence has order << len/2)
+  B_rad2/Bprod from N=4: 17 terms, minimal linear recurrence order 3 -> C-finite: 2/3 0 8/27
+  B_rad3/Bprod from N=4: 17 terms, minimal linear recurrence order 9 (no recurrence)
+  B_rad4/Bprod from N=4: 17 terms, minimal linear recurrence order 9 (no recurrence)
+  B_true/Bprod from N=4: 20 terms, minimal linear recurrence order 10 (no recurrence)
+  B_left/Bprod from N=4: 9 terms, minimal linear recurrence order 5 (no recurrence)
+  a (check): 24 terms, minimal linear recurrence order 12 (no recurrence)
+  a_2: 24 terms, minimal linear recurrence order 12 (no recurrence)
+  a_3: 24 terms, minimal linear recurrence order 12 (no recurrence)
+  a_4: 24 terms, minimal linear recurrence order 12 (no recurrence)
+  a_5: 24 terms, minimal linear recurrence order 12 (no recurrence)
+  B: 23 terms, minimal linear recurrence order 12 (no recurrence)
+  E(j)=c(2j): 26 terms, minimal linear recurrence order 13 (no recurrence)
+  signed, N odd: 12 terms, minimal linear recurrence order 6 (no recurrence)
+  signed, N=2 mod 4: 6 terms, minimal linear recurrence order 3 (no recurrence)
+  left-half perms (odd N): 12 terms, minimal linear recurrence order 6 (no recurrence)
+  B_left (odd N): 12 terms, minimal linear recurrence order 6 (no recurrence)
+== P-recursive / ODE search (all shapes with >= 5 spare equations)
+  a (check)              L=24  ansatze= 62  max K=18  relations=0  max excess=+1 at REC r=1 d=0
+  a_2                    L=24  ansatze= 62  max K=18  relations=0  max excess=+1 at REC r=1 d=0
+  a_3                    L=24  ansatze= 62  max K=18  relations=0  max excess=+1 at REC r=1 d=0
+  a_4                    L=24  ansatze= 62  max K=18  relations=0  max excess=+1 at REC r=1 d=0
+  a_5                    L=24  ansatze= 62  max K=18  relations=0  max excess=+1 at REC r=1 d=0
+  B                      L=23  ansatze= 55  max K=16  relations=0  max excess=+1 at REC r=1 d=0
+  E(j)=c(2j)             L=26  ansatze= 76  max K=20  relations=0  max excess=+1 at REC r=1 d=0
+  signed, N odd          L=12  ansatze=  9  max K= 6  relations=0  max excess=+0 at REC r=1 d=0
+  signed, N=2 mod 4: too few terms for any ansatz with 5 spare equations
+  left-half perms (odd N) L=12  ansatze=  9  max K= 6  relations=0  max excess=+0 at REC r=1 d=0
+  B_left (odd N)         L=12  ansatze=  9  max K= 6  relations=0  max excess=+0 at REC r=1 d=0
