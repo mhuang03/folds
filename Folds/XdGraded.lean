@@ -548,7 +548,12 @@ theorem chain_of_steps {N : ℕ} : ∀ (l : List ℕ) (S : Finset ℕ), Steps N 
   | [], S, _ => Chain.refl S
   | m :: l, S, h => Chain.step h.1 (chain_of_steps l (insert m S) h.2)
 
-/-! ## An obstruction for `N = 9` -/
+/-! ## Obstructions for `N = 3` and `N = 9` -/
+
+/-- The smallest twins: for `N = 3` the singletons `{1}` and `{3}` each have exactly one
+valid addition, and both lead to `{1, 3}`.  So already `Γ_3` has no injective (weighted) up
+operator on rank `1 < 3/2`. -/
+theorem twins_three : up 3 {1} = {3} ∧ up 3 {3} = {1} := by decide +kernel
 
 /-- **Twin live sets.**  For `N = 9` the live 3-sets `{1,4,9}` and `{1,6,9}` have the same
 unique live successor `{1,4,6,9}`.  So for *any* weights on the edges of the live graph, the
