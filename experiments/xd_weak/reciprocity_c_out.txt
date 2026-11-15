@@ -1,0 +1,51 @@
+N=1 semi: classes=1  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [1, 2, 3]   (-1)^N A^c_N(-q): [1, 2, 3]   equal: True
+     strict pairs q=2,3 : [2, 3]   A^c_N(q): [2, 3]   equal: True
+N=2 semi: classes=1  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [1, 4, 9]   (-1)^N A^c_N(-q): [1, 4, 9]   equal: True
+     strict pairs q=2,3 : [4, 9]   A^c_N(q): [4, 9]   equal: True
+N=3 semi: classes=2  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [2, 10, 28]   (-1)^N A^c_N(-q): [2, 10, 28]   equal: True
+     strict pairs q=2,3 : [2, 10]   A^c_N(q): [2, 10]   equal: True
+N=4 semi: classes=2  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [2, 16, 62]   (-1)^N A^c_N(-q): [2, 16, 62]   equal: True
+     strict pairs q=2,3 : [2, 16]   A^c_N(q): [2, 16]   equal: True
+N=5 semi: classes=6  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [6, 52, 228]   (-1)^N A^c_N(-q): [6, 52, 228]   equal: True
+     strict pairs q=2,3 : [0, 6]   A^c_N(q): [0, 6]   equal: True
+N=6 semi: classes=12  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [12, 132, 704]   (-1)^N A^c_N(-q): [12, 132, 704]   equal: True
+     strict pairs q=2,3 : [0, 4]   A^c_N(q): [0, 4]   equal: True
+N=7 semi: classes=20  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [20, 268, 1692]   (-1)^N A^c_N(-q): [20, 268, 1692]   equal: True
+     strict pairs q=2,3 : [0, 0]   A^c_N(q): [0, 0]   equal: True
+N=8 semi: classes=54  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [54, 844, 6156]   (-1)^N A^c_N(-q): [54, 844, 6156]   equal: True
+     strict pairs q=2,3 : [0, 0]   A^c_N(q): [0, 0]   equal: True
+N=1 sym: classes=1  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [1, 2, 3]   (-1)^N A^c_N(-q): [1, 2, 3]   equal: True
+     strict pairs q=2,3 : [2, 3]   A^c_N(q): [2, 3]   equal: True
+N=2 sym: classes=1  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [1, 4, 9]   (-1)^N A^c_N(-q): [1, 4, 9]   equal: True
+     strict pairs q=2,3 : [4, 9]   A^c_N(q): [4, 9]   equal: True
+N=3 sym: classes=2  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [2, 10, 28]   (-1)^N A^c_N(-q): [2, 10, 28]   equal: True
+     strict pairs q=2,3 : [2, 10]   A^c_N(q): [2, 10]   equal: True
+N=4 sym: classes=2  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [2, 16, 62]   (-1)^N A^c_N(-q): [2, 16, 62]   equal: True
+     strict pairs q=2,3 : [2, 16]   A^c_N(q): [2, 16]   equal: True
+N=5 sym: classes=4  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [4, 36, 160]   (-1)^N A^c_N(-q): [4, 36, 160]   equal: True
+     strict pairs q=2,3 : [0, 4]   A^c_N(q): [0, 4]   equal: True
+N=6 sym: classes=8  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [8, 84, 432]   (-1)^N A^c_N(-q): [8, 84, 432]   equal: True
+     strict pairs q=2,3 : [0, 0]   A^c_N(q): [0, 0]   equal: True
+N=7 sym: classes=8  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [8, 108, 684]   (-1)^N A^c_N(-q): [8, 108, 684]   equal: True
+     strict pairs q=2,3 : [0, 0]   A^c_N(q): [0, 0]   equal: True
+N=8 sym: classes=8  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [8, 140, 1102]   (-1)^N A^c_N(-q): [8, 140, 1102]   equal: True
+     strict pairs q=2,3 : [0, 0]   A^c_N(q): [0, 0]   equal: True
+N=9 sym: classes=16  classes are full sets of linear extensions: True
+     weak  pairs q=1,2,3: [16, 280, 2304]   (-1)^N A^c_N(-q): [16, 280, 2304]   equal: True
+     strict pairs q=2,3 : [0, 0]   A^c_N(q): [0, 0]   equal: True
