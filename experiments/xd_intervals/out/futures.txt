@@ -1,0 +1,296 @@
+# scheme ends  Tmax 8
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+8 1120 1120 1 1 1
+6 232 96 18 10 10
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme ends  Tmax 9
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+9 4256 4256 1 1 1
+7 960 256 19 8 8
+5 96 28 24 7 4
+3 6 4 2 1 1
+1 1 1 1 1 1
+# scheme ends  Tmax 10
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+10 17878 17878 1 1 1
+8 3842 1120 29 13 13
+6 420 96 108 27 10
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme ends  Tmax 11
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+11 70960 70960 1 1 1
+9 16250 4256 27 11 11
+7 1816 256 319 52 8
+5 118 28 31 8 4
+3 6 4 2 1 1
+1 1 1 1 1 1
+# scheme ends  Tmax 12
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+12 383476 383476 1 1 1
+10 80890 17878 40 18 18
+8 10450 1120 1291 201 13
+6 588 96 152 27 10
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme ends  Tmax 13
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+13 1620328 1620328 1 1 1
+11 379810 70960 38 17 17
+9 43488 4256 2525 360 11
+7 3122 256 750 59 8
+5 120 28 32 8 4
+3 6 4 2 1 1
+1 1 1 1 1 1
+# scheme ends  Tmax 14
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+14 9167908 9167908 1 1 1
+12 2002314 383476 54 26 26
+10 274462 17878 9383 1411 18
+8 17634 1120 3713 277 13
+6 712 96 190 27 10
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme mid2  Tmax 8
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+8 1120 1120 1 1 1
+6 278 96 16 8 8
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme mid2  Tmax 9
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+9 4256 4256 1 1 1
+7 1340 256 20 9 9
+5 80 28 30 10 5
+3 6 4 3 2 2
+1 1 1 1 1 1
+# scheme mid2  Tmax 10
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+10 17878 17878 1 1 1
+8 6834 1120 20 10 10
+6 320 96 84 27 8
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme mid2  Tmax 11
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+11 70960 70960 1 1 1
+9 26182 4256 24 10 10
+7 1922 256 455 76 9
+5 80 28 30 10 5
+3 6 4 3 2 2
+1 1 1 1 1 1
+# scheme mid2  Tmax 12
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+12 383476 383476 1 1 1
+10 111052 17878 28 11 11
+8 12368 1120 1719 292 10
+6 320 96 88 27 8
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme mid2  Tmax 13
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+13 1620328 1620328 1 1 1
+11 597502 70960 25 11 11
+9 57274 4256 7742 1045 10
+7 1956 256 522 76 9
+5 80 28 30 10 5
+3 6 4 3 2 2
+1 1 1 1 1 1
+# scheme mid2  Tmax 14
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+14 9167908 9167908 1 1 1
+12 3778756 383476 32 15 15
+10 275988 17878 17909 2035 11
+8 13558 1120 3241 299 10
+6 320 96 88 27 8
+4 24 10 8 4 4
+2 2 2 1 1 1
+# scheme last2  Tmax 8
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+8 1120 1120 1 1 1
+6 178 96 24 14 14
+4 14 10 7 5 5
+2 2 2 1 1 1
+# scheme last2  Tmax 9
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+9 4256 4256 1 1 1
+7 630 256 23 12 12
+5 38 28 15 10 6
+3 4 4 2 2 2
+1 1 1 1 1 1
+# scheme last2  Tmax 10
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+10 17878 17878 1 1 1
+8 2898 1120 35 18 18
+6 186 96 65 35 14
+4 14 10 7 5 5
+2 2 2 1 1 1
+# scheme last2  Tmax 11
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+11 70960 70960 1 1 1
+9 10984 4256 33 17 17
+7 646 256 158 66 12
+5 38 28 15 10 6
+3 4 4 2 2 2
+1 1 1 1 1 1
+# scheme last2  Tmax 12
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+12 383476 383476 1 1 1
+10 64010 17878 47 23 23
+8 3872 1120 1038 353 18
+6 186 96 76 41 14
+4 14 10 7 5 5
+2 2 2 1 1 1
+# scheme last2  Tmax 13
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+13 1620328 1620328 1 1 1
+11 254946 70960 40 20 20
+9 15906 4256 2005 717 17
+7 666 256 216 86 12
+5 38 28 15 10 6
+3 4 4 2 2 2
+1 1 1 1 1 1
+# scheme last2  Tmax 14
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+14 9167908 9167908 1 1 1
+12 1607812 383476 59 29 29
+10 110374 17878 9464 2602 23
+8 4092 1120 1479 405 18
+6 186 96 78 41 14
+4 14 10 7 5 5
+2 2 2 1 1 1
+# scheme mid1  Tmax 8
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+8 1120 1120 1 1 1
+7 810 256 6 3 3
+6 286 96 63 27 3
+5 80 28 40 14 3
+4 24 10 12 5 2
+3 6 4 3 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme mid1  Tmax 10
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+10 17878 17878 1 1 1
+9 13644 4256 7 4 4
+8 7266 1120 163 51 3
+7 1774 256 594 118 3
+6 320 96 152 48 3
+5 80 28 40 14 3
+4 24 10 12 5 2
+3 6 4 3 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme mid1  Tmax 12
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+12 383476 383476 1 1 1
+11 288158 70960 8 4 4
+10 120332 17878 375 118 4
+9 44150 4256 5141 884 4
+8 12556 1120 4320 555 3
+7 1954 256 963 128 3
+6 320 96 160 48 3
+5 80 28 40 14 3
+4 24 10 12 5 2
+3 6 4 3 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme mid1  Tmax 13
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+13 1620328 1620328 1 1 1
+12 1467618 383476 7 4 4
+11 683290 70960 528 175 4
+10 207104 17878 15971 2871 4
+9 58450 4256 17075 1878 4
+8 13306 1120 5815 560 3
+7 1956 256 970 128 3
+6 320 96 160 48 3
+5 80 28 40 14 3
+4 24 10 12 5 2
+3 6 4 3 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme mid1  Tmax 14
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+14 9167908 9167908 1 1 1
+13 7287006 1620328 9 5 5
+12 4225108 383476 731 264 4
+11 1310368 70960 37266 5817 4
+10 284196 17878 67975 6383 4
+9 62942 4256 25716 2125 4
+8 13558 1120 6421 560 3
+7 1958 256 976 128 3
+6 320 96 160 48 3
+5 80 28 40 14 3
+4 24 10 12 5 2
+3 6 4 3 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme last  Tmax 8
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+8 1120 1120 1 1 1
+7 494 256 10 6 6
+6 178 96 52 34 5
+5 38 28 18 13 4
+4 14 10 7 5 3
+3 4 4 2 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme last  Tmax 10
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+10 17878 17878 1 1 1
+9 8376 4256 13 7 7
+8 2984 1120 232 107 6
+7 644 256 237 103 6
+6 186 96 87 45 5
+5 38 28 19 14 4
+4 14 10 7 5 3
+3 4 4 2 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme last  Tmax 12
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+12 383476 383476 1 1 1
+11 185574 70960 15 8 8
+10 68952 17878 558 279 7
+9 15460 4256 2449 1060 7
+8 3930 1120 1413 460 6
+7 656 256 307 120 6
+6 186 96 93 48 5
+5 38 28 19 14 4
+4 14 10 7 5 3
+3 4 4 2 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme last  Tmax 13
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+13 1620328 1620328 1 1 1
+12 926138 383476 15 8 8
+11 292444 70960 447 221 8
+10 89838 17878 6564 2609 7
+9 16774 4256 4528 1544 7
+8 4060 1120 1623 503 6
+7 666 256 323 124 6
+6 186 96 93 48 5
+5 38 28 19 14 4
+4 14 10 7 5 3
+3 4 4 2 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
+# scheme last  Tmax 14
+# N  live  accepting  classes  classes(accepting)  distinct#acc.children
+14 9167908 9167908 1 1 1
+13 4681416 1620328 17 9 9
+12 1799546 383476 1015 478 8
+11 421514 70960 18995 6337 8
+10 113808 17878 21891 5557 7
+9 17458 4256 6010 1735 7
+8 4112 1120 1835 516 6
+7 666 256 332 128 6
+6 186 96 93 48 5
+5 38 28 19 14 4
+4 14 10 7 5 3
+3 4 4 2 2 2
+2 2 2 1 1 1
+1 1 1 1 1 1
