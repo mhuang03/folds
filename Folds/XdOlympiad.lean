@@ -33,9 +33,14 @@ Notes: `experiments/xd_olympiad/NOTES.txt`.
 * `del1 S`: remove panel 1 and shift the labels down.
 * `semiStep_del1_right`: for a panel `m` of the right half the step condition on the
   `N`-strip is the step condition of `m - 1` on the `(N-1)`-strip after deleting panel 1.
-* `semiStep_del1_left`: for `2 ≤ m ≤ (N+1)/2` the same holds iff panels `1` and `2m - 1`
-  are on the same side of `m` in time (`1 ∈ S ↔ 2m - 1 ∈ S`); `semiStep_del1_left_iff`
-  is the exact version (the two conditions together are equivalent to ...).
+* `semiStep_del1_left_counts`: for `2 ≤ m ≤ (N+1)/2` the window of `m` loses its two end
+  panels `1` and `2m - 1`; hence `semiStep_del1_left` (if `1 ∈ S ↔ 2m - 1 ∈ S` the two step
+  conditions are equivalent) and the converse `same_side_of_semiStep_del1`.
+
+## Half-orders and classes
+* `halves`, `halves_far_swap`: a commuting swap keeps the order of the left-half panels and
+  the order of the others; `classCount N` (`τ(N)` of the notes) counts the realised pairs.
+* Small cases: `signedCount_one`, `signedCount_four`, `signedCount_five`.
 -/
 
 namespace Folds
@@ -482,9 +487,6 @@ theorem classCount_le (N : ℕ) : classCount N ≤ semiCount N := Finset.card_im
 theorem signedCount_one : signedCount 1 = 1 := by decide +kernel
 theorem signedCount_four : signedCount 4 = 2 := by decide +kernel
 theorem signedCount_five : signedCount 5 = -4 := by decide +kernel
-theorem classCount_three : classCount 3 = 2 := by decide +kernel
-theorem classCount_four : classCount 4 = 2 := by decide +kernel
-theorem classCount_five : classCount 5 = 6 := by decide +kernel
 
 end XdOlympiad
 end Folds

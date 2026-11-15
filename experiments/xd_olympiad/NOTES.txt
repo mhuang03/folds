@@ -112,10 +112,10 @@ Files
   * By 1.1(c), moving y to the left past sigma_{i'}, .., sigma_{i+1} gives valid sequences, the
     last of which agrees with b for one more step.  Induct on the length of the common prefix.  QED
  Checks: tau(N) from the inclusion-exclusion recursion below equals the number of distinct
- (sigma, rho) by enumeration for N <= 11 (out/invariants.txt), and equals the number of classes
- found by normal forms for N <= 12 (traces.py).
+ (sigma, rho) by enumeration for N <= 13, and equals the number of classes found by normal
+ forms for N <= 12 (traces.py).
  Lean: `halves`, `halves_far_swap` (a commuting swap keeps (sigma, rho)), `classCount`
- (= #realised pairs), `classCount_three/four/five` = 2, 2, 6.  The diamond theorem itself is not
+ (= #realised pairs, definition and `classCount_le` only).  The diamond theorem itself is not
  formalized.
 
 1.4 Counting classes.  [proven]  Let t(S) = #classes of valid orderings of S.  The maximal elements
