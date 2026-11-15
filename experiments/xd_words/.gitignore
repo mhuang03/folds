@@ -1,0 +1,6 @@
+sets
+minimax
+dist
+*.o
+*.bin
+__pycache__/
